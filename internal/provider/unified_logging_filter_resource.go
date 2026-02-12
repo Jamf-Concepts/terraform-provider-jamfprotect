@@ -141,7 +141,10 @@ func (r *UnifiedLoggingFilterResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	r.apiToState(&data, result.CreateUnifiedLoggingFilter)
+	r.apiToState(ctx, &data, result.CreateUnifiedLoggingFilter, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	tflog.Trace(ctx, "created unified logging filter", map[string]any{"uuid": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -174,7 +177,10 @@ func (r *UnifiedLoggingFilterResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	r.apiToState(&data, *result.GetUnifiedLoggingFilter)
+	r.apiToState(ctx, &data, *result.GetUnifiedLoggingFilter, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -214,7 +220,10 @@ func (r *UnifiedLoggingFilterResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	r.apiToState(&data, result.UpdateUnifiedLoggingFilter)
+	r.apiToState(ctx, &data, result.UpdateUnifiedLoggingFilter, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -235,6 +244,10 @@ func (r *UnifiedLoggingFilterResource) Delete(ctx context.Context, req resource.
 
 	vars := map[string]any{"uuid": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteUnifiedLoggingFilterMutation, vars, nil); err != nil {
+		if isNotFoundError(err) {
+			tflog.Trace(ctx, "unified logging filter already deleted", map[string]any{"uuid": data.ID.ValueString()})
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting unified logging filter", err.Error())
 		return
 	}
@@ -259,6 +272,9 @@ func (r *UnifiedLoggingFilterResource) ImportState(ctx context.Context, req reso
 		return
 	}
 
-	r.apiToState(&data, *result.GetUnifiedLoggingFilter)
+	r.apiToState(ctx, &data, *result.GetUnifiedLoggingFilter, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

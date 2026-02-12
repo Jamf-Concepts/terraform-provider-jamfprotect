@@ -137,7 +137,10 @@ func (r *PreventListResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	planTags := data.Tags
-	r.apiToState(&data, result.CreatePreventList)
+	r.apiToState(ctx, &data, result.CreatePreventList, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	data.Tags = planTags
 	tflog.Trace(ctx, "created prevent list", map[string]any{"id": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -172,7 +175,10 @@ func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	stateTags := data.Tags
-	r.apiToState(&data, *result.GetPreventList)
+	r.apiToState(ctx, &data, *result.GetPreventList, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	data.Tags = stateTags
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -214,7 +220,10 @@ func (r *PreventListResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	planTags := data.Tags
-	r.apiToState(&data, result.UpdatePreventList)
+	r.apiToState(ctx, &data, result.UpdatePreventList, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	data.Tags = planTags
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -236,6 +245,10 @@ func (r *PreventListResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deletePreventListMutation, vars, nil); err != nil {
+		if isNotFoundError(err) {
+			tflog.Trace(ctx, "prevent list already deleted", map[string]any{"id": data.ID.ValueString()})
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting prevent list", err.Error())
 		return
 	}
@@ -260,7 +273,10 @@ func (r *PreventListResource) ImportState(ctx context.Context, req resource.Impo
 		return
 	}
 
-	r.apiToState(&data, *result.GetPreventList)
+	r.apiToState(ctx, &data, *result.GetPreventList, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	data.Tags = types.ListNull(types.StringType)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

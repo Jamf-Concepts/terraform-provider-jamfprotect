@@ -8,7 +8,7 @@ resource "jamfprotect_unified_logging_filter" "auth_failures" {
   name        = "Authentication Failures"
   description = "Collect authentication failure log entries."
   filter      = "eventMessage CONTAINS 'Authentication failed'"
-  level       = "INFO"
+  level       = "DEFAULT"
   enabled     = true
   tags        = ["logging", "auth"]
 }

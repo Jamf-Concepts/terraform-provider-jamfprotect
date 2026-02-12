@@ -334,6 +334,10 @@ func (r *PlanResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deletePlanMutation, vars, nil); err != nil {
+		if isNotFoundError(err) {
+			tflog.Trace(ctx, "plan already deleted", map[string]any{"id": data.ID.ValueString()})
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting plan", err.Error())
 		return
 	}

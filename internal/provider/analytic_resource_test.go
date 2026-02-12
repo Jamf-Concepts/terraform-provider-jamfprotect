@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAnalyticResource_basic(t *testing.T) {
@@ -43,17 +42,9 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 			},
 			// ImportState testing.
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("resource not found: %s", resourceName)
-					}
-					return rs.Primary.Attributes["id"], nil
-				},
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "id",
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Update and Read testing.
 			{

@@ -5,10 +5,14 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
 )
 
 // listToStrings converts a types.List of strings into a Go []string.
@@ -31,4 +35,15 @@ func stringsToList(vals []string) types.List {
 		elems[i] = types.StringValue(v)
 	}
 	return types.ListValueMust(types.StringType, elems)
+}
+
+// isNotFoundError returns true if the error indicates the resource was not found.
+// This is used to make Delete idempotent — if the resource is already gone, the
+// delete is considered successful.
+func isNotFoundError(err error) bool {
+	if !errors.Is(err, graphql.ErrGraphQL) {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "not found") || strings.Contains(msg, "not_found")
 }

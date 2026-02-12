@@ -316,6 +316,10 @@ func (r *AnalyticResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	vars := map[string]any{"uuid": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteAnalyticMutation, vars, nil); err != nil {
+		if isNotFoundError(err) {
+			tflog.Trace(ctx, "analytic already deleted", map[string]any{"uuid": data.ID.ValueString()})
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting analytic", err.Error())
 		return
 	}

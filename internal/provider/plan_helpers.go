@@ -213,10 +213,6 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	// Comms config (required).
-	commsAttrTypes := map[string]attr.Type{
-		"fqdn":     types.StringType,
-		"protocol": types.StringType,
-	}
 	if !data.CommsConfig.IsNull() {
 		commsAttrs := data.CommsConfig.Attributes()
 		vars["commsConfig"] = map[string]any{
@@ -229,7 +225,6 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 			"protocol": "",
 		}
 	}
-	_ = commsAttrTypes
 
 	// Info sync (required).
 	if !data.InfoSync.IsNull() {
@@ -254,7 +249,7 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		}
 	} else {
 		vars["signaturesFeedConfig"] = map[string]any{
-			"mode": "OFF",
+			"mode": "blocking",
 		}
 	}
 

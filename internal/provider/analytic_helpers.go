@@ -219,7 +219,7 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
-		data.Description = types.StringValue("")
+		data.Description = types.StringNull()
 	}
 
 	data.Tags = stringsToList(api.Tags)

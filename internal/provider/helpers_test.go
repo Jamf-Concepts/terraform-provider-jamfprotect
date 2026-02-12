@@ -5,10 +5,14 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
 )
 
 func TestListToStrings(t *testing.T) {
@@ -131,5 +135,57 @@ func TestStringsToListRoundTrip(t *testing.T) {
 		if roundTripped[i] != original[i] {
 			t.Errorf("element %d: expected %q, got %q", i, original[i], roundTripped[i])
 		}
+	}
+}
+
+func TestIsNotFoundError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "graphql not found error",
+			err:      fmt.Errorf("%w: resource not found", graphql.ErrGraphQL),
+			expected: true,
+		},
+		{
+			name:     "graphql not_found error",
+			err:      fmt.Errorf("%w: resource not_found", graphql.ErrGraphQL),
+			expected: true,
+		},
+		{
+			name:     "graphql other error",
+			err:      fmt.Errorf("%w: internal server error", graphql.ErrGraphQL),
+			expected: false,
+		},
+		{
+			name:     "auth error",
+			err:      fmt.Errorf("%w: bad credentials", graphql.ErrAuthentication),
+			expected: false,
+		},
+		{
+			name:     "generic error",
+			err:      errors.New("something went wrong"),
+			expected: false,
+		},
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := isNotFoundError(tc.err)
+			if result != tc.expected {
+				t.Errorf("isNotFoundError(%v) = %v, want %v", tc.err, result, tc.expected)
+			}
+		})
 	}
 }

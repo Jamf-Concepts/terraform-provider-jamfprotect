@@ -318,6 +318,10 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteActionConfigMutation, vars, nil); err != nil {
+		if isNotFoundError(err) {
+			tflog.Trace(ctx, "action config already deleted", map[string]any{"id": data.ID.ValueString()})
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting action config", err.Error())
 		return
 	}

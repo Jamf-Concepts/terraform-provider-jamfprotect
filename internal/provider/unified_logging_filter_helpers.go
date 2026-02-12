@@ -102,12 +102,14 @@ func (r *UnifiedLoggingFilterResource) buildVariables(ctx context.Context, data 
 	}
 	if !data.Description.IsNull() {
 		vars["description"] = data.Description.ValueString()
+	} else {
+		vars["description"] = ""
 	}
 	vars["tags"] = listToStrings(ctx, data.Tags, diags)
 	return vars
 }
 
-func (r *UnifiedLoggingFilterResource) apiToState(data *UnifiedLoggingFilterResourceModel, api unifiedLoggingFilterAPIModel) {
+func (r *UnifiedLoggingFilterResource) apiToState(_ context.Context, data *UnifiedLoggingFilterResourceModel, api unifiedLoggingFilterAPIModel, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Filter = types.StringValue(api.Filter)
@@ -120,6 +122,6 @@ func (r *UnifiedLoggingFilterResource) apiToState(data *UnifiedLoggingFilterReso
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
-		data.Description = types.StringValue("")
+		data.Description = types.StringNull()
 	}
 }

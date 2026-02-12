@@ -18,7 +18,6 @@ import (
 var (
 	ErrAuthentication = errors.New("jamfprotect: authentication failed")
 	ErrGraphQL        = errors.New("jamfprotect: graphql error")
-	ErrNotFound       = errors.New("jamfprotect: resource not found")
 )
 
 // Client communicates with the Jamf Protect GraphQL API.

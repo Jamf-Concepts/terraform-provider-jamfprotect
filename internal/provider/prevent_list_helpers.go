@@ -94,13 +94,15 @@ func (r *PreventListResource) buildVariables(ctx context.Context, data PreventLi
 	}
 	if !data.Description.IsNull() {
 		vars["description"] = data.Description.ValueString()
+	} else {
+		vars["description"] = ""
 	}
 	vars["tags"] = listToStrings(ctx, data.Tags, diags)
 	vars["list"] = listToStrings(ctx, data.List, diags)
 	return vars
 }
 
-func (r *PreventListResource) apiToState(data *PreventListResourceModel, api preventListAPIModel) {
+func (r *PreventListResource) apiToState(_ context.Context, data *PreventListResourceModel, api preventListAPIModel, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Type = types.StringValue(api.Type)
@@ -111,6 +113,6 @@ func (r *PreventListResource) apiToState(data *PreventListResourceModel, api pre
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
-		data.Description = types.StringValue("")
+		data.Description = types.StringNull()
 	}
 }
