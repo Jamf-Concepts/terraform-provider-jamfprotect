@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -64,14 +66,18 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the unified logging filter.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The predicate filter expression (NSPredicate format).",
 				Required:            true,
 			},
 			"level": schema.StringAttribute{
-				MarkdownDescription: "The unified logging level. The only known valid value is `DEFAULT`.",
+				MarkdownDescription: "The unified logging level.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("DEFAULT"),
+				},
 			},
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Whether the filter is enabled. Defaults to `true`.",
@@ -357,6 +363,6 @@ func (r *UnifiedLoggingFilterResource) apiToState(data *UnifiedLoggingFilterReso
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
-		data.Description = types.StringNull()
+		data.Description = types.StringValue("")
 	}
 }

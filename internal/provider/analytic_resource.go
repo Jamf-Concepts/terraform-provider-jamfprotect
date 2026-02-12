@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -81,12 +83,27 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 			},
 			"input_type": schema.StringAttribute{
-				MarkdownDescription: "The input type for the analytic. Valid values: `GPFSEvent`, `GPDownloadEvent`, `GPProcessEvent`, `GPScreenshotEvent`, `GPKeylogRegisterEvent`, `GPClickEvent`, `GPMRTEvent`, `GPUSBEvent`, `GPGatekeeperEvent`.",
+				MarkdownDescription: "The input type for the analytic. Determines which endpoint event stream the analytic monitors.",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"GPFSEvent",
+						"GPDownloadEvent",
+						"GPProcessEvent",
+						"GPScreenshotEvent",
+						"GPKeylogRegisterEvent",
+						"GPClickEvent",
+						"GPMRTEvent",
+						"GPUSBEvent",
+						"GPGatekeeperEvent",
+					),
+				},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the analytic.",
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
 			},
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The predicate filter expression for the analytic.",
@@ -97,8 +114,11 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 			},
 			"severity": schema.StringAttribute{
-				MarkdownDescription: "The severity of the analytic. Valid values: `High`, `Medium`, `Low`, `Informational`.",
+				MarkdownDescription: "The severity of the analytic.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("High", "Medium", "Low", "Informational"),
+				},
 			},
 			"tags": schema.ListAttribute{
 				MarkdownDescription: "A list of tags for the analytic.",
@@ -476,12 +496,17 @@ type analyticContextAPIModel struct {
 // buildVariables converts the Terraform model into GraphQL mutation variables.
 func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticResourceModel, diags *diag.Diagnostics) map[string]any {
 	vars := map[string]any{
-		"name":        data.Name.ValueString(),
-		"inputType":   data.InputType.ValueString(),
-		"description": data.Description.ValueString(),
-		"filter":      data.Filter.ValueString(),
-		"level":       data.Level.ValueInt64(),
-		"severity":    data.Severity.ValueString(),
+		"name":      data.Name.ValueString(),
+		"inputType": data.InputType.ValueString(),
+		"filter":    data.Filter.ValueString(),
+		"level":     data.Level.ValueInt64(),
+		"severity":  data.Severity.ValueString(),
+	}
+
+	if !data.Description.IsNull() {
+		vars["description"] = data.Description.ValueString()
+	} else {
+		vars["description"] = ""
 	}
 
 	// Simple string lists.
@@ -537,12 +562,17 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 	data.UUID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.InputType = types.StringValue(api.InputType)
-	data.Description = types.StringValue(api.Description)
 	data.Filter = types.StringValue(api.Filter)
 	data.Level = types.Int64Value(api.Level)
 	data.Severity = types.StringValue(api.Severity)
 	data.Created = types.StringValue(api.Created)
 	data.Updated = types.StringValue(api.Updated)
+
+	if api.Description != "" {
+		data.Description = types.StringValue(api.Description)
+	} else {
+		data.Description = types.StringValue("")
+	}
 
 	data.Tags = stringsToList(api.Tags)
 	data.Categories = stringsToList(api.Categories)

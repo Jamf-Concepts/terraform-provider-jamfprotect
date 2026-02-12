@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -62,10 +64,15 @@ func (r *PreventListResource) Schema(ctx context.Context, req resource.SchemaReq
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the prevent list.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "The type of prevent list. Valid values: `TEAMID`, `FILEHASH`, `CDHASH`, `SIGNINGID`.",
+				MarkdownDescription: "The type of prevent list.",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Validators: []validator.String{
+					stringvalidator.OneOf("TEAMID", "FILEHASH", "CDHASH", "SIGNINGID"),
+				},
 			},
 			"tags": schema.ListAttribute{
 				MarkdownDescription: "A list of tags for the prevent list.",
@@ -346,6 +353,6 @@ func (r *PreventListResource) apiToState(data *PreventListResourceModel, api pre
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
-		data.Description = types.StringNull()
+		data.Description = types.StringValue("")
 	}
 }

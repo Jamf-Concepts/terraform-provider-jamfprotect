@@ -7,13 +7,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -86,9 +89,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 			},
 			"log_level": schema.StringAttribute{
-				MarkdownDescription: "The log level for the plan. Valid values: `DISABLED`, `ERROR`, `WARNING`, `INFO`, `DEBUG`.",
+				MarkdownDescription: "The log level for the plan. Defaults to `ERROR`.",
 				Optional:            true,
 				Computed:            true,
+				Default:             stringdefault.StaticString("ERROR"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("DISABLED", "ERROR", "WARNING", "INFO", "DEBUG"),
+				},
 			},
 			"auto_update": schema.BoolAttribute{
 				MarkdownDescription: "Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.",
@@ -123,8 +130,11 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of analytic set (e.g. `Report`, `Prevent`).",
+							MarkdownDescription: "The type of analytic set.",
 							Required:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("Report", "Prevent"),
+							},
 						},
 						"analytic_set": schema.StringAttribute{
 							MarkdownDescription: "The UUID of the analytic set.",
@@ -142,8 +152,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 						Required:            true,
 					},
 					"protocol": schema.StringAttribute{
-						MarkdownDescription: "The protocol to use (e.g. `mqtt`).",
-						Required:            true,
+						MarkdownDescription: "The protocol to use. Defaults to `mqtt`.",
+						Optional:            true,
+						Computed:            true,
+						Default:             stringdefault.StaticString("mqtt"),
+						Validators: []validator.String{
+							stringvalidator.OneOf("mqtt"),
+						},
 					},
 				},
 			},
@@ -167,8 +182,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
-						MarkdownDescription: "The signatures feed mode (e.g. `blocking`, `monitoring`, `off`).",
-						Required:            true,
+						MarkdownDescription: "The signatures feed mode. Defaults to `blocking`.",
+						Optional:            true,
+						Computed:            true,
+						Default:             stringdefault.StaticString("blocking"),
+						Validators: []validator.String{
+							stringvalidator.OneOf("blocking", "monitoring", "off"),
+						},
 					},
 				},
 			},

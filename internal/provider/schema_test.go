@@ -56,7 +56,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "input_type", "description", "filter", "level", "severity", "tags", "categories", "snapshot_files", "analytic_actions", "context"}
+	requiredAttrs := []string{"name", "input_type", "filter", "level", "severity", "tags", "categories", "snapshot_files", "analytic_actions", "context"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -78,6 +78,18 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		if !a.IsComputed() {
 			t.Errorf("expected attribute %q to be computed", attr)
 		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in analytic schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
 	}
 }
 
@@ -115,6 +127,18 @@ func TestPreventListResourceSchema(t *testing.T) {
 			t.Errorf("expected attribute %q to be computed", attr)
 		}
 	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in prevent list schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
 }
 
 func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
@@ -150,6 +174,18 @@ func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 		if !a.IsComputed() {
 			t.Errorf("expected attribute %q to be computed", attr)
 		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in unified logging filter schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
 	}
 
 	// enabled should be optional + computed (has default).
@@ -306,6 +342,18 @@ func TestPlanResourceSchema(t *testing.T) {
 		if !a.IsOptional() {
 			t.Errorf("expected attribute %q to be optional", attr)
 		}
+	}
+
+	// log_level should be optional + computed (has default).
+	logLevel, ok := resp.Schema.Attributes["log_level"]
+	if !ok {
+		t.Fatal("expected attribute 'log_level' in schema")
+	}
+	if !logLevel.IsOptional() {
+		t.Error("expected 'log_level' to be optional")
+	}
+	if !logLevel.IsComputed() {
+		t.Error("expected 'log_level' to be computed (has default)")
 	}
 
 	// auto_update should be optional + computed (has default).
