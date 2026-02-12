@@ -53,24 +53,25 @@ func testAccActionConfigResourceConfig(name, description string) string {
 resource "jamfprotect_action_config" "test" {
   name        = %[1]q
   description = %[2]q
-  alert_config = jsonencode({
+
+  alert_config = {
     data = {
-      binary             = { attrs = [], related = [] }
-      clickEvent         = { attrs = [], related = [] }
-      downloadEvent      = { attrs = [], related = [] }
-      file               = { attrs = [], related = [] }
-      fsEvent            = { attrs = [], related = [] }
-      group              = { attrs = [], related = [] }
-      procEvent          = { attrs = [], related = [] }
-      process            = { attrs = [], related = [] }
-      screenshotEvent    = { attrs = [], related = [] }
-      usbEvent           = { attrs = [], related = [] }
-      user               = { attrs = [], related = [] }
-      gkEvent            = { attrs = [], related = [] }
-      keylogRegisterEvent = { attrs = [], related = [] }
-      mrtEvent           = { attrs = [], related = [] }
+      binary              = { attrs = [], related = [] }
+      click_event         = { attrs = [], related = [] }
+      download_event      = { attrs = [], related = [] }
+      file                = { attrs = [], related = [] }
+      fs_event            = { attrs = [], related = [] }
+      group               = { attrs = [], related = [] }
+      proc_event          = { attrs = [], related = [] }
+      process             = { attrs = [], related = [] }
+      screenshot_event    = { attrs = [], related = [] }
+      usb_event           = { attrs = [], related = [] }
+      user                = { attrs = [], related = [] }
+      gk_event            = { attrs = [], related = [] }
+      keylog_register_event = { attrs = [], related = [] }
+      mrt_event           = { attrs = [], related = [] }
     }
-  })
+  }
 }
 `, name, description)
 }

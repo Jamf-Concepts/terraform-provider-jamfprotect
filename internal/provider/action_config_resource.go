@@ -36,6 +36,19 @@ func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.Metada
 }
 
 func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	eventTypeAttrs := map[string]schema.Attribute{
+		"attrs": schema.ListAttribute{
+			MarkdownDescription: "Attribute names to include in alert data for this event type.",
+			Required:            true,
+			ElementType:         types.StringType,
+		},
+		"related": schema.ListAttribute{
+			MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+			Required:            true,
+			ElementType:         types.StringType,
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an action configuration in Jamf Protect. Action configurations define the alert data enrichment settings and reporting clients for a plan.",
 		Attributes: map[string]schema.Attribute{
@@ -57,9 +70,87 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional:            true,
 				Computed:            true,
 			},
-			"alert_config": schema.StringAttribute{
-				MarkdownDescription: "The alert configuration as a JSON-encoded string. Defines which data attributes and related objects to include in alerts for each event type.",
+			"alert_config": schema.SingleNestedAttribute{
+				MarkdownDescription: "Alert configuration defining which data attributes and related objects to include in alerts for each event type.",
 				Required:            true,
+				Attributes: map[string]schema.Attribute{
+					"data": schema.SingleNestedAttribute{
+						MarkdownDescription: "Data enrichment settings per event type.",
+						Required:            true,
+						Attributes: map[string]schema.Attribute{
+							"binary": schema.SingleNestedAttribute{
+								MarkdownDescription: "Binary/executable metadata enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"click_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Click event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"download_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Download event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"file": schema.SingleNestedAttribute{
+								MarkdownDescription: "File metadata enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"fs_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "File system event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"group": schema.SingleNestedAttribute{
+								MarkdownDescription: "Group metadata enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"proc_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Process event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"process": schema.SingleNestedAttribute{
+								MarkdownDescription: "Process metadata enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"screenshot_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Screenshot event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"usb_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "USB device event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"user": schema.SingleNestedAttribute{
+								MarkdownDescription: "User metadata enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"gk_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Gatekeeper event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"keylog_register_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Keylogger registration event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+							"mrt_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Malware Removal Tool event enrichment.",
+								Required:            true,
+								Attributes:          eventTypeAttrs,
+							},
+						},
+					},
+				},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
@@ -111,9 +202,8 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	vars, err := r.buildVariables(data)
-	if err != nil {
-		resp.Diagnostics.AddError("Error building variables", err.Error())
+	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -125,7 +215,10 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	r.apiToState(&data, result.CreateActionConfigs)
+	r.apiToState(ctx, &data, result.CreateActionConfigs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	tflog.Trace(ctx, "created action config", map[string]any{"id": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -158,7 +251,10 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	r.apiToState(&data, *result.GetActionConfigs)
+	r.apiToState(ctx, &data, *result.GetActionConfigs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -184,9 +280,8 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	vars, err := r.buildVariables(data)
-	if err != nil {
-		resp.Diagnostics.AddError("Error building variables", err.Error())
+	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	vars["id"] = data.ID.ValueString()
@@ -199,7 +294,10 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	r.apiToState(&data, result.UpdateActionConfigs)
+	r.apiToState(ctx, &data, result.UpdateActionConfigs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -244,6 +342,9 @@ func (r *ActionConfigResource) ImportState(ctx context.Context, req resource.Imp
 		return
 	}
 
-	r.apiToState(&data, *result.GetActionConfigs)
+	r.apiToState(ctx, &data, *result.GetActionConfigs, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
 func TestProviderSchema(t *testing.T) {
@@ -297,6 +298,48 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	}
 	if !desc.IsComputed() {
 		t.Error("expected 'description' to be computed")
+	}
+
+	// alert_config should be a SingleNestedAttribute containing data with 14 event types.
+	alertConfigAttr, ok := resp.Schema.Attributes["alert_config"]
+	if !ok {
+		t.Fatal("expected attribute 'alert_config' in schema")
+	}
+	alertConfigNested, ok := alertConfigAttr.(schema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("expected 'alert_config' to be a SingleNestedAttribute")
+	}
+	dataAttr, ok := alertConfigNested.Attributes["data"]
+	if !ok {
+		t.Fatal("expected 'data' attribute inside alert_config")
+	}
+	dataNested, ok := dataAttr.(schema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("expected 'data' to be a SingleNestedAttribute")
+	}
+
+	eventTypes := []string{
+		"binary", "click_event", "download_event", "file", "fs_event",
+		"group", "proc_event", "process", "screenshot_event", "usb_event",
+		"user", "gk_event", "keylog_register_event", "mrt_event",
+	}
+	for _, et := range eventTypes {
+		etAttr, ok := dataNested.Attributes[et]
+		if !ok {
+			t.Errorf("expected event type %q in alert_config.data", et)
+			continue
+		}
+		etNested, ok := etAttr.(schema.SingleNestedAttribute)
+		if !ok {
+			t.Errorf("expected event type %q to be a SingleNestedAttribute", et)
+			continue
+		}
+		if _, ok := etNested.Attributes["attrs"]; !ok {
+			t.Errorf("expected 'attrs' attribute in event type %q", et)
+		}
+		if _, ok := etNested.Attributes["related"]; !ok {
+			t.Errorf("expected 'related' attribute in event type %q", et)
+		}
 	}
 
 	// timeouts should exist.

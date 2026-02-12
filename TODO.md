@@ -4,12 +4,16 @@ Tracking improvements to make the provider feel idiomatic Terraform rather than 
 
 ## Remaining
 
-- [ ] **#2** Restructure `action_config` `alert_config` from JSON blob to typed nested blocks (DO LAST)
-  - Model 14 event types as optional `SingleNestedBlock`s
-  - Each with `attributes` (list of strings) and `related` (list of strings)
-  - Consider keeping `jsonencode()` escape hatch alongside typed blocks
+_(None — all schema improvements complete)_
 
 ## Completed
+
+- [x] **#2** Restructure `action_config` `alert_config` from JSON blob to typed nested blocks
+  - Replaced `jsonencode()` string attribute with `SingleNestedAttribute` containing `data` → 14 event types
+  - Each event type has typed `attrs` (list of strings) and `related` (list of strings) attributes
+  - Snake_case Terraform names map to camelCase API names automatically
+  - Typed API models replace `json.RawMessage` for full compile-time safety
+  - Updated acceptance tests, schema tests, and example HCL
 
 - [x] **#9** Add operation timeouts via `terraform-plugin-framework-timeouts` v0.7.0
   - Added `timeouts` attribute (attribute syntax, not block) to all 5 resources
