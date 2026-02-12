@@ -51,12 +51,16 @@ internal/
     helpers.go                   # listToStrings / stringsToList utilities
     helpers_test.go              # Helper unit tests
     schema_test.go               # Schema validation unit tests
+    action_config_resource.go    # jamfprotect_action_config (CRUD + import)
     analytic_resource.go         # jamfprotect_analytic (CRUD + import)
-    analytic_resource_test.go    # Acceptance tests
+    plan_resource.go             # jamfprotect_plan (CRUD + import)
     prevent_list_resource.go     # jamfprotect_prevent_list (CRUD + import)
-    prevent_list_resource_test.go
+    telemetry_v2_resource.go     # jamfprotect_telemetry_v2 (CRUD + import)
     unified_logging_filter_resource.go    # jamfprotect_unified_logging_filter (CRUD + import)
-    unified_logging_filter_resource_test.go
+    usb_control_set_resource.go  # jamfprotect_usb_control_set (CRUD + import)
+    *_types.go                   # Type definitions for each resource
+    *_helpers.go                 # GraphQL queries and helper functions for each resource
+    *_resource_test.go           # Acceptance tests for each resource
 queries_and_mutations/           # 42 captured GraphQL operations (reference material)
 tools/
   scripts/                       # Python helper scripts for API discovery
