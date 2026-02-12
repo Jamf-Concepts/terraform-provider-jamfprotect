@@ -112,7 +112,9 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		NewAnalyticResource,
 		NewPlanResource,
 		NewPreventListResource,
+		NewTelemetryV2Resource,
 		NewUnifiedLoggingFilterResource,
+		NewUSBControlSetResource,
 	}
 }
 

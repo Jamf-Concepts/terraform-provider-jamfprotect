@@ -448,3 +448,188 @@ func TestPlanResourceMetadata(t *testing.T) {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_plan", resp.TypeName)
 	}
 }
+
+func TestUSBControlSetResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewUSBControlSetResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "default_mount_action", "rules"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in USB control set schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in USB control set schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in USB control set schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
+
+	// default_message_action should be optional + computed.
+	msgAction, ok := resp.Schema.Attributes["default_message_action"]
+	if !ok {
+		t.Fatal("expected attribute 'default_message_action' in USB control set schema")
+	}
+	if !msgAction.IsOptional() {
+		t.Error("expected 'default_message_action' to be optional")
+	}
+	if !msgAction.IsComputed() {
+		t.Error("expected 'default_message_action' to be computed")
+	}
+
+	// rules should be a ListNestedAttribute.
+	rulesAttr, ok := resp.Schema.Attributes["rules"]
+	if !ok {
+		t.Fatal("expected attribute 'rules' in USB control set schema")
+	}
+	rulesNested, ok := rulesAttr.(schema.ListNestedAttribute)
+	if !ok {
+		t.Fatal("expected 'rules' to be a ListNestedAttribute")
+	}
+
+	// Verify rule nested attributes.
+	ruleAttrs := rulesNested.NestedObject.Attributes
+	for _, attr := range []string{"type", "mount_action"} {
+		a, ok := ruleAttrs[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in rules nested object", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected rule attribute %q to be required", attr)
+		}
+	}
+	for _, attr := range []string{"message_action", "apply_to", "vendors", "serials", "products"} {
+		if _, ok := ruleAttrs[attr]; !ok {
+			t.Errorf("expected attribute %q in rules nested object", attr)
+		}
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in USB control set schema")
+	}
+}
+
+func TestUSBControlSetResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewUSBControlSetResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_usb_control_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_usb_control_set", resp.TypeName)
+	}
+}
+
+func TestTelemetryV2ResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewTelemetryV2Resource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "log_files", "events"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in telemetry v2 schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in telemetry v2 schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in telemetry v2 schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
+
+	// Boolean attrs should be optional + computed (have defaults).
+	for _, attr := range []string{"log_file_collection", "performance_metrics", "file_hashing"} {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in telemetry v2 schema", attr)
+			continue
+		}
+		if !a.IsOptional() {
+			t.Errorf("expected attribute %q to be optional", attr)
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed (has default)", attr)
+		}
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in telemetry v2 schema")
+	}
+}
+
+func TestTelemetryV2ResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewTelemetryV2Resource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_telemetry_v2" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetry_v2", resp.TypeName)
+	}
+}
