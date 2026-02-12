@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -31,19 +30,6 @@ func NewUnifiedLoggingFilterResource() resource.Resource {
 // UnifiedLoggingFilterResource manages a Jamf Protect unified logging filter.
 type UnifiedLoggingFilterResource struct {
 	client *graphql.Client
-}
-
-// UnifiedLoggingFilterResourceModel maps the resource schema data.
-type UnifiedLoggingFilterResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Filter      types.String `tfsdk:"filter"`
-	Level       types.String `tfsdk:"level"`
-	Enabled     types.Bool   `tfsdk:"enabled"`
-	Tags        types.List   `tfsdk:"tags"`
-	Created     types.String `tfsdk:"created"`
-	Updated     types.String `tfsdk:"updated"`
 }
 
 func (r *UnifiedLoggingFilterResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -114,85 +100,6 @@ func (r *UnifiedLoggingFilterResource) Configure(ctx context.Context, req resour
 	}
 	r.client = client
 }
-
-// ---------------------------------------------------------------------------
-// GraphQL queries
-// ---------------------------------------------------------------------------
-
-const unifiedLoggingFilterFields = `
-fragment UnifiedLoggingFilterFields on UnifiedLoggingFilter {
-  uuid
-  name
-  description
-  created
-  updated
-  filter
-  tags
-  enabled
-  level
-}
-`
-
-const createUnifiedLoggingFilterMutation = `
-mutation createUnifiedLoggingFilter(
-  $name: String!,
-  $description: String,
-  $tags: [String]!,
-  $filter: String!,
-  $enabled: Boolean,
-  $level: UNIFIED_LOGGING_LEVEL!
-) {
-  createUnifiedLoggingFilter(input: {
-    name: $name,
-    description: $description,
-    tags: $tags,
-    filter: $filter,
-    enabled: $enabled,
-    level: $level
-  }) {
-    ...UnifiedLoggingFilterFields
-  }
-}
-` + unifiedLoggingFilterFields
-
-const getUnifiedLoggingFilterQuery = `
-query getUnifiedLoggingFilter($uuid: ID!) {
-  getUnifiedLoggingFilter(uuid: $uuid) {
-    ...UnifiedLoggingFilterFields
-  }
-}
-` + unifiedLoggingFilterFields
-
-const updateUnifiedLoggingFilterMutation = `
-mutation updateUnifiedLoggingFilter(
-  $uuid: ID!,
-  $name: String!,
-  $description: String,
-  $filter: String!,
-  $tags: [String]!,
-  $enabled: Boolean,
-  $level: UNIFIED_LOGGING_LEVEL!
-) {
-  updateUnifiedLoggingFilter(uuid: $uuid, input: {
-    name: $name,
-    description: $description,
-    filter: $filter,
-    tags: $tags,
-    enabled: $enabled,
-    level: $level
-  }) {
-    ...UnifiedLoggingFilterFields
-  }
-}
-` + unifiedLoggingFilterFields
-
-const deleteUnifiedLoggingFilterMutation = `
-mutation deleteUnifiedLoggingFilter($uuid: ID!) {
-  deleteUnifiedLoggingFilter(uuid: $uuid) {
-    uuid
-  }
-}
-`
 
 // ---------------------------------------------------------------------------
 // CRUD
@@ -314,55 +221,4 @@ func (r *UnifiedLoggingFilterResource) ImportState(ctx context.Context, req reso
 
 	r.apiToState(&data, *result.GetUnifiedLoggingFilter)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-// ---------------------------------------------------------------------------
-// API model
-// ---------------------------------------------------------------------------
-
-type unifiedLoggingFilterAPIModel struct {
-	UUID        string   `json:"uuid"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Created     string   `json:"created"`
-	Updated     string   `json:"updated"`
-	Filter      string   `json:"filter"`
-	Tags        []string `json:"tags"`
-	Enabled     bool     `json:"enabled"`
-	Level       string   `json:"level"`
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-func (r *UnifiedLoggingFilterResource) buildVariables(ctx context.Context, data UnifiedLoggingFilterResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name":    data.Name.ValueString(),
-		"filter":  data.Filter.ValueString(),
-		"level":   data.Level.ValueString(),
-		"enabled": data.Enabled.ValueBool(),
-	}
-	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
-	}
-	vars["tags"] = listToStrings(ctx, data.Tags, diags)
-	return vars
-}
-
-func (r *UnifiedLoggingFilterResource) apiToState(data *UnifiedLoggingFilterResourceModel, api unifiedLoggingFilterAPIModel) {
-	data.ID = types.StringValue(api.UUID)
-	data.Name = types.StringValue(api.Name)
-	data.Filter = types.StringValue(api.Filter)
-	data.Level = types.StringValue(api.Level)
-	data.Enabled = types.BoolValue(api.Enabled)
-	data.Tags = stringsToList(api.Tags)
-	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
-
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
 }

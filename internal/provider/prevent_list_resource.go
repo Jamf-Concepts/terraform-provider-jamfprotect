@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,18 +29,6 @@ func NewPreventListResource() resource.Resource {
 // PreventListResource manages a Jamf Protect prevent list (threat prevention allow/block list).
 type PreventListResource struct {
 	client *graphql.Client
-}
-
-// PreventListResourceModel maps the resource schema data.
-type PreventListResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Type        types.String `tfsdk:"type"`
-	Tags        types.List   `tfsdk:"tags"`
-	List        types.List   `tfsdk:"list"`
-	EntryCount  types.Int64  `tfsdk:"entry_count"`
-	Created     types.String `tfsdk:"created"`
 }
 
 func (r *PreventListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -108,79 +95,6 @@ func (r *PreventListResource) Configure(ctx context.Context, req resource.Config
 	}
 	r.client = client
 }
-
-// ---------------------------------------------------------------------------
-// GraphQL queries
-// ---------------------------------------------------------------------------
-
-const preventListFields = `
-fragment PreventListFields on PreventList {
-  id
-  name
-  type
-  count
-  list
-  created
-  description
-}
-`
-
-const createPreventListMutation = `
-mutation createPreventList(
-  $name: String!,
-  $tags: [String]!,
-  $type: PREVENT_LIST_TYPE!,
-  $list: [String]!,
-  $description: String
-) {
-  createPreventList(input: {
-    name: $name,
-    tags: $tags,
-    type: $type,
-    list: $list,
-    description: $description
-  }) {
-    ...PreventListFields
-  }
-}
-` + preventListFields
-
-const getPreventListQuery = `
-query getPreventList($id: ID!) {
-  getPreventList(id: $id) {
-    ...PreventListFields
-  }
-}
-` + preventListFields
-
-const updatePreventListMutation = `
-mutation updatePreventList(
-  $id: ID!,
-  $name: String!,
-  $tags: [String]!,
-  $type: PREVENT_LIST_TYPE!,
-  $list: [String]!,
-  $description: String
-) {
-  updatePreventList(id: $id, input: {
-    name: $name,
-    tags: $tags,
-    type: $type,
-    list: $list,
-    description: $description
-  }) {
-    ...PreventListFields
-  }
-}
-` + preventListFields
-
-const deletePreventListMutation = `
-mutation deletePreventList($id: ID!) {
-  deletePreventList(id: $id) {
-    id
-  }
-}
-`
 
 // ---------------------------------------------------------------------------
 // CRUD
@@ -309,50 +223,4 @@ func (r *PreventListResource) ImportState(ctx context.Context, req resource.Impo
 	r.apiToState(&data, *result.GetPreventList)
 	data.Tags = types.ListNull(types.StringType)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-// ---------------------------------------------------------------------------
-// API model
-// ---------------------------------------------------------------------------
-
-type preventListAPIModel struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Type        string   `json:"type"`
-	Count       int64    `json:"count"`
-	List        []string `json:"list"`
-	Created     string   `json:"created"`
-	Description string   `json:"description"`
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-func (r *PreventListResource) buildVariables(ctx context.Context, data PreventListResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name": data.Name.ValueString(),
-		"type": data.Type.ValueString(),
-	}
-	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
-	}
-	vars["tags"] = listToStrings(ctx, data.Tags, diags)
-	vars["list"] = listToStrings(ctx, data.List, diags)
-	return vars
-}
-
-func (r *PreventListResource) apiToState(data *PreventListResourceModel, api preventListAPIModel) {
-	data.ID = types.StringValue(api.ID)
-	data.Name = types.StringValue(api.Name)
-	data.Type = types.StringValue(api.Type)
-	data.EntryCount = types.Int64Value(api.Count)
-	data.Created = types.StringValue(api.Created)
-	data.List = stringsToList(api.List)
-
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
 }
