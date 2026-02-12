@@ -35,7 +35,7 @@ type UnifiedLoggingFilterResource struct {
 
 // UnifiedLoggingFilterResourceModel maps the resource schema data.
 type UnifiedLoggingFilterResourceModel struct {
-	UUID        types.String `tfsdk:"uuid"`
+	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
 	Filter      types.String `tfsdk:"filter"`
@@ -54,7 +54,7 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a unified logging filter in Jamf Protect. Unified logging filters capture macOS unified log entries that match a given predicate.",
 		Attributes: map[string]schema.Attribute{
-			"uuid": schema.StringAttribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the unified logging filter.",
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -219,7 +219,7 @@ func (r *UnifiedLoggingFilterResource) Create(ctx context.Context, req resource.
 	}
 
 	r.apiToState(&data, result.CreateUnifiedLoggingFilter)
-	tflog.Trace(ctx, "created unified logging filter", map[string]any{"uuid": data.UUID.ValueString()})
+	tflog.Trace(ctx, "created unified logging filter", map[string]any{"uuid": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -230,7 +230,7 @@ func (r *UnifiedLoggingFilterResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	vars := map[string]any{"uuid": data.UUID.ValueString()}
+	vars := map[string]any{"uuid": data.ID.ValueString()}
 	var result struct {
 		GetUnifiedLoggingFilter *unifiedLoggingFilterAPIModel `json:"getUnifiedLoggingFilter"`
 	}
@@ -259,13 +259,13 @@ func (r *UnifiedLoggingFilterResource) Update(ctx context.Context, req resource.
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.UUID = state.UUID
+	data.ID = state.ID
 
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	vars["uuid"] = data.UUID.ValueString()
+	vars["uuid"] = data.ID.ValueString()
 
 	var result struct {
 		UpdateUnifiedLoggingFilter unifiedLoggingFilterAPIModel `json:"updateUnifiedLoggingFilter"`
@@ -286,18 +286,18 @@ func (r *UnifiedLoggingFilterResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	vars := map[string]any{"uuid": data.UUID.ValueString()}
+	vars := map[string]any{"uuid": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteUnifiedLoggingFilterMutation, vars, nil); err != nil {
 		resp.Diagnostics.AddError("Error deleting unified logging filter", err.Error())
 		return
 	}
 
-	tflog.Trace(ctx, "deleted unified logging filter", map[string]any{"uuid": data.UUID.ValueString()})
+	tflog.Trace(ctx, "deleted unified logging filter", map[string]any{"uuid": data.ID.ValueString()})
 }
 
 func (r *UnifiedLoggingFilterResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data UnifiedLoggingFilterResourceModel
-	data.UUID = types.StringValue(req.ID)
+	data.ID = types.StringValue(req.ID)
 
 	vars := map[string]any{"uuid": req.ID}
 	var result struct {
@@ -351,7 +351,7 @@ func (r *UnifiedLoggingFilterResource) buildVariables(ctx context.Context, data 
 }
 
 func (r *UnifiedLoggingFilterResource) apiToState(data *UnifiedLoggingFilterResourceModel, api unifiedLoggingFilterAPIModel) {
-	data.UUID = types.StringValue(api.UUID)
+	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Filter = types.StringValue(api.Filter)
 	data.Level = types.StringValue(api.Level)

@@ -36,7 +36,7 @@ type AnalyticResource struct {
 
 // AnalyticResourceModel maps the resource schema data.
 type AnalyticResourceModel struct {
-	UUID            types.String `tfsdk:"uuid"`
+	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	InputType       types.String `tfsdk:"input_type"`
 	Description     types.String `tfsdk:"description"`
@@ -74,7 +74,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a custom analytic in Jamf Protect. Analytics define detection rules that monitor endpoint activity.",
 		Attributes: map[string]schema.Attribute{
-			"uuid": schema.StringAttribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the analytic.",
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -349,7 +349,7 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	tflog.Trace(ctx, "created analytic", map[string]any{"uuid": data.UUID.ValueString()})
+	tflog.Trace(ctx, "created analytic", map[string]any{"uuid": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -360,7 +360,7 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	vars := map[string]any{"uuid": data.UUID.ValueString()}
+	vars := map[string]any{"uuid": data.ID.ValueString()}
 	var result struct {
 		GetAnalytic *analyticAPIModel `json:"getAnalytic"`
 	}
@@ -394,13 +394,13 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.UUID = state.UUID
+	data.ID = state.ID
 
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	vars["uuid"] = data.UUID.ValueString()
+	vars["uuid"] = data.ID.ValueString()
 
 	var result struct {
 		UpdateAnalytic analyticAPIModel `json:"updateAnalytic"`
@@ -425,18 +425,18 @@ func (r *AnalyticResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	vars := map[string]any{"uuid": data.UUID.ValueString()}
+	vars := map[string]any{"uuid": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteAnalyticMutation, vars, nil); err != nil {
 		resp.Diagnostics.AddError("Error deleting analytic", err.Error())
 		return
 	}
 
-	tflog.Trace(ctx, "deleted analytic", map[string]any{"uuid": data.UUID.ValueString()})
+	tflog.Trace(ctx, "deleted analytic", map[string]any{"uuid": data.ID.ValueString()})
 }
 
 func (r *AnalyticResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data AnalyticResourceModel
-	data.UUID = types.StringValue(req.ID)
+	data.ID = types.StringValue(req.ID)
 
 	vars := map[string]any{"uuid": req.ID}
 	var result struct {
@@ -569,7 +569,7 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 
 // apiToState maps the API response into the Terraform state model.
 func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceModel, api analyticAPIModel, diags *diag.Diagnostics) {
-	data.UUID = types.StringValue(api.UUID)
+	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.InputType = types.StringValue(api.InputType)
 	data.Filter = types.StringValue(api.Filter)

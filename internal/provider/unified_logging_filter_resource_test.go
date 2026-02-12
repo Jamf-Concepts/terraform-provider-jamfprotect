@@ -24,7 +24,7 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 			{
 				Config: testAccUnifiedLoggingFilterResourceConfig(rName, "Test filter description", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test filter description"),
 					resource.TestCheckResourceAttr(resourceName, "filter", `subsystem == "com.apple.securityd"`),
@@ -45,10 +45,10 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 					if !ok {
 						return "", fmt.Errorf("resource not found: %s", resourceName)
 					}
-					return rs.Primary.Attributes["uuid"], nil
+					return rs.Primary.Attributes["id"], nil
 				},
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "uuid",
+				ImportStateVerifyIdentifierAttribute: "id",
 			},
 			// Update: disable the filter.
 			{

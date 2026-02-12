@@ -68,7 +68,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"uuid", "created", "updated"}
+	computedAttrs := []string{"id", "created", "updated"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -164,7 +164,7 @@ func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"uuid", "created", "updated"}
+	computedAttrs := []string{"id", "created", "updated"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {

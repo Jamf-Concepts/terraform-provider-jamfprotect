@@ -24,7 +24,7 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 			{
 				Config: testAccAnalyticResourceConfig(rName, "Test analytic description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test analytic description"),
 					resource.TestCheckResourceAttr(resourceName, "input_type", "GPFSEvent"),
@@ -50,10 +50,10 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					if !ok {
 						return "", fmt.Errorf("resource not found: %s", resourceName)
 					}
-					return rs.Primary.Attributes["uuid"], nil
+					return rs.Primary.Attributes["id"], nil
 				},
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "uuid",
+				ImportStateVerifyIdentifierAttribute: "id",
 			},
 			// Update and Read testing.
 			{
@@ -77,7 +77,7 @@ func TestAccAnalyticResource_withActions(t *testing.T) {
 			{
 				Config: testAccAnalyticResourceConfigWithActions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.name", "SmartGroup"),
