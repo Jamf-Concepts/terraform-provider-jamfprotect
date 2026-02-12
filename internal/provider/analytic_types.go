@@ -4,26 +4,28 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // AnalyticResourceModel maps the resource schema data.
 type AnalyticResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	InputType       types.String `tfsdk:"input_type"`
-	Description     types.String `tfsdk:"description"`
-	Filter          types.String `tfsdk:"filter"`
-	Level           types.Int64  `tfsdk:"level"`
-	Severity        types.String `tfsdk:"severity"`
-	Tags            types.List   `tfsdk:"tags"`
-	Categories      types.List   `tfsdk:"categories"`
-	SnapshotFiles   types.List   `tfsdk:"snapshot_files"`
-	Actions         types.List   `tfsdk:"actions"`
-	AnalyticActions types.List   `tfsdk:"analytic_actions"`
-	Context         types.List   `tfsdk:"context"`
-	Created         types.String `tfsdk:"created"`
-	Updated         types.String `tfsdk:"updated"`
+	ID              types.String   `tfsdk:"id"`
+	Name            types.String   `tfsdk:"name"`
+	InputType       types.String   `tfsdk:"input_type"`
+	Description     types.String   `tfsdk:"description"`
+	Filter          types.String   `tfsdk:"filter"`
+	Level           types.Int64    `tfsdk:"level"`
+	Severity        types.String   `tfsdk:"severity"`
+	Tags            types.List     `tfsdk:"tags"`
+	Categories      types.List     `tfsdk:"categories"`
+	SnapshotFiles   types.List     `tfsdk:"snapshot_files"`
+	Actions         types.List     `tfsdk:"actions"`
+	AnalyticActions types.List     `tfsdk:"analytic_actions"`
+	Context         types.List     `tfsdk:"context"`
+	Created         types.String   `tfsdk:"created"`
+	Updated         types.String   `tfsdk:"updated"`
+	Timeouts        timeouts.Value `tfsdk:"timeouts"`
 }
 
 // analyticActionModel maps AnalyticActionsInput / response.

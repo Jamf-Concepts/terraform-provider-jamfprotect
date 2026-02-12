@@ -91,6 +91,11 @@ func TestAnalyticResourceSchema(t *testing.T) {
 	if !desc.IsComputed() {
 		t.Error("expected 'description' to be computed")
 	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in analytic schema")
+	}
 }
 
 func TestPreventListResourceSchema(t *testing.T) {
@@ -138,6 +143,11 @@ func TestPreventListResourceSchema(t *testing.T) {
 	}
 	if !desc.IsComputed() {
 		t.Error("expected 'description' to be computed")
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in prevent list schema")
 	}
 }
 
@@ -198,6 +208,11 @@ func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 	}
 	if !enabled.IsComputed() {
 		t.Error("expected 'enabled' to be computed (has default)")
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in unified logging filter schema")
 	}
 }
 
@@ -283,6 +298,11 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	if !desc.IsComputed() {
 		t.Error("expected 'description' to be computed")
 	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in action config schema")
+	}
 }
 
 func TestActionConfigResourceMetadata(t *testing.T) {
@@ -366,6 +386,11 @@ func TestPlanResourceSchema(t *testing.T) {
 	}
 	if !autoUpdate.IsComputed() {
 		t.Error("expected 'auto_update' to be computed (has default)")
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in plan schema")
 	}
 }
 

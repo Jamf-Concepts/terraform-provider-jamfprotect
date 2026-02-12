@@ -6,7 +6,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -67,6 +69,12 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "The last-updated timestamp.",
 				Computed:            true,
 			},
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Read:   true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -95,6 +103,14 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
+	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+
 	vars, err := r.buildVariables(data)
 	if err != nil {
 		resp.Diagnostics.AddError("Error building variables", err.Error())
@@ -120,6 +136,14 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, readTimeout)
+	defer cancel()
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	var result struct {
@@ -152,6 +176,14 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	data.ID = state.ID
 
+	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+	defer cancel()
+
 	vars, err := r.buildVariables(data)
 	if err != nil {
 		resp.Diagnostics.AddError("Error building variables", err.Error())
@@ -177,6 +209,14 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+	defer cancel()
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteActionConfigMutation, vars, nil); err != nil {

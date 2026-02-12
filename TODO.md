@@ -4,7 +4,6 @@ Tracking improvements to make the provider feel idiomatic Terraform rather than 
 
 ## Remaining
 
-- [ ] **#9** Add operation timeouts via `terraform-plugin-framework-timeouts`
 - [ ] **#2** Restructure `action_config` `alert_config` from JSON blob to typed nested blocks (DO LAST)
   - Model 14 event types as optional `SingleNestedBlock`s
   - Each with `attributes` (list of strings) and `related` (list of strings)
@@ -12,6 +11,10 @@ Tracking improvements to make the provider feel idiomatic Terraform rather than 
 
 ## Completed
 
+- [x] **#9** Add operation timeouts via `terraform-plugin-framework-timeouts` v0.7.0
+  - Added `timeouts` attribute (attribute syntax, not block) to all 5 resources
+  - All CRUD operations wrapped with `context.WithTimeout` (30s default)
+  - Updated schema tests to verify `timeouts` attribute exists
 - [x] **#1** Add `stringvalidator.OneOf()` to all enum fields across all resources
   - `analytic`: `input_type`, `severity`
   - `plan`: `log_level`, `signatures_feed_config.mode`, `comms_config.protocol`, `analytic_sets.type`

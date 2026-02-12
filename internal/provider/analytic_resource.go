@@ -6,7 +6,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -152,6 +154,12 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "The last-updated timestamp.",
 				Computed:            true,
 			},
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Read:   true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -179,6 +187,14 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
 
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -208,6 +224,14 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, readTimeout)
+	defer cancel()
 
 	vars := map[string]any{"uuid": data.ID.ValueString()}
 	var result struct {
@@ -245,6 +269,14 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	data.ID = state.ID
 
+	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+	defer cancel()
+
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -273,6 +305,14 @@ func (r *AnalyticResource) Delete(ctx context.Context, req resource.DeleteReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+	defer cancel()
 
 	vars := map[string]any{"uuid": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deleteAnalyticMutation, vars, nil); err != nil {

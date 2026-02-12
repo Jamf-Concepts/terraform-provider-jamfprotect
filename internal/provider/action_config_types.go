@@ -6,18 +6,20 @@ package provider
 import (
 	"encoding/json"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ActionConfigResourceModel maps the resource schema data.
 type ActionConfigResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Hash        types.String `tfsdk:"hash"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	AlertConfig types.String `tfsdk:"alert_config"`
-	Created     types.String `tfsdk:"created"`
-	Updated     types.String `tfsdk:"updated"`
+	ID          types.String   `tfsdk:"id"`
+	Hash        types.String   `tfsdk:"hash"`
+	Name        types.String   `tfsdk:"name"`
+	Description types.String   `tfsdk:"description"`
+	AlertConfig types.String   `tfsdk:"alert_config"`
+	Created     types.String   `tfsdk:"created"`
+	Updated     types.String   `tfsdk:"updated"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
 
 // ---------------------------------------------------------------------------

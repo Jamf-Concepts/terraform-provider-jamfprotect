@@ -6,7 +6,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -79,6 +81,12 @@ func (r *PreventListResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
 			},
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Read:   true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -107,6 +115,14 @@ func (r *PreventListResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -133,6 +149,14 @@ func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, readTimeout)
+	defer cancel()
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	var result struct {
@@ -167,6 +191,14 @@ func (r *PreventListResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	data.ID = state.ID
 
+	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+	defer cancel()
+
 	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,6 +225,14 @@ func (r *PreventListResource) Delete(ctx context.Context, req resource.DeleteReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+	defer cancel()
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	if err := r.client.Query(ctx, deletePreventListMutation, vars, nil); err != nil {

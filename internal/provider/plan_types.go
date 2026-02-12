@@ -4,28 +4,30 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // PlanResourceModel maps the resource schema data.
 type PlanResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	Hash                 types.String `tfsdk:"hash"`
-	Name                 types.String `tfsdk:"name"`
-	Description          types.String `tfsdk:"description"`
-	LogLevel             types.String `tfsdk:"log_level"`
-	AutoUpdate           types.Bool   `tfsdk:"auto_update"`
-	ActionConfigs        types.String `tfsdk:"action_configs"`
-	ExceptionSets        types.List   `tfsdk:"exception_sets"`
-	Telemetry            types.String `tfsdk:"telemetry"`
-	TelemetryV2          types.String `tfsdk:"telemetry_v2"`
-	USBControlSet        types.String `tfsdk:"usb_control_set"`
-	AnalyticSets         types.List   `tfsdk:"analytic_sets"`
-	CommsConfig          types.Object `tfsdk:"comms_config"`
-	InfoSync             types.Object `tfsdk:"info_sync"`
-	SignaturesFeedConfig types.Object `tfsdk:"signatures_feed_config"`
-	Created              types.String `tfsdk:"created"`
-	Updated              types.String `tfsdk:"updated"`
+	ID                   types.String   `tfsdk:"id"`
+	Hash                 types.String   `tfsdk:"hash"`
+	Name                 types.String   `tfsdk:"name"`
+	Description          types.String   `tfsdk:"description"`
+	LogLevel             types.String   `tfsdk:"log_level"`
+	AutoUpdate           types.Bool     `tfsdk:"auto_update"`
+	ActionConfigs        types.String   `tfsdk:"action_configs"`
+	ExceptionSets        types.List     `tfsdk:"exception_sets"`
+	Telemetry            types.String   `tfsdk:"telemetry"`
+	TelemetryV2          types.String   `tfsdk:"telemetry_v2"`
+	USBControlSet        types.String   `tfsdk:"usb_control_set"`
+	AnalyticSets         types.List     `tfsdk:"analytic_sets"`
+	CommsConfig          types.Object   `tfsdk:"comms_config"`
+	InfoSync             types.Object   `tfsdk:"info_sync"`
+	SignaturesFeedConfig types.Object   `tfsdk:"signatures_feed_config"`
+	Created              types.String   `tfsdk:"created"`
+	Updated              types.String   `tfsdk:"updated"`
+	Timeouts             timeouts.Value `tfsdk:"timeouts"`
 }
 
 // planAnalyticSetModel maps PlanAnalyticSetInput / response.
