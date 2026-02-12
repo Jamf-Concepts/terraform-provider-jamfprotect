@@ -6,7 +6,9 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 | Resource                             | Description                               |
 | ------------------------------------ | ----------------------------------------- |
+| `jamfprotect_action_config`          | Manage action configurations              |
 | `jamfprotect_analytic`               | Manage analytics (threat detection rules) |
+| `jamfprotect_plan`                   | Manage plans (endpoint configurations)    |
 | `jamfprotect_prevent_list`           | Manage prevent lists (allow/block lists)  |
 | `jamfprotect_unified_logging_filter` | Manage unified logging filters            |
 
@@ -45,28 +47,84 @@ provider "jamfprotect" {}
 
 ## Usage Examples
 
+### Action Configuration
+
+```hcl
+resource "jamfprotect_action_config" "default" {
+  name        = "Default Action Config"
+  description = "Alert data enrichment settings."
+
+  alert_config = jsonencode({
+    data = {
+      binary              = { attrs = ["signingInfo"], related = ["user", "group"] }
+      clickEvent          = { attrs = [], related = ["process", "user", "group"] }
+      downloadEvent       = { attrs = [], related = ["file"] }
+      file                = { attrs = ["sha256hex", "signingInfo"], related = ["user", "group"] }
+      fsEvent             = { attrs = [], related = ["file", "process", "user", "group"] }
+      group               = { attrs = ["name"], related = [] }
+      procEvent           = { attrs = [], related = ["process"] }
+      process             = { attrs = ["args", "signingInfo"], related = ["binary", "user", "group"] }
+      screenshotEvent     = { attrs = [], related = ["file"] }
+      usbEvent            = { attrs = [], related = [] }
+      user                = { attrs = ["name"], related = [] }
+      gkEvent             = { attrs = [], related = ["process", "binary"] }
+      keylogRegisterEvent = { attrs = [], related = ["process"] }
+      mrtEvent            = { attrs = [], related = [] }
+    }
+  })
+}
+```
+
 ### Analytic
 
 ```hcl
-resource "jamfprotect_analytic" "example" {
-  name        = "Example Analytic"
-  description = "Detects example events"
-  input_type  = "Predicate"
-  filter      = "process.name == 'example'"
-  level       = "Default"
-  severity    = 1
-  tags        = ["example"]
-  categories  = ["Visibility"]
+resource "jamfprotect_analytic" "suspicious_process" {
+  name        = "Detect Suspicious Process"
+  input_type  = "GPProcessEvent"
+  description = "Detect execution of suspicious binaries."
+  filter      = "( $event.type == 1 )"
+  level       = 5
+  severity    = "High"
 
-  analytic_actions {
-    name       = "Log"
-    parameters = "{}"
+  tags           = ["security", "threat-hunting"]
+  categories     = ["Execution"]
+  snapshot_files = []
+
+  analytic_actions = [{
+    name       = "SmartGroup"
+    parameters = "{\"id\":\"smartgroup\"}"
+  }]
+
+  context = [{
+    name  = "process_path"
+    type  = "String"
+    exprs = ["$event.process.path"]
+  }]
+}
+```
+
+### Plan
+
+```hcl
+resource "jamfprotect_plan" "endpoint_security" {
+  name           = "Endpoint Security Plan"
+  description    = "Standard endpoint security plan."
+  action_configs = jamfprotect_action_config.default.id
+  auto_update    = true
+  log_level      = "ERROR"
+
+  comms_config {
+    fqdn     = "your-tenant.protect.jamfcloud.com"
+    protocol = "mqtt"
   }
 
-  context {
-    name  = "process"
-    type  = "String"
-    exprs = ["process.name"]
+  info_sync {
+    attrs                  = ["arch", "os_version", "serial"]
+    insights_sync_interval = 86400
+  }
+
+  signatures_feed_config {
+    mode = "blocking"
   }
 }
 ```
@@ -74,23 +132,23 @@ resource "jamfprotect_analytic" "example" {
 ### Prevent List
 
 ```hcl
-resource "jamfprotect_prevent_list" "example" {
-  name        = "Example Prevent List"
-  description = "Allow list for trusted apps"
-  type        = "PATH"
-  tags        = ["example"]
-  list        = ["/usr/local/bin/trusted-app"]
+resource "jamfprotect_prevent_list" "trusted_team_ids" {
+  name        = "Trusted Team IDs"
+  description = "Allow list for trusted developer teams"
+  type        = "TEAMID"
+  tags        = ["security"]
+  list        = ["ABC123DEF4"]
 }
 ```
 
 ### Unified Logging Filter
 
 ```hcl
-resource "jamfprotect_unified_logging_filter" "example" {
-  name        = "Example Filter"
-  description = "Captures auth events"
-  filter      = "subsystem == 'com.apple.Authorization'"
-  level       = "Default"
+resource "jamfprotect_unified_logging_filter" "auth_events" {
+  name        = "Auth Events"
+  description = "Captures authentication events"
+  filter      = "subsystem == \"com.apple.securityd\""
+  level       = "DEFAULT"
   tags        = ["auth"]
   enabled     = true
 }
@@ -125,7 +183,7 @@ go mod tidy
 make test
 ```
 
-**Acceptance tests** (creates real resources — requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
+**Acceptance tests** (creates real resources -- requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
 
 ```shell
 make testacc

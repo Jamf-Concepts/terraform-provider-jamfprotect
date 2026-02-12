@@ -35,7 +35,7 @@ resource "jamfprotect_unified_logging_filter" "auth_failures" {
 ### Required
 
 - `filter` (String) The predicate filter expression (NSPredicate format).
-- `level` (String) The unified logging level to capture.
+- `level` (String) The unified logging level. The only known valid value is `DEFAULT`.
 - `name` (String) The name of the unified logging filter.
 - `tags` (List of String) A list of tags for the unified logging filter.
 

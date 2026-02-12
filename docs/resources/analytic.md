@@ -13,34 +13,28 @@ Manages a custom analytic in Jamf Protect. Analytics define detection rules that
 ## Example Usage
 
 ```terraform
-provider "jamfprotect" {
-  url           = "https://your-tenant.protect.jamfcloud.com"
-  client_id     = "your-client-id"
-  client_secret = "your-client-secret"
-}
-
 resource "jamfprotect_analytic" "suspicious_process" {
   name        = "Detect Suspicious Process"
-  input_type  = "event"
+  input_type  = "GPProcessEvent"
   description = "Detect execution of suspicious binaries."
-  filter      = "process.name == 'malware'"
+  filter      = "( $event.type == 1 )"
   level       = 5
   severity    = "High"
 
   tags           = ["security", "threat-hunting"]
-  categories     = ["execution"]
+  categories     = ["Execution"]
   snapshot_files = ["/usr/bin/malware"]
 
-  analytic_actions {
-    name       = "notify"
-    parameters = ["channel=security"]
-  }
+  analytic_actions = [{
+    name       = "SmartGroup"
+    parameters = "{\"id\":\"smartgroup\"}"
+  }]
 
-  context {
+  context = [{
     name  = "process_path"
-    type  = "STRING"
-    exprs = ["process.path"]
-  }
+    type  = "String"
+    exprs = ["$event.process.path"]
+  }]
 }
 ```
 
@@ -54,7 +48,7 @@ resource "jamfprotect_analytic" "suspicious_process" {
 - `context` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context))
 - `description` (String) A description of the analytic.
 - `filter` (String) The predicate filter expression for the analytic.
-- `input_type` (String) The input type for the analytic (e.g. `event`).
+- `input_type` (String) The input type for the analytic. Valid values: `GPFSEvent`, `GPDownloadEvent`, `GPProcessEvent`, `GPScreenshotEvent`, `GPKeylogRegisterEvent`, `GPClickEvent`, `GPMRTEvent`, `GPUSBEvent`, `GPGatekeeperEvent`.
 - `level` (Number) The log level (integer) for the analytic.
 - `name` (String) The name of the analytic.
 - `severity` (String) The severity of the analytic. Valid values: `High`, `Medium`, `Low`, `Informational`.
@@ -76,11 +70,11 @@ resource "jamfprotect_analytic" "suspicious_process" {
 
 Required:
 
-- `name` (String) The action name.
+- `name` (String) The action name (e.g. `Log`, `SmartGroup`, `Webhook`).
 
 Optional:
 
-- `parameters` (List of String) Action parameters.
+- `parameters` (String) Action parameters as a JSON-encoded string (e.g. `{"id":"smartgroup"}`).
 
 
 <a id="nestedatt--context"></a>

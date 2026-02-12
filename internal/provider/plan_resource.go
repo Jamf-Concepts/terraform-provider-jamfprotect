@@ -86,7 +86,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 			},
 			"log_level": schema.StringAttribute{
-				MarkdownDescription: "The log level for the plan. Valid values include `DISABLED`, `ERROR`, `WARNING`, `INFO`, `DEBUG`.",
+				MarkdownDescription: "The log level for the plan. Valid values: `DISABLED`, `ERROR`, `WARNING`, `INFO`, `DEBUG`.",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -123,7 +123,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of analytic set (e.g. `custom`, `managed`).",
+							MarkdownDescription: "The type of analytic set (e.g. `Report`, `Prevent`).",
 							Required:            true,
 						},
 						"analytic_set": schema.StringAttribute{
@@ -142,7 +142,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 						Required:            true,
 					},
 					"protocol": schema.StringAttribute{
-						MarkdownDescription: "The protocol to use (e.g. `MQTT`).",
+						MarkdownDescription: "The protocol to use (e.g. `mqtt`).",
 						Required:            true,
 					},
 				},
@@ -167,7 +167,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
-						MarkdownDescription: "The signatures feed mode (e.g. `ON`, `OFF`).",
+						MarkdownDescription: "The signatures feed mode (e.g. `blocking`, `monitoring`, `off`).",
 						Required:            true,
 					},
 				},
@@ -586,8 +586,8 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		diags.Append(data.AnalyticSets.ElementsAs(ctx, &setModels, false)...)
 		for _, s := range setModels {
 			analyticSets = append(analyticSets, map[string]any{
-				"type":        s.Type.ValueString(),
-				"analyticSet": s.AnalyticSet.ValueString(),
+				"type": s.Type.ValueString(),
+				"uuid": s.AnalyticSet.ValueString(),
 			})
 		}
 	}
