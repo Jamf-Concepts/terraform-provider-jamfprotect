@@ -4,10 +4,22 @@
 This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/jamf-protect/), built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 with Protocol v6. The Go module path is `github.com/smithjw/terraform-provider-jamfprotect`.
 
 ## Tooling
-- Use `mise` for all toolchain setup and task execution.
-- For Jamf Protect API calls, use `fnox exec --` to inject credentials.
-- Activate mise before fnox when needed: `eval "$(mise activate)"`.
+- Use `mise` for all toolchain setup and task execution. Run `mise run <task>` to execute tasks (auto-activates tools — no need for `eval "$(mise activate)"`).
+- For Jamf Protect API calls, use `fnox exec --` to inject credentials (already embedded in relevant mise tasks like `testacc`).
 - Go >= 1.25, Terraform >= 1.0.
+
+### Available mise tasks
+| Task          | Description                                                      |
+| ------------- | ---------------------------------------------------------------- |
+| `go:build`    | Build the provider                                               |
+| `go:install`  | Build and install the provider locally (depends on `go:build`)   |
+| `go:fmt`      | Format Go source files                                           |
+| `go:lint`     | Run golangci-lint                                                |
+| `go:tidy`     | Tidy Go module dependencies                                     |
+| `test`        | Run unit tests                                                   |
+| `testacc`     | Run acceptance tests (injects credentials via `fnox exec --`)    |
+| `generate`    | Generate provider documentation with tfplugindocs                |
+| `check`       | Run fmt, lint, and unit tests (composite)                        |
 
 ## Python Scripts
 - Do not call `python` directly.
@@ -55,9 +67,9 @@ examples/                        # Example Terraform configurations
 ## Provider Development
 - Terraform Plugin Framework code lives in `internal/`.
 - The GraphQL client (`internal/graphql/client.go`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
-- Run formatting and linting before committing: `make fmt` and `make lint`.
-- Generate docs with `make generate`.
-- Run tests with `make test`; acceptance tests with `make testacc` (requires real tenant).
+- Run formatting and linting before committing: `mise run go:fmt` and `mise run go:lint`.
+- Generate docs with `mise run generate`.
+- Run tests with `mise run test`; acceptance tests with `mise run testacc` (requires real tenant).
 
 ## Environment Variables
 - `JAMFPROTECT_URL` — Base URL of the Jamf Protect tenant (e.g. `https://your-tenant.protect.jamfcloud.com`).
@@ -66,8 +78,8 @@ examples/                        # Example Terraform configurations
 - These can also be set in the provider block in Terraform configuration.
 
 ## Testing
-- **Unit tests**: `make test` — runs schema validation, helper, and client tests (no real API needed).
-- **Acceptance tests**: `make testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
+- **Unit tests**: `mise run test` — runs schema validation, helper, and client tests (no real API needed).
+- **Acceptance tests**: `mise run testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
 - Test files follow the `*_test.go` convention next to the code they test.
 
 ## Adding a New Resource
@@ -80,4 +92,4 @@ examples/                        # Example Terraform configurations
 
 ## Documentation & Examples
 - Update `docs/` and `examples/` when adding new resources or data sources.
-- Run `make generate` to regenerate documentation from schema descriptions.
+- Run `mise run generate` to regenerate documentation from schema descriptions.

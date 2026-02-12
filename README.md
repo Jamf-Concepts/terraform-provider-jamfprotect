@@ -56,26 +56,26 @@ provider "jamfprotect" {}
 ```hcl
 resource "jamfprotect_action_config" "default" {
   name        = "Default Action Config"
-  description = "Alert data enrichment settings."
+  description = "Default alert data enrichment settings."
 
-  alert_config = jsonencode({
+  alert_config = {
     data = {
-      binary              = { attrs = ["signingInfo"], related = ["user", "group"] }
-      clickEvent          = { attrs = [], related = ["process", "user", "group"] }
-      downloadEvent       = { attrs = [], related = ["file"] }
-      file                = { attrs = ["sha256hex", "signingInfo"], related = ["user", "group"] }
-      fsEvent             = { attrs = [], related = ["file", "process", "user", "group"] }
-      group               = { attrs = ["name"], related = [] }
-      procEvent           = { attrs = [], related = ["process"] }
-      process             = { attrs = ["args", "signingInfo"], related = ["binary", "user", "group"] }
-      screenshotEvent     = { attrs = [], related = ["file"] }
-      usbEvent            = { attrs = [], related = [] }
-      user                = { attrs = ["name"], related = [] }
-      gkEvent             = { attrs = [], related = ["process", "binary"] }
-      keylogRegisterEvent = { attrs = [], related = ["process"] }
-      mrtEvent            = { attrs = [], related = [] }
+      binary                = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
+      click_event           = { attrs = [], related = [] }
+      download_event        = { attrs = ["sourceUrl"], related = ["file", "process"] }
+      file                  = { attrs = ["sha256hex", "path"], related = [] }
+      fs_event              = { attrs = ["path"], related = ["process", "file"] }
+      group                 = { attrs = [], related = [] }
+      proc_event            = { attrs = ["ppid", "uid"], related = ["process"] }
+      process               = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
+      screenshot_event      = { attrs = [], related = [] }
+      usb_event             = { attrs = [], related = [] }
+      user                  = { attrs = ["name", "uid"], related = [] }
+      gk_event              = { attrs = [], related = [] }
+      keylog_register_event = { attrs = [], related = [] }
+      mrt_event             = { attrs = [], related = [] }
     }
-  })
+  }
 }
 ```
 
@@ -112,22 +112,21 @@ resource "jamfprotect_analytic" "suspicious_process" {
 ```hcl
 resource "jamfprotect_plan" "endpoint_security" {
   name           = "Endpoint Security Plan"
-  description    = "Standard endpoint security plan."
+  description    = "Standard endpoint security plan with threat prevention."
   action_configs = jamfprotect_action_config.default.id
   auto_update    = true
-  log_level      = "ERROR"
 
-  comms_config {
+  comms_config = {
     fqdn     = "your-tenant.protect.jamfcloud.com"
     protocol = "mqtt"
   }
 
-  info_sync {
-    attrs                  = ["arch", "os_version", "serial"]
+  info_sync = {
+    attrs                  = ["arch", "hostName", "serial"]
     insights_sync_interval = 86400
   }
 
-  signatures_feed_config {
+  signatures_feed_config = {
     mode = "blocking"
   }
 }
@@ -165,7 +164,7 @@ resource "jamfprotect_unified_logging_filter" "auth_events" {
 3. Build the provider:
 
 ```shell
-go install
+mise run go:build
 ```
 
 ## Developing the Provider
@@ -176,7 +175,7 @@ This provider uses [Go modules](https://github.com/golang/go/wiki/Modules). To a
 
 ```shell
 go get github.com/author/dependency
-go mod tidy
+mise run go:tidy
 ```
 
 ### Testing
@@ -184,13 +183,13 @@ go mod tidy
 **Unit tests** (no API credentials required):
 
 ```shell
-make test
+mise run test
 ```
 
 **Acceptance tests** (creates real resources -- requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
 
 ```shell
-make testacc
+mise run testacc
 ```
 
 ### Documentation
@@ -198,5 +197,5 @@ make testacc
 Generate or update documentation:
 
 ```shell
-make generate
+mise run generate
 ```

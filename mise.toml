@@ -7,3 +7,50 @@ opencode = "latest"
 prek = "latest"
 "aqua:terraform" = "latest"
 fnox = "latest"
+
+# ── Go tasks ──────────────────────────────────────────────────────────────────
+
+[tasks."go:build"]
+description = "Build the provider"
+run = "go build -v ./..."
+
+[tasks."go:install"]
+description = "Build and install the provider locally"
+run = "go install -v ./..."
+depends = ["go:build"]
+
+[tasks."go:fmt"]
+description = "Format Go source files"
+run = "gofmt -s -w -e ."
+
+[tasks."go:lint"]
+description = "Run golangci-lint"
+run = "golangci-lint run"
+
+[tasks."go:tidy"]
+description = "Tidy Go module dependencies"
+run = "go mod tidy"
+
+# ── Test tasks ────────────────────────────────────────────────────────────────
+
+[tasks.test]
+description = "Run unit tests"
+run = "go test -v -cover -timeout=120s -parallel=10 ./..."
+
+[tasks.testacc]
+description = "Run acceptance tests (requires Jamf Protect credentials via fnox)"
+run = "fnox exec -- go test -v -cover -timeout 120m ./..."
+env = { TF_ACC = "1" }
+
+# ── Documentation tasks ──────────────────────────────────────────────────────
+
+[tasks.generate]
+description = "Generate provider documentation with tfplugindocs"
+dir = "tools"
+run = "go generate ./..."
+
+# ── Composite tasks ──────────────────────────────────────────────────────────
+
+[tasks.check]
+description = "Run fmt, lint, and unit tests"
+depends = ["go:fmt", "go:lint", "test"]
