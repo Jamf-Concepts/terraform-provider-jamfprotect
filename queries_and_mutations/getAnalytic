@@ -1,0 +1,44 @@
+query getAnalytic($uuid: ID!) {
+  getAnalytic(uuid: $uuid) {
+    ...AnalyticFields
+    __typename
+  }
+}
+
+fragment AnalyticFields on Analytic {
+  uuid
+  name
+  label
+  inputType
+  filter
+  description
+  longDescription
+  created
+  updated
+  actions
+  analyticActions {
+    name
+    parameters
+    __typename
+  }
+  tenantActions {
+    name
+    parameters
+    __typename
+  }
+  tags
+  level
+  severity
+  tenantSeverity
+  snapshotFiles
+  context {
+    name
+    type
+    exprs
+    __typename
+  }
+  categories
+  jamf
+  remediation
+  __typename
+}

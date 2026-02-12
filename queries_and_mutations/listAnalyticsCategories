@@ -1,0 +1,7 @@
+query listAnalyticsCategories {
+  listAnalyticsCategories {
+    value
+    count
+    __typename
+  }
+}

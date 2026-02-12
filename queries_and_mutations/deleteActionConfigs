@@ -1,0 +1,6 @@
+mutation deleteActionConfigs($id: ID!) {
+  deleteActionConfigs(id: $id) {
+    id
+    __typename
+  }
+}

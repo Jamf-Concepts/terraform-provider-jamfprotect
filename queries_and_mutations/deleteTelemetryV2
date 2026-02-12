@@ -1,0 +1,6 @@
+mutation deleteTelemetryV2($id: ID!) {
+  deleteTelemetryV2(id: $id) {
+    id
+    __typename
+  }
+}

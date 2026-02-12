@@ -1,0 +1,19 @@
+mutation deleteUnifiedLoggingFilter($uuid: ID!) {
+  deleteUnifiedLoggingFilter(uuid: $uuid) {
+    ...UnifiedLoggingFilterFields
+    __typename
+  }
+}
+
+fragment UnifiedLoggingFilterFields on UnifiedLoggingFilter {
+  uuid
+  name
+  description
+  created
+  updated
+  filter
+  tags
+  enabled
+  level
+  __typename
+}

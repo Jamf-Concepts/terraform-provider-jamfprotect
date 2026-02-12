@@ -1,0 +1,6 @@
+mutation deleteAnalytic($uuid: ID!) {
+  deleteAnalytic(uuid: $uuid) {
+    uuid
+    __typename
+  }
+}

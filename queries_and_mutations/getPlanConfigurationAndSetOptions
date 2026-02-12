@@ -1,0 +1,76 @@
+query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+  actionConfigs: listActionConfigs(
+    input: {order: {direction: DESC, field: created}}
+  ) @include(if: $RBAC_ActionConfigs) {
+    items {
+      name
+      id
+      __typename
+    }
+    __typename
+  }
+  telemetries: listTelemetries(input: {order: {direction: DESC, field: created}}) @include(if: $RBAC_Telemetry) {
+    items {
+      name
+      id
+      __typename
+    }
+    __typename
+  }
+  telemetriesV2: listTelemetriesV2(
+    input: {order: {direction: DESC, field: created}}
+  ) @include(if: $RBAC_Telemetry) {
+    items {
+      name
+      id
+      __typename
+    }
+    __typename
+  }
+  usbControlSets: listUSBControlSets(
+    input: {order: {direction: DESC, field: created}}
+  ) @include(if: $RBAC_USBControlSet) {
+    items {
+      name
+      id
+      __typename
+    }
+    __typename
+  }
+  exceptionSets: listExceptionSets(
+    input: {order: {direction: DESC, field: created}}
+  ) @include(if: $RBAC_ExceptionSet) {
+    items {
+      name
+      uuid
+      managed
+      __typename
+    }
+    __typename
+  }
+  analyticSets: listAnalyticSets(
+    input: {order: {direction: DESC, field: created}, filter: {managed: {equals: false}}}
+  ) @include(if: $RBAC_AnalyticSet) {
+    items {
+      name
+      uuid
+      managed
+      types
+      __typename
+    }
+    __typename
+  }
+  managedAnalyticSets: listAnalyticSets(
+    input: {order: {direction: DESC, field: created}, filter: {managed: {equals: true}}}
+  ) @include(if: $RBAC_AnalyticSet) {
+    items {
+      name
+      description
+      uuid
+      managed
+      types
+      __typename
+    }
+    __typename
+  }
+}

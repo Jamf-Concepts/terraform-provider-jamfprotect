@@ -1,0 +1,17 @@
+query getPreventList($id: ID!) {
+  getPreventList(id: $id) {
+    ...PreventListFields
+    __typename
+  }
+}
+
+fragment PreventListFields on PreventList {
+  id
+  name
+  type
+  count
+  list
+  created
+  description
+  __typename
+}

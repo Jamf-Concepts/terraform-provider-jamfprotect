@@ -1,0 +1,22 @@
+mutation updateUnifiedLoggingFilter($uuid: ID!, $name: String!, $description: String, $filter: String!, $tags: [String]!, $enabled: Boolean, $level: UNIFIED_LOGGING_LEVEL!) {
+  updateUnifiedLoggingFilter(
+    uuid: $uuid
+    input: {name: $name, description: $description, filter: $filter, tags: $tags, enabled: $enabled, level: $level}
+  ) {
+    ...UnifiedLoggingFilterFields
+    __typename
+  }
+}
+
+fragment UnifiedLoggingFilterFields on UnifiedLoggingFilter {
+  uuid
+  name
+  description
+  created
+  updated
+  filter
+  tags
+  enabled
+  level
+  __typename
+}

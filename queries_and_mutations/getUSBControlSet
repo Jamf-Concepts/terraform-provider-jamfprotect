@@ -1,0 +1,47 @@
+query getUSBControlSet($id: ID!) {
+  getUSBControlSet(id: $id) {
+    ...USBControlSetFields
+    __typename
+  }
+}
+
+fragment USBControlSetFields on USBControlSet {
+  id
+  name
+  description
+  defaultMountAction
+  defaultMessageAction
+  rules {
+    mountAction
+    messageAction
+    type
+    ... on VendorRule {
+      vendors
+      applyTo
+      __typename
+    }
+    ... on SerialRule {
+      serials
+      applyTo
+      __typename
+    }
+    ... on ProductRule {
+      products {
+        vendor
+        product
+        __typename
+      }
+      applyTo
+      __typename
+    }
+    __typename
+  }
+  plans {
+    id
+    name
+    __typename
+  }
+  created
+  updated
+  __typename
+}

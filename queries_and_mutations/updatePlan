@@ -1,0 +1,76 @@
+mutation updatePlan($id: ID!, $hasLimitedAppAccess: Boolean!, $excludeAnalytics: Boolean = false, $name: String!, $description: String!, $logLevel: LOG_LEVEL_ENUM, $actionConfigs: ID!, $exceptionSets: [ID!], $telemetry: ID, $telemetryV2: ID, $analyticSets: [PlanAnalyticSetInput!], $usbControlSet: ID, $commsConfig: CommsConfigInput!, $infoSync: InfoSyncInput!, $autoUpdate: Boolean!, $signaturesFeedConfig: SignaturesFeedConfigInput!, $RBAC_AnalyticSet: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_ActionConfigs: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+  updatePlan(
+    id: $id
+    input: {name: $name, description: $description, logLevel: $logLevel, actionConfigs: $actionConfigs, exceptionSets: $exceptionSets, telemetry: $telemetry, telemetryV2: $telemetryV2, analyticSets: $analyticSets, usbControlSet: $usbControlSet, commsConfig: $commsConfig, infoSync: $infoSync, autoUpdate: $autoUpdate, signaturesFeedConfig: $signaturesFeedConfig}
+  ) {
+    ...PlanFields
+    __typename
+  }
+}
+
+fragment PlanFields on Plan {
+  id
+  hash
+  name
+  description
+  created
+  updated
+  logLevel
+  infoSync @skip(if: $hasLimitedAppAccess) {
+    attrs
+    insightsSyncInterval
+    __typename
+  }
+  autoUpdate @skip(if: $hasLimitedAppAccess)
+  commsConfig @skip(if: $hasLimitedAppAccess) {
+    fqdn
+    protocol
+    __typename
+  }
+  signaturesFeedConfig @skip(if: $hasLimitedAppAccess) {
+    mode
+    __typename
+  }
+  actionConfigs @include(if: $RBAC_ActionConfigs) {
+    id
+    name
+    __typename
+  }
+  exceptionSets @include(if: $RBAC_ExceptionSet) {
+    name
+    uuid
+    managed
+    __typename
+  }
+  usbControlSet @include(if: $RBAC_USBControlSet) {
+    name
+    id
+    __typename
+  }
+  telemetry @include(if: $RBAC_Telemetry) {
+    id
+    name
+    __typename
+  }
+  telemetryV2 @include(if: $RBAC_Telemetry) {
+    id
+    name
+    __typename
+  }
+  analyticSets @include(if: $RBAC_AnalyticSet) {
+    type
+    analyticSet {
+      uuid
+      name
+      managed
+      analytics @skip(if: $excludeAnalytics) {
+        uuid
+        categories
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

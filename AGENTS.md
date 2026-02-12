@@ -1,0 +1,83 @@
+# Repository Guidelines
+
+## Overview
+This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/jamf-protect/), built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 with Protocol v6. The Go module path is `github.com/smithjw/terraform-provider-jamfprotect`.
+
+## Tooling
+- Use `mise` for all toolchain setup and task execution.
+- For Jamf Protect API calls, use `fnox exec --` to inject credentials.
+- Activate mise before fnox when needed: `eval "$(mise activate)"`.
+- Go >= 1.25, Terraform >= 1.0.
+
+## Python Scripts
+- Do not call `python` directly.
+- Use `uv` with the script shebang format:
+  `#!/usr/bin/env -S uv run --script` and inline frontmatter.
+- Run scripts with `uv run path/to/script.py` (prefer `fnox exec -- uv run ...` for API calls).
+
+## Jamf Protect API
+- The Jamf Protect API exposes two GraphQL endpoints:
+  - `/graphql` — limited scope, supports introspection.
+  - `/app` — full API surface, introspection disabled. **The provider uses this endpoint for all operations.**
+- Token endpoint: `POST ${JAMFPROTECT_URL}/token` with `client_id` + `password` fields → returns `access_token` (no Bearer prefix). Tokens are cached for 25 minutes.
+- Helper scripts in `tools/scripts/`:
+  - `introspect_jamfprotect_schema.py` — introspects `/graphql` for type discovery.
+  - `describe_jamfprotect_graphql.py` — describes types from introspection output.
+  - `mutation.py` — run arbitrary mutations against `/app`.
+- Captured queries and mutations from browser DevTools live in `queries_and_mutations/` (42 operations covering ActionConfigs, Analytic, AnalyticSets, Plan, PreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
+
+## Project Structure
+```
+main.go                          # Provider entry point (registry.terraform.io/smithjw/jamfprotect)
+internal/
+  graphql/
+    client.go                    # Thread-safe GraphQL client with token caching & sentinel errors
+    client_test.go               # Unit tests (httptest-based)
+  provider/
+    provider.go                  # JamfProtectProvider (url, client_id, client_secret)
+    provider_test.go             # Provider acceptance test helpers
+    helpers.go                   # listToStrings / stringsToList utilities
+    helpers_test.go              # Helper unit tests
+    schema_test.go               # Schema validation unit tests
+    analytic_resource.go         # jamfprotect_analytic (CRUD + import)
+    analytic_resource_test.go    # Acceptance tests
+    prevent_list_resource.go     # jamfprotect_prevent_list (CRUD + import)
+    prevent_list_resource_test.go
+    unified_logging_filter_resource.go    # jamfprotect_unified_logging_filter (CRUD + import)
+    unified_logging_filter_resource_test.go
+queries_and_mutations/           # 42 captured GraphQL operations (reference material)
+tools/
+  scripts/                       # Python helper scripts for API discovery
+docs/                            # Generated provider documentation
+examples/                        # Example Terraform configurations
+```
+
+## Provider Development
+- Terraform Plugin Framework code lives in `internal/`.
+- The GraphQL client (`internal/graphql/client.go`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
+- Run formatting and linting before committing: `make fmt` and `make lint`.
+- Generate docs with `make generate`.
+- Run tests with `make test`; acceptance tests with `make testacc` (requires real tenant).
+
+## Environment Variables
+- `JAMFPROTECT_URL` — Base URL of the Jamf Protect tenant (e.g. `https://your-tenant.protect.jamfcloud.com`).
+- `JAMFPROTECT_CLIENT_ID` — API client ID for authentication.
+- `JAMFPROTECT_CLIENT_SECRET` — API client secret for authentication.
+- These can also be set in the provider block in Terraform configuration.
+
+## Testing
+- **Unit tests**: `make test` — runs schema validation, helper, and client tests (no real API needed).
+- **Acceptance tests**: `make testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
+- Test files follow the `*_test.go` convention next to the code they test.
+
+## Adding a New Resource
+1. Capture the relevant GraphQL queries/mutations (see `queries_and_mutations/` for examples).
+2. Create `internal/provider/<resource_name>_resource.go` implementing `resource.Resource` with CRUD + `ImportState`.
+3. Register the resource in `provider.go` → `Resources()`.
+4. Create `internal/provider/<resource_name>_resource_test.go` with acceptance tests.
+5. Add schema validation tests in `schema_test.go`.
+6. Update `docs/` and `examples/` with documentation and example `.tf` files.
+
+## Documentation & Examples
+- Update `docs/` and `examples/` when adding new resources or data sources.
+- Run `make generate` to regenerate documentation from schema descriptions.

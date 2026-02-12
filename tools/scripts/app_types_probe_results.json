@@ -1,0 +1,387 @@
+{
+  "ANALYTIC_SET_TYPE": [
+    {
+      "data": {
+        "listAnalyticSets": {
+          "items": [
+            {
+              "types": [
+                "Report"
+              ]
+            },
+            {
+              "types": [
+                "Report"
+              ]
+            },
+            {
+              "types": [
+                "Report"
+              ]
+            },
+            {
+              "types": [
+                "Prevent"
+              ]
+            },
+            {
+              "types": [
+                "Report",
+                "Prevent"
+              ]
+            }
+          ]
+        }
+      },
+      "info": "No errors returned \u2014 query succeeded"
+    }
+  ],
+  "ActionConfigsAlertConfigInput": [
+    {
+      "locations": [
+        {
+          "column": 32,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.alertConfig' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='alertConfig', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}]}' is missing required fields '[data]' @ 'createActionConfigs'",
+      "path": null
+    }
+  ],
+  "ActionConfigsOrderField": [
+    {
+      "locations": [
+        {
+          "column": 27,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'ActionConfigsOrderField' @ 'listActionConfigs'",
+      "path": null
+    }
+  ],
+  "AnalyticActionsInput": [
+    {
+      "locations": [
+        {
+          "column": 27,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.analyticActions[0]' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='inputType', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='filter', value=StringValue{value='x'}}, ObjectField{name='analyticActions', value=ArrayValue{values=[ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}]}}, ObjectField{name='tags', value=ArrayValue{values=[]}}, ObjectField{name='categories', value=ArrayValue{values=[]}}, ObjectField{name='context', value=ArrayValue{values=[]}}, ObjectField{name='level', value=IntValue{value=0}}, ObjectField{name='severity', value=EnumValue{name='Informational'}}, ObjectField{name='snapshotFiles', value=ArrayValue{values=[]}}]}' is missing required fields '[name, parameters]' @ 'createAnalytic'",
+      "path": null
+    }
+  ],
+  "AnalyticContextInput": [
+    {
+      "locations": [
+        {
+          "column": 27,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.context[0]' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='inputType', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='filter', value=StringValue{value='x'}}, ObjectField{name='analyticActions', value=ArrayValue{values=[]}}, ObjectField{name='tags', value=ArrayValue{values=[]}}, ObjectField{name='categories', value=ArrayValue{values=[]}}, ObjectField{name='context', value=ArrayValue{values=[ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}]}}, ObjectField{name='level', value=IntValue{value=0}}, ObjectField{name='severity', value=EnumValue{name='Informational'}}, ObjectField{name='snapshotFiles', value=ArrayValue{values=[]}}]}' contains a field not in 'AnalyticContextInput': 'INVALID_FIELD' @ 'createAnalytic'",
+      "path": null
+    }
+  ],
+  "AnalyticSetFiltersInput": [
+    {
+      "locations": [
+        {
+          "column": 26,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.filter' with value 'ObjectValue{objectFields=[ObjectField{name='order', value=ObjectValue{objectFields=[ObjectField{name='direction', value=EnumValue{name='DESC'}}, ObjectField{name='field', value=EnumValue{name='created'}}]}}, ObjectField{name='filter', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}]}' contains a field not in 'AnalyticSetFiltersInput': 'INVALID_FIELD' @ 'listAnalyticSets'",
+      "path": null
+    }
+  ],
+  "AnalyticSetOrderField": [
+    {
+      "locations": [
+        {
+          "column": 26,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'AnalyticSetOrderField' @ 'listAnalyticSets'",
+      "path": null
+    }
+  ],
+  "CommsConfigInput": [
+    {
+      "locations": [
+        {
+          "column": 23,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.commsConfig' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='actionConfigs', value=StringValue{value='x'}}, ObjectField{name='analyticSets', value=ArrayValue{values=[]}}, ObjectField{name='commsConfig', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}, ObjectField{name='infoSync', value=ObjectValue{objectFields=[ObjectField{name='attrs', value=ArrayValue{values=[]}}]}}, ObjectField{name='autoUpdate', value=BooleanValue{value=false}}, ObjectField{name='signaturesFeedConfig', value=ObjectValue{objectFields=[ObjectField{name='mode', value=EnumValue{name='INVALID'}}]}}]}' is missing required fields '[protocol, fqdn]' @ 'createPlan'",
+      "path": null
+    }
+  ],
+  "ES_EVENTS_ENUM": [
+    {
+      "locations": [
+        {
+          "column": 30,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.events[0]' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'ES_EVENTS_ENUM' @ 'createTelemetryV2'",
+      "path": null
+    }
+  ],
+  "InfoSyncInput": [
+    {
+      "locations": [
+        {
+          "column": 23,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.infoSync' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='actionConfigs', value=StringValue{value='x'}}, ObjectField{name='analyticSets', value=ArrayValue{values=[]}}, ObjectField{name='commsConfig', value=ObjectValue{objectFields=[ObjectField{name='fqdn', value=StringValue{value='x'}}, ObjectField{name='protocol', value=StringValue{value='x'}}]}}, ObjectField{name='infoSync', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}, ObjectField{name='autoUpdate', value=BooleanValue{value=false}}, ObjectField{name='signaturesFeedConfig', value=ObjectValue{objectFields=[ObjectField{name='mode', value=EnumValue{name='INVALID'}}]}}]}' is missing required fields '[insightsSyncInterval, attrs]' @ 'createPlan'",
+      "path": null
+    }
+  ],
+  "LOG_LEVEL_ENUM": [
+    {
+      "data": {
+        "__type_probe": {
+          "items": [
+            {
+              "logLevel": "ERROR"
+            },
+            {
+              "logLevel": "ERROR"
+            },
+            {
+              "logLevel": "ERROR"
+            },
+            {
+              "logLevel": "ERROR"
+            }
+          ]
+        }
+      },
+      "info": "No errors returned \u2014 query succeeded"
+    }
+  ],
+  "OrderDirection": [
+    {
+      "locations": [
+        {
+          "column": 23,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type UnknownArgument: Unknown field argument input @ 'listAnalytics'",
+      "path": null
+    }
+  ],
+  "PREVENT_LIST_TYPE": [
+    {
+      "locations": [
+        {
+          "column": 30,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.type' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'PREVENT_LIST_TYPE' @ 'createPreventList'",
+      "path": null
+    }
+  ],
+  "PlanAnalyticSetInput": [
+    {
+      "locations": [
+        {
+          "column": 23,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.analyticSets[0]' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='actionConfigs', value=StringValue{value='x'}}, ObjectField{name='analyticSets', value=ArrayValue{values=[ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}]}}, ObjectField{name='commsConfig', value=ObjectValue{objectFields=[ObjectField{name='fqdn', value=StringValue{value='x'}}, ObjectField{name='protocol', value=StringValue{value='x'}}]}}, ObjectField{name='infoSync', value=ObjectValue{objectFields=[ObjectField{name='attrs', value=ArrayValue{values=[]}}]}}, ObjectField{name='autoUpdate', value=BooleanValue{value=false}}, ObjectField{name='signaturesFeedConfig', value=ObjectValue{objectFields=[ObjectField{name='mode', value=EnumValue{name='INVALID'}}]}}]}' is missing required fields '[type, uuid]' @ 'createPlan'",
+      "path": null
+    }
+  ],
+  "PlanOrderField": [
+    {
+      "locations": [
+        {
+          "column": 19,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'PlanOrderField' @ 'listPlans'",
+      "path": null
+    }
+  ],
+  "PreventListFilterInput": [
+    {
+      "locations": [
+        {
+          "column": 26,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.filter' with value 'ObjectValue{objectFields=[ObjectField{name='order', value=ObjectValue{objectFields=[ObjectField{name='direction', value=EnumValue{name='DESC'}}, ObjectField{name='field', value=EnumValue{name='created'}}]}}, ObjectField{name='filter', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}]}' contains a field not in 'PreventListFilterInput': 'INVALID_FIELD' @ 'listPreventLists'",
+      "path": null
+    }
+  ],
+  "PreventListOrderField": [
+    {
+      "locations": [
+        {
+          "column": 26,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'PreventListOrderField' @ 'listPreventLists'",
+      "path": null
+    }
+  ],
+  "ReportClientInput": [
+    {
+      "locations": [
+        {
+          "column": 32,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.alertConfig' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='alertConfig', value=ObjectValue{objectFields=[]}}, ObjectField{name='clients', value=ArrayValue{values=[ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}]}}]}' is missing required fields '[data]' @ 'createActionConfigs'",
+      "path": null
+    }
+  ],
+  "SEVERITY": [
+    {
+      "locations": [
+        {
+          "column": 27,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.severity' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'SEVERITY' @ 'createAnalytic'",
+      "path": null
+    }
+  ],
+  "SignaturesFeedConfigInput": [
+    {
+      "locations": [
+        {
+          "column": 23,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.infoSync' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='description', value=StringValue{value='x'}}, ObjectField{name='actionConfigs', value=StringValue{value='x'}}, ObjectField{name='analyticSets', value=ArrayValue{values=[]}}, ObjectField{name='commsConfig', value=ObjectValue{objectFields=[ObjectField{name='fqdn', value=StringValue{value='x'}}, ObjectField{name='protocol', value=StringValue{value='x'}}]}}, ObjectField{name='infoSync', value=ObjectValue{objectFields=[ObjectField{name='attrs', value=ArrayValue{values=[]}}]}}, ObjectField{name='autoUpdate', value=BooleanValue{value=false}}, ObjectField{name='signaturesFeedConfig', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}]}' is missing required fields '[insightsSyncInterval]' @ 'createPlan'",
+      "path": null
+    }
+  ],
+  "TelemetryOrderField": [
+    {
+      "locations": [
+        {
+          "column": 25,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'TelemetryOrderField' @ 'listTelemetries'",
+      "path": null
+    }
+  ],
+  "UNIFIED_LOGGING_LEVEL": [
+    {
+      "locations": [
+        {
+          "column": 39,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.level' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'UNIFIED_LOGGING_LEVEL' @ 'createUnifiedLoggingFilter'",
+      "path": null
+    }
+  ],
+  "USBCONTROL_MOUNT_ACTION_TYPE_ENUM": [
+    {
+      "locations": [
+        {
+          "column": 32,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.defaultMountAction' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'USBCONTROL_MOUNT_ACTION_TYPE_ENUM' @ 'createUSBControlSet'",
+      "path": null
+    }
+  ],
+  "USBControlOrderField": [
+    {
+      "locations": [
+        {
+          "column": 28,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'USBControlOrderField' @ 'listUSBControlSets'",
+      "path": null
+    }
+  ],
+  "USBControlRuleInput": [
+    {
+      "locations": [
+        {
+          "column": 32,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.rules[0]' with value 'ObjectValue{objectFields=[ObjectField{name='name', value=StringValue{value='x'}}, ObjectField{name='defaultMountAction', value=EnumValue{name='ReadOnly'}}, ObjectField{name='rules', value=ArrayValue{values=[ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}]}}]}' is missing required fields '[type]' @ 'createUSBControlSet'",
+      "path": null
+    }
+  ],
+  "UnifiedLoggingFiltersFilterInput": [
+    {
+      "locations": [
+        {
+          "column": 35,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.filter' with value 'ObjectValue{objectFields=[ObjectField{name='order', value=ObjectValue{objectFields=[ObjectField{name='direction', value=EnumValue{name='DESC'}}, ObjectField{name='field', value=EnumValue{name='created'}}]}}, ObjectField{name='filter', value=ObjectValue{objectFields=[ObjectField{name='INVALID_FIELD', value=BooleanValue{value=true}}]}}]}' contains a field not in 'UnifiedLoggingFiltersFilterInput': 'INVALID_FIELD' @ 'listUnifiedLoggingFilters'",
+      "path": null
+    }
+  ],
+  "UnifiedLoggingFiltersOrderField": [
+    {
+      "locations": [
+        {
+          "column": 35,
+          "line": 1,
+          "sourceName": null
+        }
+      ],
+      "message": "Validation error of type WrongType: argument 'input.order.field' with value 'EnumValue{name='INVALID_VALUE'}' is not a valid 'UnifiedLoggingFiltersOrderField' @ 'listUnifiedLoggingFilters'",
+      "path": null
+    }
+  ]
+}

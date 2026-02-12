@@ -1,0 +1,109 @@
+query listPlans($nextToken: String, $direction: OrderDirection!, $field: PlanOrderField!, $hasLimitedAppAccess: Boolean!, $excludeAnalytics: Boolean = true, $minimal: Boolean = false, $RBAC_AnalyticSet: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_ActionConfigs: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+  listPlans(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items: items @skip(if: $minimal) {
+      ...PlanFields
+      __typename
+    }
+    items: items @include(if: $minimal) {
+      id
+      name
+      infoSync @skip(if: $hasLimitedAppAccess) {
+        attrs
+        insightsSyncInterval
+        __typename
+      }
+      actionConfigs @include(if: $RBAC_ActionConfigs) {
+        id
+        __typename
+      }
+      telemetry @include(if: $RBAC_Telemetry) {
+        id
+        __typename
+      }
+      telemetryV2 @include(if: $RBAC_Telemetry) {
+        id
+        __typename
+      }
+      signaturesFeedConfig @skip(if: $hasLimitedAppAccess) {
+        mode
+        __typename
+      }
+      __typename
+    }
+    pageInfo {
+      next
+      total
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment PlanFields on Plan {
+  id
+  hash
+  name
+  description
+  created
+  updated
+  logLevel
+  infoSync @skip(if: $hasLimitedAppAccess) {
+    attrs
+    insightsSyncInterval
+    __typename
+  }
+  autoUpdate @skip(if: $hasLimitedAppAccess)
+  commsConfig @skip(if: $hasLimitedAppAccess) {
+    fqdn
+    protocol
+    __typename
+  }
+  signaturesFeedConfig @skip(if: $hasLimitedAppAccess) {
+    mode
+    __typename
+  }
+  actionConfigs @include(if: $RBAC_ActionConfigs) {
+    id
+    name
+    __typename
+  }
+  exceptionSets @include(if: $RBAC_ExceptionSet) {
+    name
+    uuid
+    managed
+    __typename
+  }
+  usbControlSet @include(if: $RBAC_USBControlSet) {
+    name
+    id
+    __typename
+  }
+  telemetry @include(if: $RBAC_Telemetry) {
+    id
+    name
+    __typename
+  }
+  telemetryV2 @include(if: $RBAC_Telemetry) {
+    id
+    name
+    __typename
+  }
+  analyticSets @include(if: $RBAC_AnalyticSet) {
+    type
+    analyticSet {
+      uuid
+      name
+      managed
+      analytics @skip(if: $excludeAnalytics) {
+        uuid
+        categories
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

@@ -1,0 +1,14 @@
+query listPlanNames($nextToken: String) {
+  listPlanNames: listPlans(input: {next: $nextToken}) {
+    items {
+      name
+      __typename
+    }
+    pageInfo {
+      next
+      total
+      __typename
+    }
+    __typename
+  }
+}

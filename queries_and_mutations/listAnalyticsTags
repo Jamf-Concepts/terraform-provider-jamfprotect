@@ -1,0 +1,7 @@
+query listAnalyticsTags {
+  listAnalyticsTags {
+    value
+    count
+    __typename
+  }
+}

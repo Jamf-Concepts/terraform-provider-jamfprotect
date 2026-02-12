@@ -1,0 +1,9 @@
+[env]
+FNOX_PROFILE = "{{ env.ENV_NAME | default(value='dev') }}"
+
+[tools]
+go = "latest"
+opencode = "latest"
+prek = "latest"
+"aqua:terraform" = "latest"
+fnox = "latest"

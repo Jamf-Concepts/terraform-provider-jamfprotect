@@ -1,0 +1,6 @@
+mutation deletePlan($id: ID!) {
+  deletePlan(id: $id) {
+    id
+    __typename
+  }
+}

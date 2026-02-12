@@ -1,64 +1,140 @@
-# Terraform Provider Scaffolding (Terraform Plugin Framework)
+# Terraform Provider for Jamf Protect
 
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://developer.hashicorp.com/terraform/plugin/framework-benefits) in the Terraform documentation for additional information._
+The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://www.jamf.com/products/jamf-protect/) resources via the Jamf Protect GraphQL API. Built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 (Protocol v6).
 
-This repository is a *template* for a [Terraform](https://www.terraform.io) provider. It is intended as a starting point for creating Terraform providers, containing:
+## Supported Resources
 
-- A resource and a data source (`internal/provider/`),
-- Examples (`examples/`) and generated documentation (`docs/`),
-- Miscellaneous meta files.
+| Resource                             | Description                               |
+| ------------------------------------ | ----------------------------------------- |
+| `jamfprotect_analytic`               | Manage analytics (threat detection rules) |
+| `jamfprotect_prevent_list`           | Manage prevent lists (allow/block lists)  |
+| `jamfprotect_unified_logging_filter` | Manage unified logging filters            |
 
-These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Developer](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework) platform. _Terraform Plugin Framework specific guides are titled accordingly._
-
-Please see the [GitHub template repository documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) for how to create a new repository from this template on GitHub.
-
-Once you've written your provider, you'll want to [publish it on the Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers/publishing) so that others can use it.
+All resources support full CRUD operations and `terraform import`.
 
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.24
+- [Go](https://golang.org/doc/install) >= 1.25 (to build the provider)
+
+## Authentication
+
+The provider authenticates against the Jamf Protect API using an API client. Configure credentials via the provider block or environment variables:
+
+| Provider Attribute | Environment Variable        | Description                                                 |
+| ------------------ | --------------------------- | ----------------------------------------------------------- |
+| `url`              | `JAMFPROTECT_URL`           | Base URL (e.g. `https://your-tenant.protect.jamfcloud.com`) |
+| `client_id`        | `JAMFPROTECT_CLIENT_ID`     | API client ID                                               |
+| `client_secret`    | `JAMFPROTECT_CLIENT_SECRET` | API client secret                                           |
+
+### Example Provider Configuration
+
+```hcl
+provider "jamfprotect" {
+  url           = "https://your-tenant.protect.jamfcloud.com"
+  client_id     = var.jamfprotect_client_id
+  client_secret = var.jamfprotect_client_secret
+}
+```
+
+Or use environment variables and leave the provider block empty:
+
+```hcl
+provider "jamfprotect" {}
+```
+
+## Usage Examples
+
+### Analytic
+
+```hcl
+resource "jamfprotect_analytic" "example" {
+  name        = "Example Analytic"
+  description = "Detects example events"
+  input_type  = "Predicate"
+  filter      = "process.name == 'example'"
+  level       = "Default"
+  severity    = 1
+  tags        = ["example"]
+  categories  = ["Visibility"]
+
+  analytic_actions {
+    name       = "Log"
+    parameters = "{}"
+  }
+
+  context {
+    name  = "process"
+    type  = "String"
+    exprs = ["process.name"]
+  }
+}
+```
+
+### Prevent List
+
+```hcl
+resource "jamfprotect_prevent_list" "example" {
+  name        = "Example Prevent List"
+  description = "Allow list for trusted apps"
+  type        = "PATH"
+  tags        = ["example"]
+  list        = ["/usr/local/bin/trusted-app"]
+}
+```
+
+### Unified Logging Filter
+
+```hcl
+resource "jamfprotect_unified_logging_filter" "example" {
+  name        = "Example Filter"
+  description = "Captures auth events"
+  filter      = "subsystem == 'com.apple.Authorization'"
+  level       = "Default"
+  tags        = ["auth"]
+  enabled     = true
+}
+```
 
 ## Building The Provider
 
 1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
+2. Enter the repository directory
+3. Build the provider:
 
 ```shell
 go install
 ```
 
-## Adding Dependencies
+## Developing the Provider
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+### Dependencies
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+This provider uses [Go modules](https://github.com/golang/go/wiki/Modules). To add a new dependency:
 
 ```shell
 go get github.com/author/dependency
 go mod tidy
 ```
 
-Then commit the changes to `go.mod` and `go.sum`.
+### Testing
 
-## Using the provider
+**Unit tests** (no API credentials required):
 
-Fill this in for each provider
+```shell
+make test
+```
 
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `make generate`.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
+**Acceptance tests** (creates real resources — requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
 
 ```shell
 make testacc
+```
+
+### Documentation
+
+Generate or update documentation:
+
+```shell
+make generate
 ```

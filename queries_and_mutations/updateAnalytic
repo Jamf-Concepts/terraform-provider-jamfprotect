@@ -1,0 +1,47 @@
+mutation updateAnalytic($uuid: ID!, $name: String!, $inputType: String!, $description: String!, $actions: [String], $analyticActions: [AnalyticActionsInput]!, $tags: [String]!, $categories: [String]!, $filter: String!, $context: [AnalyticContextInput]!, $level: Int!, $severity: SEVERITY, $snapshotFiles: [String]!) {
+  updateAnalytic(
+    uuid: $uuid
+    input: {name: $name, inputType: $inputType, description: $description, actions: $actions, analyticActions: $analyticActions, categories: $categories, tags: $tags, filter: $filter, context: $context, level: $level, severity: $severity, snapshotFiles: $snapshotFiles}
+  ) {
+    ...AnalyticFields
+    __typename
+  }
+}
+
+fragment AnalyticFields on Analytic {
+  uuid
+  name
+  label
+  inputType
+  filter
+  description
+  longDescription
+  created
+  updated
+  actions
+  analyticActions {
+    name
+    parameters
+    __typename
+  }
+  tenantActions {
+    name
+    parameters
+    __typename
+  }
+  tags
+  level
+  severity
+  tenantSeverity
+  snapshotFiles
+  context {
+    name
+    type
+    exprs
+    __typename
+  }
+  categories
+  jamf
+  remediation
+  __typename
+}

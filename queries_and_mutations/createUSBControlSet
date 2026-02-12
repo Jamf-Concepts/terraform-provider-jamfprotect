@@ -1,0 +1,49 @@
+mutation createUSBControlSet($name: String!, $description: String, $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!, $defaultMessageAction: String, $rules: [USBControlRuleInput!]!) {
+  createUSBControlSet(
+    input: {name: $name, description: $description, defaultMountAction: $defaultMountAction, defaultMessageAction: $defaultMessageAction, rules: $rules}
+  ) {
+    ...USBControlSetFields
+    __typename
+  }
+}
+
+fragment USBControlSetFields on USBControlSet {
+  id
+  name
+  description
+  defaultMountAction
+  defaultMessageAction
+  rules {
+    mountAction
+    messageAction
+    type
+    ... on VendorRule {
+      vendors
+      applyTo
+      __typename
+    }
+    ... on SerialRule {
+      serials
+      applyTo
+      __typename
+    }
+    ... on ProductRule {
+      products {
+        vendor
+        product
+        __typename
+      }
+      applyTo
+      __typename
+    }
+    __typename
+  }
+  plans {
+    id
+    name
+    __typename
+  }
+  created
+  updated
+  __typename
+}

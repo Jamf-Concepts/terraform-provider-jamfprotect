@@ -1,0 +1,9 @@
+query listUnifiedLoggingFilterNames {
+  listUnifiedLoggingFilterNames: listUnifiedLoggingFilters {
+    items {
+      name
+      __typename
+    }
+    __typename
+  }
+}

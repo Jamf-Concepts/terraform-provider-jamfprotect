@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/smithjw/terraform-provider-jamfprotect
 
 go 1.25.5
 

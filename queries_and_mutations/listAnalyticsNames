@@ -1,0 +1,9 @@
+query listAnalyticsNames {
+  listAnalyticsNames: listAnalytics {
+    items {
+      name
+      __typename
+    }
+    __typename
+  }
+}
