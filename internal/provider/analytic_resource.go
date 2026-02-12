@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -55,7 +56,7 @@ type AnalyticResourceModel struct {
 // analyticActionModel maps AnalyticActionsInput / response.
 type analyticActionModel struct {
 	Name       types.String `tfsdk:"name"`
-	Parameters types.String `tfsdk:"parameters"`
+	Parameters types.Map    `tfsdk:"parameters"`
 }
 
 // analyticContextModel maps AnalyticContextInput / response.
@@ -149,9 +150,10 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 							MarkdownDescription: "The action name (e.g. `Log`, `SmartGroup`, `Webhook`).",
 							Required:            true,
 						},
-						"parameters": schema.StringAttribute{
-							MarkdownDescription: "Action parameters as a JSON-encoded string (e.g. `{\"id\":\"smartgroup\"}`).",
+						"parameters": schema.MapAttribute{
+							MarkdownDescription: "Action parameters as key-value pairs (e.g. `{id = \"smartgroup\"}`).",
 							Optional:            true,
+							ElementType:         types.StringType,
 						},
 					},
 				},
@@ -525,8 +527,16 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 		diags.Append(data.AnalyticActions.ElementsAs(ctx, &actionModels, false)...)
 		for _, a := range actionModels {
 			m := map[string]any{"name": a.Name.ValueString()}
-			if !a.Parameters.IsNull() && a.Parameters.ValueString() != "" {
-				m["parameters"] = a.Parameters.ValueString()
+			if !a.Parameters.IsNull() && len(a.Parameters.Elements()) > 0 {
+				// Convert the map to a JSON-encoded string for the API.
+				paramMap := make(map[string]string, len(a.Parameters.Elements()))
+				diags.Append(a.Parameters.ElementsAs(ctx, &paramMap, false)...)
+				jsonBytes, err := json.Marshal(paramMap)
+				if err != nil {
+					diags.AddError("Error encoding parameters", err.Error())
+					return nil
+				}
+				m["parameters"] = string(jsonBytes)
 			}
 			actions = append(actions, m)
 		}
@@ -589,13 +599,25 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 	// Analytic actions.
 	actionAttrTypes := map[string]attr.Type{
 		"name":       types.StringType,
-		"parameters": types.StringType,
+		"parameters": types.MapType{ElemType: types.StringType},
 	}
 	var actionVals []attr.Value
 	for _, a := range api.AnalyticActions {
-		paramVal := types.StringNull()
+		paramVal := types.MapNull(types.StringType)
 		if a.Parameters != "" {
-			paramVal = types.StringValue(a.Parameters)
+			var paramMap map[string]string
+			if err := json.Unmarshal([]byte(a.Parameters), &paramMap); err != nil {
+				diags.AddError("Error decoding parameters",
+					fmt.Sprintf("Failed to parse parameters JSON %q: %s", a.Parameters, err.Error()))
+				return
+			}
+			paramElements := make(map[string]attr.Value, len(paramMap))
+			for k, v := range paramMap {
+				paramElements[k] = types.StringValue(v)
+			}
+			mapVal, d := types.MapValue(types.StringType, paramElements)
+			diags.Append(d...)
+			paramVal = mapVal
 		}
 		actionVals = append(actionVals, types.ObjectValueMust(actionAttrTypes, map[string]attr.Value{
 			"name":       types.StringValue(a.Name),

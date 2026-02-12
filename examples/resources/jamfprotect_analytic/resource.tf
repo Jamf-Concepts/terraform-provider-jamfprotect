@@ -11,8 +11,10 @@ resource "jamfprotect_analytic" "suspicious_process" {
   snapshot_files = ["/usr/bin/malware"]
 
   analytic_actions = [{
-    name       = "SmartGroup"
-    parameters = "{\"id\":\"smartgroup\"}"
+    name = "SmartGroup"
+    parameters = {
+      id = "smartgroup"
+    }
   }]
 
   context = [{

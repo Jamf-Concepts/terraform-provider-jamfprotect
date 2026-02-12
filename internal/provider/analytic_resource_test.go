@@ -81,7 +81,7 @@ func TestAccAnalyticResource_withActions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.name", "SmartGroup"),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.parameters", `{"id":"smartgroup"}`),
+					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.parameters.id", "smartgroup"),
 					resource.TestCheckResourceAttr(resourceName, "context.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "context.0.name", "name"),
 					resource.TestCheckResourceAttr(resourceName, "context.0.type", "String"),
@@ -127,7 +127,9 @@ resource "jamfprotect_analytic" "test" {
 
   analytic_actions = [{
     name       = "SmartGroup"
-    parameters = "{\"id\":\"smartgroup\"}"
+    parameters = {
+      id = "smartgroup"
+    }
   }]
 
   context = [{
