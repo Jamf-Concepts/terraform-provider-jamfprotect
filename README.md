@@ -201,3 +201,51 @@ Generate or update documentation:
 ```shell
 mise run generate
 ```
+
+## Publishing to Terraform Registry
+
+The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/smithjw/jamfprotect) via GitHub releases with GPG-signed checksums.
+
+### Prerequisites
+
+1. **Terraform Registry account**: Sign in at [registry.terraform.io](https://registry.terraform.io) with your GitHub account and authorize the `smithjw` namespace.
+2. **GPG signing key**: Generate a GPG key pair and add the public key to the Terraform Registry under [User Settings > Signing Keys](https://registry.terraform.io/settings/gpg-keys). The private key and passphrase must be stored as GitHub Actions secrets (`GPG_PRIVATE_KEY`, `PASSPHRASE`).
+3. **GitHub repository settings**: Ensure the repository is public and the release workflow has write access to contents.
+
+### Release Process
+
+1. Ensure all tests pass:
+   ```shell
+   mise run check
+   ```
+
+2. Regenerate documentation and verify no drift:
+   ```shell
+   mise run generate
+   git diff --exit-code
+   ```
+
+3. Create and push a version tag:
+   ```shell
+   git tag v0.1.0-alpha.1
+   git push origin v0.1.0-alpha.1
+   ```
+
+4. The [release workflow](.github/workflows/release.yml) automatically:
+   - Builds binaries for all supported platforms (linux, darwin, windows, freebsd × amd64, arm64, etc.)
+   - Generates SHA256 checksums and signs them with GPG
+   - Creates a GitHub release with the binaries, checksums, and Terraform registry manifest
+   - The Terraform Registry detects the new release and publishes it
+
+### Using the Alpha Provider
+
+```hcl
+terraform {
+  required_providers {
+    jamfprotect = {
+      source  = "smithjw/jamfprotect"
+      version = "0.1.0-alpha.1"
+    }
+  }
+}
+```
