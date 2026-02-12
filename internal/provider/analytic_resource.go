@@ -53,7 +53,7 @@ type AnalyticResourceModel struct {
 // analyticActionModel maps AnalyticActionsInput / response.
 type analyticActionModel struct {
 	Name       types.String `tfsdk:"name"`
-	Parameters types.List   `tfsdk:"parameters"`
+	Parameters types.String `tfsdk:"parameters"`
 }
 
 // analyticContextModel maps AnalyticContextInput / response.
@@ -81,7 +81,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 			},
 			"input_type": schema.StringAttribute{
-				MarkdownDescription: "The input type for the analytic (e.g. `event`).",
+				MarkdownDescription: "The input type for the analytic. Valid values: `GPFSEvent`, `GPDownloadEvent`, `GPProcessEvent`, `GPScreenshotEvent`, `GPKeylogRegisterEvent`, `GPClickEvent`, `GPMRTEvent`, `GPUSBEvent`, `GPGatekeeperEvent`.",
 				Required:            true,
 			},
 			"description": schema.StringAttribute{
@@ -126,13 +126,12 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							MarkdownDescription: "The action name.",
+							MarkdownDescription: "The action name (e.g. `Log`, `SmartGroup`, `Webhook`).",
 							Required:            true,
 						},
-						"parameters": schema.ListAttribute{
-							MarkdownDescription: "Action parameters.",
+						"parameters": schema.StringAttribute{
+							MarkdownDescription: "Action parameters as a JSON-encoded string (e.g. `{\"id\":\"smartgroup\"}`).",
 							Optional:            true,
-							ElementType:         types.StringType,
 						},
 					},
 				},
@@ -460,8 +459,8 @@ type analyticAPIModel struct {
 }
 
 type analyticActionAPIModel struct {
-	Name       string   `json:"name"`
-	Parameters []string `json:"parameters"`
+	Name       string `json:"name"`
+	Parameters string `json:"parameters"`
 }
 
 type analyticContextAPIModel struct {
@@ -501,10 +500,8 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 		diags.Append(data.AnalyticActions.ElementsAs(ctx, &actionModels, false)...)
 		for _, a := range actionModels {
 			m := map[string]any{"name": a.Name.ValueString()}
-			if !a.Parameters.IsNull() {
-				m["parameters"] = listToStrings(ctx, a.Parameters, diags)
-			} else {
-				m["parameters"] = []string{}
+			if !a.Parameters.IsNull() && a.Parameters.ValueString() != "" {
+				m["parameters"] = a.Parameters.ValueString()
 			}
 			actions = append(actions, m)
 		}
@@ -550,22 +547,33 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 	data.Tags = stringsToList(api.Tags)
 	data.Categories = stringsToList(api.Categories)
 	data.SnapshotFiles = stringsToList(api.SnapshotFiles)
-	data.Actions = stringsToList(api.Actions)
+
+	// actions is Optional — preserve null when the API returns an empty array
+	// so the plan doesn't show a diff from null → [].
+	if len(api.Actions) == 0 {
+		data.Actions = types.ListNull(types.StringType)
+	} else {
+		data.Actions = stringsToList(api.Actions)
+	}
 
 	// Analytic actions.
 	actionAttrTypes := map[string]attr.Type{
 		"name":       types.StringType,
-		"parameters": types.ListType{ElemType: types.StringType},
+		"parameters": types.StringType,
 	}
 	var actionVals []attr.Value
 	for _, a := range api.AnalyticActions {
+		paramVal := types.StringNull()
+		if a.Parameters != "" {
+			paramVal = types.StringValue(a.Parameters)
+		}
 		actionVals = append(actionVals, types.ObjectValueMust(actionAttrTypes, map[string]attr.Value{
 			"name":       types.StringValue(a.Name),
-			"parameters": stringsToList(a.Parameters),
+			"parameters": paramVal,
 		}))
 	}
 	if len(actionVals) == 0 {
-		data.AnalyticActions = types.ListNull(types.ObjectType{AttrTypes: actionAttrTypes})
+		data.AnalyticActions = types.ListValueMust(types.ObjectType{AttrTypes: actionAttrTypes}, []attr.Value{})
 	} else {
 		actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
 		diags.Append(d...)
@@ -587,7 +595,7 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 		}))
 	}
 	if len(ctxVals) == 0 {
-		data.Context = types.ListNull(types.ObjectType{AttrTypes: ctxAttrTypes})
+		data.Context = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
 	} else {
 		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
 		diags.Append(d...)

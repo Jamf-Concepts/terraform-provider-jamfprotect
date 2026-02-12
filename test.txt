@@ -1,8 +1,0 @@
-
- mise exec -- go mod tidy
-- mise exec -- go build ./...
-- mise exec -- make test
-- mise exec -- make generate
-- mise exec -- go build ./... && mise exec -- make test
-go build ./...
- make testacc

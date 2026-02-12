@@ -25,14 +25,4 @@ func testAccPreCheck(t *testing.T) {
 			t.Fatalf("environment variable %s must be set for acceptance tests", env)
 		}
 	}
-
-	if testAccEnumValues == nil {
-		values, err := testAccProbeEnumValues(t)
-		if err != nil {
-			t.Fatalf("failed to probe enum values: %v", err)
-		}
-		testAccEnumValues = values
-	}
 }
-
-var testAccEnumValues map[string][]string

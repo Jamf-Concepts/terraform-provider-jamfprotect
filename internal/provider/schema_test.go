@@ -200,3 +200,135 @@ func TestUnifiedLoggingFilterResourceMetadata(t *testing.T) {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_unified_logging_filter", resp.TypeName)
 	}
 }
+
+func TestActionConfigResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewActionConfigResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "alert_config"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in action config schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "hash", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in action config schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
+}
+
+func TestActionConfigResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewActionConfigResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_action_config" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_config", resp.TypeName)
+	}
+}
+
+func TestPlanResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewPlanResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "action_configs", "comms_config", "info_sync", "signatures_feed_config"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in plan schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "hash", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in plan schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	optionalAttrs := []string{"description", "log_level", "exception_sets", "telemetry", "telemetry_v2", "usb_control_set", "analytic_sets"}
+	for _, attr := range optionalAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in plan schema", attr)
+			continue
+		}
+		if !a.IsOptional() {
+			t.Errorf("expected attribute %q to be optional", attr)
+		}
+	}
+
+	// auto_update should be optional + computed (has default).
+	autoUpdate, ok := resp.Schema.Attributes["auto_update"]
+	if !ok {
+		t.Fatal("expected attribute 'auto_update' in schema")
+	}
+	if !autoUpdate.IsOptional() {
+		t.Error("expected 'auto_update' to be optional")
+	}
+	if !autoUpdate.IsComputed() {
+		t.Error("expected 'auto_update' to be computed (has default)")
+	}
+}
+
+func TestPlanResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewPlanResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_plan" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_plan", resp.TypeName)
+	}
+}

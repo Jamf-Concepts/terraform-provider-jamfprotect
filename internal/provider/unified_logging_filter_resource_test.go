@@ -15,7 +15,6 @@ import (
 func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-ulf")
 	resourceName := "jamfprotect_unified_logging_filter.test"
-	logLevel := testAccUnifiedLoggingLevel(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -23,13 +22,13 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
-				Config: testAccUnifiedLoggingFilterResourceConfig(rName, "Test filter description", true, logLevel),
+				Config: testAccUnifiedLoggingFilterResourceConfig(rName, "Test filter description", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test filter description"),
 					resource.TestCheckResourceAttr(resourceName, "filter", `subsystem == "com.apple.securityd"`),
-					resource.TestCheckResourceAttr(resourceName, "level", logLevel),
+					resource.TestCheckResourceAttr(resourceName, "level", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "terraform-test"),
@@ -48,11 +47,12 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 					}
 					return rs.Primary.Attributes["uuid"], nil
 				},
-				ImportStateVerify: true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "uuid",
 			},
 			// Update: disable the filter.
 			{
-				Config: testAccUnifiedLoggingFilterResourceConfig(rName, "Updated description", false, logLevel),
+				Config: testAccUnifiedLoggingFilterResourceConfig(rName, "Updated description", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -62,24 +62,15 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 	})
 }
 
-func testAccUnifiedLoggingFilterResourceConfig(name, description string, enabled bool, level string) string {
+func testAccUnifiedLoggingFilterResourceConfig(name, description string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_unified_logging_filter" "test" {
   name        = %[1]q
   description = %[2]q
   filter      = "subsystem == \"com.apple.securityd\""
-  level       = %[3]q
-  enabled     = %[4]t
+  level       = "DEFAULT"
+  enabled     = %[3]t
   tags        = ["terraform-test"]
 }
-`, name, description, level, enabled)
-}
-
-func testAccUnifiedLoggingLevel(t *testing.T) string {
-	t.Helper()
-	values, ok := testAccEnumValues["UNIFIED_LOGGING_LEVEL"]
-	if !ok || len(values) == 0 {
-		t.Skip("UNIFIED_LOGGING_LEVEL enum values not available")
-	}
-	return values[0]
+`, name, description, enabled)
 }

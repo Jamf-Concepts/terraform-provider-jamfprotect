@@ -108,7 +108,9 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 
 func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewActionConfigResource,
 		NewAnalyticResource,
+		NewPlanResource,
 		NewPreventListResource,
 		NewUnifiedLoggingFilterResource,
 	}

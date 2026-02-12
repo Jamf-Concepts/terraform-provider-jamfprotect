@@ -70,7 +70,7 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 				Required:            true,
 			},
 			"level": schema.StringAttribute{
-				MarkdownDescription: "The unified logging level to capture (enum).",
+				MarkdownDescription: "The unified logging level. The only known valid value is `DEFAULT`.",
 				Required:            true,
 			},
 			"enabled": schema.BoolAttribute{

@@ -1,0 +1,7 @@
+{
+    "name": "Default",
+    "description": "Description",
+    "defaultMountAction": "ReadOnly",
+    "defaultMessageAction": "This removable storage device is limited to read-only.",
+    "rules": []
+}

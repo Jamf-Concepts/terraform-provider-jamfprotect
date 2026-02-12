@@ -199,3 +199,78 @@ Next steps (in priority order):
 4. Update `CHANGELOG.md` for v0.1.0.
 5. Start implementing the next resource: `jamfprotect_plan` using captured operations in `queries_and_mutations/createPlan`, `getPlan`, `updatePlan`, `deletePlan`.
 ```
+
+---
+
+**Date**: February 2026
+**Session**: 5 (Completing action_config + plan resources, tests, examples)
+
+---
+
+### Session 5: Completing New Resources
+
+#### What Was Accomplished
+
+1. **Registered `jamfprotect_action_config` resource** — Added `NewActionConfigResource` to `provider.go` `Resources()`. All 5 resources now registered.
+
+2. **Added schema tests for action_config** — `TestActionConfigResourceSchema` and `TestActionConfigResourceMetadata` added to `schema_test.go`. Validates required (`name`, `alert_config`), computed (`id`, `hash`, `created`, `updated`), and optional+computed (`description`) attributes.
+
+3. **Created acceptance tests**:
+   - `action_config_resource_test.go` — `TestAccActionConfigResource_basic` with Create/Read, ImportState, and Update steps. Uses minimal `alertConfig` JSON with all 14 data categories.
+   - `plan_resource_test.go` — `TestAccPlanResource_basic` with Create/Read, ImportState, and Update steps. Creates a dependent `jamfprotect_action_config` inline to provide a valid `action_configs` ID.
+
+4. **Created example Terraform configurations**:
+   - `examples/resources/jamfprotect_plan/resource.tf` + `import.sh` — Shows plan with action config dependency, comms_config, info_sync, and signatures_feed_config.
+   - `examples/resources/jamfprotect_action_config/resource.tf` + `import.sh` — Shows action config with realistic alert data enrichment settings.
+
+5. **Fixed stale analytic example** — Updated `examples/resources/jamfprotect_analytic/resource.tf` to use correct `input_type` (`GPProcessEvent` not `event`), `parameters` (JSON string not list), and `context.type` (`String` not `STRING`).
+
+6. **Build + unit tests pass** — `go build ./...` succeeds; `make test` passes all 21 unit tests (7 client, 14 schema/metadata/helper) with 78.9% coverage on the GraphQL client. 7 acceptance tests correctly skipped without `TF_ACC`.
+
+#### Current Resource Status
+
+| Resource | File | Registered | Schema Tests | Acceptance Tests | Examples |
+|---|---|---|---|---|---|
+| `jamfprotect_analytic` | `analytic_resource.go` | Yes | Yes | Yes (passing) | Yes |
+| `jamfprotect_prevent_list` | `prevent_list_resource.go` | Yes | Yes | Yes (passing) | Yes |
+| `jamfprotect_unified_logging_filter` | `unified_logging_filter_resource.go` | Yes | Yes | Yes (passing) | Yes |
+| `jamfprotect_plan` | `plan_resource.go` | Yes | Yes | Yes (needs acc run) | Yes |
+| `jamfprotect_action_config` | `action_config_resource.go` | Yes | Yes | Yes (needs acc run) | Yes |
+
+---
+
+## Outstanding Tasks
+
+### Must Do (acceptance tests)
+
+- [ ] **Run acceptance tests** — `fnox exec -- mise exec -- make testacc` to validate action_config and plan resources against a real Jamf Protect tenant.
+- [ ] **Update `CHANGELOG.md`** — Document initial resource set under v0.1.0.
+- [ ] **Regenerate docs** — `make generate` to update `docs/` with new resources.
+
+### Nice to Have (future work)
+
+- [ ] **Add remaining resources**:
+  - `jamfprotect_telemetry` (TelemetryV2)
+  - `jamfprotect_usb_control_set` (USBControlSet)
+- [ ] **Add data sources** — Read-only data sources for listing/filtering resources
+- [ ] **CI/CD** — GitHub Actions workflow for automated testing and release
+- [ ] **Terraform Registry publishing** — Set up GoReleaser + GPG signing
+
+## Prompt for Next Session
+
+```
+Continue building the Terraform provider for Jamf Protect.
+
+Context: The provider now has 5 fully implemented resources
+(jamfprotect_analytic, jamfprotect_prevent_list, jamfprotect_unified_logging_filter,
+jamfprotect_plan, jamfprotect_action_config), all with CRUD + Import, schema tests,
+acceptance tests, and example .tf files. Build and unit tests pass.
+See AGENTS.md and SESSION_SUMMARY.md for full details.
+
+Next steps (in priority order):
+1. Run acceptance tests: `fnox exec -- mise exec -- make testacc`
+2. Fix any acceptance test failures for plan and action_config resources
+3. Regenerate docs: `make generate`
+4. Update CHANGELOG.md for v0.1.0
+5. Consider implementing next resources: jamfprotect_telemetry, jamfprotect_usb_control_set
+```

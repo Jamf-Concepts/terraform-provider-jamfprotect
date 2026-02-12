@@ -1,0 +1,54 @@
+{
+    "excludeAnalytics": false,
+    "hasLimitedAppAccess": false,
+    "RBAC_ActionConfigs": true,
+    "RBAC_AnalyticSet": true,
+    "RBAC_ExceptionSet": true,
+    "RBAC_USBControlSet": true,
+    "RBAC_Telemetry": true,
+    "id": "1",
+    "name": "Default",
+    "description": "",
+    "logLevel": "ERROR",
+    "infoSync": {
+        "insightsSyncInterval": 86400,
+        "attrs": [
+            "insights",
+            "arch",
+            "hostName",
+            "kernelVersion",
+            "memorySize",
+            "modelName",
+            "serial",
+            "osMajor",
+            "osMinor",
+            "osPatch",
+            "osString"
+        ]
+    },
+    "autoUpdate": true,
+    "commsConfig": {
+        "fqdn": "example-ats.iot.ap-southeast-2.amazonaws.com",
+        "protocol": "mqtt"
+    },
+    "signaturesFeedConfig": {
+        "mode": "blocking"
+    },
+    "actionConfigs": "1",
+    "exceptionSets": [
+        "4c8552c0-8347-43fb-b74b-eda602d02e15"
+    ],
+    "usbControlSet": null,
+    "telemetry": null,
+    "telemetryV2": "68",
+    "analyticSets": [
+        {
+            "uuid": "3212c234-eb60-45a9-9068-a8cb12db9243",
+            "type": "Report"
+        },
+        {
+            "uuid": "9d523b8e-c527-4525-8768-92243b55e0b6",
+            "type": "Prevent"
+        }
+    ]
+}

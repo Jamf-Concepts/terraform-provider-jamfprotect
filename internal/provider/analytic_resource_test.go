@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAnalyticResource_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test analytic description"),
-					resource.TestCheckResourceAttr(resourceName, "input_type", "event"),
+					resource.TestCheckResourceAttr(resourceName, "input_type", "GPFSEvent"),
 					resource.TestCheckResourceAttr(resourceName, "severity", "Informational"),
 					resource.TestCheckResourceAttr(resourceName, "level", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
@@ -42,9 +43,17 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 			},
 			// ImportState testing.
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("resource not found: %s", resourceName)
+					}
+					return rs.Primary.Attributes["uuid"], nil
+				},
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "uuid",
 			},
 			// Update and Read testing.
 			{
@@ -71,10 +80,11 @@ func TestAccAnalyticResource_withActions(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.name", "Log"),
+					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.name", "SmartGroup"),
+					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.parameters", `{"id":"smartgroup"}`),
 					resource.TestCheckResourceAttr(resourceName, "context.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context.0.name", "$event.process.name"),
-					resource.TestCheckResourceAttr(resourceName, "context.0.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "context.0.name", "name"),
+					resource.TestCheckResourceAttr(resourceName, "context.0.type", "String"),
 				),
 			},
 		},
@@ -85,18 +95,18 @@ func testAccAnalyticResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-  input_type  = "event"
+  input_type  = "GPFSEvent"
   description = %[2]q
-  filter      = "true == true"
+  filter      = "( $event.type == Filter )"
   level       = 0
   severity    = "Informational"
 
-	  tags           = ["terraform-test"]
-	  categories     = ["Testing"]
-	  snapshot_files = []
+  tags           = ["terraform-test"]
+  categories     = ["Testing"]
+  snapshot_files = []
 
-	  analytic_actions = []
-	  context          = []
+  analytic_actions = []
+  context          = []
 }
 `, name, description)
 }
@@ -105,26 +115,26 @@ func testAccAnalyticResourceConfigWithActions(name string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-  input_type  = "event"
+  input_type  = "GPFSEvent"
   description = "Analytic with actions"
-  filter      = "true == true"
+  filter      = "( $event.type == Filter )"
   level       = 0
   severity    = "Low"
 
   tags           = ["terraform-test"]
-  categories     = ["Testing"]
-	  snapshot_files = []
+  categories     = ["Evasion"]
+  snapshot_files = ["/tmp/snapshot.log"]
 
-	  analytic_actions = [{
-	    name       = "Log"
-	    parameters = []
-	  }]
+  analytic_actions = [{
+    name       = "SmartGroup"
+    parameters = "{\"id\":\"smartgroup\"}"
+  }]
 
-	  context = [{
-	    name  = "$event.process.name"
-	    type  = "string"
-	    exprs = ["$event.process.name"]
-	  }]
+  context = [{
+    name  = "name"
+    type  = "String"
+    exprs = [""]
+  }]
 }
 `, name)
 }

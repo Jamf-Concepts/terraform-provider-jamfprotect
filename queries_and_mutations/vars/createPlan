@@ -1,0 +1,57 @@
+{
+    "excludeAnalytics": false,
+    "hasLimitedAppAccess": false,
+    "RBAC_ActionConfigs": true,
+    "RBAC_AnalyticSet": true,
+    "RBAC_ExceptionSet": true,
+    "RBAC_USBControlSet": true,
+    "RBAC_Telemetry": true,
+    "name": "Default2",
+    "description": "Description",
+    "infoSync": {
+        "insightsSyncInterval": 86400,
+        "attrs": [
+            "arch",
+            "hostName",
+            "kernelVersion",
+            "memorySize",
+            "modelName",
+            "osMajor",
+            "osMinor",
+            "osPatch",
+            "osString",
+            "serial",
+            "insights"
+        ]
+    },
+    "autoUpdate": true,
+    "actionConfigs": "1",
+    "commsConfig": {
+        "fqdn": "placeholder - will be updated by resolver on create",
+        "protocol": "mqtt"
+    },
+    "signaturesFeedConfig": {
+        "mode": "blocking"
+    },
+    "logLevel": "ERROR",
+    "exceptionSets": [
+        "4c8552c0-8347-43fb-b74b-eda602d02e15"
+    ],
+    "usbControlSet": "35",
+    "analyticSets": [
+        {
+            "uuid": "3212c234-eb60-45a9-9068-a8cb12db9243",
+            "type": "Report"
+        },
+        {
+            "uuid": "9d523b8e-c527-4525-8768-92243b55e0b6",
+            "type": "Prevent"
+        },
+        {
+            "uuid": "5b8a2426-cba3-4805-9688-982c54545f3c",
+            "type": "Report"
+        }
+    ],
+    "telemetry": null,
+    "telemetryV2": null
+}

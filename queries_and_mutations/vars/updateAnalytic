@@ -1,5 +1,5 @@
 {
-    "uuid": "245ec6a0-278e-4e72-8540-182db7b5b95c",
+    "uuid": "7ded37e0-2e37-47c0-9586-8e4822a55e5d",
     "name": "Test Analytic",
     "inputType": "GPFSEvent",
     "filter": "( $event.type  == Filter )",
