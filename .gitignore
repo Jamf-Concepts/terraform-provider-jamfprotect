@@ -8,11 +8,8 @@ bin/
 dist/
 modules-dev/
 /pkg/
-website/.vagrant
-website/.bundle
-website/build
-website/node_modules
 .vagrant/
+.ruff_cache/
 *.backup
 ./*.tfstate
 .terraform/
@@ -23,13 +20,4 @@ website/node_modules
 .idea
 *.iml
 *.test
-*.iml
-
-website/vendor
-
-# Test exclusions
-!command/test-fixtures/**/*.tfstate
-!command/test-fixtures/**/.terraform/
-
-# Keep windows files with windows line endings
-*.winfile eol=crlf
+SESSION_SUMMARY.md
