@@ -31,7 +31,7 @@ func TestAccPreventListResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "terraform-test"),
 					resource.TestCheckResourceAttr(resourceName, "list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "list.0", "ABC123DEF4"),
-					resource.TestCheckResourceAttr(resourceName, "count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "entry_count", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 				),
 			},
@@ -40,7 +40,7 @@ func TestAccPreventListResource_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// Tags are not returned by getPreventList; skip verify for them.
+				// Tags are not returned by getPreventList.
 				ImportStateVerifyIgnore: []string{"tags"},
 			},
 			// Update and Read testing.

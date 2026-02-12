@@ -1,7 +1,7 @@
 # Session Summary — Terraform Provider for Jamf Protect
 
 **Date**: February 2026
-**Sessions**: 3 (API discovery → provider scaffolding → modernisation & tests)
+**Session**: 3 (API discovery → provider scaffolding → modernisation & tests)
 
 ---
 
@@ -116,4 +116,86 @@ Next steps (in priority order):
    JAMFPROTECT_CLIENT_ID, JAMFPROTECT_CLIENT_SECRET env vars via fnox)
 9. Start implementing the next resource: jamfprotect_plan
    (captured operations in queries_and_mutations/createPlan, getPlan, updatePlan, deletePlan)
+```
+
+---
+
+**Date**: February 2026
+**Session**: 4 (API discovery → provider scaffolding → modernisation & tests)
+
+---
+
+### 1. Session 4 (Docs + Acceptance Debugging)
+- Ran `go mod tidy`, `go build ./...`, and `make test` successfully.
+- Cleaned scaffolding content from `docs/` and `examples/`, regenerated docs with `make generate`.
+- Added real examples for provider + all three resources, including import scripts.
+- Renamed prevent list attribute `count` → `entry_count` (Terraform reserved name fix) and updated tests.
+- Updated doc generation provider name in `tools/tools.go`.
+- Acceptance test updates:
+  - Prevent list acceptance tests now pass; tags preserved across read/update and import handled as null.
+  - Added acceptance helper to probe enum values via `fnox exec -- uv run tools/scripts/probe_app_types.py`.
+  - Unified logging filter import uses `uuid` from state during import.
+- Acceptance tests still fail for analytics and unified logging filters due to unknown input shapes/enums from `/app`.
+
+---
+
+## Outstanding Tasks
+
+### Must Do (acceptance tests)
+
+- [ ] **Fix analytic resource inputs** — analytics create/update fail with "This mutation may only use predefined types" and invalid `parameters` values; need correct `AnalyticActionsInput` shape and `context.type` values from browser payloads.
+- [ ] **Fix unified logging filter level** — `UNIFIED_LOGGING_LEVEL` enum values unknown; capture actual `level` values from browser payloads.
+- [ ] **Re-run `make testacc`** — validate all resources after fixes.
+
+### Should Do (before first commit/PR)
+
+- [ ] **Update `CHANGELOG.md`** — Document initial resource set under v0.1.0
+
+### Nice to Have (future work)
+
+- [ ] **Add remaining resources** — 4 resource types have captured GraphQL operations but no provider implementation yet:
+  - `jamfprotect_action_config` (ActionConfigs)
+  - `jamfprotect_plan` (Plan)
+  - `jamfprotect_telemetry` (TelemetryV2)
+  - `jamfprotect_usb_control_set` (USBControlSet)
+- [ ] **Add data sources** — Read-only data sources for listing/filtering resources (e.g. `jamfprotect_analytics`, `jamfprotect_plans`)
+- [ ] **CI/CD** — GitHub Actions workflow for automated testing and release
+- [ ] **Terraform Registry publishing** — Set up GoReleaser + GPG signing for registry publication
+- [ ] **Import testing** — Verify import operations handle all edge cases (missing resources, permission errors)
+- [ ] **Error handling refinement** — Map more GraphQL error codes to specific Terraform diagnostics
+
+---
+
+## Prompt for Next Session
+
+```
+Continue building the Terraform provider for Jamf Protect.
+
+Context: The provider has been scaffolded with 3 working resources
+(jamfprotect_analytic, jamfprotect_prevent_list, jamfprotect_unified_logging_filter),
+a thread-safe GraphQL client, and comprehensive tests. The module was renamed from
+the HashiCorp scaffolding template. See AGENTS.md for full project structure and
+conventions, and SESSION_SUMMARY.md for detailed progress.
+
+Next steps (in priority order):
+1. Work on the analytic items to get them functional:
+   - createAnalytic (minimal custom analytic)
+   - updateAnalytic (existing analytic with actions/context)
+   - listAnalytics (to see valid enums/fields in responses)
+   - createUnifiedLoggingFilter or listUnifiedLoggingFilters (to see valid `level` values)
+   - Analytic inputType:
+     - GPFSEvent
+     - GPDownloadEvent
+     - GPProcessEvent
+     - GPScreenshotEvent
+     - GPKeylogRegisterEvent
+     - GPClickEvent
+     - GPMRTEvent
+     - GPUSBEvent
+     - GPGatekeeperEvent
+   - UNIFIED_LOGGING_LEVEL is only ever DEFAULT
+2. Update provider inputs/tests based on captured payloads (AnalyticActionsInput parameters and context types; UNIFIED_LOGGING_LEVEL enum values).
+3. Re-run `fnox exec -- mise exec -- make testacc`.
+4. Update `CHANGELOG.md` for v0.1.0.
+5. Start implementing the next resource: `jamfprotect_plan` using captured operations in `queries_and_mutations/createPlan`, `getPlan`, `updatePlan`, `deletePlan`.
 ```

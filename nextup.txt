@@ -1,0 +1,31 @@
+SESSION_SUMMARY.md
+I reviewed the captured operations. The key gaps are that the input types and enums are opaque in the queries:
+- createAnalytic/updateAnalytic require AnalyticActionsInput and AnalyticContextInput, but the query doesn’t show the shape of parameters or the allowed context.type values.
+- createUnifiedLoggingFilter requires the enum UNIFIED_LOGGING_LEVEL, and the query doesn’t expose valid enum values.
+
+To debug via the browser Network Inspector, capture the variables JSON (and any error payload) for these operations:
+- createAnalytic for a minimal custom analytic created in the UI
+  - Focus fields: inputType, severity, analyticActions (especially parameters), context (especially type), snapshotFiles, categories.
+- updateAnalytic on an existing analytic that has actions and context set
+  - This often shows the real analyticActions.parameters and context shapes even when create fails.
+- listAnalytics response for built-in analytics
+  - This reveals valid severity values, inputType values, and the response shape for analyticActions.parameters.
+- listActionConfigNames (or listActionConfigs) response
+  - Confirms action names used in analyticActions.name or tenantActions.name.
+- createUnifiedLoggingFilter and/or getUnifiedLoggingFilter for a real filter created in the UI
+  - Focus field: level value returned in the response; that value should be valid for UNIFIED_LOGGING_LEVEL.
+- listUnifiedLoggingFilters response
+  - Another way to see actual level enum values in the wild.
+
+Analytic inputType:
+ - GPFSEvent
+ - GPDownloadEvent
+ - GPProcessEvent
+ - GPScreenshotEvent
+ - GPKeylogRegisterEvent
+ - GPClickEvent
+ - GPMRTEvent
+ - GPUSBEvent
+ - GPGatekeeperEvent
+
+UNIFIED_LOGGING_LEVEL is only ever DEFAULT

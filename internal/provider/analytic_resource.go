@@ -450,12 +450,12 @@ type analyticAPIModel struct {
 	Created         string                    `json:"created"`
 	Updated         string                    `json:"updated"`
 	Actions         []string                  `json:"actions"`
-	AnalyticActions []analyticActionAPIModel   `json:"analyticActions"`
+	AnalyticActions []analyticActionAPIModel  `json:"analyticActions"`
 	Tags            []string                  `json:"tags"`
 	Level           int64                     `json:"level"`
 	Severity        string                    `json:"severity"`
 	SnapshotFiles   []string                  `json:"snapshotFiles"`
-	Context         []analyticContextAPIModel  `json:"context"`
+	Context         []analyticContextAPIModel `json:"context"`
 	Categories      []string                  `json:"categories"`
 }
 
@@ -496,29 +496,39 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 
 	// Analytic actions.
 	var actions []map[string]any
-	var actionModels []analyticActionModel
-	diags.Append(data.AnalyticActions.ElementsAs(ctx, &actionModels, false)...)
-	for _, a := range actionModels {
-		m := map[string]any{"name": a.Name.ValueString()}
-		if !a.Parameters.IsNull() {
-			m["parameters"] = listToStrings(ctx, a.Parameters, diags)
-		} else {
-			m["parameters"] = []string{}
+	if !data.AnalyticActions.IsNull() {
+		var actionModels []analyticActionModel
+		diags.Append(data.AnalyticActions.ElementsAs(ctx, &actionModels, false)...)
+		for _, a := range actionModels {
+			m := map[string]any{"name": a.Name.ValueString()}
+			if !a.Parameters.IsNull() {
+				m["parameters"] = listToStrings(ctx, a.Parameters, diags)
+			} else {
+				m["parameters"] = []string{}
+			}
+			actions = append(actions, m)
 		}
-		actions = append(actions, m)
+	}
+	if actions == nil {
+		actions = []map[string]any{}
 	}
 	vars["analyticActions"] = actions
 
 	// Context.
 	var ctxEntries []map[string]any
-	var contextModels []analyticContextModel
-	diags.Append(data.Context.ElementsAs(ctx, &contextModels, false)...)
-	for _, c := range contextModels {
-		ctxEntries = append(ctxEntries, map[string]any{
-			"name":  c.Name.ValueString(),
-			"type":  c.Type.ValueString(),
-			"exprs": listToStrings(ctx, c.Exprs, diags),
-		})
+	if !data.Context.IsNull() {
+		var contextModels []analyticContextModel
+		diags.Append(data.Context.ElementsAs(ctx, &contextModels, false)...)
+		for _, c := range contextModels {
+			ctxEntries = append(ctxEntries, map[string]any{
+				"name":  c.Name.ValueString(),
+				"type":  c.Type.ValueString(),
+				"exprs": listToStrings(ctx, c.Exprs, diags),
+			})
+		}
+	}
+	if ctxEntries == nil {
+		ctxEntries = []map[string]any{}
 	}
 	vars["context"] = ctxEntries
 
@@ -554,9 +564,13 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 			"parameters": stringsToList(a.Parameters),
 		}))
 	}
-	actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
-	diags.Append(d...)
-	data.AnalyticActions = actionList
+	if len(actionVals) == 0 {
+		data.AnalyticActions = types.ListNull(types.ObjectType{AttrTypes: actionAttrTypes})
+	} else {
+		actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
+		diags.Append(d...)
+		data.AnalyticActions = actionList
+	}
 
 	// Context.
 	ctxAttrTypes := map[string]attr.Type{
@@ -572,7 +586,11 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 			"exprs": stringsToList(c.Exprs),
 		}))
 	}
-	ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
-	diags.Append(d...)
-	data.Context = ctxList
+	if len(ctxVals) == 0 {
+		data.Context = types.ListNull(types.ObjectType{AttrTypes: ctxAttrTypes})
+	} else {
+		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
+		diags.Append(d...)
+		data.Context = ctxList
+	}
 }

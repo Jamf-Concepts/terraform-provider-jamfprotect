@@ -91,11 +91,12 @@ resource "jamfprotect_analytic" "test" {
   level       = 0
   severity    = "Informational"
 
-  tags            = ["terraform-test"]
-  categories      = ["Testing"]
-  snapshot_files   = []
-  analytic_actions = []
-  context          = []
+	  tags           = ["terraform-test"]
+	  categories     = ["Testing"]
+	  snapshot_files = []
+
+	  analytic_actions = []
+	  context          = []
 }
 `, name, description)
 }
@@ -112,18 +113,18 @@ resource "jamfprotect_analytic" "test" {
 
   tags           = ["terraform-test"]
   categories     = ["Testing"]
-  snapshot_files  = []
+	  snapshot_files = []
 
-  analytic_actions {
-    name       = "Log"
-    parameters = []
-  }
+	  analytic_actions = [{
+	    name       = "Log"
+	    parameters = []
+	  }]
 
-  context {
-    name  = "$event.process.name"
-    type  = "string"
-    exprs = ["$event.process.name"]
-  }
+	  context = [{
+	    name  = "$event.process.name"
+	    type  = "string"
+	    exprs = ["$event.process.name"]
+	  }]
 }
 `, name)
 }

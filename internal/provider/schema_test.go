@@ -104,7 +104,7 @@ func TestPreventListResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "count", "created"}
+	computedAttrs := []string{"id", "entry_count", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {

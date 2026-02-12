@@ -38,7 +38,7 @@ type PreventListResourceModel struct {
 	Type        types.String `tfsdk:"type"`
 	Tags        types.List   `tfsdk:"tags"`
 	List        types.List   `tfsdk:"list"`
-	Count       types.Int64  `tfsdk:"count"`
+	EntryCount  types.Int64  `tfsdk:"entry_count"`
 	Created     types.String `tfsdk:"created"`
 }
 
@@ -77,7 +77,7 @@ func (r *PreventListResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:            true,
 				ElementType:         types.StringType,
 			},
-			"count": schema.Int64Attribute{
+			"entry_count": schema.Int64Attribute{
 				MarkdownDescription: "The number of entries in the prevent list.",
 				Computed:            true,
 			},
@@ -199,7 +199,9 @@ func (r *PreventListResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	planTags := data.Tags
 	r.apiToState(&data, result.CreatePreventList)
+	data.Tags = planTags
 	tflog.Trace(ctx, "created prevent list", map[string]any{"id": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -224,7 +226,9 @@ func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	stateTags := data.Tags
 	r.apiToState(&data, *result.GetPreventList)
+	data.Tags = stateTags
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -256,7 +260,9 @@ func (r *PreventListResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	planTags := data.Tags
 	r.apiToState(&data, result.UpdatePreventList)
+	data.Tags = planTags
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -294,6 +300,7 @@ func (r *PreventListResource) ImportState(ctx context.Context, req resource.Impo
 	}
 
 	r.apiToState(&data, *result.GetPreventList)
+	data.Tags = types.ListNull(types.StringType)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -332,7 +339,7 @@ func (r *PreventListResource) apiToState(data *PreventListResourceModel, api pre
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Type = types.StringValue(api.Type)
-	data.Count = types.Int64Value(api.Count)
+	data.EntryCount = types.Int64Value(api.Count)
 	data.Created = types.StringValue(api.Created)
 	data.List = stringsToList(api.List)
 
