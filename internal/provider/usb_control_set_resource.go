@@ -41,7 +41,7 @@ func (r *USBControlSetResource) Metadata(ctx context.Context, req resource.Metad
 
 func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	mountActionValidator := stringvalidator.OneOf("ReadOnly", "ReadWrite", "Prevented")
-	ruleTypeValidator := stringvalidator.OneOf("VendorRule", "SerialRule", "ProductRule")
+	ruleTypeValidator := stringvalidator.OneOf("Vendor", "Serial", "Product", "Encryption", "VendorRule", "SerialRule", "ProductRule", "EncryptionRule")
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a USB control set in Jamf Protect. USB control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.",
@@ -77,7 +77,7 @@ func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaR
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of rule. Valid values: `VendorRule`, `SerialRule`, `ProductRule`.",
+							MarkdownDescription: "The type of rule. Valid values: `Vendor`, `Serial`, `Product`, `Encryption`.",
 							Required:            true,
 							Validators:          []validator.String{ruleTypeValidator},
 						},

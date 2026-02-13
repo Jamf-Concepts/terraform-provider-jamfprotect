@@ -154,25 +154,35 @@ func (r *USBControlSetResource) buildVariables(ctx context.Context, data USBCont
 }
 
 func buildRuleVariable(ctx context.Context, rule USBRuleModel, diags *diag.Diagnostics) map[string]any {
+	ruleType := normalizeUSBRuleType(rule.Type.ValueString())
 	r := map[string]any{
-		"type":        rule.Type.ValueString(),
+		"type": ruleType,
+	}
+
+	baseRule := map[string]any{
 		"mountAction": rule.MountAction.ValueString(),
 	}
-
 	if !rule.MessageAction.IsNull() {
-		r["messageAction"] = rule.MessageAction.ValueString()
+		baseRule["messageAction"] = rule.MessageAction.ValueString()
 	}
 
-	if !rule.ApplyTo.IsNull() {
-		r["applyTo"] = rule.ApplyTo.ValueString()
-	}
-
-	switch rule.Type.ValueString() {
-	case "VendorRule":
-		r["vendors"] = listToStrings(ctx, rule.Vendors, diags)
-	case "SerialRule":
-		r["serials"] = listToStrings(ctx, rule.Serials, diags)
-	case "ProductRule":
+	switch ruleType {
+	case "Vendor":
+		if !rule.ApplyTo.IsNull() {
+			baseRule["applyTo"] = rule.ApplyTo.ValueString()
+		}
+		baseRule["vendors"] = listToStrings(ctx, rule.Vendors, diags)
+		r["vendorRule"] = baseRule
+	case "Serial":
+		if !rule.ApplyTo.IsNull() {
+			baseRule["applyTo"] = rule.ApplyTo.ValueString()
+		}
+		baseRule["serials"] = listToStrings(ctx, rule.Serials, diags)
+		r["serialRule"] = baseRule
+	case "Product":
+		if !rule.ApplyTo.IsNull() {
+			baseRule["applyTo"] = rule.ApplyTo.ValueString()
+		}
 		products := make([]map[string]any, 0, len(rule.Products))
 		for _, p := range rule.Products {
 			products = append(products, map[string]any{
@@ -180,10 +190,31 @@ func buildRuleVariable(ctx context.Context, rule USBRuleModel, diags *diag.Diagn
 				"product": p.Product.ValueString(),
 			})
 		}
-		r["products"] = products
+		baseRule["products"] = products
+		r["productRule"] = baseRule
+	case "Encryption":
+		r["encryptionRule"] = baseRule
+	default:
+		diags.AddError("Unsupported USB control rule type", "Unsupported rule type: "+rule.Type.ValueString())
+		return nil
 	}
 
 	return r
+}
+
+func normalizeUSBRuleType(ruleType string) string {
+	switch ruleType {
+	case "VendorRule":
+		return "Vendor"
+	case "SerialRule":
+		return "Serial"
+	case "ProductRule":
+		return "Product"
+	case "EncryptionRule":
+		return "Encryption"
+	default:
+		return ruleType
+	}
 }
 
 func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSetResourceModel, api usbControlSetAPIModel, _ *diag.Diagnostics) {
@@ -208,7 +239,7 @@ func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSe
 	rules := make([]USBRuleModel, 0, len(api.Rules))
 	for _, apiRule := range api.Rules {
 		rule := USBRuleModel{
-			Type:        types.StringValue(apiRule.Type),
+			Type:        types.StringValue(normalizeUSBRuleType(apiRule.Type)),
 			MountAction: types.StringValue(apiRule.MountAction),
 		}
 
@@ -224,14 +255,14 @@ func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSe
 			rule.ApplyTo = types.StringNull()
 		}
 
-		switch apiRule.Type {
-		case "VendorRule":
+		switch normalizeUSBRuleType(apiRule.Type) {
+		case "Vendor":
 			rule.Vendors = stringsToList(apiRule.Vendors)
 			rule.Serials = types.ListNull(types.StringType)
-		case "SerialRule":
+		case "Serial":
 			rule.Serials = stringsToList(apiRule.Serials)
 			rule.Vendors = types.ListNull(types.StringType)
-		case "ProductRule":
+		case "Product":
 			products := make([]USBProductModel, 0, len(apiRule.Products))
 			for _, p := range apiRule.Products {
 				products = append(products, USBProductModel{
