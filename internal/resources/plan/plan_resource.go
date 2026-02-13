@@ -6,8 +6,9 @@ package plan
 import (
 	"context"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 	"time"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -97,7 +98,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "The ID of the v2 telemetry configuration.",
 				Optional:            true,
 			},
-			"usb_control_set": schema.StringAttribute{
+			"removable_storage_control_set": schema.StringAttribute{
 				MarkdownDescription: "The ID of the USB control set to associate with this plan.",
 				Optional:            true,
 			},

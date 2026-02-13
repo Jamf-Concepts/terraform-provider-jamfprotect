@@ -1,7 +1,7 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package actionconfig
+package action_configuration
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"

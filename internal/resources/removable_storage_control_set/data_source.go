@@ -1,11 +1,12 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package usbcontrolset
+package removable_storage_control_set
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -29,7 +30,7 @@ type USBControlSetsDataSource struct {
 
 // USBControlSetsDataSourceModel maps the data source schema.
 type USBControlSetsDataSourceModel struct {
-	USBControlSets []USBControlSetDataSourceItemModel `tfsdk:"usb_control_sets"`
+	USBControlSets []USBControlSetDataSourceItemModel `tfsdk:"removable_storage_control_sets"`
 }
 
 // USBControlSetDataSourceItemModel maps a single USB control set item (read-only, no timeouts).
@@ -62,14 +63,14 @@ type USBProductDataSourceItemModel struct {
 }
 
 func (d *USBControlSetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_usb_control_sets"
+	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_sets"
 }
 
 func (d *USBControlSetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of all USB control sets in Jamf Protect.",
 		Attributes: map[string]schema.Attribute{
-			"usb_control_sets": schema.ListNestedAttribute{
+			"removable_storage_control_sets": schema.ListNestedAttribute{
 				MarkdownDescription: "The list of USB control sets.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{

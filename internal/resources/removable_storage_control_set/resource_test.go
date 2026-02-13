@@ -1,11 +1,12 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package usbcontrolset_test
+package removable_storage_control_set_test
 
 import (
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 	"testing"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -21,7 +22,7 @@ func TestAccUSBControlSetResource_basic(t *testing.T) {
 			// Create and Read.
 			{
 				Config: `
-resource "jamfprotect_usb_control_set" "test" {
+resource "jamfprotect_removable_storage_control_set" "test" {
   name                 = "tf-acc-test-usb"
   description          = "Acceptance test USB control set"
   default_mount_action = "ReadOnly"
@@ -30,21 +31,21 @@ resource "jamfprotect_usb_control_set" "test" {
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("jamfprotect_usb_control_set.test", "id"),
-					resource.TestCheckResourceAttr("jamfprotect_usb_control_set.test", "name", "tf-acc-test-usb"),
-					resource.TestCheckResourceAttr("jamfprotect_usb_control_set.test", "default_mount_action", "ReadOnly"),
+					resource.TestCheckResourceAttrSet("jamfprotect_removable_storage_control_set.test", "id"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-usb"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_mount_action", "ReadOnly"),
 				),
 			},
 			// Import.
 			{
-				ResourceName:      "jamfprotect_usb_control_set.test",
+				ResourceName:      "jamfprotect_removable_storage_control_set.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// Update.
 			{
 				Config: `
-resource "jamfprotect_usb_control_set" "test" {
+resource "jamfprotect_removable_storage_control_set" "test" {
   name                 = "tf-acc-test-usb-updated"
   description          = "Updated USB control set"
   default_mount_action = "Prevented"
@@ -53,8 +54,8 @@ resource "jamfprotect_usb_control_set" "test" {
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("jamfprotect_usb_control_set.test", "name", "tf-acc-test-usb-updated"),
-					resource.TestCheckResourceAttr("jamfprotect_usb_control_set.test", "default_mount_action", "Prevented"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-usb-updated"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_mount_action", "Prevented"),
 				),
 			},
 		},

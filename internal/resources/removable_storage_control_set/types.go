@@ -1,7 +1,7 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package usbcontrolset
+package removable_storage_control_set
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"

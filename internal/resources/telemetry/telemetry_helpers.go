@@ -1,7 +1,7 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package telemetryv2
+package telemetry
 
 import (
 	"context"

@@ -20,7 +20,7 @@ type PlanResourceModel struct {
 	ExceptionSets        types.List     `tfsdk:"exception_sets"`
 	Telemetry            types.String   `tfsdk:"telemetry"`
 	TelemetryV2          types.String   `tfsdk:"telemetry_v2"`
-	USBControlSet        types.String   `tfsdk:"usb_control_set"`
+	USBControlSet        types.String   `tfsdk:"removable_storage_control_set"`
 	AnalyticSets         types.List     `tfsdk:"analytic_sets"`
 	CommsConfig          types.Object   `tfsdk:"comms_config"`
 	InfoSync             types.Object   `tfsdk:"info_sync"`

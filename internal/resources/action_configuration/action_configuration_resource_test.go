@@ -1,7 +1,7 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package actionconfig_test
+package action_configuration_test
 
 import (
 	"fmt"

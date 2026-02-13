@@ -50,7 +50,7 @@ Read-Only:
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `updated` (String) The last-updated timestamp.
-- `usb_control_set` (String) The ID of the USB control set associated with this plan.
+- `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 
 <a id="nestedatt--plans--analytic_sets"></a>
 ### Nested Schema for `plans.analytic_sets`
