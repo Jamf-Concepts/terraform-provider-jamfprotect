@@ -175,6 +175,10 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 					return nil
 				}
 				m["parameters"] = string(jsonBytes)
+			} else {
+				// The API requires parameters as AWSJSON! (non-null),
+				// so send an empty JSON object when no parameters are provided.
+				m["parameters"] = "{}"
 			}
 			actions = append(actions, m)
 		}
@@ -242,20 +246,22 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 	var actionVals []attr.Value
 	for _, a := range api.AnalyticActions {
 		paramVal := types.MapNull(types.StringType)
-		if a.Parameters != "" {
+		if a.Parameters != "" && a.Parameters != "{}" {
 			var paramMap map[string]string
 			if err := json.Unmarshal([]byte(a.Parameters), &paramMap); err != nil {
 				diags.AddError("Error decoding parameters",
 					fmt.Sprintf("Failed to parse parameters JSON %q: %s", a.Parameters, err.Error()))
 				return
 			}
-			paramElements := make(map[string]attr.Value, len(paramMap))
-			for k, v := range paramMap {
-				paramElements[k] = types.StringValue(v)
+			if len(paramMap) > 0 {
+				paramElements := make(map[string]attr.Value, len(paramMap))
+				for k, v := range paramMap {
+					paramElements[k] = types.StringValue(v)
+				}
+				mapVal, d := types.MapValue(types.StringType, paramElements)
+				diags.Append(d...)
+				paramVal = mapVal
 			}
-			mapVal, d := types.MapValue(types.StringType, paramElements)
-			diags.Append(d...)
-			paramVal = mapVal
 		}
 		actionVals = append(actionVals, types.ObjectValueMust(actionAttrTypes, map[string]attr.Value{
 			"name":       types.StringValue(a.Name),
