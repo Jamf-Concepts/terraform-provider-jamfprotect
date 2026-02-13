@@ -101,7 +101,7 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	client := graphql.NewClient(url, clientID, clientSecret)
+	client := graphql.NewClientWithVersion(url, clientID, clientSecret, p.version)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }

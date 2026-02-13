@@ -18,6 +18,7 @@ import (
 var (
 	ErrAuthentication = errors.New("jamfprotect: authentication failed")
 	ErrGraphQL        = errors.New("jamfprotect: graphql error")
+	ErrNotFound       = errors.New("jamfprotect: resource not found")
 )
 
 // Client communicates with the Jamf Protect GraphQL API.
@@ -25,6 +26,7 @@ type Client struct {
 	baseURL      string
 	clientID     string
 	clientSecret string
+	userAgent    string
 
 	httpClient *http.Client
 
@@ -35,10 +37,17 @@ type Client struct {
 
 // NewClient creates a new Jamf Protect GraphQL client.
 func NewClient(baseURL, clientID, clientSecret string) *Client {
+	return NewClientWithVersion(baseURL, clientID, clientSecret, "dev")
+}
+
+// NewClientWithVersion creates a new Jamf Protect GraphQL client with a custom version string.
+func NewClientWithVersion(baseURL, clientID, clientSecret, version string) *Client {
+	userAgent := fmt.Sprintf("terraform-provider-jamfprotect/%s", version)
 	return &Client{
 		baseURL:      strings.TrimRight(baseURL, "/"),
 		clientID:     clientID,
 		clientSecret: clientSecret,
+		userAgent:    userAgent,
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -79,6 +88,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 		return fmt.Errorf("creating token request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", c.userAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -149,6 +159,7 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", c.accessToken)
+	req.Header.Set("User-Agent", c.userAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -168,10 +179,19 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 
 	if len(gqlResp.Errors) > 0 {
 		messages := make([]string, len(gqlResp.Errors))
+		isNotFound := false
 		for i, e := range gqlResp.Errors {
 			messages[i] = e.Message
+			msg := strings.ToLower(e.Message)
+			if strings.Contains(msg, "not found") || strings.Contains(msg, "not_found") {
+				isNotFound = true
+			}
 		}
-		return fmt.Errorf("%w: %s", ErrGraphQL, strings.Join(messages, "; "))
+		errMsg := strings.Join(messages, "; ")
+		if isNotFound {
+			return fmt.Errorf("%w: %w: %s", ErrNotFound, ErrGraphQL, errMsg)
+		}
+		return fmt.Errorf("%w: %s", ErrGraphQL, errMsg)
 	}
 
 	if target != nil && gqlResp.Data != nil {

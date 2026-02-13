@@ -147,13 +147,18 @@ func TestIsNotFoundError(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "graphql not found error",
-			err:      fmt.Errorf("%w: resource not found", graphql.ErrGraphQL),
+			name:     "ErrNotFound wrapped with ErrGraphQL",
+			err:      fmt.Errorf("%w: %w: resource not found", graphql.ErrNotFound, graphql.ErrGraphQL),
 			expected: true,
 		},
 		{
-			name:     "graphql not_found error",
-			err:      fmt.Errorf("%w: resource not_found", graphql.ErrGraphQL),
+			name:     "ErrNotFound alone",
+			err:      graphql.ErrNotFound,
+			expected: true,
+		},
+		{
+			name:     "ErrNotFound wrapped",
+			err:      fmt.Errorf("wrapped: %w", graphql.ErrNotFound),
 			expected: true,
 		},
 		{

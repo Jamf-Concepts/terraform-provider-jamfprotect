@@ -6,7 +6,6 @@ package provider
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -41,11 +40,7 @@ func stringsToList(vals []string) types.List {
 // This is used to make Delete idempotent — if the resource is already gone, the
 // delete is considered successful.
 func isNotFoundError(err error) bool {
-	if !errors.Is(err, graphql.ErrGraphQL) {
-		return false
-	}
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "not found") || strings.Contains(msg, "not_found")
+	return errors.Is(err, graphql.ErrNotFound)
 }
 
 // pageInfo represents the pagination metadata returned by list queries.
