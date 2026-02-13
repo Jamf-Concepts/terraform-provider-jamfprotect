@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 // listToStrings converts a types.List of strings into a Go []string.
@@ -40,7 +40,7 @@ func stringsToList(vals []string) types.List {
 // This is used to make Delete idempotent — if the resource is already gone, the
 // delete is considered successful.
 func isNotFoundError(err error) bool {
-	return errors.Is(err, graphql.ErrNotFound)
+	return errors.Is(err, client.ErrNotFound)
 }
 
 // pageInfo represents the pagination metadata returned by list queries.

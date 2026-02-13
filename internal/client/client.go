@@ -1,5 +1,7 @@
-// Package graphql provides a lightweight client for the Jamf Protect GraphQL API.
-package graphql
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package client
 
 import (
 	"bytes"
@@ -27,12 +29,39 @@ type Client struct {
 	clientID     string
 	clientSecret string
 	userAgent    string
+	httpClient   *http.Client
+	mu           sync.Mutex
+	accessToken  string
+	tokenExpiry  time.Time
+}
 
-	httpClient *http.Client
+// tokenRequest is the payload sent to the /token endpoint.
+type tokenRequest struct {
+	ClientID string `json:"client_id"`
+	Password string `json:"password"`
+}
 
-	mu          sync.Mutex
-	accessToken string
-	tokenExpiry time.Time
+// tokenResponse is the response from the /token endpoint.
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
+// graphqlRequest is the JSON payload for a GraphQL request.
+type graphqlRequest struct {
+	Query     string         `json:"query"`
+	Variables map[string]any `json:"variables,omitempty"`
+}
+
+// graphqlResponse is the raw GraphQL response envelope.
+type graphqlResponse struct {
+	Data   json.RawMessage `json:"data"`
+	Errors []GraphQLError  `json:"errors,omitempty"`
+}
+
+// GraphQLError represents an error returned by the GraphQL endpoint.
+type GraphQLError struct {
+	Message string `json:"message"`
+	Path    []any  `json:"path,omitempty"`
 }
 
 // NewClient creates a new Jamf Protect GraphQL client.
@@ -54,15 +83,8 @@ func NewClientWithVersion(baseURL, clientID, clientSecret, version string) *Clie
 	}
 }
 
-// tokenRequest is the payload sent to the /token endpoint.
-type tokenRequest struct {
-	ClientID string `json:"client_id"`
-	Password string `json:"password"`
-}
-
-// tokenResponse is the response from the /token endpoint.
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
+func (e GraphQLError) Error() string {
+	return e.Message
 }
 
 // authenticate obtains (or refreshes) an access token. Thread-safe.
@@ -113,28 +135,6 @@ func (c *Client) authenticate(ctx context.Context) error {
 	// Tokens typically last ~30 min; refresh at 25 min as a safety margin.
 	c.tokenExpiry = time.Now().Add(25 * time.Minute)
 	return nil
-}
-
-// graphqlRequest is the JSON payload for a GraphQL request.
-type graphqlRequest struct {
-	Query     string         `json:"query"`
-	Variables map[string]any `json:"variables,omitempty"`
-}
-
-// graphqlResponse is the raw GraphQL response envelope.
-type graphqlResponse struct {
-	Data   json.RawMessage `json:"data"`
-	Errors []GraphQLError  `json:"errors,omitempty"`
-}
-
-// GraphQLError represents an error returned by the GraphQL endpoint.
-type GraphQLError struct {
-	Message string `json:"message"`
-	Path    []any  `json:"path,omitempty"`
-}
-
-func (e GraphQLError) Error() string {
-	return e.Message
 }
 
 // Query executes a GraphQL query/mutation against the /app endpoint and

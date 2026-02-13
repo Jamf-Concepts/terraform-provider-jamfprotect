@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 var _ provider.Provider = &JamfProtectProvider{}
@@ -101,7 +101,7 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	client := graphql.NewClientWithVersion(url, clientID, clientSecret, p.version)
+	client := client.NewClientWithVersion(url, clientID, clientSecret, p.version)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
