@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	graphql "github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 	"golang.org/x/sync/singleflight"
@@ -60,24 +61,6 @@ type tokenResponse struct {
 	TokenType   string `json:"token_type,omitempty"`
 }
 
-// graphqlRequest is the JSON payload for a GraphQL request.
-type graphqlRequest struct {
-	Query     string         `json:"query"`
-	Variables map[string]any `json:"variables,omitempty"`
-}
-
-// graphqlResponse is the raw GraphQL response envelope.
-type graphqlResponse struct {
-	Data   json.RawMessage `json:"data"`
-	Errors []GraphQLError  `json:"errors,omitempty"`
-}
-
-// GraphQLError represents an error returned by the GraphQL endpoint.
-type GraphQLError struct {
-	Message string `json:"message"`
-	Path    []any  `json:"path,omitempty"`
-}
-
 // NewClient creates a new Jamf Protect GraphQL client.
 func NewClient(baseURL, clientID, clientSecret string) *Client {
 	return NewClientWithVersion(baseURL, clientID, clientSecret, "dev")
@@ -108,10 +91,6 @@ func NewClientWithVersion(baseURL, clientID, clientSecret, version string, opts 
 // SetLogger sets the logger for the client.
 func (c *Client) SetLogger(logger Logger) {
 	c.logger = logger
-}
-
-func (e GraphQLError) Error() string {
-	return e.Message
 }
 
 // authenticate obtains (or refreshes) an access token. Thread-safe.
@@ -222,74 +201,47 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
-	body, err := json.Marshal(graphqlRequest{
-		Query:     query,
-		Variables: variables,
+	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
+		r.Header.Set("Authorization", token.AccessToken)
+		r.Header.Set("User-Agent", c.userAgent)
 	})
+
+	if target == nil {
+		_, err := client.ExecRaw(ctx, query, variables)
+		return c.mapGraphQLError(err)
+	}
+
+	return c.mapGraphQLError(client.Exec(ctx, query, target, variables))
+}
+
+// QueryStruct executes a GraphQL query built from a struct definition.
+func (c *Client) QueryStruct(ctx context.Context, query any, variables map[string]any) error {
+	token, err := c.authenticate(ctx)
 	if err != nil {
-		return fmt.Errorf("marshalling query: %w", err)
+		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.baseURL+"/app", bytes.NewReader(body))
+	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
+		r.Header.Set("Authorization", token.AccessToken)
+		r.Header.Set("User-Agent", c.userAgent)
+	})
+
+	return c.mapGraphQLError(client.Query(ctx, query, variables))
+}
+
+// MutateStruct executes a GraphQL mutation built from a struct definition.
+func (c *Client) MutateStruct(ctx context.Context, mutation any, variables map[string]any) error {
+	token, err := c.authenticate(ctx)
 	if err != nil {
-		return fmt.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token.AccessToken)
-	req.Header.Set("User-Agent", c.userAgent)
-
-	if c.logger != nil {
-		c.logger.LogRequest(ctx, http.MethodPost, req.URL.String(), req.Header, body)
+		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("executing query: %w", err)
-	}
-	defer resp.Body.Close()
+	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
+		r.Header.Set("Authorization", token.AccessToken)
+		r.Header.Set("User-Agent", c.userAgent)
+	})
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("reading response: %w", err)
-	}
-	if c.logger != nil {
-		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var gqlResp graphqlResponse
-	if err := json.Unmarshal(respBody, &gqlResp); err != nil {
-		return fmt.Errorf("decoding response: %w", err)
-	}
-
-	if len(gqlResp.Errors) > 0 {
-		messages := make([]string, len(gqlResp.Errors))
-		isNotFound := false
-		for i, e := range gqlResp.Errors {
-			messages[i] = e.Message
-			msg := strings.ToLower(e.Message)
-			if strings.Contains(msg, "not found") || strings.Contains(msg, "not_found") {
-				isNotFound = true
-			}
-		}
-		errMsg := strings.Join(messages, "; ")
-		if isNotFound {
-			return fmt.Errorf("%w: %w: %s", ErrNotFound, ErrGraphQL, errMsg)
-		}
-		return fmt.Errorf("%w: %s", ErrGraphQL, errMsg)
-	}
-
-	if target != nil && gqlResp.Data != nil {
-		if err := json.Unmarshal(gqlResp.Data, target); err != nil {
-			return fmt.Errorf("unmarshalling data: %w", err)
-		}
-	}
-
-	return nil
+	return c.mapGraphQLError(client.Mutate(ctx, mutation, variables))
 }
 
 // AccessToken ensures a valid token is available and returns it.
@@ -315,4 +267,112 @@ func WithHTTPClient(httpClient *http.Client) Option {
 			c.httpClient = httpClient
 		}
 	}
+}
+
+func (c *Client) newGraphQLClient() *graphql.Client {
+	return graphql.NewClient(c.baseURL+"/app", c.graphqlDoer())
+}
+
+func (c *Client) graphqlDoer() graphql.Doer {
+	if c.logger == nil {
+		return c.httpClient
+	}
+
+	return &loggingDoer{
+		base:   c.httpClient,
+		logger: c.logger,
+	}
+}
+
+func (c *Client) mapGraphQLError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+
+	var gqlErrs graphql.Errors
+	if !errors.As(err, &gqlErrs) {
+		return err
+	}
+
+	if isRequestError(gqlErrs) {
+		return err
+	}
+
+	messages := make([]string, 0, len(gqlErrs))
+	isNotFound := false
+	for _, e := range gqlErrs {
+		msg := e.Message
+		if msg == "" {
+			msg = e.Error()
+		}
+		messages = append(messages, msg)
+		lower := strings.ToLower(msg)
+		if strings.Contains(lower, "not found") || strings.Contains(lower, "not_found") {
+			isNotFound = true
+		}
+	}
+	if len(messages) == 0 {
+		return err
+	}
+
+	errMsg := strings.Join(messages, "; ")
+	if isNotFound {
+		return fmt.Errorf("%w: %w: %s", ErrNotFound, ErrGraphQL, errMsg)
+	}
+	return fmt.Errorf("%w: %s", ErrGraphQL, errMsg)
+}
+
+func isRequestError(errs graphql.Errors) bool {
+	for _, e := range errs {
+		code, ok := e.Extensions["code"].(string)
+		if !ok {
+			continue
+		}
+		switch code {
+		case graphql.ErrRequestError,
+			graphql.ErrJsonEncode,
+			graphql.ErrJsonDecode,
+			graphql.ErrGraphQLEncode,
+			graphql.ErrGraphQLDecode,
+			graphql.ErrGraphQLExtensionsDecode:
+			return true
+		default:
+			continue
+		}
+	}
+	return false
+}
+
+type loggingDoer struct {
+	base   graphql.Doer
+	logger Logger
+}
+
+func (d *loggingDoer) Do(req *http.Request) (*http.Response, error) {
+	var reqBody []byte
+	if req.Body != nil {
+		reqBody, _ = io.ReadAll(req.Body)
+		_ = req.Body.Close()
+		req.Body = io.NopCloser(bytes.NewReader(reqBody))
+	}
+	if d.logger != nil {
+		d.logger.LogRequest(req.Context(), req.Method, req.URL.String(), req.Header, reqBody)
+	}
+
+	resp, err := d.base.Do(req)
+	if err != nil {
+		return resp, err
+	}
+	if resp != nil && resp.Body != nil {
+		respBody, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		resp.Body = io.NopCloser(bytes.NewReader(respBody))
+		if d.logger != nil {
+			d.logger.LogResponse(req.Context(), resp.StatusCode, resp.Header, respBody)
+		}
+	}
+	return resp, nil
 }

@@ -210,15 +210,6 @@ func TestClient_Query_NilTarget(t *testing.T) {
 	}
 }
 
-func TestGraphQLError_Error(t *testing.T) {
-	t.Parallel()
-
-	e := GraphQLError{Message: "something went wrong"}
-	if e.Error() != "something went wrong" {
-		t.Errorf("unexpected error string: %q", e.Error())
-	}
-}
-
 func TestNewClientWithVersion(t *testing.T) {
 	t.Parallel()
 

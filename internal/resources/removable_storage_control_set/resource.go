@@ -184,7 +184,7 @@ func (r *USBControlSetResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result struct {
-		CreateUSBControlSet usbControlSetAPIModel `json:"createUSBControlSet"`
+		CreateUSBControlSet usbControlSetAPIModel `graphql:"createUSBControlSet"`
 	}
 	if err := r.client.Query(ctx, createUSBControlSetMutation, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error creating USB control set", err.Error())
@@ -216,7 +216,7 @@ func (r *USBControlSetResource) Read(ctx context.Context, req resource.ReadReque
 
 	vars := map[string]any{"id": data.ID.ValueString()}
 	var result struct {
-		GetUSBControlSet *usbControlSetAPIModel `json:"getUSBControlSet"`
+		GetUSBControlSet *usbControlSetAPIModel `graphql:"getUSBControlSet"`
 	}
 	if err := r.client.Query(ctx, getUSBControlSetQuery, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error reading USB control set", err.Error())
@@ -263,7 +263,7 @@ func (r *USBControlSetResource) Update(ctx context.Context, req resource.UpdateR
 	vars["id"] = data.ID.ValueString()
 
 	var result struct {
-		UpdateUSBControlSet usbControlSetAPIModel `json:"updateUSBControlSet"`
+		UpdateUSBControlSet usbControlSetAPIModel `graphql:"updateUSBControlSet"`
 	}
 	if err := r.client.Query(ctx, updateUSBControlSetMutation, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error updating USB control set", err.Error())
