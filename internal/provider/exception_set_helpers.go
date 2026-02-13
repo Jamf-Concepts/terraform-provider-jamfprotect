@@ -306,7 +306,7 @@ func (r *ExceptionSetResource) apiToState(ctx context.Context, data *ExceptionSe
 }
 
 // apiExceptionsToList converts API exceptions to a Terraform list.
-func apiExceptionsToList(ctx context.Context, apiExceptions []exceptionAPIModel, diags *diag.Diagnostics) types.List {
+func apiExceptionsToList(_ context.Context, apiExceptions []exceptionAPIModel, diags *diag.Diagnostics) types.List {
 	if len(apiExceptions) == 0 {
 		return types.ListValueMust(types.ObjectType{AttrTypes: exceptionAttrTypes}, []attr.Value{})
 	}
@@ -367,7 +367,7 @@ func apiExceptionsToList(ctx context.Context, apiExceptions []exceptionAPIModel,
 }
 
 // apiEsExceptionsToList converts API esExceptions to a Terraform list.
-func apiEsExceptionsToList(ctx context.Context, apiEsExceptions []esExceptionAPIModel, diags *diag.Diagnostics) types.List {
+func apiEsExceptionsToList(_ context.Context, apiEsExceptions []esExceptionAPIModel, diags *diag.Diagnostics) types.List {
 	if len(apiEsExceptions) == 0 {
 		return types.ListValueMust(types.ObjectType{AttrTypes: esExceptionAttrTypes}, []attr.Value{})
 	}

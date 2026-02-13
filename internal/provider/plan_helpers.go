@@ -231,9 +231,19 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	// Comms config (required).
 	if !data.CommsConfig.IsNull() {
 		commsAttrs := data.CommsConfig.Attributes()
+		fqdn, ok := commsAttrs["fqdn"].(types.String)
+		if !ok {
+			diags.AddError("Type assertion failed", "fqdn is not a types.String")
+			return nil
+		}
+		protocol, ok := commsAttrs["protocol"].(types.String)
+		if !ok {
+			diags.AddError("Type assertion failed", "protocol is not a types.String")
+			return nil
+		}
 		vars["commsConfig"] = map[string]any{
-			"fqdn":     commsAttrs["fqdn"].(types.String).ValueString(),
-			"protocol": commsAttrs["protocol"].(types.String).ValueString(),
+			"fqdn":     fqdn.ValueString(),
+			"protocol": protocol.ValueString(),
 		}
 	} else {
 		vars["commsConfig"] = map[string]any{
@@ -245,10 +255,19 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	// Info sync (required).
 	if !data.InfoSync.IsNull() {
 		infoAttrs := data.InfoSync.Attributes()
-		attrsList := infoAttrs["attrs"].(types.List)
+		attrsList, ok := infoAttrs["attrs"].(types.List)
+		if !ok {
+			diags.AddError("Type assertion failed", "attrs is not a types.List")
+			return nil
+		}
+		syncInterval, ok := infoAttrs["insights_sync_interval"].(types.Int64)
+		if !ok {
+			diags.AddError("Type assertion failed", "insights_sync_interval is not a types.Int64")
+			return nil
+		}
 		vars["infoSync"] = map[string]any{
 			"attrs":                listToStrings(ctx, attrsList, diags),
-			"insightsSyncInterval": infoAttrs["insights_sync_interval"].(types.Int64).ValueInt64(),
+			"insightsSyncInterval": syncInterval.ValueInt64(),
 		}
 	} else {
 		vars["infoSync"] = map[string]any{
@@ -260,8 +279,13 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	// Signatures feed config (required).
 	if !data.SignaturesFeedConfig.IsNull() {
 		sigAttrs := data.SignaturesFeedConfig.Attributes()
+		mode, ok := sigAttrs["mode"].(types.String)
+		if !ok {
+			diags.AddError("Type assertion failed", "mode is not a types.String")
+			return nil
+		}
 		vars["signaturesFeedConfig"] = map[string]any{
-			"mode": sigAttrs["mode"].(types.String).ValueString(),
+			"mode": mode.ValueString(),
 		}
 	} else {
 		vars["signaturesFeedConfig"] = map[string]any{

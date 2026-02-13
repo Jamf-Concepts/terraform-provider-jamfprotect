@@ -252,7 +252,7 @@ func (r *ActionConfigResource) buildVariables(ctx context.Context, data ActionCo
 }
 
 // eventTypeToObjectValue converts an API event type model to a Terraform ObjectValue.
-func eventTypeToObjectValue(ctx context.Context, et *alertEventTypeAPIModel, diags *diag.Diagnostics) types.Object {
+func eventTypeToObjectValue(et *alertEventTypeAPIModel, diags *diag.Diagnostics) types.Object {
 	if et == nil {
 		et = &alertEventTypeAPIModel{Attrs: []string{}, Related: []string{}}
 	}
@@ -303,7 +303,7 @@ func apiEventTypeGetter(apiData *alertDataAPIModel, apiName string) *alertEventT
 	}
 }
 
-func (r *ActionConfigResource) apiToState(ctx context.Context, data *ActionConfigResourceModel, api actionConfigAPIModel, diags *diag.Diagnostics) {
+func (r *ActionConfigResource) apiToState(_ context.Context, data *ActionConfigResourceModel, api actionConfigAPIModel, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Hash = types.StringValue(api.Hash)
 	data.Name = types.StringValue(api.Name)
@@ -321,7 +321,7 @@ func (r *ActionConfigResource) apiToState(ctx context.Context, data *ActionConfi
 		dataAttrs := map[string]attr.Value{}
 		for _, m := range eventTypeMapping {
 			apiET := apiEventTypeGetter(api.AlertConfig.Data, m.apiName)
-			dataAttrs[m.tfName] = eventTypeToObjectValue(ctx, apiET, diags)
+			dataAttrs[m.tfName] = eventTypeToObjectValue(apiET, diags)
 		}
 		if diags.HasError() {
 			return

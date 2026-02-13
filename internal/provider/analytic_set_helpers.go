@@ -120,7 +120,7 @@ func (r *AnalyticSetResource) buildVariables(ctx context.Context, data AnalyticS
 }
 
 // apiToState maps the API response into the Terraform state model.
-func (r *AnalyticSetResource) apiToState(ctx context.Context, data *AnalyticSetResourceModel, api analyticSetResourceAPIModel, diags *diag.Diagnostics) {
+func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetResourceModel, api analyticSetResourceAPIModel, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)

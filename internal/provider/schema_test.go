@@ -1033,7 +1033,11 @@ func TestExceptionSetsDataSourceMetadata(t *testing.T) {
 func TestProviderDataSources(t *testing.T) {
 	t.Parallel()
 
-	p := New("test")().(*JamfProtectProvider)
+	provider := New("test")()
+	p, ok := provider.(*JamfProtectProvider)
+	if !ok {
+		t.Fatal("provider is not a *JamfProtectProvider")
+	}
 	dataSources := p.DataSources(context.Background())
 
 	if len(dataSources) != 9 {

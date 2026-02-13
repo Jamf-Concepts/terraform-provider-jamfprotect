@@ -251,7 +251,7 @@ func (d *PlansDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 }
 
 // planAPIToDataSourceItem maps a planAPIModel to PlanDataSourceItemModel.
-func planAPIToDataSourceItem(api planAPIModel, diags *diag.Diagnostics) PlanDataSourceItemModel {
+func planAPIToDataSourceItem(api planAPIModel, _ *diag.Diagnostics) PlanDataSourceItemModel {
 	item := PlanDataSourceItemModel{
 		ID:         types.StringValue(api.ID),
 		Hash:       types.StringValue(api.Hash),

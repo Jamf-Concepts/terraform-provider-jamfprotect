@@ -14,6 +14,30 @@ import (
 	"testing"
 )
 
+// testEncodeJSON is a helper to handle JSON encoding in tests.
+func testEncodeJSON(t *testing.T, w http.ResponseWriter, v any) {
+	t.Helper()
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		t.Fatalf("failed to encode JSON: %v", err)
+	}
+}
+
+// testWrite is a helper to handle writes in tests.
+func testWrite(t *testing.T, w http.ResponseWriter, data []byte) {
+	t.Helper()
+	if _, err := w.Write(data); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+}
+
+// testDecodeJSON is a helper to handle JSON decoding in tests.
+func testDecodeJSON(t *testing.T, r *http.Request, v any) {
+	t.Helper()
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		t.Fatalf("failed to decode JSON: %v", err)
+	}
+}
+
 func TestNewClient(t *testing.T) {
 	t.Parallel()
 
@@ -39,14 +63,14 @@ func TestClient_Query_Success(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "test-token"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "test-token"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "test-token" {
 			t.Errorf("expected Authorization %q, got %q", "test-token", got)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		testEncodeJSON(t, w, map[string]any{
 			"data": map[string]any{
 				"getAnalytic": map[string]any{
 					"uuid": "abc-123",
@@ -84,10 +108,10 @@ func TestClient_Query_GraphQLErrors(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
+		testEncodeJSON(t, w, map[string]any{
 			"errors": []map[string]any{
 				{"message": "field not found"},
 				{"message": "type mismatch"},
@@ -114,7 +138,7 @@ func TestClient_Query_AuthFailure(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error": "invalid_client"}`))
+		testWrite(t, w, []byte(`{"error": "invalid_client"}`))
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -141,10 +165,10 @@ func TestClient_TokenCaching(t *testing.T) {
 		mu.Lock()
 		tokenCalls++
 		mu.Unlock()
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "cached-tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "cached-tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{}})
+		testEncodeJSON(t, w, map[string]any{"data": map[string]any{}})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -170,10 +194,10 @@ func TestClient_Query_NilTarget(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"deleteAnalytic": map[string]any{"uuid": "x"}}})
+		testEncodeJSON(t, w, map[string]any{"data": map[string]any{"deleteAnalytic": map[string]any{"uuid": "x"}}})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -219,11 +243,11 @@ func TestClient_Query_UserAgentHeader(t *testing.T) {
 	var capturedUserAgent string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "test-token"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "test-token"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		capturedUserAgent = r.Header.Get("User-Agent")
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{}})
+		testEncodeJSON(t, w, map[string]any{"data": map[string]any{}})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -277,10 +301,10 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 
 			mux := http.NewServeMux()
 			mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-				json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+				testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 			})
 			mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
-				json.NewEncoder(w).Encode(map[string]any{
+				testEncodeJSON(t, w, map[string]any{
 					"errors": []map[string]any{
 						{"message": tc.errorMessage},
 					},
@@ -320,7 +344,7 @@ func TestClient_Query_ContextCancellation(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -344,11 +368,11 @@ func TestClient_Query_HTTPError(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		testWrite(t, w, []byte("internal server error"))
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -369,11 +393,11 @@ func TestClient_Query_MalformedJSON(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("{invalid json"))
+		testWrite(t, w, []byte("{invalid json"))
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -391,7 +415,7 @@ func TestClient_Authenticate_EmptyToken(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": ""})
+		testEncodeJSON(t, w, map[string]string{"access_token": ""})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -415,18 +439,18 @@ func TestClient_Query_WithVariables(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Query     string         `json:"query"`
 			Variables map[string]any `json:"variables"`
 		}
-		json.NewDecoder(r.Body).Decode(&req)
+		testDecodeJSON(t, r, &req)
 		receivedQuery = req.Query
 		receivedVars = req.Variables
 
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"result": "ok"}})
+		testEncodeJSON(t, w, map[string]any{"data": map[string]any{"result": "ok"}})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -454,10 +478,10 @@ func TestClient_Query_NullData(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{"data": nil})
+		testEncodeJSON(t, w, map[string]any{"data": nil})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
