@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 var _ resource.Resource = &AnalyticResource{}
@@ -33,7 +33,7 @@ func NewAnalyticResource() resource.Resource {
 
 // AnalyticResource manages a Jamf Protect custom analytic.
 type AnalyticResource struct {
-	client *graphql.Client
+	client *client.Client
 }
 
 func (r *AnalyticResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -176,10 +176,10 @@ func (r *AnalyticResource) Configure(ctx context.Context, req resource.Configure
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*graphql.Client)
+	client, ok := req.ProviderData.(*client.Client)
 	if !ok {
 		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *graphql.Client, got: %T", req.ProviderData))
+			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
 	r.client = client

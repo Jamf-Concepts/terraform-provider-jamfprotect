@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 var _ datasource.DataSource = &ExceptionSetsDataSource{}
@@ -23,7 +23,7 @@ func NewExceptionSetsDataSource() datasource.DataSource {
 
 // ExceptionSetsDataSource lists all exception sets in Jamf Protect.
 type ExceptionSetsDataSource struct {
-	client *graphql.Client
+	client *client.Client
 }
 
 // ExceptionSetsDataSourceModel maps the data source schema.
@@ -78,10 +78,10 @@ func (d *ExceptionSetsDataSource) Configure(ctx context.Context, req datasource.
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*graphql.Client)
+	client, ok := req.ProviderData.(*client.Client)
 	if !ok {
 		resp.Diagnostics.AddError("Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *graphql.Client, got: %T", req.ProviderData))
+			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
 	d.client = client

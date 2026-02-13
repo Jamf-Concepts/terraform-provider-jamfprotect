@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 var _ resource.Resource = &TelemetryV2Resource{}
@@ -31,7 +31,7 @@ func NewTelemetryV2Resource() resource.Resource {
 
 // TelemetryV2Resource manages a Jamf Protect telemetry v2 configuration.
 type TelemetryV2Resource struct {
-	client *graphql.Client
+	client *client.Client
 }
 
 func (r *TelemetryV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -108,10 +108,10 @@ func (r *TelemetryV2Resource) Configure(ctx context.Context, req resource.Config
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*graphql.Client)
+	client, ok := req.ProviderData.(*client.Client)
 	if !ok {
 		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *graphql.Client, got: %T", req.ProviderData))
+			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
 	r.client = client

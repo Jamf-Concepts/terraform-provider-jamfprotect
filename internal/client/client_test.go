@@ -1,7 +1,4 @@
-// Copyright (c) James Smith 2025
-// SPDX-License-Identifier: MPL-2.0
-
-package graphql
+package client
 
 import (
 	"context"
@@ -12,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // testEncodeJSON is a helper to handle JSON encoding in tests.
@@ -63,7 +61,7 @@ func TestClient_Query_Success(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		testEncodeJSON(t, w, map[string]string{"access_token": "test-token"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "test-token", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "test-token" {
@@ -108,7 +106,7 @@ func TestClient_Query_GraphQLErrors(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		testEncodeJSON(t, w, map[string]any{
@@ -165,7 +163,7 @@ func TestClient_TokenCaching(t *testing.T) {
 		mu.Lock()
 		tokenCalls++
 		mu.Unlock()
-		testEncodeJSON(t, w, map[string]string{"access_token": "cached-tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "cached-tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		testEncodeJSON(t, w, map[string]any{"data": map[string]any{}})
@@ -194,7 +192,7 @@ func TestClient_Query_NilTarget(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		testEncodeJSON(t, w, map[string]any{"data": map[string]any{"deleteAnalytic": map[string]any{"uuid": "x"}}})
@@ -243,7 +241,7 @@ func TestClient_Query_UserAgentHeader(t *testing.T) {
 	var capturedUserAgent string
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "test-token"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "test-token", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		capturedUserAgent = r.Header.Get("User-Agent")
@@ -301,7 +299,7 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 
 			mux := http.NewServeMux()
 			mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-				testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+				testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 			})
 			mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 				testEncodeJSON(t, w, map[string]any{
@@ -344,7 +342,7 @@ func TestClient_Query_ContextCancellation(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -368,7 +366,7 @@ func TestClient_Query_HTTPError(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -393,7 +391,7 @@ func TestClient_Query_MalformedJSON(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -415,7 +413,7 @@ func TestClient_Authenticate_EmptyToken(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": ""})
+		testEncodeJSON(t, w, map[string]any{"access_token": "", "expires_in": 3600})
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -431,6 +429,36 @@ func TestClient_Authenticate_EmptyToken(t *testing.T) {
 	}
 }
 
+func TestClient_AccessToken_ExpiresIn(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		testEncodeJSON(t, w, map[string]any{
+			"access_token": "tok",
+			"expires_in":   3600,
+			"token_type":   "Bearer",
+		})
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	client := NewClient(srv.URL, "cid", "csecret")
+
+	start := time.Now()
+	_, expiresAt, err := client.AccessToken(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	end := time.Now()
+
+	minExpected := start.Add(59 * time.Minute)
+	maxExpected := end.Add(60 * time.Minute)
+	if expiresAt.Before(minExpected) || expiresAt.After(maxExpected) {
+		t.Fatalf("unexpected expiry time: %s (expected between %s and %s)", expiresAt, minExpected, maxExpected)
+	}
+}
+
 func TestClient_Query_WithVariables(t *testing.T) {
 	t.Parallel()
 
@@ -439,7 +467,7 @@ func TestClient_Query_WithVariables(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
@@ -478,7 +506,7 @@ func TestClient_Query_NullData(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
-		testEncodeJSON(t, w, map[string]string{"access_token": "tok"})
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 	})
 	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
 		testEncodeJSON(t, w, map[string]any{"data": nil})
