@@ -9,17 +9,19 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 - Go >= 1.25, Terraform >= 1.0.
 
 ### Available mise tasks
-| Task          | Description                                                      |
-| ------------- | ---------------------------------------------------------------- |
-| `go:build`    | Build the provider                                               |
-| `go:install`  | Build and install the provider locally (depends on `go:build`)   |
-| `go:fmt`      | Format Go source files                                           |
-| `go:lint`     | Run golangci-lint                                                |
-| `go:tidy`     | Tidy Go module dependencies                                     |
-| `test`        | Run unit tests                                                   |
-| `testacc`     | Run acceptance tests (injects credentials via `fnox exec --`)    |
-| `generate`    | Generate provider documentation with tfplugindocs                |
-| `check`       | Run fmt, lint, and unit tests (composite)                        |
+| Task                  | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| `install`             | Install Go module dependencies                                       |
+| `tidy`                | Tidy Go module dependencies                                         |
+| `build`               | Build the provider and generate documentation (composite)            |
+| `build:provider`      | Build the provider                                                   |
+| `build:generate-docs` | Generate provider documentation with tfplugindocs                    |
+| `dev:install`         | Build and install the provider locally (depends on `build`)          |
+| `fmt`                 | Format Go source files                                               |
+| `lint`                | Run golangci-lint                                                    |
+| `test`                | Run unit tests                                                       |
+| `testacc`             | Run acceptance tests (injects credentials via `fnox exec --`)        |
+| `check`               | Run fmt, lint, and unit tests (composite)                            |
 
 ## Python Scripts
 - Do not call `python` directly.
@@ -71,8 +73,8 @@ examples/                        # Example Terraform configurations
 ## Provider Development
 - Terraform Plugin Framework code lives in `internal/`.
 - The GraphQL client (`internal/graphql/client.go`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
-- Run formatting and linting before committing: `mise run go:fmt` and `mise run go:lint`.
-- Generate docs with `mise run generate`.
+- Run formatting and linting before committing: `mise run fmt` and `mise run lint`.
+- Generate docs with `mise run build:generate-docs`.
 - Run tests with `mise run test`; acceptance tests with `mise run testacc` (requires real tenant).
 
 ## Environment Variables
@@ -96,4 +98,4 @@ examples/                        # Example Terraform configurations
 
 ## Documentation & Examples
 - Update `docs/` and `examples/` when adding new resources or data sources.
-- Run `mise run generate` to regenerate documentation from schema descriptions.
+- Run `mise run build:generate-docs` to regenerate documentation from schema descriptions.

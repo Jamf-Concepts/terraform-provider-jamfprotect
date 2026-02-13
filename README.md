@@ -166,7 +166,7 @@ resource "jamfprotect_unified_logging_filter" "auth_events" {
 3. Build the provider:
 
 ```shell
-mise run go:build
+mise run build
 ```
 
 ## Developing the Provider
@@ -177,7 +177,7 @@ This provider uses [Go modules](https://github.com/golang/go/wiki/Modules). To a
 
 ```shell
 go get github.com/author/dependency
-mise run go:tidy
+mise run tidy
 ```
 
 ### Testing
@@ -199,7 +199,7 @@ mise run testacc
 Generate or update documentation:
 
 ```shell
-mise run generate
+mise run build:generate-docs
 ```
 
 ## Publishing to Terraform Registry
@@ -221,7 +221,7 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 
 2. Regenerate documentation and verify no drift:
    ```shell
-   mise run generate
+   mise run build:generate-docs
    git diff --exit-code
    ```
 

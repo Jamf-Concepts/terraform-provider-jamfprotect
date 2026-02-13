@@ -22,9 +22,9 @@ jobs:
       - uses: jdx/mise-action@v2
         with:
           experimental: true
-      - run: mise run go:build
+      - run: mise run build:provider
       - name: Run linters
-        run: mise run go:lint
+        run: mise run lint
 
   generate:
     runs-on: ubuntu-latest
@@ -33,11 +33,11 @@ jobs:
       - uses: jdx/mise-action@v2
         with:
           experimental: true
-      - run: mise run generate
+      - run: mise run build:generate-docs
       - name: git diff
         run: |
           git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after code generation. Run 'mise run generate' command and commit."; exit 1)
+            (echo; echo "Unexpected difference in directories after code generation. Run 'mise run build:generate-docs' command and commit."; exit 1)
 
   unit-test:
     name: Unit Tests
