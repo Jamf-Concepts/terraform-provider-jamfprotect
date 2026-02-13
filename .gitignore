@@ -21,3 +21,5 @@ modules-dev/
 *.iml
 *.test
 SESSION_SUMMARY.md
+sandbox/*
+terraform-provider-jamfprotect

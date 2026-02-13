@@ -23,6 +23,7 @@ run = "go mod tidy"
 [tasks."build:provider"]
 description = "Build the provider"
 run = "go build -v ./..."
+depends = ["install"]
 
 [tasks."build:generate-docs"]
 description = "Generate provider documentation with tfplugindocs"
@@ -35,10 +36,15 @@ depends = ["build:provider", "build:generate-docs"]
 
 # ── Development tasks ────────────────────────────────────────────────────────
 
-[tasks."dev:install"]
-description = "Build and install the provider locally"
-run = "go install -v ./..."
-depends = ["build"]
+[tasks."dev:build"]
+description = "Build the provider binary into the project root"
+run = "go build -o terraform-provider-jamfprotect"
+
+# dev:sandbox is a file task at .mise-tasks/dev/sandbox
+
+[tasks.dev]
+description = "Build the provider and set up the sandbox environment"
+depends = ["dev:build", "dev:sandbox"]
 
 [tasks.fmt]
 description = "Format Go source files"

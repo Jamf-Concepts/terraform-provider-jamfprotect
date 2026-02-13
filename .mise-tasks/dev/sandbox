@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#MISE description="Create sandbox environment for testing with Terraform CLI"
+#MISE wait_for=["dev:build"]
+set -e
+
+mkdir -p sandbox
+
+cat > sandbox/.terraformrc << EOF
+provider_installation {
+  dev_overrides {
+    "smithjw/jamfprotect" = "$PWD"
+  }
+  direct {}
+}
+EOF
+
+if [ ! -f sandbox/mise.toml ]; then
+    cat > sandbox/mise.toml << EOF
+[env]
+TF_CLI_CONFIG_FILE = "{{config_root}}/sandbox/.terraformrc"
+EOF
+fi
+
+if [ ! -f sandbox/provider.tf ]; then
+    cat > sandbox/provider.tf << 'EOF'
+terraform {
+  required_providers {
+    jamfprotect = {
+      source = "smithjw/jamfprotect"
+    }
+  }
+}
+provider "jamfprotect" {}
+EOF
+fi
+
+if [ ! -f sandbox/main.tf ]; then
+    cat > sandbox/main.tf << 'EOF'
+resource "jamfprotect_prevent_list" "test" {
+  name        = "TF Sandbox Test"
+  description = "Created by local provider dev"
+  type        = "TEAMID"
+  tags        = ["testing"]
+  list        = ["ABC123DEF4"]
+}
+EOF
+fi
+
+echo "Sandbox ready at sandbox/"
+echo "  cd sandbox && fnox exec -- terraform plan"
