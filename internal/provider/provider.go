@@ -122,6 +122,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 	return []func() datasource.DataSource{
 		NewActionConfigsDataSource,
 		NewAnalyticsDataSource,
+		NewAnalyticSetsDataSource,
 		NewPlansDataSource,
 		NewPreventListsDataSource,
 		NewTelemetriesV2DataSource,

@@ -1,0 +1,154 @@
+
+Goal
+Build an idiomatic Terraform provider for Jamf Protect backed by a GraphQL API. The project has gone through schema improvements, resource implementation, data source implementation, and is now implementing 8 high-impact provider improvements to make the resources work in a more modern Terraform-defined way. After that, the user wants a Python script to convert Jamf Protect custom analytic YAML files from the github.com/jamf/jamfprotect repo into Terraform HCL.
+Instructions
+- See AGENTS.md for full project structure, conventions, API docs, testing guide, and "Adding a New Resource" workflow
+- Tests run via mise run test for unit tests, mise run testacc for acceptance tests (requires JAMFPROTECT_URL, JAMFPROTECT_CLIENT_ID, JAMFPROTECT_CLIENT_SECRET env vars via fnox)
+- Build with mise run build (or mise run dev:build for local binary)
+- Commit using --author="opencode <noreply@opencode.ai>" --no-gpg-sign
+- Work autonomously without user input
+- When implementing new functions, add required tests and get them passing before moving to next item
+- Batch up changes and commit often in logical chunks
+- Update relevant documents as you go
+- Track todos in TODO.md
+- Make sure all code is clear, secure, and follows modern best practices for Terraform and Go
+- Mise tasks should be usable by both humans AND agents, and should replace the need to run mise activate before commands since mise run <task> auto-activates tools
+- GitHub Actions should use jdx/mise-action and mirror local mise tasks so local dev and CI are consistent
+- Complex mise tasks should be file tasks in .mise-tasks/ directory
+Discoveries
+1. Plan resource analyticSets input uses uuid field (not analyticSet) in the PlanAnalyticSetInput
+2. Plan field values: signaturesFeedConfig.mode = "blocking" (not ON/OFF), commsConfig.protocol = "mqtt" (lowercase), analyticSets[].type = "Report"/"Prevent", logLevel = "ERROR"
+3. Info sync valid attrs: arch, hostName, kernelVersion, memorySize, modelName, osMajor, osMinor, osPatch, osString, serial, insights
+4. Analytic inputType valid values: GPFSEvent, GPDownloadEvent, GPProcessEvent, GPScreenshotEvent, GPKeylogRegisterEvent, GPClickEvent, GPMRTEvent, GPUSBEvent, GPGatekeeperEvent
+5. Analytic analyticActions.parameters is a JSON-encoded string in the API (e.g. "{\"id\":\"smartgroup\"}")
+6. Analytic actions parameters field is AWSJSON! (non-null) — when no parameters are provided, the provider must send "{}" (empty JSON object), not omit the field. On read-back, "{}" must be mapped to null in Terraform state to avoid "inconsistent result after apply" errors.
+7. PreventList tags are NOT returned by the API's getPreventList query — the provider uses a manual preservation hack to keep them in state
+8. Reference providers studied: terraform-provider-jamfpro and terraform-provider-jamfplatform — both use stringvalidator.OneOf() for enums, RequiresReplace() for immutable fields, Optional+Computed+Default pattern, nested blocks, and snake_case field naming with case conversion
+9. terraform-plugin-framework-validators v0.19.0 and terraform-plugin-framework-timeouts v0.7.0 are dependencies
+10. The GraphQL client respects context cancellation — uses http.NewRequestWithContext(ctx, ...) on both token and query paths
+11. Alert config structure: The alertConfig JSON has structure { "data": { "<eventType>": { "attrs": [...], "related": [...] } } } with exactly 14 event types
+12. Event type name mapping (snake_case → camelCase): binary→binary, click_event→clickEvent, download_event→downloadEvent, file→file, fs_event→fsEvent, group→group, proc_event→procEvent, process→process, screenshot_event→screenshotEvent, usb_event→usbEvent, user→user, gk_event→gkEvent, keylog_register_event→keylogRegisterEvent, mrt_event→mrtEvent
+13. USBControlSet API: Polymorphic rules field with VendorRule (vendors list), SerialRule (serials list), ProductRule (vendor+product pairs). defaultMountAction enum: ReadOnly, ReadWrite, Prevented. No $RBAC_Plan directive needed.
+14. TelemetryV2 API: No getTelemetryV2 query was captured from browser DevTools — the provider constructs one following the same pattern.
+15. ID field discrepancy: Some resources use id (Plan, ActionConfig, PreventList, TelemetryV2, USBControlSet) while others use uuid (Analytic, UnifiedLoggingFilter). The get queries reflect this (getPlan(id: $id) vs getAnalytic(uuid: $uuid)).
+16. Pagination pattern: All list queries use token-based pagination with input: {next: $nextToken, order: {direction, field}, pageSize: 100} and return {items{...}, pageInfo{next, total}}. Exception: listAnalytics takes no input parameters at all.
+17. List query field coverage: listActionConfigs only returns basic fields (id, name, description, created, updated) — NOT the full alertConfig.
+18. listUnifiedLoggingFilters requires a non-null $filter: UnifiedLoggingFiltersFilterInput! parameter.
+19. Import pattern issue: All 7 resources do a full API read inside ImportState(), then Terraform automatically calls Read() again — resulting in a double API call on every import. Modern best practice is resource.ImportStatePassthroughID() to just set the ID and let Read() handle the rest.
+20. Missing UseStateForUnknown on created and hash: These computed fields show "(known after apply)" noise on every plan even though they never change (or only change when config changes).
+21. description has Optional+Computed but no default: Causes "(known after apply)" when omitted.
+22. No ErrNotFound sentinel error: isNotFoundError() relies on fragile string matching ("not found"/"not_found") against ErrGraphQL.
+23. No User-Agent header in HTTP requests to the Jamf Protect API.
+24. Analytic level has no range validator — accepts any Int64 value.
+25. Prevent list missing updated attribute (all other resources have it).
+26. Jamf Protect custom analytic YAML schema maps closely to jamfprotect_analytic resource. Key YAML fields: name, uuid, longDescription→description, inputType→input_type, filter, level, severity, tags, categories, snapshotFiles→snapshot_files, actions[].name→analytic_actions[].name, context→context. Extra YAML-only fields: shortDescription, label, version, remediation, MitreCategories. All ~80 YAML files use level: 0, actions: [{name: Log}], and only 4 of 9 input types.
+Accomplished
+Committed (17 commits on main, ahead of origin by 17)
+1. 31d317b: Added validators, defaults, and RequiresReplace to all resource schemas
+2. 83d0c00: Replaced analytic parameters JSON string with typed map attribute
+3. e6ee507: Standardized ID attribute naming to id across all resources
+4. e694bb4: Split all 5 resource files into resource, types, and helpers
+5. 825a7cd: Updated TODO.md
+6. 03be9c0: Added operation timeouts to all resources
+7. eb9ef90: Replaced action_config alert_config JSON blob with typed nested attributes
+8. c59c374: Standardized patterns, fixed examples, added idempotent deletes
+9. 967da57: Added mise tasks to mise.toml, updated AGENTS.md and README.md
+10. 798da70: Added jamfprotect_usb_control_set and jamfprotect_telemetry_v2 resources
+11. b036858: Updated AGENTS.md project structure and README.md supported resources table
+12. b576d4f: Migrated GitHub Actions to jdx/mise-action@v2
+13. 41b5615: Added alpha publishing steps to README
+14. 03b65c1: Renamed mise tasks to language-agnostic conventions
+15. 2114e1e: Fixed analytic AWSJSON! non-null requirement for action parameters
+16. f61f058: Added dev:build task, sandbox file task, and gitignore updates
+17. 56429a3: Added data sources for all 7 resource types (with examples, docs, tests)
+In Progress — 8 High-Impact Provider Improvements
+The user asked for a review of how to make resources more "Terraform-defined". Analysis was completed (reading all files, researching modern TF patterns, analyzing Jamf YAML format). User chose to implement high-impact improvements first, then Python YAML conversion script.
+8 improvements to implement (ALL NOT YET STARTED — no code changes made yet):
+| # | Item | Status |
+|---|---|---|
+| 1 | Switch all 7 resources to resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp) | Not started |
+| 2 | Add UseStateForUnknown() to created on all 7 resources | Not started |
+| 3 | Add UseStateForUnknown() to hash on Plan and ActionConfig resources | Not started |
+| 4 | Add stringdefault.StaticString("") to description on all 7 resources | Not started |
+| 5 | Add ValidateConfig for cross-attribute validation where applicable | Not started |
+| 6 | Add proper ErrNotFound sentinel to GraphQL client (replace string matching in isNotFoundError) | Not started |
+| 7 | Add User-Agent: terraform-provider-jamfprotect/{version} header to all HTTP requests | Not started |
+| 8 | Add int64validator.Between() range validator to analytic level attribute | Not started |
+After improvements: Python YAML conversion script
+- Create tools/scripts/convert_analytics_yaml.py using uv inline script format
+- Reads YAML files from github.com/jamf/jamfprotect/custom_analytic_detections/
+- Outputs Terraform HCL .tf files and import {} blocks (Terraform 1.5+ syntax)
+- Maps YAML fields to Terraform analytic resource attributes per the mapping table in Discovery #26
+Key implementation details for each improvement:
+Item 1 (ImportStatePassthroughID): Replace the custom ImportState methods in all 7 *_resource.go files. Current pattern (example from action_config_resource.go lines 332-354) does a full API query + apiToState; replace with single line resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp). The Read() method already handles full state population. Special case: prevent_list_resource.go — import currently sets data.Tags = types.ListNull(types.StringType) because tags aren't returned by the API. With passthrough ID, Read() will need to handle this (it already does via stateTags preservation, but on import there won't be prior state tags — need to verify this still works).
+Item 2 (UseStateForUnknown on created): Add PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()} to the created attribute in all 7 resource schemas. Exact locations:
+- action_config_resource.go line 155-158
+- analytic_resource.go line 149-152
+- plan_resource.go line 168-171
+- prevent_list_resource.go line 80-83
+- telemetry_v2_resource.go line 85-88
+- unified_logging_filter_resource.go line 81-84
+- usb_control_set_resource.go line 125-128
+Item 3 (UseStateForUnknown on hash): Add to hash attribute on action_config_resource.go line 60-63 and plan_resource.go line 52-54.
+Item 4 (description default): Add Default: stringdefault.StaticString("") to the description attribute in all 7 resources. Will need to add the import "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault" where not already present.
+Item 5 (ValidateConfig): Need to identify cross-attribute validation rules. Example: USB control set rules should have vendors set when type is VendorRule, serials when SerialRule, products when ProductRule.
+Item 6 (ErrNotFound): Add ErrNotFound = errors.New("jamfprotect: resource not found") to internal/graphql/client.go. In the Query method, check GraphQL error messages for "not found"/"not_found" and wrap with ErrNotFound instead of ErrGraphQL. Update isNotFoundError() in helpers.go to use errors.Is(err, graphql.ErrNotFound). Update tests in helpers_test.go and client_test.go.
+Item 7 (User-Agent): Add a userAgent field to the Client struct in internal/graphql/client.go. Set it in NewClient() (need to accept version param or set via method). Add req.Header.Set("User-Agent", c.userAgent) to both the authenticate() and Query() methods. The version string is available in main.go as version var, passed to provider.New(version).
+Item 8 (level validator): Add int64validator.Between(0, 10) (or appropriate range) to analytic_resource.go line 80-83. Will need import "github.com/hashicorp/terraform-plugin-framework-validators/int64validator" and int64validator import.
+Relevant files / directories
+Configuration & Build
+- mise.toml — Task definitions
+- .mise-tasks/dev/sandbox — File task for sandbox setup
+- .gitignore — Includes provider binary and sandbox/
+- .goreleaser.yml — GoReleaser v2 config
+- go.mod / go.sum — Go 1.25.5, terraform-plugin-framework v1.17.0
+- main.go — Provider entrypoint (has version var)
+Documentation
+- AGENTS.md — Agent conventions doc
+- README.md — Project README
+- TODO.md — Task tracking
+CI/CD
+- .github/workflows/test.yml — Test workflow
+- .github/workflows/release.yml — Release workflow
+Core Provider (WILL BE MODIFIED)
+- internal/provider/provider.go — JamfProtectProvider
+- internal/provider/helpers.go — isNotFoundError(), listToStrings, stringsToList, pageInfo
+- internal/provider/helpers_test.go — Tests for helpers including isNotFoundError
+GraphQL Client (WILL BE MODIFIED)
+- internal/graphql/client.go — GraphQL client (185 lines) — needs ErrNotFound sentinel + User-Agent header
+- internal/graphql/client_test.go — Client tests (195 lines) — needs new test cases
+Resources (ALL 7 WILL BE MODIFIED for improvements 1-4)
+- internal/provider/action_config_resource.go (355 lines) — ImportState at 332-354, created at 155-158, hash at 60-63, description at 68-72
+- internal/provider/analytic_resource.go (353 lines) — ImportState at 330-352, created at 149-152, description at 71-75, level at 80-83
+- internal/provider/plan_resource.go (371 lines) — ImportState at 348-370, created at 168-171, hash at 52-54, description at 59-63
+- internal/provider/prevent_list_resource.go (283 lines) — ImportState at 259-282 (special: sets tags to null), created at 80-83, description at 53-57
+- internal/provider/telemetry_v2_resource.go (285 lines) — ImportState at 262-284, created at 85-88, description at 52-56
+- internal/provider/unified_logging_filter_resource.go (281 lines) — ImportState at 258-280, created at 81-84, description at 54-58
+- internal/provider/usb_control_set_resource.go (325 lines) — ImportState at 302-324, created at 125-128, description at 56-60
+Resource Types & Helpers (for reference, likely unchanged)
+- internal/provider/*_types.go — Type definitions for each resource
+- internal/provider/*_helpers.go — GraphQL queries and buildVariables/apiToState functions
+Tests
+- internal/provider/schema_test.go — Schema validation unit tests (61 tests)
+- internal/provider/*_resource_test.go — Acceptance tests per resource
+Data Sources (already committed, no changes needed)
+- internal/provider/*_data_source.go — 7 data source files
+Examples
+- examples/resources/ — 7 resource examples
+- examples/data-sources/ — 7 data source examples
+Sandbox (gitignored)
+- sandbox/ — Local development sandbox
+GraphQL Reference
+- queries_and_mutations/ — 42 captured GraphQL operations
+
+## TODO
+[ ] Switch all 7 resources to ImportStatePassthroughID
+[ ] Add UseStateForUnknown to 'created' on all 7 resources
+[ ] Add UseStateForUnknown to 'hash' on Plan resource
+[ ] Add stringdefault.StaticString("") to 'description' on all resources
+[ ] Add ValidateConfig for cross-attribute validation where applicable
+[ ] Fix isNotFoundError to use proper ErrNotFound sentinel
+[ ] Add User-Agent header to GraphQL client
+[ ] Add int64 range validator to analytic 'level' attribute
+[ ] Run tests and verify all changes
+[ ] Commit provider improvements
