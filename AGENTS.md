@@ -5,7 +5,6 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 
 ## Tooling
 - Use `mise` for all toolchain setup and task execution. Run `mise run <task>` to execute tasks (auto-activates tools — no need for `eval "$(mise activate)"`).
-- For Jamf Protect API calls, use `fnox exec --` to inject credentials (already embedded in relevant mise tasks like `testacc`).
 - Go >= 1.25, Terraform >= 1.0.
 
 ### Available mise tasks
@@ -20,14 +19,14 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 | `fmt`                 | Format Go source files                                               |
 | `lint`                | Run golangci-lint                                                    |
 | `test`                | Run unit tests                                                       |
-| `testacc`             | Run acceptance tests (injects credentials via `fnox exec --`)        |
+| `testacc`             | Run acceptance tests (requires environment variables)                |
 | `check`               | Run fmt, lint, and unit tests (composite)                            |
 
 ## Python Scripts
 - Do not call `python` directly.
 - Use `uv` with the script shebang format:
   `#!/usr/bin/env -S uv run --script` and inline frontmatter.
-- Run scripts with `uv run path/to/script.py` (prefer `fnox exec -- uv run ...` for API calls).
+- Run scripts with `uv run path/to/script.py` or `uvx` for CLI tools.
 
 ## Jamf Protect API
 - The Jamf Protect API exposes two GraphQL endpoints:
@@ -38,7 +37,7 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
   - `introspect_jamfprotect_schema.py` — introspects `/graphql` for type discovery.
   - `describe_jamfprotect_graphql.py` — describes types from introspection output.
   - `mutation.py` — run arbitrary mutations against `/app`.
-- Captured queries and mutations from browser DevTools live in `queries_and_mutations/` (42 operations covering ActionConfigs, Analytic, AnalyticSets, Plan, PreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
+- Captured queries and mutations from browser DevTools live in `queries_and_mutations/` (operations covering ActionConfigs, Analytic, AnalyticSets, ExceptionSets, Plan, PreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
 
 ## Project Structure
 ```
@@ -55,6 +54,8 @@ internal/
     schema_test.go               # Schema validation unit tests
     action_config_resource.go    # jamfprotect_action_config (CRUD + import)
     analytic_resource.go         # jamfprotect_analytic (CRUD + import)
+    analytic_set_resource.go     # jamfprotect_analytic_set (CRUD + import)
+    exception_set_resource.go    # jamfprotect_exception_set (CRUD + import)
     plan_resource.go             # jamfprotect_plan (CRUD + import)
     prevent_list_resource.go     # jamfprotect_prevent_list (CRUD + import)
     telemetry_v2_resource.go     # jamfprotect_telemetry_v2 (CRUD + import)
@@ -65,12 +66,14 @@ internal/
     *_resource_test.go           # Acceptance tests for each resource
     plans_data_source.go         # jamfprotect_plans data source
     analytics_data_source.go     # jamfprotect_analytics data source
+    analytic_sets_data_source.go # jamfprotect_analytic_sets data source
+    exception_sets_data_source.go # jamfprotect_exception_sets data source
     action_configs_data_source.go        # jamfprotect_action_configs data source
     prevent_lists_data_source.go         # jamfprotect_prevent_lists data source
     telemetries_v2_data_source.go        # jamfprotect_telemetries_v2 data source
     unified_logging_filters_data_source.go  # jamfprotect_unified_logging_filters data source
     usb_control_sets_data_source.go      # jamfprotect_usb_control_sets data source
-queries_and_mutations/           # 42 captured GraphQL operations (reference material)
+queries_and_mutations/           # Captured GraphQL operations (reference material)
 tools/
   scripts/                       # Python helper scripts for API discovery
 docs/                            # Generated provider documentation (resources + data sources)

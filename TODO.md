@@ -8,9 +8,9 @@ _(None — all schema improvements and data sources complete)_
 
 ## Completed
 
-- [x] **Data Sources** — Added read-only data sources for all 7 resource types
-  - `jamfprotect_plans`, `jamfprotect_analytics`, `jamfprotect_action_configs`
-  - `jamfprotect_prevent_lists`, `jamfprotect_telemetries_v2`
+- [x] **Data Sources** — Added read-only data sources for all 9 resource types
+  - `jamfprotect_plans`, `jamfprotect_analytics`, `jamfprotect_analytic_sets`, `jamfprotect_exception_sets`
+  - `jamfprotect_action_configs`, `jamfprotect_prevent_lists`, `jamfprotect_telemetries_v2`
   - `jamfprotect_unified_logging_filters`, `jamfprotect_usb_control_sets`
   - Shared `pageInfo` pagination helper in `helpers.go`
   - List queries added to existing `*_helpers.go` files
@@ -26,7 +26,7 @@ _(None — all schema improvements and data sources complete)_
   - Updated acceptance tests, schema tests, and example HCL
 
 - [x] **#9** Add operation timeouts via `terraform-plugin-framework-timeouts` v0.7.0
-  - Added `timeouts` attribute (attribute syntax, not block) to all 5 resources
+  - Added `timeouts` attribute (attribute syntax, not block) to all 9 resources
   - All CRUD operations wrapped with `context.WithTimeout` (30s default)
   - Updated schema tests to verify `timeouts` attribute exists
 - [x] **#1** Add `stringvalidator.OneOf()` to all enum fields across all resources
