@@ -106,6 +106,13 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 	if shouldEnableHTTPLogging() {
 		client.SetLogger(NewTerraformLogger())
 	}
+	if _, _, err := client.AccessToken(ctx); err != nil {
+		resp.Diagnostics.AddError(
+			"Jamf Protect authentication failed",
+			"The provider could not authenticate with the Jamf Protect API. Verify the URL, client ID, and client secret. Details: "+err.Error(),
+		)
+		return
+	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
