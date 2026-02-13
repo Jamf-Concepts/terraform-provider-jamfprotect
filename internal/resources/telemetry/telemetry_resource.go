@@ -1,13 +1,14 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package telemetryv2
+package telemetry
 
 import (
 	"context"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 	"time"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -36,7 +37,7 @@ type TelemetryV2Resource struct {
 }
 
 func (r *TelemetryV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_telemetry_v2"
+	resp.TypeName = req.ProviderTypeName + "_telemetry"
 }
 
 func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

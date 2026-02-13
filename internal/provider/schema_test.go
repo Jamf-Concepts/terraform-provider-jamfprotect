@@ -11,15 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	actionconfig "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_config"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic"
-	analyticset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
-	exceptionset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
-	preventlist "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
-	telemetryv2 "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry_v2"
-	unifiedloggingfilter "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
-	usbcontrolset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/usb_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
 )
 
 func TestProviderSchema(t *testing.T) {
@@ -112,7 +112,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 func TestPreventListResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := preventlist.NewPreventListResource()
+	r := prevent_list.NewPreventListResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -165,7 +165,7 @@ func TestPreventListResourceSchema(t *testing.T) {
 func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := unifiedloggingfilter.NewUnifiedLoggingFilterResource()
+	r := unified_logging_filter.NewUnifiedLoggingFilterResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -242,7 +242,7 @@ func TestAnalyticResourceMetadata(t *testing.T) {
 func TestPreventListResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := preventlist.NewPreventListResource()
+	r := prevent_list.NewPreventListResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -254,7 +254,7 @@ func TestPreventListResourceMetadata(t *testing.T) {
 func TestUnifiedLoggingFilterResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := unifiedloggingfilter.NewUnifiedLoggingFilterResource()
+	r := unified_logging_filter.NewUnifiedLoggingFilterResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -266,7 +266,7 @@ func TestUnifiedLoggingFilterResourceMetadata(t *testing.T) {
 func TestActionConfigResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := actionconfig.NewActionConfigResource()
+	r := action_configuration.NewActionConfigResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -361,7 +361,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 func TestActionConfigResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := actionconfig.NewActionConfigResource()
+	r := action_configuration.NewActionConfigResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -405,7 +405,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		}
 	}
 
-	optionalAttrs := []string{"description", "log_level", "exception_sets", "telemetry", "telemetry_v2", "usb_control_set", "analytic_sets"}
+	optionalAttrs := []string{"description", "log_level", "exception_sets", "telemetry", "telemetry", "removable_storage_control_set", "analytic_sets"}
 	for _, attr := range optionalAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -462,7 +462,7 @@ func TestPlanResourceMetadata(t *testing.T) {
 func TestUSBControlSetResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := usbcontrolset.NewUSBControlSetResource()
+	r := removable_storage_control_set.NewUSBControlSetResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -555,19 +555,19 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 func TestUSBControlSetResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := usbcontrolset.NewUSBControlSetResource()
+	r := removable_storage_control_set.NewUSBControlSetResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_usb_control_set" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_usb_control_set", resp.TypeName)
+	if resp.TypeName != "jamfprotect_removable_storage_control_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_removable_storage_control_set", resp.TypeName)
 	}
 }
 
 func TestAnalyticSetResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := analyticset.NewAnalyticSetResource()
+	r := analytic_set.NewAnalyticSetResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -608,7 +608,7 @@ func TestAnalyticSetResourceSchema(t *testing.T) {
 func TestAnalyticSetResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := analyticset.NewAnalyticSetResource()
+	r := analytic_set.NewAnalyticSetResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -620,7 +620,7 @@ func TestAnalyticSetResourceMetadata(t *testing.T) {
 func TestExceptionSetResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := exceptionset.NewExceptionSetResource()
+	r := exception_set.NewExceptionSetResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -658,7 +658,7 @@ func TestExceptionSetResourceSchema(t *testing.T) {
 func TestExceptionSetResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := exceptionset.NewExceptionSetResource()
+	r := exception_set.NewExceptionSetResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -670,7 +670,7 @@ func TestExceptionSetResourceMetadata(t *testing.T) {
 func TestTelemetryV2ResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := telemetryv2.NewTelemetryV2Resource()
+	r := telemetry.NewTelemetryV2Resource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -738,12 +738,12 @@ func TestTelemetryV2ResourceSchema(t *testing.T) {
 func TestTelemetryV2ResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := telemetryv2.NewTelemetryV2Resource()
+	r := telemetry.NewTelemetryV2Resource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_telemetry_v2" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetry_v2", resp.TypeName)
+	if resp.TypeName != "jamfprotect_telemetry" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetry", resp.TypeName)
 	}
 }
 
@@ -818,7 +818,7 @@ func TestAnalyticsDataSourceMetadata(t *testing.T) {
 func TestActionConfigsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := actionconfig.NewActionConfigsDataSource()
+	ds := action_configuration.NewActionConfigsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -838,7 +838,7 @@ func TestActionConfigsDataSourceSchema(t *testing.T) {
 func TestActionConfigsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := actionconfig.NewActionConfigsDataSource()
+	ds := action_configuration.NewActionConfigsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -850,7 +850,7 @@ func TestActionConfigsDataSourceMetadata(t *testing.T) {
 func TestPreventListsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := preventlist.NewPreventListsDataSource()
+	ds := prevent_list.NewPreventListsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -870,7 +870,7 @@ func TestPreventListsDataSourceSchema(t *testing.T) {
 func TestPreventListsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := preventlist.NewPreventListsDataSource()
+	ds := prevent_list.NewPreventListsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -882,7 +882,7 @@ func TestPreventListsDataSourceMetadata(t *testing.T) {
 func TestUnifiedLoggingFiltersDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := unifiedloggingfilter.NewUnifiedLoggingFiltersDataSource()
+	ds := unified_logging_filter.NewUnifiedLoggingFiltersDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -902,7 +902,7 @@ func TestUnifiedLoggingFiltersDataSourceSchema(t *testing.T) {
 func TestUnifiedLoggingFiltersDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := unifiedloggingfilter.NewUnifiedLoggingFiltersDataSource()
+	ds := unified_logging_filter.NewUnifiedLoggingFiltersDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -914,7 +914,7 @@ func TestUnifiedLoggingFiltersDataSourceMetadata(t *testing.T) {
 func TestUSBControlSetsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := usbcontrolset.NewUSBControlSetsDataSource()
+	ds := removable_storage_control_set.NewUSBControlSetsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -922,31 +922,31 @@ func TestUSBControlSetsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	usbAttr, ok := resp.Schema.Attributes["usb_control_sets"]
+	usbAttr, ok := resp.Schema.Attributes["removable_storage_control_sets"]
 	if !ok {
-		t.Fatal("expected attribute 'usb_control_sets' in data source schema")
+		t.Fatal("expected attribute 'removable_storage_control_sets' in data source schema")
 	}
 	if !usbAttr.IsComputed() {
-		t.Error("expected 'usb_control_sets' to be computed")
+		t.Error("expected 'removable_storage_control_sets' to be computed")
 	}
 }
 
 func TestUSBControlSetsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := usbcontrolset.NewUSBControlSetsDataSource()
+	ds := removable_storage_control_set.NewUSBControlSetsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_usb_control_sets" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_usb_control_sets", resp.TypeName)
+	if resp.TypeName != "jamfprotect_removable_storage_control_sets" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_removable_storage_control_sets", resp.TypeName)
 	}
 }
 
 func TestTelemetriesV2DataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := telemetryv2.NewTelemetriesV2DataSource()
+	ds := telemetry.NewTelemetriesV2DataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -966,7 +966,7 @@ func TestTelemetriesV2DataSourceSchema(t *testing.T) {
 func TestTelemetriesV2DataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := telemetryv2.NewTelemetriesV2DataSource()
+	ds := telemetry.NewTelemetriesV2DataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -978,7 +978,7 @@ func TestTelemetriesV2DataSourceMetadata(t *testing.T) {
 func TestAnalyticSetsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := analyticset.NewAnalyticSetsDataSource()
+	ds := analytic_set.NewAnalyticSetsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -998,7 +998,7 @@ func TestAnalyticSetsDataSourceSchema(t *testing.T) {
 func TestAnalyticSetsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := analyticset.NewAnalyticSetsDataSource()
+	ds := analytic_set.NewAnalyticSetsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -1010,7 +1010,7 @@ func TestAnalyticSetsDataSourceMetadata(t *testing.T) {
 func TestExceptionSetsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := exceptionset.NewExceptionSetsDataSource()
+	ds := exception_set.NewExceptionSetsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -1030,7 +1030,7 @@ func TestExceptionSetsDataSourceSchema(t *testing.T) {
 func TestExceptionSetsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := exceptionset.NewExceptionSetsDataSource()
+	ds := exception_set.NewExceptionSetsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 

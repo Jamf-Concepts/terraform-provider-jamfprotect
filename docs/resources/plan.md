@@ -82,7 +82,7 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
-- `usb_control_set` (String) The ID of the USB control set to associate with this plan.
+- `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 
 ### Read-Only
 

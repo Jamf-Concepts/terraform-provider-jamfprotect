@@ -1,12 +1,13 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package exceptionset_test
+package exception_set_test
 
 import (
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 	"testing"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"

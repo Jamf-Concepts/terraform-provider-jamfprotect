@@ -1,12 +1,13 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package unifiedloggingfilter_test
+package unified_logging_filter_test
 
 import (
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 	"testing"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"

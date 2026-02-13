@@ -1,13 +1,14 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package usbcontrolset
+package removable_storage_control_set
 
 import (
 	"context"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 	"time"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -37,7 +38,7 @@ type USBControlSetResource struct {
 }
 
 func (r *USBControlSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_usb_control_set"
+	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_set"
 }
 
 func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -1,10 +1,11 @@
 // Copyright (c) James Smith 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package exceptionset
+package exception_set
 
 import (
 	"context"
+
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"

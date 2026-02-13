@@ -6,6 +6,7 @@ package plan
 import (
 	"context"
 	"fmt"
+
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -45,8 +46,8 @@ type PlanDataSourceItemModel struct {
 	ActionConfigs        types.String `tfsdk:"action_configs"`
 	ExceptionSets        types.List   `tfsdk:"exception_sets"`
 	Telemetry            types.String `tfsdk:"telemetry"`
-	TelemetryV2          types.String `tfsdk:"telemetry_v2"`
-	USBControlSet        types.String `tfsdk:"usb_control_set"`
+	TelemetryV2          types.String `tfsdk:"telemetry"`
+	USBControlSet        types.String `tfsdk:"removable_storage_control_set"`
 	AnalyticSets         types.List   `tfsdk:"analytic_sets"`
 	CommsConfig          types.Object `tfsdk:"comms_config"`
 	InfoSync             types.Object `tfsdk:"info_sync"`
@@ -117,7 +118,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The ID of the v2 telemetry configuration.",
 			Computed:            true,
 		},
-		"usb_control_set": schema.StringAttribute{
+		"removable_storage_control_set": schema.StringAttribute{
 			MarkdownDescription: "The ID of the USB control set associated with this plan.",
 			Computed:            true,
 		},

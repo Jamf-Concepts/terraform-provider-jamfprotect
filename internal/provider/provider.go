@@ -15,15 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
-	actionconfig "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_config"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic"
-	analyticset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
-	exceptionset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
-	preventlist "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
-	telemetryv2 "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry_v2"
-	unifiedloggingfilter "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
-	usbcontrolset "github.com/smithjw/terraform-provider-jamfprotect/internal/resources/usb_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
 )
 
 var _ provider.Provider = &JamfProtectProvider{}
@@ -128,29 +128,29 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 
 func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		actionconfig.NewActionConfigResource,
+		action_configuration.NewActionConfigResource,
 		analytic.NewAnalyticResource,
-		analyticset.NewAnalyticSetResource,
-		exceptionset.NewExceptionSetResource,
+		analytic_set.NewAnalyticSetResource,
+		exception_set.NewExceptionSetResource,
 		plan.NewPlanResource,
-		preventlist.NewPreventListResource,
-		telemetryv2.NewTelemetryV2Resource,
-		unifiedloggingfilter.NewUnifiedLoggingFilterResource,
-		usbcontrolset.NewUSBControlSetResource,
+		prevent_list.NewPreventListResource,
+		telemetry.NewTelemetryV2Resource,
+		unified_logging_filter.NewUnifiedLoggingFilterResource,
+		removable_storage_control_set.NewUSBControlSetResource,
 	}
 }
 
 func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		actionconfig.NewActionConfigsDataSource,
+		action_configuration.NewActionConfigsDataSource,
 		analytic.NewAnalyticsDataSource,
-		analyticset.NewAnalyticSetsDataSource,
-		exceptionset.NewExceptionSetsDataSource,
+		analytic_set.NewAnalyticSetsDataSource,
+		exception_set.NewExceptionSetsDataSource,
 		plan.NewPlansDataSource,
-		preventlist.NewPreventListsDataSource,
-		telemetryv2.NewTelemetriesV2DataSource,
-		unifiedloggingfilter.NewUnifiedLoggingFiltersDataSource,
-		usbcontrolset.NewUSBControlSetsDataSource,
+		prevent_list.NewPreventListsDataSource,
+		telemetry.NewTelemetriesV2DataSource,
+		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
+		removable_storage_control_set.NewUSBControlSetsDataSource,
 	}
 }
 
