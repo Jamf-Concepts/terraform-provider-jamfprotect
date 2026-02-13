@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -260,26 +261,5 @@ func (r *PreventListResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *PreventListResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	var data PreventListResourceModel
-	data.ID = types.StringValue(req.ID)
-
-	vars := map[string]any{"id": req.ID}
-	var result struct {
-		GetPreventList *preventListAPIModel `json:"getPreventList"`
-	}
-	if err := r.client.Query(ctx, getPreventListQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error importing prevent list", err.Error())
-		return
-	}
-	if result.GetPreventList == nil {
-		resp.Diagnostics.AddError("Prevent list not found", fmt.Sprintf("No prevent list with ID %q", req.ID))
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetPreventList, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.Tags = types.ListNull(types.StringType)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

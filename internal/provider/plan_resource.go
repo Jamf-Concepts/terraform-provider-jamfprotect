@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -349,25 +350,5 @@ func (r *PlanResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 func (r *PlanResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	var data PlanResourceModel
-	data.ID = types.StringValue(req.ID)
-
-	vars := map[string]any{"id": req.ID}
-	var result struct {
-		GetPlan *planAPIModel `json:"getPlan"`
-	}
-	if err := r.client.Query(ctx, getPlanQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error importing plan", err.Error())
-		return
-	}
-	if result.GetPlan == nil {
-		resp.Diagnostics.AddError("Plan not found", fmt.Sprintf("No plan with ID %q", req.ID))
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetPlan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

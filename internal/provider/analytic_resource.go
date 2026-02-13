@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -335,25 +336,5 @@ func (r *AnalyticResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (r *AnalyticResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	var data AnalyticResourceModel
-	data.ID = types.StringValue(req.ID)
-
-	vars := map[string]any{"uuid": req.ID}
-	var result struct {
-		GetAnalytic *analyticAPIModel `json:"getAnalytic"`
-	}
-	if err := r.client.Query(ctx, getAnalyticQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error importing analytic", err.Error())
-		return
-	}
-	if result.GetAnalytic == nil {
-		resp.Diagnostics.AddError("Analytic not found", fmt.Sprintf("No analytic with UUID %q", req.ID))
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetAnalytic, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -334,25 +335,5 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *ActionConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	var data ActionConfigResourceModel
-	data.ID = types.StringValue(req.ID)
-
-	vars := map[string]any{"id": req.ID}
-	var result struct {
-		GetActionConfigs *actionConfigAPIModel `json:"getActionConfigs"`
-	}
-	if err := r.client.Query(ctx, getActionConfigQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error importing action config", err.Error())
-		return
-	}
-	if result.GetActionConfigs == nil {
-		resp.Diagnostics.AddError("Action config not found", fmt.Sprintf("No action config with ID %q", req.ID))
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetActionConfigs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
