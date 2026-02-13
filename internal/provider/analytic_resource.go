@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -78,8 +79,11 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 			},
 			"level": schema.Int64Attribute{
-				MarkdownDescription: "The log level (integer) for the analytic.",
+				MarkdownDescription: "The log level (integer) for the analytic. Valid values are 0-10.",
 				Required:            true,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 10),
+				},
 			},
 			"severity": schema.StringAttribute{
 				MarkdownDescription: "The severity of the analytic.",
