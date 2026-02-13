@@ -1,0 +1,9 @@
+{
+  "minimal": true,
+  "RBAC_Analytic": true,
+  "RBAC_Plan": true,
+  "nextToken": null,
+  "direction": "DESC",
+  "field": "managed",
+  "filter": null
+}

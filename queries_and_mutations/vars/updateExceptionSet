@@ -1,0 +1,200 @@
+{
+    "minimal": false,
+    "RBAC_Analytic": true,
+    "RBAC_Plan": true,
+    "uuid": "0884338f-f48f-451e-90f4-8cec35e4b08e",
+    "name": "Test Exception Set",
+    "description": "Description",
+    "exceptions": [
+        {
+            "type": "TeamId",
+            "ignoreActivity": "Analytics",
+            "value": "ABCD1234",
+            "analyticTypes": [
+                "GPFSEvent"
+            ]
+        },
+        {
+            "type": "Executable",
+            "ignoreActivity": "Analytics",
+            "value": "/Apps/App.app",
+            "analyticTypes": [
+                "GPFSEvent"
+            ]
+        },
+        {
+            "type": "PlatformBinary",
+            "ignoreActivity": "Analytics",
+            "value": "com.apple.calculator",
+            "analyticTypes": [
+                "GPFSEvent"
+            ]
+        },
+        {
+            "type": "Path",
+            "ignoreActivity": "Analytics",
+            "value": "/tmp/log",
+            "analyticTypes": [
+                "GPFSEvent"
+            ]
+        },
+        {
+            "type": "Path",
+            "ignoreActivity": "Analytics",
+            "value": "/tmp/",
+            "analyticTypes": [
+                "GPDownloadEvent"
+            ]
+        },
+        {
+            "type": "Executable",
+            "ignoreActivity": "Analytics",
+            "value": "/Apps/app.app",
+            "analyticTypes": [
+                "GPProcessEvent"
+            ]
+        },
+        {
+            "type": "Path",
+            "ignoreActivity": "Analytics",
+            "value": "/tmp/",
+            "analyticTypes": [
+                "GPScreenshotEvent"
+            ]
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "Analytics",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "analyticTypes": [
+                "GPKeylogRegisterEvent"
+            ]
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "Analytics",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "analyticTypes": [
+                "GPClickEvent"
+            ]
+        },
+        {
+            "type": "Path",
+            "ignoreActivity": "Analytics",
+            "value": "/tmp/",
+            "analyticUuid": "4c331012-1e61-4fc7-8197-9651bea6cfae"
+        }
+    ],
+    "esExceptions": [
+        {
+            "type": "Groups",
+            "ignoreActivity": "ThreatPrevention",
+            "value": "staff",
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "User",
+            "ignoreActivity": "ThreatPrevention",
+            "value": "example-user",
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "PlatformBinary",
+            "ignoreActivity": "ThreatPrevention",
+            "value": "com.apple.calculator",
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "Executable",
+            "ignoreActivity": "ThreatPrevention",
+            "value": "/Applications/App.app",
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "ThreatPrevention",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "TeamId",
+            "ignoreActivity": "ThreatPrevention",
+            "value": "ABCD",
+            "ignoreListType": "ignore",
+            "ignoreListSubType": null
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "ThreatPrevention",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "ignore",
+            "ignoreListSubType": "parent"
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "ThreatPrevention",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "ignore",
+            "ignoreListSubType": "responsible"
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "TelemetryV2",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "12334"
+            },
+            "ignoreListType": "events",
+            "eventType": "exec"
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "TelemetryV2",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "sourceIgnore"
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "TelemetryV2",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "sourceIgnore",
+            "ignoreListSubType": "parent"
+        },
+        {
+            "type": "AppSigningInfo",
+            "ignoreActivity": "TelemetryV2",
+            "appSigningInfo": {
+                "teamId": "ABCD",
+                "appId": "1234"
+            },
+            "ignoreListType": "sourceIgnore",
+            "ignoreListSubType": "responsible"
+        }
+    ]
+}

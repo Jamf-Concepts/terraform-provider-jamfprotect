@@ -1,0 +1,52 @@
+query getExceptionSet($uuid: ID!, $minimal: Boolean = false, $RBAC_Analytic: Boolean!, $RBAC_Plan: Boolean!) {
+  getExceptionSet(uuid: $uuid) {
+    ...ExceptionSetFields
+    __typename
+  }
+}
+
+fragment ExceptionSetFields on ExceptionSet {
+  uuid
+  name
+  description
+  exceptions @skip(if: $minimal) {
+    type
+    value
+    appSigningInfo {
+      appId
+      teamId
+      __typename
+    }
+    ignoreActivity
+    analyticTypes
+    analytic @include(if: $RBAC_Analytic) {
+      name
+      uuid
+      __typename
+    }
+    __typename
+  }
+  esExceptions @skip(if: $minimal) {
+    type
+    value
+    appSigningInfo {
+      appId
+      teamId
+      __typename
+    }
+    ignoreActivity
+    ignoreListType
+    ignoreListSubType
+    eventType
+    __typename
+  }
+  created
+  updated
+  plans @include(if: $RBAC_Plan) {
+    id
+    name
+    __typename
+  }
+  managed
+  __typename
+}

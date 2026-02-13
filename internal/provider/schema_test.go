@@ -555,6 +555,109 @@ func TestUSBControlSetResourceMetadata(t *testing.T) {
 	}
 }
 
+func TestAnalyticSetResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewAnalyticSetResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	// name and analytics should be required.
+	for _, attr := range []string{"name", "analytics"} {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in analytic set schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in analytic set schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in analytic set schema")
+	}
+}
+
+func TestAnalyticSetResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewAnalyticSetResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_analytic_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_analytic_set", resp.TypeName)
+	}
+}
+
+func TestExceptionSetResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := NewExceptionSetResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	// name should be required.
+	name, ok := resp.Schema.Attributes["name"]
+	if !ok {
+		t.Fatal("expected attribute 'name' in exception set schema")
+	}
+	if !name.IsRequired() {
+		t.Error("expected 'name' to be required")
+	}
+
+	// description should be optional + computed.
+	desc, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in exception set schema")
+	}
+	if !desc.IsOptional() {
+		t.Error("expected 'description' to be optional")
+	}
+	if !desc.IsComputed() {
+		t.Error("expected 'description' to be computed")
+	}
+
+	// timeouts should exist.
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in exception set schema")
+	}
+}
+
+func TestExceptionSetResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := NewExceptionSetResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_exception_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_exception_set", resp.TypeName)
+	}
+}
+
 func TestTelemetryV2ResourceSchema(t *testing.T) {
 	t.Parallel()
 

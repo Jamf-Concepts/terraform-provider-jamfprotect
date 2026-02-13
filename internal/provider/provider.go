@@ -110,6 +110,8 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 	return []func() resource.Resource{
 		NewActionConfigResource,
 		NewAnalyticResource,
+		NewAnalyticSetResource,
+		NewExceptionSetResource,
 		NewPlanResource,
 		NewPreventListResource,
 		NewTelemetryV2Resource,

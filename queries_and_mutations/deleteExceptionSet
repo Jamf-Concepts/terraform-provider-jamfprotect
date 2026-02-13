@@ -1,0 +1,6 @@
+mutation deleteExceptionSet($uuid: ID!) {
+  deleteExceptionSet(uuid: $uuid) {
+    uuid
+    __typename
+  }
+}

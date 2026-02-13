@@ -1,0 +1,26 @@
+{
+    "excludeAnalytics": false,
+    "RBAC_Plan": true,
+    "analytics": [
+        "dcb69719-5ae1-46f6-972a-da1799daa00c",
+        "ec930ae1-1796-11ea-b2ba-acde48001122",
+        "a0ae8850-902a-4d46-b06b-27973939136f",
+        "9bfc40a5-1063-4fde-a3ab-d734f03f26f2",
+        "3fa48b4a-7b5e-11ed-8505-dee89a7045ff",
+        "e294b48d-e24d-47b6-b957-55dc6ad2c1b3",
+        "bcaa9eff-7de1-4809-9255-06a9919e2f8e",
+        "55729e64-afdb-48a9-a1c7-e3d81c2bd5e8",
+        "bd9708da-a655-4fc8-bc3c-5641254d6f04",
+        "d0caf4fc-03bf-450d-bca2-7c7c0a074e34",
+        "1fafca0f-2dfd-478d-a6c1-2ee143e6c169",
+        "c20e347d-10b0-4047-96ff-88a060a1668e",
+        "e74135b3-2b97-11ec-bbc5-1e00d23a1099",
+        "5cc24ddf-103f-459c-9259-96b36fc2b8e7",
+        "245ec6a0-278e-4e72-8540-182db7b5b95c"
+    ],
+    "name": "Test Set",
+    "description": "Test Set Description",
+    "types": [
+        "Report"
+    ]
+}

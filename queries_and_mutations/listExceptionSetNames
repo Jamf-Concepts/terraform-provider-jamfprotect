@@ -1,0 +1,9 @@
+query listExceptionSetNames {
+  listExceptionSetNames: listExceptionSets {
+    items {
+      name
+      __typename
+    }
+    __typename
+  }
+}
