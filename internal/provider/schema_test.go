@@ -895,13 +895,45 @@ func TestAnalyticSetsDataSourceMetadata(t *testing.T) {
 	}
 }
 
+func TestExceptionSetsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewExceptionSetsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	exceptionSetsAttr, ok := resp.Schema.Attributes["exception_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'exception_sets' in data source schema")
+	}
+	if !exceptionSetsAttr.IsComputed() {
+		t.Error("expected 'exception_sets' to be computed")
+	}
+}
+
+func TestExceptionSetsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewExceptionSetsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_exception_sets" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_exception_sets", resp.TypeName)
+	}
+}
+
 func TestProviderDataSources(t *testing.T) {
 	t.Parallel()
 
 	p := New("test")().(*JamfProtectProvider)
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 8 {
-		t.Errorf("expected 8 data sources, got %d", len(dataSources))
+	if len(dataSources) != 9 {
+		t.Errorf("expected 9 data sources, got %d", len(dataSources))
 	}
 }

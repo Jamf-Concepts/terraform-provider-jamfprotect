@@ -123,6 +123,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		NewActionConfigsDataSource,
 		NewAnalyticsDataSource,
 		NewAnalyticSetsDataSource,
+		NewExceptionSetsDataSource,
 		NewPlansDataSource,
 		NewPreventListsDataSource,
 		NewTelemetriesV2DataSource,
