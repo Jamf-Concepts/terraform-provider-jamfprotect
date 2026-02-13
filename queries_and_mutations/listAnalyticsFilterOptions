@@ -1,0 +1,12 @@
+query listAnalyticsFilterOptions {
+  listAnalyticsTags {
+    value
+    count
+    __typename
+  }
+  listAnalyticsCategories {
+    value
+    count
+    __typename
+  }
+}
