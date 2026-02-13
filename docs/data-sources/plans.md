@@ -46,11 +46,11 @@ Read-Only:
 - `info_sync` (Attributes) Info sync configuration for the plan. (see [below for nested schema](#nestedatt--plans--info_sync))
 - `log_level` (String) The log level for the plan.
 - `name` (String) The name of the plan.
+- `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 - `signatures_feed_config` (Attributes) Signatures feed configuration for the plan. (see [below for nested schema](#nestedatt--plans--signatures_feed_config))
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `updated` (String) The last-updated timestamp.
-- `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 
 <a id="nestedatt--plans--analytic_sets"></a>
 ### Nested Schema for `plans.analytic_sets`
