@@ -35,6 +35,8 @@ type Client struct {
 	tokenExpiry  time.Time
 }
 
+const tokenExpirySkew = 60 * time.Second
+
 // tokenRequest is the payload sent to the /token endpoint.
 type tokenRequest struct {
 	ClientID string `json:"client_id"`
@@ -44,6 +46,8 @@ type tokenRequest struct {
 // tokenResponse is the response from the /token endpoint.
 type tokenResponse struct {
 	AccessToken string `json:"access_token"`
+	ExpiresIn   int64  `json:"expires_in,omitempty"`
+	TokenType   string `json:"token_type,omitempty"`
 }
 
 // graphqlRequest is the JSON payload for a GraphQL request.
@@ -132,8 +136,15 @@ func (c *Client) authenticate(ctx context.Context) error {
 	}
 
 	c.accessToken = tokenResp.AccessToken
-	// Tokens typically last ~30 min; refresh at 25 min as a safety margin.
-	c.tokenExpiry = time.Now().Add(25 * time.Minute)
+	if tokenResp.ExpiresIn <= 0 {
+		return fmt.Errorf("%w: token response missing expires_in", ErrAuthentication)
+	}
+
+	expiry := time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
+	if time.Duration(tokenResp.ExpiresIn)*time.Second > tokenExpirySkew {
+		expiry = expiry.Add(-tokenExpirySkew)
+	}
+	c.tokenExpiry = expiry
 	return nil
 }
 
@@ -201,4 +212,16 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	}
 
 	return nil
+}
+
+// AccessToken ensures a valid token is available and returns it with its expiry time.
+// Tokens returned by Jamf Protect do not include a "Bearer" prefix.
+func (c *Client) AccessToken(ctx context.Context) (string, time.Time, error) {
+	if err := c.authenticate(ctx); err != nil {
+		return "", time.Time{}, fmt.Errorf("%w: %w", ErrAuthentication, err)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.accessToken, c.tokenExpiry, nil
 }
