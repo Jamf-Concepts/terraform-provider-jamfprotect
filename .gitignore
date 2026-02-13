@@ -27,3 +27,4 @@ terraform-provider-jamfprotect
 fnox.local.toml
 mise.local.toml
 META.d/
+local_testing/
