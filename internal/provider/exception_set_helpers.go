@@ -30,6 +30,7 @@ fragment ExceptionSetFields on ExceptionSet {
     }
     ignoreActivity
     analyticTypes
+    analyticUuid
   }
   esExceptions @skip(if: $minimal) {
     type
@@ -128,8 +129,9 @@ var exceptionAttrTypes = map[string]attr.Type{
 	"type":             types.StringType,
 	"value":            types.StringType,
 	"app_signing_info": types.ObjectType{AttrTypes: appSigningInfoAttrTypes},
-	"ignore_activity":  types.BoolType,
+	"ignore_activity":  types.StringType,
 	"analytic_types":   types.ListType{ElemType: types.StringType},
+	"analytic_uuid":    types.StringType,
 }
 
 // esExceptionAttrTypes defines the attribute types for es_exceptions.
@@ -137,7 +139,7 @@ var esExceptionAttrTypes = map[string]attr.Type{
 	"type":                types.StringType,
 	"value":               types.StringType,
 	"app_signing_info":    types.ObjectType{AttrTypes: appSigningInfoAttrTypes},
-	"ignore_activity":     types.BoolType,
+	"ignore_activity":     types.StringType,
 	"ignore_list_type":    types.StringType,
 	"ignore_list_subtype": types.StringType,
 	"event_type":          types.StringType,
@@ -193,8 +195,12 @@ func buildExceptionsArray(ctx context.Context, list types.List, diags *diag.Diag
 	for _, exc := range exceptions {
 		item := map[string]any{
 			"type":           exc.Type.ValueString(),
-			"value":          exc.Value.ValueString(),
-			"ignoreActivity": exc.IgnoreActivity.ValueBool(),
+			"ignoreActivity": exc.IgnoreActivity.ValueString(),
+		}
+
+		// Value is optional when using app_signing_info
+		if !exc.Value.IsNull() && !exc.Value.IsUnknown() {
+			item["value"] = exc.Value.ValueString()
 		}
 
 		// Handle app_signing_info if present
@@ -212,6 +218,11 @@ func buildExceptionsArray(ctx context.Context, list types.List, diags *diag.Diag
 		// Handle analytic_types if present
 		if !exc.AnalyticTypes.IsNull() && !exc.AnalyticTypes.IsUnknown() {
 			item["analyticTypes"] = listToStrings(ctx, exc.AnalyticTypes, diags)
+		}
+
+		// Handle analytic_uuid if present
+		if !exc.AnalyticUuid.IsNull() && !exc.AnalyticUuid.IsUnknown() {
+			item["analyticUuid"] = exc.AnalyticUuid.ValueString()
 		}
 
 		result = append(result, item)
@@ -235,12 +246,24 @@ func buildEsExceptionsArray(ctx context.Context, list types.List, diags *diag.Di
 	result := make([]map[string]any, 0, len(esExceptions))
 	for _, exc := range esExceptions {
 		item := map[string]any{
-			"type":              exc.Type.ValueString(),
-			"value":             exc.Value.ValueString(),
-			"ignoreActivity":    exc.IgnoreActivity.ValueBool(),
-			"ignoreListType":    exc.IgnoreListType.ValueString(),
-			"ignoreListSubType": exc.IgnoreListSubType.ValueString(),
-			"eventType":         exc.EventType.ValueString(),
+			"type":           exc.Type.ValueString(),
+			"ignoreActivity": exc.IgnoreActivity.ValueString(),
+		}
+
+		// Value is optional
+		if !exc.Value.IsNull() && !exc.Value.IsUnknown() {
+			item["value"] = exc.Value.ValueString()
+		}
+
+		// Handle optional fields
+		if !exc.IgnoreListType.IsNull() && !exc.IgnoreListType.IsUnknown() {
+			item["ignoreListType"] = exc.IgnoreListType.ValueString()
+		}
+		if !exc.IgnoreListSubType.IsNull() && !exc.IgnoreListSubType.IsUnknown() {
+			item["ignoreListSubType"] = exc.IgnoreListSubType.ValueString()
+		}
+		if !exc.EventType.IsNull() && !exc.EventType.IsUnknown() {
+			item["eventType"] = exc.EventType.ValueString()
 		}
 
 		// Handle app_signing_info if present
@@ -312,14 +335,27 @@ func apiExceptionsToList(ctx context.Context, apiExceptions []exceptionAPIModel,
 			analyticTypesList = types.ListNull(types.StringType)
 		}
 
+		// Handle optional value
+		valueStr := types.StringNull()
+		if apiExc.Value != "" {
+			valueStr = types.StringValue(apiExc.Value)
+		}
+
+		// Handle optional analytic_uuid
+		analyticUuidStr := types.StringNull()
+		if apiExc.AnalyticUuid != "" {
+			analyticUuidStr = types.StringValue(apiExc.AnalyticUuid)
+		}
+
 		obj := types.ObjectValueMust(
 			exceptionAttrTypes,
 			map[string]attr.Value{
 				"type":             types.StringValue(apiExc.Type),
-				"value":            types.StringValue(apiExc.Value),
+				"value":            valueStr,
 				"app_signing_info": appSigningInfoObj,
-				"ignore_activity":  types.BoolValue(apiExc.IgnoreActivity),
+				"ignore_activity":  types.StringValue(apiExc.IgnoreActivity),
 				"analytic_types":   analyticTypesList,
+				"analytic_uuid":    analyticUuidStr,
 			},
 		)
 		elements = append(elements, obj)
@@ -352,16 +388,37 @@ func apiEsExceptionsToList(ctx context.Context, apiEsExceptions []esExceptionAPI
 			appSigningInfoObj = types.ObjectNull(appSigningInfoAttrTypes)
 		}
 
+		// Handle optional fields with null handling
+		valueStr := types.StringNull()
+		if apiExc.Value != "" {
+			valueStr = types.StringValue(apiExc.Value)
+		}
+
+		ignoreListTypeStr := types.StringNull()
+		if apiExc.IgnoreListType != "" {
+			ignoreListTypeStr = types.StringValue(apiExc.IgnoreListType)
+		}
+
+		ignoreListSubTypeStr := types.StringNull()
+		if apiExc.IgnoreListSubType != "" {
+			ignoreListSubTypeStr = types.StringValue(apiExc.IgnoreListSubType)
+		}
+
+		eventTypeStr := types.StringNull()
+		if apiExc.EventType != "" {
+			eventTypeStr = types.StringValue(apiExc.EventType)
+		}
+
 		obj := types.ObjectValueMust(
 			esExceptionAttrTypes,
 			map[string]attr.Value{
 				"type":                types.StringValue(apiExc.Type),
-				"value":               types.StringValue(apiExc.Value),
+				"value":               valueStr,
 				"app_signing_info":    appSigningInfoObj,
-				"ignore_activity":     types.BoolValue(apiExc.IgnoreActivity),
-				"ignore_list_type":    types.StringValue(apiExc.IgnoreListType),
-				"ignore_list_subtype": types.StringValue(apiExc.IgnoreListSubType),
-				"event_type":          types.StringValue(apiExc.EventType),
+				"ignore_activity":     types.StringValue(apiExc.IgnoreActivity),
+				"ignore_list_type":    ignoreListTypeStr,
+				"ignore_list_subtype": ignoreListSubTypeStr,
+				"event_type":          eventTypeStr,
 			},
 		)
 		elements = append(elements, obj)

@@ -23,3 +23,6 @@ modules-dev/
 SESSION_SUMMARY.md
 sandbox/*
 terraform-provider-jamfprotect
+
+fnox.local.toml
+mise.local.toml

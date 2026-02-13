@@ -26,8 +26,9 @@ type exceptionModel struct {
 	Type           types.String `tfsdk:"type"`
 	Value          types.String `tfsdk:"value"`
 	AppSigningInfo types.Object `tfsdk:"app_signing_info"`
-	IgnoreActivity types.Bool   `tfsdk:"ignore_activity"`
+	IgnoreActivity types.String `tfsdk:"ignore_activity"`
 	AnalyticTypes  types.List   `tfsdk:"analytic_types"`
+	AnalyticUuid   types.String `tfsdk:"analytic_uuid"`
 }
 
 // esExceptionModel maps the es_exceptions nested attribute.
@@ -35,7 +36,7 @@ type esExceptionModel struct {
 	Type              types.String `tfsdk:"type"`
 	Value             types.String `tfsdk:"value"`
 	AppSigningInfo    types.Object `tfsdk:"app_signing_info"`
-	IgnoreActivity    types.Bool   `tfsdk:"ignore_activity"`
+	IgnoreActivity    types.String `tfsdk:"ignore_activity"`
 	IgnoreListType    types.String `tfsdk:"ignore_list_type"`
 	IgnoreListSubType types.String `tfsdk:"ignore_list_subtype"`
 	EventType         types.String `tfsdk:"event_type"`
@@ -66,15 +67,16 @@ type exceptionAPIModel struct {
 	Type           string                  `json:"type"`
 	Value          string                  `json:"value"`
 	AppSigningInfo *appSigningInfoAPIModel `json:"appSigningInfo"`
-	IgnoreActivity bool                    `json:"ignoreActivity"`
+	IgnoreActivity string                  `json:"ignoreActivity"`
 	AnalyticTypes  []string                `json:"analyticTypes"`
+	AnalyticUuid   string                  `json:"analyticUuid"`
 }
 
 type esExceptionAPIModel struct {
 	Type              string                  `json:"type"`
 	Value             string                  `json:"value"`
 	AppSigningInfo    *appSigningInfoAPIModel `json:"appSigningInfo"`
-	IgnoreActivity    bool                    `json:"ignoreActivity"`
+	IgnoreActivity    string                  `json:"ignoreActivity"`
 	IgnoreListType    string                  `json:"ignoreListType"`
 	IgnoreListSubType string                  `json:"ignoreListSubType"`
 	EventType         string                  `json:"eventType"`

@@ -1,12 +1,7 @@
-[env]
-FNOX_PROFILE = "{{ env.ENV_NAME | default(value='dev') }}"
-
 [tools]
 go = "latest"
-opencode = "latest"
 prek = "latest"
 "aqua:terraform" = "latest"
-fnox = "latest"
 
 # ── Dependency tasks ─────────────────────────────────────────────────────────
 
@@ -62,7 +57,7 @@ run = "go test -v -cover -timeout=120s -parallel=10 ./..."
 
 [tasks.testacc]
 description = "Run acceptance tests (requires Jamf Protect credentials via fnox)"
-run = "fnox exec -- go test -v -cover -timeout 120m ./..."
+run = "go test -v -cover -timeout 120m ./..."
 env = { TF_ACC = "1" }
 
 # ── Composite tasks ─────────────────────────────────────────────────────────

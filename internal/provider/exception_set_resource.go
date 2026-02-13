@@ -9,15 +9,16 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -54,62 +55,80 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 
 	exceptionAttrs := map[string]schema.Attribute{
 		"type": schema.StringAttribute{
-			MarkdownDescription: "The type of exception (e.g., `SHA256Hash`, `ProcessPath`, `SigningId`).",
+			MarkdownDescription: "The type of exception. Valid values: `User`, `AppSigningInfo`, `TeamId`, `Executable`, `PlatformBinary`, `Path`.",
 			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("User", "AppSigningInfo", "TeamId", "Executable", "PlatformBinary", "Path"),
+			},
 		},
 		"value": schema.StringAttribute{
-			MarkdownDescription: "The value to match for this exception.",
-			Required:            true,
+			MarkdownDescription: "The value to match for this exception. Not used when type is `AppSigningInfo`.",
+			Optional:            true,
 		},
 		"app_signing_info": schema.SingleNestedAttribute{
 			MarkdownDescription: "Application signing information for code signature exceptions.",
 			Optional:            true,
 			Attributes:          appSigningInfoAttrs,
 		},
-		"ignore_activity": schema.BoolAttribute{
-			MarkdownDescription: "Whether to ignore activity matching this exception.",
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(false),
+		"ignore_activity": schema.StringAttribute{
+			MarkdownDescription: "The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`.",
+			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("Analytics", "ThreatPrevention", "TelemetryV2"),
+			},
 		},
 		"analytic_types": schema.ListAttribute{
-			MarkdownDescription: "The types of analytics this exception applies to (e.g., `Report`, `Prevent`).",
+			MarkdownDescription: "The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).",
 			Optional:            true,
 			ElementType:         types.StringType,
+		},
+		"analytic_uuid": schema.StringAttribute{
+			MarkdownDescription: "The UUID of a specific analytic this exception applies to. Mutually exclusive with `analytic_types`.",
+			Optional:            true,
 		},
 	}
 
 	esExceptionAttrs := map[string]schema.Attribute{
 		"type": schema.StringAttribute{
-			MarkdownDescription: "The type of ES exception.",
+			MarkdownDescription: "The type of ES exception. Valid values: `Groups`, `User`, `PlatformBinary`, `Executable`, `TeamId`, `AppSigningInfo`.",
 			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("Groups", "User", "PlatformBinary", "Executable", "TeamId", "AppSigningInfo"),
+			},
 		},
 		"value": schema.StringAttribute{
-			MarkdownDescription: "The value to match for this ES exception.",
-			Required:            true,
+			MarkdownDescription: "The value to match for this ES exception. Not used when type is `AppSigningInfo`.",
+			Optional:            true,
 		},
 		"app_signing_info": schema.SingleNestedAttribute{
 			MarkdownDescription: "Application signing information for code signature exceptions.",
 			Optional:            true,
 			Attributes:          appSigningInfoAttrs,
 		},
-		"ignore_activity": schema.BoolAttribute{
-			MarkdownDescription: "Whether to ignore activity matching this exception.",
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(false),
+		"ignore_activity": schema.StringAttribute{
+			MarkdownDescription: "The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`.",
+			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("Analytics", "ThreatPrevention", "TelemetryV2"),
+			},
 		},
 		"ignore_list_type": schema.StringAttribute{
-			MarkdownDescription: "The ignore list type for this ES exception.",
-			Required:            true,
+			MarkdownDescription: "The ignore list type. Valid values: `ignore`, `events`, `sourceIgnore`.",
+			Optional:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("ignore", "events", "sourceIgnore"),
+			},
 		},
 		"ignore_list_subtype": schema.StringAttribute{
-			MarkdownDescription: "The ignore list subtype for this ES exception.",
-			Required:            true,
+			MarkdownDescription: "The ignore list subtype. Valid values: `parent`, `responsible`, or null.",
+			Optional:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("parent", "responsible"),
+			},
 		},
 		"event_type": schema.StringAttribute{
-			MarkdownDescription: "The event type for this ES exception.",
-			Required:            true,
+			MarkdownDescription: "The endpoint security event type (e.g., `exec`, `open`, `create`).",
+			Optional:            true,
 		},
 	}
 

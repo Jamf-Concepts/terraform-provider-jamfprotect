@@ -50,7 +50,7 @@ resource "jamfprotect_analytic" "suspicious_process" {
 - `context` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context))
 - `filter` (String) The predicate filter expression for the analytic.
 - `input_type` (String) The input type for the analytic. Determines which endpoint event stream the analytic monitors.
-- `level` (Number) The log level (integer) for the analytic.
+- `level` (Number) The log level (integer) for the analytic. Valid values are 0-10.
 - `name` (String) The name of the analytic.
 - `severity` (String) The severity of the analytic.
 - `snapshot_files` (List of String) A list of snapshot file paths to collect when the analytic triggers.
