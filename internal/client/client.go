@@ -30,9 +30,16 @@ type Client struct {
 	clientSecret string
 	userAgent    string
 	httpClient   *http.Client
+	logger       Logger
 	mu           sync.Mutex
 	accessToken  string
 	tokenExpiry  time.Time
+}
+
+// Logger is an interface for logging HTTP requests and responses.
+type Logger interface {
+	LogRequest(ctx context.Context, method, url string, headers http.Header, body []byte)
+	LogResponse(ctx context.Context, statusCode int, headers http.Header, body []byte)
 }
 
 const tokenExpirySkew = 60 * time.Second
@@ -87,6 +94,11 @@ func NewClientWithVersion(baseURL, clientID, clientSecret, version string) *Clie
 	}
 }
 
+// SetLogger sets the logger for the client.
+func (c *Client) SetLogger(logger Logger) {
+	c.logger = logger
+}
+
 func (e GraphQLError) Error() string {
 	return e.Message
 }
@@ -116,19 +128,30 @@ func (c *Client) authenticate(ctx context.Context) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
 
+	if c.logger != nil {
+		c.logger.LogRequest(ctx, http.MethodPost, req.URL.String(), req.Header, body)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("requesting token: %w", err)
 	}
 	defer resp.Body.Close()
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading token response: %w", err)
+	}
+	if c.logger != nil {
+		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var tokenResp tokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+	if err := json.Unmarshal(respBody, &tokenResp); err != nil {
 		return fmt.Errorf("decoding token response: %w", err)
 	}
 	if tokenResp.AccessToken == "" {
@@ -172,19 +195,30 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	req.Header.Set("Authorization", c.accessToken)
 	req.Header.Set("User-Agent", c.userAgent)
 
+	if c.logger != nil {
+		c.logger.LogRequest(ctx, http.MethodPost, req.URL.String(), req.Header, body)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("executing query: %w", err)
 	}
 	defer resp.Body.Close()
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response: %w", err)
+	}
+	if c.logger != nil {
+		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var gqlResp graphqlResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gqlResp); err != nil {
+	if err := json.Unmarshal(respBody, &gqlResp); err != nil {
 		return fmt.Errorf("decoding response: %w", err)
 	}
 

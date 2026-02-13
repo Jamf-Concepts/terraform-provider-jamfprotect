@@ -1,0 +1,62 @@
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package provider
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
+
+// Ensure TerraformLogger implements client.Logger interface.
+var _ client.Logger = (*TerraformLogger)(nil)
+
+// TerraformLogger implements the client.Logger interface using tflog.
+type TerraformLogger struct{}
+
+// NewTerraformLogger creates a new TerraformLogger.
+func NewTerraformLogger() *TerraformLogger {
+	return &TerraformLogger{}
+}
+
+// LogRequest logs HTTP request details using tflog at DEBUG level.
+func (l *TerraformLogger) LogRequest(ctx context.Context, method, url string, headers http.Header, body []byte) {
+	fields := map[string]any{
+		"method": method,
+		"url":    url,
+	}
+
+	if len(headers) > 0 {
+		fields["request_headers"] = headers
+	}
+	if len(body) > 0 {
+		fields["request_body"] = string(body)
+	}
+
+	tflog.Debug(ctx, "HTTP Request", fields)
+}
+
+// LogResponse logs HTTP response details using tflog at DEBUG level.
+func (l *TerraformLogger) LogResponse(ctx context.Context, statusCode int, headers http.Header, body []byte) {
+	fields := map[string]any{
+		"status_code": statusCode,
+	}
+
+	if len(headers) > 0 {
+		fields["response_headers"] = headers
+	}
+
+	if len(body) > 0 {
+		bodyStr := string(body)
+		if len(bodyStr) > 5000 {
+			bodyStr = bodyStr[:5000] + "... (truncated)"
+		}
+		fields["response_body"] = bodyStr
+	}
+
+	tflog.Debug(ctx, "HTTP Response", fields)
+}
