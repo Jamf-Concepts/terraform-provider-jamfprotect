@@ -44,11 +44,14 @@ func TestNewClient(t *testing.T) {
 	if c.baseURL != "https://example.protect.jamfcloud.com" {
 		t.Errorf("expected trailing slash trimmed, got %q", c.baseURL)
 	}
-	if c.clientID != "client-id" {
-		t.Errorf("expected clientID %q, got %q", "client-id", c.clientID)
+	if c.oauthConfig.ClientID != "client-id" {
+		t.Errorf("expected clientID %q, got %q", "client-id", c.oauthConfig.ClientID)
 	}
-	if c.clientSecret != "secret" {
-		t.Errorf("expected clientSecret %q, got %q", "secret", c.clientSecret)
+	if c.oauthConfig.ClientSecret != "secret" {
+		t.Errorf("expected clientSecret %q, got %q", "secret", c.oauthConfig.ClientSecret)
+	}
+	if c.oauthConfig.TokenURL != "https://example.protect.jamfcloud.com/token" {
+		t.Errorf("expected token URL %q, got %q", "https://example.protect.jamfcloud.com/token", c.oauthConfig.TokenURL)
 	}
 }
 
@@ -224,11 +227,14 @@ func TestNewClientWithVersion(t *testing.T) {
 	if c.baseURL != "https://example.protect.jamfcloud.com" {
 		t.Errorf("expected trailing slash trimmed, got %q", c.baseURL)
 	}
-	if c.clientID != "client-id" {
-		t.Errorf("expected clientID %q, got %q", "client-id", c.clientID)
+	if c.oauthConfig.ClientID != "client-id" {
+		t.Errorf("expected clientID %q, got %q", "client-id", c.oauthConfig.ClientID)
 	}
-	if c.clientSecret != "secret" {
-		t.Errorf("expected clientSecret %q, got %q", "secret", c.clientSecret)
+	if c.oauthConfig.ClientSecret != "secret" {
+		t.Errorf("expected clientSecret %q, got %q", "secret", c.oauthConfig.ClientSecret)
+	}
+	if c.oauthConfig.TokenURL != "https://example.protect.jamfcloud.com/token" {
+		t.Errorf("expected token URL %q, got %q", "https://example.protect.jamfcloud.com/token", c.oauthConfig.TokenURL)
 	}
 	if c.userAgent != "terraform-provider-jamfprotect/1.2.3" {
 		t.Errorf("expected userAgent %q, got %q", "terraform-provider-jamfprotect/1.2.3", c.userAgent)
@@ -446,7 +452,7 @@ func TestClient_AccessToken_ExpiresIn(t *testing.T) {
 	client := NewClient(srv.URL, "cid", "csecret")
 
 	start := time.Now()
-	_, expiresAt, err := client.AccessToken(context.Background())
+	token, err := client.AccessToken(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -454,8 +460,8 @@ func TestClient_AccessToken_ExpiresIn(t *testing.T) {
 
 	minExpected := start.Add(59 * time.Minute)
 	maxExpected := end.Add(60 * time.Minute)
-	if expiresAt.Before(minExpected) || expiresAt.After(maxExpected) {
-		t.Fatalf("unexpected expiry time: %s (expected between %s and %s)", expiresAt, minExpected, maxExpected)
+	if token.Expiry.Before(minExpected) || token.Expiry.After(maxExpected) {
+		t.Fatalf("unexpected expiry time: %s (expected between %s and %s)", token.Expiry, minExpected, maxExpected)
 	}
 }
 

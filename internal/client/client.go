@@ -14,6 +14,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/sync/singleflight"
 )
 
 // Sentinel errors returned by the client.
@@ -25,15 +29,14 @@ var (
 
 // Client communicates with the Jamf Protect GraphQL API.
 type Client struct {
-	baseURL      string
-	clientID     string
-	clientSecret string
-	userAgent    string
-	httpClient   *http.Client
-	logger       Logger
-	mu           sync.Mutex
-	accessToken  string
-	tokenExpiry  time.Time
+	baseURL     string
+	userAgent   string
+	httpClient  *http.Client
+	logger      Logger
+	oauthConfig clientcredentials.Config
+	mu          sync.Mutex
+	token       *oauth2.Token
+	tokenGroup  singleflight.Group
 }
 
 // Logger is an interface for logging HTTP requests and responses.
@@ -81,17 +84,25 @@ func NewClient(baseURL, clientID, clientSecret string) *Client {
 }
 
 // NewClientWithVersion creates a new Jamf Protect GraphQL client with a custom version string.
-func NewClientWithVersion(baseURL, clientID, clientSecret, version string) *Client {
+func NewClientWithVersion(baseURL, clientID, clientSecret, version string, opts ...Option) *Client {
 	userAgent := fmt.Sprintf("terraform-provider-jamfprotect/%s", version)
-	return &Client{
-		baseURL:      strings.TrimRight(baseURL, "/"),
-		clientID:     clientID,
-		clientSecret: clientSecret,
-		userAgent:    userAgent,
-		httpClient: &http.Client{
-			Timeout: 60 * time.Second,
+	httpClient := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+	c := &Client{
+		baseURL:    strings.TrimRight(baseURL, "/"),
+		userAgent:  userAgent,
+		httpClient: httpClient,
+		oauthConfig: clientcredentials.Config{
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			TokenURL:     strings.TrimRight(baseURL, "/") + "/token",
 		},
 	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
 }
 
 // SetLogger sets the logger for the client.
@@ -104,26 +115,56 @@ func (e GraphQLError) Error() string {
 }
 
 // authenticate obtains (or refreshes) an access token. Thread-safe.
-func (c *Client) authenticate(ctx context.Context) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.accessToken != "" && time.Now().Before(c.tokenExpiry) {
-		return nil
+func (c *Client) authenticate(ctx context.Context) (*oauth2.Token, error) {
+	if token := c.currentToken(); token != nil {
+		return token, nil
 	}
 
-	body, err := json.Marshal(tokenRequest{
-		ClientID: c.clientID,
-		Password: c.clientSecret,
+	value, err, _ := c.tokenGroup.Do("token", func() (any, error) {
+		if token := c.currentToken(); token != nil {
+			return token, nil
+		}
+		token, err := c.fetchToken(ctx)
+		if err != nil {
+			return nil, err
+		}
+		c.mu.Lock()
+		c.token = token
+		c.mu.Unlock()
+		return token, nil
 	})
 	if err != nil {
-		return fmt.Errorf("marshalling token request: %w", err)
+		return nil, err
+	}
+	token, ok := value.(*oauth2.Token)
+	if !ok {
+		return nil, fmt.Errorf("unexpected token type %T", value)
+	}
+	return token, nil
+}
+
+func (c *Client) currentToken() *oauth2.Token {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.token != nil && c.token.Valid() {
+		return c.token
+	}
+	return nil
+}
+
+func (c *Client) fetchToken(ctx context.Context) (*oauth2.Token, error) {
+	body, err := json.Marshal(tokenRequest{
+		ClientID: c.oauthConfig.ClientID,
+		Password: c.oauthConfig.ClientSecret,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("marshalling token request: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.baseURL+"/token", bytes.NewReader(body))
+		c.oauthConfig.TokenURL, bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("creating token request: %w", err)
+		return nil, fmt.Errorf("creating token request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
@@ -134,47 +175,50 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("requesting token: %w", err)
+		return nil, fmt.Errorf("requesting token: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading token response: %w", err)
+		return nil, fmt.Errorf("reading token response: %w", err)
 	}
 	if c.logger != nil {
 		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var tokenResp tokenResponse
 	if err := json.Unmarshal(respBody, &tokenResp); err != nil {
-		return fmt.Errorf("decoding token response: %w", err)
+		return nil, fmt.Errorf("decoding token response: %w", err)
 	}
 	if tokenResp.AccessToken == "" {
-		return fmt.Errorf("%w: token response missing access_token", ErrAuthentication)
+		return nil, fmt.Errorf("%w: token response missing access_token", ErrAuthentication)
 	}
 
-	c.accessToken = tokenResp.AccessToken
 	if tokenResp.ExpiresIn <= 0 {
-		return fmt.Errorf("%w: token response missing expires_in", ErrAuthentication)
+		return nil, fmt.Errorf("%w: token response missing expires_in", ErrAuthentication)
 	}
 
 	expiry := time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
 	if time.Duration(tokenResp.ExpiresIn)*time.Second > tokenExpirySkew {
 		expiry = expiry.Add(-tokenExpirySkew)
 	}
-	c.tokenExpiry = expiry
-	return nil
+	return &oauth2.Token{
+		AccessToken: tokenResp.AccessToken,
+		TokenType:   tokenResp.TokenType,
+		Expiry:      expiry,
+	}, nil
 }
 
 // Query executes a GraphQL query/mutation against the /app endpoint and
 // decodes the result into target.
 func (c *Client) Query(ctx context.Context, query string, variables map[string]any, target any) error {
-	if err := c.authenticate(ctx); err != nil {
+	token, err := c.authenticate(ctx)
+	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
@@ -192,7 +236,7 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 		return fmt.Errorf("creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", c.accessToken)
+	req.Header.Set("Authorization", token.AccessToken)
 	req.Header.Set("User-Agent", c.userAgent)
 
 	if c.logger != nil {
@@ -248,14 +292,27 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	return nil
 }
 
-// AccessToken ensures a valid token is available and returns it with its expiry time.
+// AccessToken ensures a valid token is available and returns it.
 // Tokens returned by Jamf Protect do not include a "Bearer" prefix.
-func (c *Client) AccessToken(ctx context.Context) (string, time.Time, error) {
-	if err := c.authenticate(ctx); err != nil {
-		return "", time.Time{}, fmt.Errorf("%w: %w", ErrAuthentication, err)
+func (c *Client) AccessToken(ctx context.Context) (*oauth2.Token, error) {
+	token, err := c.authenticate(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.accessToken, c.tokenExpiry, nil
+	return token, nil
+}
+
+// Option configures a Client.
+type Option func(*Client)
+
+// WithHTTPClient overrides the HTTP client used by the API client.
+func WithHTTPClient(httpClient *http.Client) Option {
+	return func(c *Client) {
+		if httpClient != nil {
+			c.httpClient = httpClient
+		}
+	}
 }
