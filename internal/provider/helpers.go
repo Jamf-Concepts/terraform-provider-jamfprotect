@@ -47,3 +47,9 @@ func isNotFoundError(err error) bool {
 	msg := strings.ToLower(err.Error())
 	return strings.Contains(msg, "not found") || strings.Contains(msg, "not_found")
 }
+
+// pageInfo represents the pagination metadata returned by list queries.
+type pageInfo struct {
+	Next  *string `json:"next"`
+	Total int     `json:"total"`
+}

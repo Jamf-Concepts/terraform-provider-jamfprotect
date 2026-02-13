@@ -4,9 +4,19 @@ Tracking improvements to make the provider feel idiomatic Terraform rather than 
 
 ## Remaining
 
-_(None — all schema improvements complete)_
+_(None — all schema improvements and data sources complete)_
 
 ## Completed
+
+- [x] **Data Sources** — Added read-only data sources for all 7 resource types
+  - `jamfprotect_plans`, `jamfprotect_analytics`, `jamfprotect_action_configs`
+  - `jamfprotect_prevent_lists`, `jamfprotect_telemetries_v2`
+  - `jamfprotect_unified_logging_filters`, `jamfprotect_usb_control_sets`
+  - Shared `pageInfo` pagination helper in `helpers.go`
+  - List queries added to existing `*_helpers.go` files
+  - Schema validation and metadata tests in `schema_test.go`
+  - Example `.tf` files in `examples/data-sources/`
+  - Generated docs in `docs/data-sources/`
 
 - [x] **#2** Restructure `action_config` `alert_config` from JSON blob to typed nested blocks
   - Replaced `jsonencode()` string attribute with `SingleNestedAttribute` containing `data` → 14 event types

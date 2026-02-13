@@ -26,8 +26,10 @@ resource "jamfprotect_analytic" "suspicious_process" {
   snapshot_files = ["/usr/bin/malware"]
 
   analytic_actions = [{
-    name       = "SmartGroup"
-    parameters = "{\"id\":\"smartgroup\"}"
+    name = "SmartGroup"
+    parameters = {
+      id = "smartgroup"
+    }
   }]
 
   context = [{
@@ -46,24 +48,25 @@ resource "jamfprotect_analytic" "suspicious_process" {
 - `analytic_actions` (Attributes List) Structured actions to perform when the analytic triggers. (see [below for nested schema](#nestedatt--analytic_actions))
 - `categories` (List of String) A list of categories for the analytic.
 - `context` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context))
-- `description` (String) A description of the analytic.
 - `filter` (String) The predicate filter expression for the analytic.
-- `input_type` (String) The input type for the analytic. Valid values: `GPFSEvent`, `GPDownloadEvent`, `GPProcessEvent`, `GPScreenshotEvent`, `GPKeylogRegisterEvent`, `GPClickEvent`, `GPMRTEvent`, `GPUSBEvent`, `GPGatekeeperEvent`.
+- `input_type` (String) The input type for the analytic. Determines which endpoint event stream the analytic monitors.
 - `level` (Number) The log level (integer) for the analytic.
 - `name` (String) The name of the analytic.
-- `severity` (String) The severity of the analytic. Valid values: `High`, `Medium`, `Low`, `Informational`.
+- `severity` (String) The severity of the analytic.
 - `snapshot_files` (List of String) A list of snapshot file paths to collect when the analytic triggers.
 - `tags` (List of String) A list of tags for the analytic.
 
 ### Optional
 
 - `actions` (List of String) A list of legacy action names.
+- `description` (String) A description of the analytic.
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `created` (String) The creation timestamp.
+- `id` (String) The unique identifier of the analytic.
 - `updated` (String) The last-updated timestamp.
-- `uuid` (String) The unique identifier of the analytic.
 
 <a id="nestedatt--analytic_actions"></a>
 ### Nested Schema for `analytic_actions`
@@ -74,7 +77,7 @@ Required:
 
 Optional:
 
-- `parameters` (String) Action parameters as a JSON-encoded string (e.g. `{"id":"smartgroup"}`).
+- `parameters` (Map of String) Action parameters as key-value pairs (e.g. `{id = "smartgroup"}`).
 
 
 <a id="nestedatt--context"></a>
@@ -85,6 +88,17 @@ Required:
 - `exprs` (List of String) Expressions to evaluate for this context variable.
 - `name` (String) The context variable name.
 - `type` (String) The context variable type.
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 

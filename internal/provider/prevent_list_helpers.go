@@ -83,6 +83,22 @@ mutation deletePreventList($id: ID!) {
 }
 `
 
+const listPreventListsQuery = `
+query listPreventLists($nextToken: String, $direction: OrderDirection!, $field: PreventListOrderField!) {
+  listPreventLists(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items {
+      ...PreventListFields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + preventListFields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

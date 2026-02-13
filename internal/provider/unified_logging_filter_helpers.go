@@ -89,6 +89,22 @@ mutation deleteUnifiedLoggingFilter($uuid: ID!) {
 }
 `
 
+const listUnifiedLoggingFiltersQuery = `
+query listUnifiedLoggingFilters($nextToken: String, $direction: OrderDirection!, $field: UnifiedLoggingFiltersOrderField!, $filter: UnifiedLoggingFiltersFilterInput!) {
+  listUnifiedLoggingFilters(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100, filter: $filter}
+  ) {
+    items {
+      ...UnifiedLoggingFilterFields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + unifiedLoggingFilterFields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

@@ -119,7 +119,15 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 }
 
 func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewActionConfigsDataSource,
+		NewAnalyticsDataSource,
+		NewPlansDataSource,
+		NewPreventListsDataSource,
+		NewTelemetriesV2DataSource,
+		NewUnifiedLoggingFiltersDataSource,
+		NewUSBControlSetsDataSource,
+	}
 }
 
 func New(version string) func() provider.Provider {

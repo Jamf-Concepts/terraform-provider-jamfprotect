@@ -63,11 +63,20 @@ internal/
     *_types.go                   # Type definitions for each resource
     *_helpers.go                 # GraphQL queries and helper functions for each resource
     *_resource_test.go           # Acceptance tests for each resource
+    plans_data_source.go         # jamfprotect_plans data source
+    analytics_data_source.go     # jamfprotect_analytics data source
+    action_configs_data_source.go        # jamfprotect_action_configs data source
+    prevent_lists_data_source.go         # jamfprotect_prevent_lists data source
+    telemetries_v2_data_source.go        # jamfprotect_telemetries_v2 data source
+    unified_logging_filters_data_source.go  # jamfprotect_unified_logging_filters data source
+    usb_control_sets_data_source.go      # jamfprotect_usb_control_sets data source
 queries_and_mutations/           # 42 captured GraphQL operations (reference material)
 tools/
   scripts/                       # Python helper scripts for API discovery
-docs/                            # Generated provider documentation
-examples/                        # Example Terraform configurations
+docs/                            # Generated provider documentation (resources + data sources)
+examples/
+  resources/                     # Example .tf files for resources
+  data-sources/                  # Example .tf files for data sources
 ```
 
 ## Provider Development

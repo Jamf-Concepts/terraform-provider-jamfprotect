@@ -20,6 +20,18 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 All resources support full CRUD operations and `terraform import`.
 
+## Supported Data Sources
+
+| Data Source                              | Description                                  |
+| ---------------------------------------- | -------------------------------------------- |
+| `jamfprotect_action_configs`             | List all action configurations               |
+| `jamfprotect_analytics`                  | List all analytics (threat detection rules)   |
+| `jamfprotect_plans`                      | List all plans (endpoint configurations)      |
+| `jamfprotect_prevent_lists`              | List all prevent lists (allow/block lists)    |
+| `jamfprotect_telemetries_v2`             | List all telemetry v2 configurations          |
+| `jamfprotect_unified_logging_filters`    | List all unified logging filters              |
+| `jamfprotect_usb_control_sets`           | List all USB control sets                     |
+
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0

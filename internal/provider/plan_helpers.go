@@ -157,6 +157,22 @@ mutation deletePlan($id: ID!) {
 }
 `
 
+const listPlansQuery = `
+query listPlans($nextToken: String, $direction: OrderDirection!, $field: PlanOrderField!) {
+  listPlans(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items {
+      ...PlanFields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + planFields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

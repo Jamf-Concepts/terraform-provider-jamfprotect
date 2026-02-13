@@ -94,6 +94,22 @@ mutation deleteTelemetryV2($id: ID!) {
 }
 `
 
+const listTelemetriesV2Query = `
+query listTelemetriesV2($nextToken: String, $direction: OrderDirection!, $field: TelemetryOrderField!) {
+  listTelemetriesV2(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items {
+      ...TelemetryV2Fields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + telemetryV2Fields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

@@ -129,6 +129,20 @@ mutation deleteAnalytic($uuid: ID!) {
 }
 `
 
+const listAnalyticsQuery = `
+query listAnalytics {
+  listAnalytics {
+    items {
+      ...AnalyticFields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + analyticFields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

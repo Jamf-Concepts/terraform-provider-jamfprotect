@@ -23,7 +23,7 @@ resource "jamfprotect_unified_logging_filter" "auth_failures" {
   name        = "Authentication Failures"
   description = "Collect authentication failure log entries."
   filter      = "eventMessage CONTAINS 'Authentication failed'"
-  level       = "INFO"
+  level       = "DEFAULT"
   enabled     = true
   tags        = ["logging", "auth"]
 }
@@ -35,7 +35,7 @@ resource "jamfprotect_unified_logging_filter" "auth_failures" {
 ### Required
 
 - `filter` (String) The predicate filter expression (NSPredicate format).
-- `level` (String) The unified logging level. The only known valid value is `DEFAULT`.
+- `level` (String) The unified logging level.
 - `name` (String) The name of the unified logging filter.
 - `tags` (List of String) A list of tags for the unified logging filter.
 
@@ -43,12 +43,23 @@ resource "jamfprotect_unified_logging_filter" "auth_failures" {
 
 - `description` (String) A description of the unified logging filter.
 - `enabled` (Boolean) Whether the filter is enabled. Defaults to `true`.
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `created` (String) The creation timestamp.
+- `id` (String) The unique identifier of the unified logging filter.
 - `updated` (String) The last-updated timestamp.
-- `uuid` (String) The unique identifier of the unified logging filter.
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 

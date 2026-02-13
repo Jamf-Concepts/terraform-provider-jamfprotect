@@ -103,6 +103,22 @@ mutation deleteUSBControlSet($id: ID!) {
 }
 `
 
+const listUSBControlSetsQuery = `
+query listUSBControlSets($nextToken: String, $direction: OrderDirection!, $field: USBControlOrderField!) {
+  listUSBControlSets(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items {
+      ...USBControlSetFields
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+` + usbControlSetFields
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------

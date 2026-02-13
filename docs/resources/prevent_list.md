@@ -36,17 +36,28 @@ resource "jamfprotect_prevent_list" "blocked_team_ids" {
 - `list` (List of String) The list of entries (identifiers) in the prevent list.
 - `name` (String) The name of the prevent list.
 - `tags` (List of String) A list of tags for the prevent list.
-- `type` (String) The type of prevent list. Valid values: `TEAMID`, `FILEHASH`, `CDHASH`, `SIGNINGID`.
+- `type` (String) The type of prevent list.
 
 ### Optional
 
 - `description` (String) A description of the prevent list.
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `created` (String) The creation timestamp.
 - `entry_count` (Number) The number of entries in the prevent list.
 - `id` (String) The unique identifier of the prevent list.
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 

@@ -18,24 +18,24 @@ resource "jamfprotect_action_config" "default" {
   name        = "Default Action Config"
   description = "Default alert data enrichment settings."
 
-  alert_config = jsonencode({
+  alert_config = {
     data = {
-      binary              = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
-      clickEvent          = { attrs = [], related = [] }
-      downloadEvent       = { attrs = ["sourceUrl"], related = ["file", "process"] }
-      file                = { attrs = ["sha256hex", "path"], related = [] }
-      fsEvent             = { attrs = ["path"], related = ["process", "file"] }
-      group               = { attrs = [], related = [] }
-      procEvent           = { attrs = ["ppid", "uid"], related = ["process"] }
-      process             = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
-      screenshotEvent     = { attrs = [], related = [] }
-      usbEvent            = { attrs = [], related = [] }
-      user                = { attrs = ["name", "uid"], related = [] }
-      gkEvent             = { attrs = [], related = [] }
-      keylogRegisterEvent = { attrs = [], related = [] }
-      mrtEvent            = { attrs = [], related = [] }
+      binary                = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
+      click_event           = { attrs = [], related = [] }
+      download_event        = { attrs = ["sourceUrl"], related = ["file", "process"] }
+      file                  = { attrs = ["sha256hex", "path"], related = [] }
+      fs_event              = { attrs = ["path"], related = ["process", "file"] }
+      group                 = { attrs = [], related = [] }
+      proc_event            = { attrs = ["ppid", "uid"], related = ["process"] }
+      process               = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
+      screenshot_event      = { attrs = [], related = [] }
+      usb_event             = { attrs = [], related = [] }
+      user                  = { attrs = ["name", "uid"], related = [] }
+      gk_event              = { attrs = [], related = [] }
+      keylog_register_event = { attrs = [], related = [] }
+      mrt_event             = { attrs = [], related = [] }
     }
-  })
+  }
 }
 
 # Create a plan that uses the action configuration.
@@ -45,18 +45,18 @@ resource "jamfprotect_plan" "endpoint_security" {
   action_configs = jamfprotect_action_config.default.id
   auto_update    = true
 
-  comms_config {
+  comms_config = {
     fqdn     = "your-tenant.protect.jamfcloud.com"
-    protocol = "MQTT"
+    protocol = "mqtt"
   }
 
-  info_sync {
-    attrs                  = ["arch", "os_version", "serial_number"]
+  info_sync = {
+    attrs                  = ["arch", "hostName", "serial"]
     insights_sync_interval = 86400
   }
 
-  signatures_feed_config {
-    mode = "ON"
+  signatures_feed_config = {
+    mode = "blocking"
   }
 }
 ```
@@ -78,9 +78,10 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `description` (String) A description of the plan.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
-- `log_level` (String) The log level for the plan. Valid values: `DISABLED`, `ERROR`, `WARNING`, `INFO`, `DEBUG`.
+- `log_level` (String) The log level for the plan. Defaults to `ERROR`.
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `usb_control_set` (String) The ID of the USB control set to associate with this plan.
 
 ### Read-Only
@@ -96,7 +97,10 @@ resource "jamfprotect_plan" "endpoint_security" {
 Required:
 
 - `fqdn` (String) The fully qualified domain name for communications.
-- `protocol` (String) The protocol to use (e.g. `mqtt`).
+
+Optional:
+
+- `protocol` (String) The protocol to use. Defaults to `mqtt`.
 
 
 <a id="nestedatt--info_sync"></a>
@@ -111,9 +115,9 @@ Required:
 <a id="nestedatt--signatures_feed_config"></a>
 ### Nested Schema for `signatures_feed_config`
 
-Required:
+Optional:
 
-- `mode` (String) The signatures feed mode (e.g. `blocking`, `monitoring`, `off`).
+- `mode` (String) The signatures feed mode. Defaults to `blocking`.
 
 
 <a id="nestedatt--analytic_sets"></a>
@@ -122,7 +126,18 @@ Required:
 Required:
 
 - `analytic_set` (String) The UUID of the analytic set.
-- `type` (String) The type of analytic set (e.g. `Report`, `Prevent`).
+- `type` (String) The type of analytic set.
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 

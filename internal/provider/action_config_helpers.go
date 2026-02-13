@@ -94,6 +94,26 @@ mutation deleteActionConfigs($id: ID!) {
 }
 `
 
+const listActionConfigsQuery = `
+query listActionConfigs($nextToken: String, $direction: OrderDirection!, $field: ActionConfigsOrderField!) {
+  listActionConfigs(
+    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+  ) {
+    items {
+      id
+      name
+      description
+      created
+      updated
+    }
+    pageInfo {
+      next
+      total
+    }
+  }
+}
+`
+
 // ---------------------------------------------------------------------------
 // Alert config attribute type definitions for ObjectValue construction
 // ---------------------------------------------------------------------------

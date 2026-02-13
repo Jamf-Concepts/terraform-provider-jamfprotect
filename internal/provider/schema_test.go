@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -631,5 +632,244 @@ func TestTelemetryV2ResourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_telemetry_v2" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetry_v2", resp.TypeName)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Data source schema tests
+// ---------------------------------------------------------------------------
+
+func TestPlansDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewPlansDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	plansAttr, ok := resp.Schema.Attributes["plans"]
+	if !ok {
+		t.Fatal("expected attribute 'plans' in data source schema")
+	}
+	if !plansAttr.IsComputed() {
+		t.Error("expected 'plans' to be computed")
+	}
+}
+
+func TestPlansDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewPlansDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_plans" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_plans", resp.TypeName)
+	}
+}
+
+func TestAnalyticsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewAnalyticsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	analyticsAttr, ok := resp.Schema.Attributes["analytics"]
+	if !ok {
+		t.Fatal("expected attribute 'analytics' in data source schema")
+	}
+	if !analyticsAttr.IsComputed() {
+		t.Error("expected 'analytics' to be computed")
+	}
+}
+
+func TestAnalyticsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewAnalyticsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_analytics" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_analytics", resp.TypeName)
+	}
+}
+
+func TestActionConfigsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewActionConfigsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	actionConfigsAttr, ok := resp.Schema.Attributes["action_configs"]
+	if !ok {
+		t.Fatal("expected attribute 'action_configs' in data source schema")
+	}
+	if !actionConfigsAttr.IsComputed() {
+		t.Error("expected 'action_configs' to be computed")
+	}
+}
+
+func TestActionConfigsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewActionConfigsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_action_configs" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_configs", resp.TypeName)
+	}
+}
+
+func TestPreventListsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewPreventListsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	preventListsAttr, ok := resp.Schema.Attributes["prevent_lists"]
+	if !ok {
+		t.Fatal("expected attribute 'prevent_lists' in data source schema")
+	}
+	if !preventListsAttr.IsComputed() {
+		t.Error("expected 'prevent_lists' to be computed")
+	}
+}
+
+func TestPreventListsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewPreventListsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_prevent_lists" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_lists", resp.TypeName)
+	}
+}
+
+func TestUnifiedLoggingFiltersDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewUnifiedLoggingFiltersDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	filtersAttr, ok := resp.Schema.Attributes["unified_logging_filters"]
+	if !ok {
+		t.Fatal("expected attribute 'unified_logging_filters' in data source schema")
+	}
+	if !filtersAttr.IsComputed() {
+		t.Error("expected 'unified_logging_filters' to be computed")
+	}
+}
+
+func TestUnifiedLoggingFiltersDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewUnifiedLoggingFiltersDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_unified_logging_filters" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_unified_logging_filters", resp.TypeName)
+	}
+}
+
+func TestUSBControlSetsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewUSBControlSetsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	usbAttr, ok := resp.Schema.Attributes["usb_control_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'usb_control_sets' in data source schema")
+	}
+	if !usbAttr.IsComputed() {
+		t.Error("expected 'usb_control_sets' to be computed")
+	}
+}
+
+func TestUSBControlSetsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewUSBControlSetsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_usb_control_sets" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_usb_control_sets", resp.TypeName)
+	}
+}
+
+func TestTelemetriesV2DataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := NewTelemetriesV2DataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	telemetriesAttr, ok := resp.Schema.Attributes["telemetries_v2"]
+	if !ok {
+		t.Fatal("expected attribute 'telemetries_v2' in data source schema")
+	}
+	if !telemetriesAttr.IsComputed() {
+		t.Error("expected 'telemetries_v2' to be computed")
+	}
+}
+
+func TestTelemetriesV2DataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := NewTelemetriesV2DataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_telemetries_v2" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetries_v2", resp.TypeName)
+	}
+}
+
+func TestProviderDataSources(t *testing.T) {
+	t.Parallel()
+
+	p := New("test")().(*JamfProtectProvider)
+	dataSources := p.DataSources(context.Background())
+
+	if len(dataSources) != 7 {
+		t.Errorf("expected 7 data sources, got %d", len(dataSources))
 	}
 }
