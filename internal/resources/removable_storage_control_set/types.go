@@ -44,27 +44,41 @@ type USBProductModel struct {
 // ---------------------------------------------------------------------------
 
 type usbControlSetAPIModel struct {
-	ID                   string            `json:"id"`
-	Name                 string            `json:"name"`
-	Description          string            `json:"description"`
-	DefaultMountAction   string            `json:"defaultMountAction"`
-	DefaultMessageAction string            `json:"defaultMessageAction"`
-	Rules                []usbRuleAPIModel `json:"rules"`
-	Created              string            `json:"created"`
-	Updated              string            `json:"updated"`
+	ID                   string            `graphql:"id"`
+	Name                 string            `graphql:"name"`
+	Description          string            `graphql:"description"`
+	DefaultMountAction   string            `graphql:"defaultMountAction"`
+	DefaultMessageAction string            `graphql:"defaultMessageAction"`
+	Rules                []usbRuleAPIModel `graphql:"rules"`
+	Created              string            `graphql:"created"`
+	Updated              string            `graphql:"updated"`
 }
 
 type usbRuleAPIModel struct {
-	Type          string               `json:"type"`
-	MountAction   string               `json:"mountAction"`
-	MessageAction string               `json:"messageAction"`
-	ApplyTo       string               `json:"applyTo"`
-	Vendors       []string             `json:"vendors"`
-	Serials       []string             `json:"serials"`
-	Products      []usbProductAPIModel `json:"products"`
+	Type          string                  `graphql:"type"`
+	MountAction   string                  `graphql:"mountAction"`
+	MessageAction string                  `graphql:"messageAction"`
+	VendorRule    *usbVendorRuleAPIModel  `graphql:"... on VendorRule"`
+	SerialRule    *usbSerialRuleAPIModel  `graphql:"... on SerialRule"`
+	ProductRule   *usbProductRuleAPIModel `graphql:"... on ProductRule"`
+}
+
+type usbVendorRuleAPIModel struct {
+	Vendors []string `graphql:"vendors"`
+	ApplyTo string   `graphql:"applyTo"`
+}
+
+type usbSerialRuleAPIModel struct {
+	Serials []string `graphql:"serials"`
+	ApplyTo string   `graphql:"applyTo"`
+}
+
+type usbProductRuleAPIModel struct {
+	Products []usbProductAPIModel `graphql:"products"`
+	ApplyTo  string               `graphql:"applyTo"`
 }
 
 type usbProductAPIModel struct {
-	Vendor  string `json:"vendor"`
-	Product string `json:"product"`
+	Vendor  string `graphql:"vendor"`
+	Product string `graphql:"product"`
 }

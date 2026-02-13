@@ -190,9 +190,9 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 
 		var result struct {
 			ListUSBControlSets struct {
-				Items    []usbControlSetAPIModel `json:"items"`
-				PageInfo common.PageInfo         `json:"pageInfo"`
-			} `json:"listUSBControlSets"`
+				Items    []usbControlSetAPIModel `graphql:"items"`
+				PageInfo common.PageInfo         `graphql:"pageInfo"`
+			} `graphql:"listUSBControlSets"`
 		}
 		if err := d.client.Query(ctx, listUSBControlSetsQuery, vars, &result); err != nil {
 			resp.Diagnostics.AddError("Error listing USB control sets", err.Error())
@@ -244,33 +244,52 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 				rule.MessageAction = types.StringNull()
 			}
 
-			if apiRule.ApplyTo != "" {
-				rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
-			} else {
-				rule.ApplyTo = types.StringNull()
-			}
-
+			applyTo := ""
 			switch normalizeUSBRuleType(apiRule.Type) {
 			case "Vendor":
-				rule.Vendors = common.StringsToList(apiRule.Vendors)
+				if apiRule.VendorRule != nil {
+					applyTo = apiRule.VendorRule.ApplyTo
+					rule.Vendors = common.StringsToList(apiRule.VendorRule.Vendors)
+				} else {
+					rule.Vendors = types.ListNull(types.StringType)
+				}
 				rule.Serials = types.ListNull(types.StringType)
 			case "Serial":
-				rule.Serials = common.StringsToList(apiRule.Serials)
+				if apiRule.SerialRule != nil {
+					applyTo = apiRule.SerialRule.ApplyTo
+					rule.Serials = common.StringsToList(apiRule.SerialRule.Serials)
+				} else {
+					rule.Serials = types.ListNull(types.StringType)
+				}
 				rule.Vendors = types.ListNull(types.StringType)
 			case "Product":
-				products := make([]USBProductDataSourceItemModel, 0, len(apiRule.Products))
-				for _, p := range apiRule.Products {
-					products = append(products, USBProductDataSourceItemModel{
-						Vendor:  types.StringValue(p.Vendor),
-						Product: types.StringValue(p.Product),
-					})
+				if apiRule.ProductRule != nil {
+					applyTo = apiRule.ProductRule.ApplyTo
+					products := make([]USBProductDataSourceItemModel, 0, len(apiRule.ProductRule.Products))
+					for _, p := range apiRule.ProductRule.Products {
+						products = append(products, USBProductDataSourceItemModel{
+							Vendor:  types.StringValue(p.Vendor),
+							Product: types.StringValue(p.Product),
+						})
+					}
+					rule.Products = products
+				} else {
+					rule.Products = nil
 				}
-				rule.Products = products
+				rule.Vendors = types.ListNull(types.StringType)
+				rule.Serials = types.ListNull(types.StringType)
+			case "Encryption":
 				rule.Vendors = types.ListNull(types.StringType)
 				rule.Serials = types.ListNull(types.StringType)
 			default:
 				rule.Vendors = types.ListNull(types.StringType)
 				rule.Serials = types.ListNull(types.StringType)
+			}
+
+			if applyTo != "" {
+				rule.ApplyTo = types.StringValue(applyTo)
+			} else {
+				rule.ApplyTo = types.StringNull()
 			}
 
 			rules = append(rules, rule)

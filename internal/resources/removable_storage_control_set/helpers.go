@@ -18,106 +18,106 @@ import (
 
 const usbControlSetFields = `
 fragment USBControlSetFields on USBControlSet {
-  id
-  name
-  description
-  defaultMountAction
-  defaultMessageAction
-  rules {
-    mountAction
-    messageAction
-    type
-    ... on VendorRule {
-      vendors
-      applyTo
-    }
-    ... on SerialRule {
-      serials
-      applyTo
-    }
-    ... on ProductRule {
-      products {
-        vendor
-        product
-      }
-      applyTo
-    }
-  }
-  created
-  updated
+	id
+	name
+	description
+	defaultMountAction
+	defaultMessageAction
+	rules {
+		mountAction
+		messageAction
+		type
+		... on VendorRule {
+			vendors
+			applyTo
+		}
+		... on SerialRule {
+			serials
+			applyTo
+		}
+		... on ProductRule {
+			products {
+				vendor
+				product
+			}
+			applyTo
+		}
+	}
+	created
+	updated
 }
 `
 
 const createUSBControlSetMutation = `
 mutation createUSBControlSet(
-  $name: String!,
-  $description: String,
-  $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-  $defaultMessageAction: String,
-  $rules: [USBControlRuleInput!]!
+	$name: String!,
+	$description: String,
+	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
+	$defaultMessageAction: String,
+	$rules: [USBControlRuleInput!]!
 ) {
-  createUSBControlSet(input: {
-    name: $name,
-    description: $description,
-    defaultMountAction: $defaultMountAction,
-    defaultMessageAction: $defaultMessageAction,
-    rules: $rules
-  }) {
-    ...USBControlSetFields
-  }
+	createUSBControlSet(input: {
+		name: $name,
+		description: $description,
+		defaultMountAction: $defaultMountAction,
+		defaultMessageAction: $defaultMessageAction,
+		rules: $rules
+	}) {
+		...USBControlSetFields
+	}
 }
 ` + usbControlSetFields
 
 const getUSBControlSetQuery = `
 query getUSBControlSet($id: ID!) {
-  getUSBControlSet(id: $id) {
-    ...USBControlSetFields
-  }
+	getUSBControlSet(id: $id) {
+		...USBControlSetFields
+	}
 }
 ` + usbControlSetFields
 
 const updateUSBControlSetMutation = `
 mutation updateUSBControlSet(
-  $id: ID!,
-  $name: String!,
-  $description: String,
-  $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-  $defaultMessageAction: String,
-  $rules: [USBControlRuleInput!]!
+	$id: ID!,
+	$name: String!,
+	$description: String,
+	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
+	$defaultMessageAction: String,
+	$rules: [USBControlRuleInput!]!
 ) {
-  updateUSBControlSet(id: $id, input: {
-    name: $name,
-    description: $description,
-    defaultMountAction: $defaultMountAction,
-    defaultMessageAction: $defaultMessageAction,
-    rules: $rules
-  }) {
-    ...USBControlSetFields
-  }
+	updateUSBControlSet(id: $id, input: {
+		name: $name,
+		description: $description,
+		defaultMountAction: $defaultMountAction,
+		defaultMessageAction: $defaultMessageAction,
+		rules: $rules
+	}) {
+		...USBControlSetFields
+	}
 }
 ` + usbControlSetFields
 
 const deleteUSBControlSetMutation = `
 mutation deleteUSBControlSet($id: ID!) {
-  deleteUSBControlSet(id: $id) {
-    id
-  }
+	deleteUSBControlSet(id: $id) {
+		id
+	}
 }
 `
 
 const listUSBControlSetsQuery = `
 query listUSBControlSets($nextToken: String, $direction: OrderDirection!, $field: USBControlOrderField!) {
-  listUSBControlSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-  ) {
-    items {
-      ...USBControlSetFields
-    }
-    pageInfo {
-      next
-      total
-    }
-  }
+	listUSBControlSets(
+		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+	) {
+		items {
+			...USBControlSetFields
+		}
+		pageInfo {
+			next
+			total
+		}
+	}
 }
 ` + usbControlSetFields
 
@@ -157,34 +157,35 @@ func (r *USBControlSetResource) buildVariables(ctx context.Context, data USBCont
 
 func buildRuleVariable(ctx context.Context, rule USBRuleModel, diags *diag.Diagnostics) map[string]any {
 	ruleType := normalizeUSBRuleType(rule.Type.ValueString())
-	r := map[string]any{
-		"type": ruleType,
-	}
-
+	input := map[string]any{"type": ruleType}
 	baseRule := map[string]any{
 		"mountAction": rule.MountAction.ValueString(),
 	}
+	var messageAction *string
 	if !rule.MessageAction.IsNull() {
-		baseRule["messageAction"] = rule.MessageAction.ValueString()
+		value := rule.MessageAction.ValueString()
+		messageAction = &value
+	}
+	var applyTo *string
+	if !rule.ApplyTo.IsNull() {
+		value := rule.ApplyTo.ValueString()
+		applyTo = &value
+	}
+	if messageAction != nil {
+		baseRule["messageAction"] = *messageAction
+	}
+	if applyTo != nil {
+		baseRule["applyTo"] = *applyTo
 	}
 
 	switch ruleType {
 	case "Vendor":
-		if !rule.ApplyTo.IsNull() {
-			baseRule["applyTo"] = rule.ApplyTo.ValueString()
-		}
 		baseRule["vendors"] = common.ListToStrings(ctx, rule.Vendors, diags)
-		r["vendorRule"] = baseRule
+		input["vendorRule"] = baseRule
 	case "Serial":
-		if !rule.ApplyTo.IsNull() {
-			baseRule["applyTo"] = rule.ApplyTo.ValueString()
-		}
 		baseRule["serials"] = common.ListToStrings(ctx, rule.Serials, diags)
-		r["serialRule"] = baseRule
+		input["serialRule"] = baseRule
 	case "Product":
-		if !rule.ApplyTo.IsNull() {
-			baseRule["applyTo"] = rule.ApplyTo.ValueString()
-		}
 		products := make([]map[string]any, 0, len(rule.Products))
 		for _, p := range rule.Products {
 			products = append(products, map[string]any{
@@ -193,15 +194,15 @@ func buildRuleVariable(ctx context.Context, rule USBRuleModel, diags *diag.Diagn
 			})
 		}
 		baseRule["products"] = products
-		r["productRule"] = baseRule
+		input["productRule"] = baseRule
 	case "Encryption":
-		r["encryptionRule"] = baseRule
+		input["encryptionRule"] = baseRule
 	default:
 		diags.AddError("Unsupported USB control rule type", "Unsupported rule type: "+rule.Type.ValueString())
-		return nil
+		return map[string]any{}
 	}
 
-	return r
+	return input
 }
 
 func normalizeUSBRuleType(ruleType string) string {
@@ -251,33 +252,52 @@ func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSe
 			rule.MessageAction = types.StringNull()
 		}
 
-		if apiRule.ApplyTo != "" {
-			rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
-		} else {
-			rule.ApplyTo = types.StringNull()
-		}
-
+		applyTo := ""
 		switch normalizeUSBRuleType(apiRule.Type) {
 		case "Vendor":
-			rule.Vendors = common.StringsToList(apiRule.Vendors)
+			if apiRule.VendorRule != nil {
+				applyTo = apiRule.VendorRule.ApplyTo
+				rule.Vendors = common.StringsToList(apiRule.VendorRule.Vendors)
+			} else {
+				rule.Vendors = types.ListNull(types.StringType)
+			}
 			rule.Serials = types.ListNull(types.StringType)
 		case "Serial":
-			rule.Serials = common.StringsToList(apiRule.Serials)
+			if apiRule.SerialRule != nil {
+				applyTo = apiRule.SerialRule.ApplyTo
+				rule.Serials = common.StringsToList(apiRule.SerialRule.Serials)
+			} else {
+				rule.Serials = types.ListNull(types.StringType)
+			}
 			rule.Vendors = types.ListNull(types.StringType)
 		case "Product":
-			products := make([]USBProductModel, 0, len(apiRule.Products))
-			for _, p := range apiRule.Products {
-				products = append(products, USBProductModel{
-					Vendor:  types.StringValue(p.Vendor),
-					Product: types.StringValue(p.Product),
-				})
+			if apiRule.ProductRule != nil {
+				applyTo = apiRule.ProductRule.ApplyTo
+				products := make([]USBProductModel, 0, len(apiRule.ProductRule.Products))
+				for _, p := range apiRule.ProductRule.Products {
+					products = append(products, USBProductModel{
+						Vendor:  types.StringValue(p.Vendor),
+						Product: types.StringValue(p.Product),
+					})
+				}
+				rule.Products = products
+			} else {
+				rule.Products = nil
 			}
-			rule.Products = products
+			rule.Vendors = types.ListNull(types.StringType)
+			rule.Serials = types.ListNull(types.StringType)
+		case "Encryption":
 			rule.Vendors = types.ListNull(types.StringType)
 			rule.Serials = types.ListNull(types.StringType)
 		default:
 			rule.Vendors = types.ListNull(types.StringType)
 			rule.Serials = types.ListNull(types.StringType)
+		}
+
+		if applyTo != "" {
+			rule.ApplyTo = types.StringValue(applyTo)
+		} else {
+			rule.ApplyTo = types.StringNull()
 		}
 
 		rules = append(rules, rule)
