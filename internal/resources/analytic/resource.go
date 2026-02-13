@@ -6,8 +6,9 @@ package analytic
 import (
 	"context"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
 	"time"
+
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"

@@ -7,7 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
+
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"

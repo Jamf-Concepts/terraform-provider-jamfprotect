@@ -6,7 +6,8 @@ package telemetry
 import (
 	"context"
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/common"
+
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
