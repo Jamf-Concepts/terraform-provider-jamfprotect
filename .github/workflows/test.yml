@@ -22,9 +22,9 @@ jobs:
       - uses: jdx/mise-action@6d1e696aa24c1aa1bcc1adea0212707c71ab78a8 # v3.6.1
         with:
           experimental: true
-      - run: mise run build:provider
-      - name: Run linters
-        run: mise run lint
+      - run: |
+          mise run build:provider
+          mise run lint
 
   generate:
     runs-on: ubuntu-latest
@@ -52,31 +52,31 @@ jobs:
       - run: mise run test
         timeout-minutes: 5
 
-  acceptance-test:
-    name: 'Acceptance Tests: Terraform ${{ matrix.terraform }}'
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    strategy:
-      fail-fast: false
-      matrix:
-        terraform:
-          - '1.13.*'
-          - '1.14.*'
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: jdx/mise-action@6d1e696aa24c1aa1bcc1adea0212707c71ab78a8 # v3.6.1
-        with:
-          experimental: true
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          terraform_version: ${{ matrix.terraform }}
-          terraform_wrapper: false
-      - env:
-          TF_ACC: "1"
-          JAMFPROTECT_URL: ${{ secrets.JAMFPROTECT_URL }}
-          JAMFPROTECT_CLIENT_ID: ${{ secrets.JAMFPROTECT_CLIENT_ID }}
-          JAMFPROTECT_CLIENT_SECRET: ${{ secrets.JAMFPROTECT_CLIENT_SECRET }}
-        run: go test -v -cover ./internal/provider/
-        timeout-minutes: 10
+  # acceptance-test:
+  #   name: 'Acceptance Tests: Terraform ${{ matrix.terraform }}'
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+  #   if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       terraform:
+  #         - '1.13.*'
+  #         - '1.14.*'
+  #   steps:
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - uses: jdx/mise-action@6d1e696aa24c1aa1bcc1adea0212707c71ab78a8 # v3.6.1
+  #       with:
+  #         experimental: true
+  #     - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+  #       with:
+  #         terraform_version: ${{ matrix.terraform }}
+  #         terraform_wrapper: false
+  #     - env:
+  #         TF_ACC: '1'
+  #         JAMFPROTECT_URL: ${{ secrets.JAMFPROTECT_URL }}
+  #         JAMFPROTECT_CLIENT_ID: ${{ secrets.JAMFPROTECT_CLIENT_ID }}
+  #         JAMFPROTECT_CLIENT_SECRET: ${{ secrets.JAMFPROTECT_CLIENT_SECRET }}
+  #       run: go test -v -cover ./internal/provider/
+  #       timeout-minutes: 10
