@@ -79,10 +79,10 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `description` (String) A description of the plan.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Defaults to `ERROR`.
+- `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
-- `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 
 ### Read-Only
 
