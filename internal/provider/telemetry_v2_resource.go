@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -53,6 +54,7 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "A description of the telemetry v2 configuration.",
 				Optional:            true,
 				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 			},
 			"log_files": schema.ListAttribute{
 				MarkdownDescription: "A list of log file paths to collect from endpoints.",
@@ -85,6 +87,7 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated": schema.StringAttribute{
 				MarkdownDescription: "The last update timestamp.",

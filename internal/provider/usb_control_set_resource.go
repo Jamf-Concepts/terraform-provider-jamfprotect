@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -57,6 +58,7 @@ func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaR
 				MarkdownDescription: "A description of the USB control set.",
 				Optional:            true,
 				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 			},
 			"default_mount_action": schema.StringAttribute{
 				MarkdownDescription: "The default mount action for USB devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
@@ -125,6 +127,7 @@ func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaR
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated": schema.StringAttribute{
 				MarkdownDescription: "The last update timestamp.",

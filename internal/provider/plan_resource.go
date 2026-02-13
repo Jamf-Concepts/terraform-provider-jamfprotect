@@ -51,6 +51,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"hash": schema.StringAttribute{
 				MarkdownDescription: "The configuration hash of the plan.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the plan.",
@@ -60,6 +61,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A description of the plan.",
 				Optional:            true,
 				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 			},
 			"log_level": schema.StringAttribute{
 				MarkdownDescription: "The log level for the plan. Defaults to `ERROR`.",
@@ -168,6 +170,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated": schema.StringAttribute{
 				MarkdownDescription: "The last-updated timestamp.",

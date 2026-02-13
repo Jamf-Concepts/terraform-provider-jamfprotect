@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -60,6 +61,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			"hash": schema.StringAttribute{
 				MarkdownDescription: "The configuration hash.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the action configuration.",
@@ -69,6 +71,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "A description of the action configuration.",
 				Optional:            true,
 				Computed:            true,
+				Default:             stringdefault.StaticString(""),
 			},
 			"alert_config": schema.SingleNestedAttribute{
 				MarkdownDescription: "Alert configuration defining which data attributes and related objects to include in alerts for each event type.",
@@ -155,6 +158,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated": schema.StringAttribute{
 				MarkdownDescription: "The last-updated timestamp.",
