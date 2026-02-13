@@ -1,6 +1,6 @@
 module github.com/smithjw/terraform-provider-jamfprotect
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.17.0
@@ -60,6 +60,6 @@ require (
 	golang.org/x/tools v0.41.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
-	google.golang.org/grpc v1.79.0 // indirect
+	google.golang.org/grpc v1.79.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
