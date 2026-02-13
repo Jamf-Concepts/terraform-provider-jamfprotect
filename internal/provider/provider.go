@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -13,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 var _ provider.Provider = &JamfProtectProvider{}
@@ -101,7 +102,10 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	client := graphql.NewClientWithVersion(url, clientID, clientSecret, p.version)
+	client := client.NewClientWithVersion(url, clientID, clientSecret, p.version)
+	if shouldEnableHTTPLogging() {
+		client.SetLogger(NewTerraformLogger())
+	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
@@ -139,5 +143,19 @@ func New(version string) func() provider.Provider {
 		return &JamfProtectProvider{
 			version: version,
 		}
+	}
+}
+
+func shouldEnableHTTPLogging() bool {
+	level, ok := os.LookupEnv("TF_LOG")
+	if !ok {
+		return false
+	}
+
+	switch strings.ToLower(level) {
+	case "debug", "trace":
+		return true
+	default:
+		return false
 	}
 }

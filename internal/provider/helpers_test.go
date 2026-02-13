@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/graphql"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
 func TestListToStrings(t *testing.T) {
@@ -148,27 +148,27 @@ func TestIsNotFoundError(t *testing.T) {
 	}{
 		{
 			name:     "ErrNotFound wrapped with ErrGraphQL",
-			err:      fmt.Errorf("%w: %w: resource not found", graphql.ErrNotFound, graphql.ErrGraphQL),
+			err:      fmt.Errorf("%w: %w: resource not found", client.ErrNotFound, client.ErrGraphQL),
 			expected: true,
 		},
 		{
 			name:     "ErrNotFound alone",
-			err:      graphql.ErrNotFound,
+			err:      client.ErrNotFound,
 			expected: true,
 		},
 		{
 			name:     "ErrNotFound wrapped",
-			err:      fmt.Errorf("wrapped: %w", graphql.ErrNotFound),
+			err:      fmt.Errorf("wrapped: %w", client.ErrNotFound),
 			expected: true,
 		},
 		{
-			name:     "graphql other error",
-			err:      fmt.Errorf("%w: internal server error", graphql.ErrGraphQL),
+			name:     "client other error",
+			err:      fmt.Errorf("%w: internal server error", client.ErrGraphQL),
 			expected: false,
 		},
 		{
 			name:     "auth error",
-			err:      fmt.Errorf("%w: bad credentials", graphql.ErrAuthentication),
+			err:      fmt.Errorf("%w: bad credentials", client.ErrAuthentication),
 			expected: false,
 		},
 		{

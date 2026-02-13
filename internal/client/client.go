@@ -1,5 +1,7 @@
-// Package graphql provides a lightweight client for the Jamf Protect GraphQL API.
-package graphql
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package client
 
 import (
 	"bytes"
@@ -27,12 +29,50 @@ type Client struct {
 	clientID     string
 	clientSecret string
 	userAgent    string
+	httpClient   *http.Client
+	logger       Logger
+	mu           sync.Mutex
+	accessToken  string
+	tokenExpiry  time.Time
+}
 
-	httpClient *http.Client
+// Logger is an interface for logging HTTP requests and responses.
+type Logger interface {
+	LogRequest(ctx context.Context, method, url string, headers http.Header, body []byte)
+	LogResponse(ctx context.Context, statusCode int, headers http.Header, body []byte)
+}
 
-	mu          sync.Mutex
-	accessToken string
-	tokenExpiry time.Time
+const tokenExpirySkew = 60 * time.Second
+
+// tokenRequest is the payload sent to the /token endpoint.
+type tokenRequest struct {
+	ClientID string `json:"client_id"`
+	Password string `json:"password"`
+}
+
+// tokenResponse is the response from the /token endpoint.
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int64  `json:"expires_in,omitempty"`
+	TokenType   string `json:"token_type,omitempty"`
+}
+
+// graphqlRequest is the JSON payload for a GraphQL request.
+type graphqlRequest struct {
+	Query     string         `json:"query"`
+	Variables map[string]any `json:"variables,omitempty"`
+}
+
+// graphqlResponse is the raw GraphQL response envelope.
+type graphqlResponse struct {
+	Data   json.RawMessage `json:"data"`
+	Errors []GraphQLError  `json:"errors,omitempty"`
+}
+
+// GraphQLError represents an error returned by the GraphQL endpoint.
+type GraphQLError struct {
+	Message string `json:"message"`
+	Path    []any  `json:"path,omitempty"`
 }
 
 // NewClient creates a new Jamf Protect GraphQL client.
@@ -54,15 +94,13 @@ func NewClientWithVersion(baseURL, clientID, clientSecret, version string) *Clie
 	}
 }
 
-// tokenRequest is the payload sent to the /token endpoint.
-type tokenRequest struct {
-	ClientID string `json:"client_id"`
-	Password string `json:"password"`
+// SetLogger sets the logger for the client.
+func (c *Client) SetLogger(logger Logger) {
+	c.logger = logger
 }
 
-// tokenResponse is the response from the /token endpoint.
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
+func (e GraphQLError) Error() string {
+	return e.Message
 }
 
 // authenticate obtains (or refreshes) an access token. Thread-safe.
@@ -90,19 +128,30 @@ func (c *Client) authenticate(ctx context.Context) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
 
+	if c.logger != nil {
+		c.logger.LogRequest(ctx, http.MethodPost, req.URL.String(), req.Header, body)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("requesting token: %w", err)
 	}
 	defer resp.Body.Close()
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading token response: %w", err)
+	}
+	if c.logger != nil {
+		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("token request returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var tokenResp tokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+	if err := json.Unmarshal(respBody, &tokenResp); err != nil {
 		return fmt.Errorf("decoding token response: %w", err)
 	}
 	if tokenResp.AccessToken == "" {
@@ -110,31 +159,16 @@ func (c *Client) authenticate(ctx context.Context) error {
 	}
 
 	c.accessToken = tokenResp.AccessToken
-	// Tokens typically last ~30 min; refresh at 25 min as a safety margin.
-	c.tokenExpiry = time.Now().Add(25 * time.Minute)
+	if tokenResp.ExpiresIn <= 0 {
+		return fmt.Errorf("%w: token response missing expires_in", ErrAuthentication)
+	}
+
+	expiry := time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
+	if time.Duration(tokenResp.ExpiresIn)*time.Second > tokenExpirySkew {
+		expiry = expiry.Add(-tokenExpirySkew)
+	}
+	c.tokenExpiry = expiry
 	return nil
-}
-
-// graphqlRequest is the JSON payload for a GraphQL request.
-type graphqlRequest struct {
-	Query     string         `json:"query"`
-	Variables map[string]any `json:"variables,omitempty"`
-}
-
-// graphqlResponse is the raw GraphQL response envelope.
-type graphqlResponse struct {
-	Data   json.RawMessage `json:"data"`
-	Errors []GraphQLError  `json:"errors,omitempty"`
-}
-
-// GraphQLError represents an error returned by the GraphQL endpoint.
-type GraphQLError struct {
-	Message string `json:"message"`
-	Path    []any  `json:"path,omitempty"`
-}
-
-func (e GraphQLError) Error() string {
-	return e.Message
 }
 
 // Query executes a GraphQL query/mutation against the /app endpoint and
@@ -161,19 +195,30 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	req.Header.Set("Authorization", c.accessToken)
 	req.Header.Set("User-Agent", c.userAgent)
 
+	if c.logger != nil {
+		c.logger.LogRequest(ctx, http.MethodPost, req.URL.String(), req.Header, body)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("executing query: %w", err)
 	}
 	defer resp.Body.Close()
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response: %w", err)
+	}
+	if c.logger != nil {
+		c.logger.LogResponse(ctx, resp.StatusCode, resp.Header, respBody)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var gqlResp graphqlResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gqlResp); err != nil {
+	if err := json.Unmarshal(respBody, &gqlResp); err != nil {
 		return fmt.Errorf("decoding response: %w", err)
 	}
 
@@ -201,4 +246,16 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	}
 
 	return nil
+}
+
+// AccessToken ensures a valid token is available and returns it with its expiry time.
+// Tokens returned by Jamf Protect do not include a "Bearer" prefix.
+func (c *Client) AccessToken(ctx context.Context) (string, time.Time, error) {
+	if err := c.authenticate(ctx); err != nil {
+		return "", time.Time{}, fmt.Errorf("%w: %w", ErrAuthentication, err)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.accessToken, c.tokenExpiry, nil
 }
