@@ -251,9 +251,6 @@ func (c *Client) AccessToken(ctx context.Context) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	return token, nil
 }
 
