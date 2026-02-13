@@ -99,7 +99,7 @@ func (d *USBControlSetsDataSource) Schema(ctx context.Context, req datasource.Sc
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
-										MarkdownDescription: "The rule type (VendorRule, SerialRule, or ProductRule).",
+										MarkdownDescription: "The rule type (Vendor, Serial, Product, or Encryption).",
 										Computed:            true,
 									},
 									"mount_action": schema.StringAttribute{
@@ -232,7 +232,7 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 		rules := make([]USBRuleDataSourceItemModel, 0, len(api.Rules))
 		for _, apiRule := range api.Rules {
 			rule := USBRuleDataSourceItemModel{
-				Type:        types.StringValue(apiRule.Type),
+				Type:        types.StringValue(normalizeUSBRuleType(apiRule.Type)),
 				MountAction: types.StringValue(apiRule.MountAction),
 			}
 
@@ -248,14 +248,14 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 				rule.ApplyTo = types.StringNull()
 			}
 
-			switch apiRule.Type {
-			case "VendorRule":
+			switch normalizeUSBRuleType(apiRule.Type) {
+			case "Vendor":
 				rule.Vendors = stringsToList(apiRule.Vendors)
 				rule.Serials = types.ListNull(types.StringType)
-			case "SerialRule":
+			case "Serial":
 				rule.Serials = stringsToList(apiRule.Serials)
 				rule.Vendors = types.ListNull(types.StringType)
-			case "ProductRule":
+			case "Product":
 				products := make([]USBProductDataSourceItemModel, 0, len(apiRule.Products))
 				for _, p := range apiRule.Products {
 					products = append(products, USBProductDataSourceItemModel{
