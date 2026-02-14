@@ -385,10 +385,6 @@ func buildHTTPClient(ctx context.Context, obj types.Object, diags *diag.Diagnost
 	if diags.HasError() {
 		return nil
 	}
-	if !boolValueOrTrue(endpoint.Enabled) {
-		return nil
-	}
-
 	params := map[string]any{}
 	if !endpoint.URL.IsNull() && !endpoint.URL.IsUnknown() {
 		params["url"] = endpoint.URL.ValueString()
@@ -418,23 +414,18 @@ func buildHTTPClient(ctx context.Context, obj types.Object, diags *diag.Diagnost
 		params["headers"] = headerItems
 	}
 
-	client := map[string]any{
-		"type": "Http",
-	}
-	if batch := buildBatchConfig(endpoint.BatchSizeIndex, endpoint.BatchWindowSeconds, endpoint.BatchSizeInBytes, endpoint.BatchDelimiter); len(batch) > 0 {
-		client["batchConfig"] = batch
-	}
-	if !endpoint.SupportedReports.IsNull() && !endpoint.SupportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, endpoint.SupportedReports, diags)
-	}
-	paramsJSON, err := json.Marshal(params)
-	if err != nil {
-		diags.AddError("Error serializing HTTP client params", err.Error())
-		return nil
-	}
-	client["params"] = string(paramsJSON)
-
-	return client
+	return buildClientFromEndpoint(
+		ctx,
+		"Http",
+		endpoint.Enabled,
+		endpoint.SupportedReports,
+		endpoint.BatchSizeIndex,
+		endpoint.BatchWindowSeconds,
+		endpoint.BatchSizeInBytes,
+		endpoint.BatchDelimiter,
+		params,
+		diags,
+	)
 }
 
 func buildKafkaClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
@@ -444,9 +435,6 @@ func buildKafkaClient(ctx context.Context, obj types.Object, diags *diag.Diagnos
 	var endpoint endpointKafkaModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
-	}
-	if !boolValueOrTrue(endpoint.Enabled) {
 		return nil
 	}
 
@@ -467,23 +455,18 @@ func buildKafkaClient(ctx context.Context, obj types.Object, diags *diag.Diagnos
 		params["serverCN"] = endpoint.ServerCN.ValueString()
 	}
 
-	client := map[string]any{
-		"type": "Kafka",
-	}
-	if batch := buildBatchConfig(endpoint.BatchSizeIndex, endpoint.BatchWindowSeconds, types.Int64Null(), types.StringNull()); len(batch) > 0 {
-		client["batchConfig"] = batch
-	}
-	if !endpoint.SupportedReports.IsNull() && !endpoint.SupportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, endpoint.SupportedReports, diags)
-	}
-	paramsJSON, err := json.Marshal(params)
-	if err != nil {
-		diags.AddError("Error serializing Kafka client params", err.Error())
-		return nil
-	}
-	client["params"] = string(paramsJSON)
-
-	return client
+	return buildClientFromEndpoint(
+		ctx,
+		"Kafka",
+		endpoint.Enabled,
+		endpoint.SupportedReports,
+		endpoint.BatchSizeIndex,
+		endpoint.BatchWindowSeconds,
+		endpoint.BatchSizeInBytes,
+		endpoint.BatchDelimiter,
+		params,
+		diags,
+	)
 }
 
 func buildSyslogClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
@@ -493,9 +476,6 @@ func buildSyslogClient(ctx context.Context, obj types.Object, diags *diag.Diagno
 	var endpoint endpointSyslogModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
-	}
-	if !boolValueOrTrue(endpoint.Enabled) {
 		return nil
 	}
 
@@ -510,23 +490,18 @@ func buildSyslogClient(ctx context.Context, obj types.Object, diags *diag.Diagno
 		params["scheme"] = endpoint.Scheme.ValueString()
 	}
 
-	client := map[string]any{
-		"type": "Syslog",
-	}
-	if batch := buildBatchConfig(endpoint.BatchSizeIndex, endpoint.BatchWindowSeconds, types.Int64Null(), types.StringNull()); len(batch) > 0 {
-		client["batchConfig"] = batch
-	}
-	if !endpoint.SupportedReports.IsNull() && !endpoint.SupportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, endpoint.SupportedReports, diags)
-	}
-	paramsJSON, err := json.Marshal(params)
-	if err != nil {
-		diags.AddError("Error serializing Syslog client params", err.Error())
-		return nil
-	}
-	client["params"] = string(paramsJSON)
-
-	return client
+	return buildClientFromEndpoint(
+		ctx,
+		"Syslog",
+		endpoint.Enabled,
+		endpoint.SupportedReports,
+		endpoint.BatchSizeIndex,
+		endpoint.BatchWindowSeconds,
+		endpoint.BatchSizeInBytes,
+		endpoint.BatchDelimiter,
+		params,
+		diags,
+	)
 }
 
 func buildLogFileClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
@@ -536,9 +511,6 @@ func buildLogFileClient(ctx context.Context, obj types.Object, diags *diag.Diagn
 	var endpoint endpointLogFileModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
-	}
-	if !boolValueOrTrue(endpoint.Enabled) {
 		return nil
 	}
 
@@ -559,23 +531,18 @@ func buildLogFileClient(ctx context.Context, obj types.Object, diags *diag.Diagn
 		params["backups"] = endpoint.Backups.ValueInt64()
 	}
 
-	client := map[string]any{
-		"type": "LogFile",
-	}
-	if batch := buildBatchConfig(endpoint.BatchSizeIndex, endpoint.BatchWindowSeconds, types.Int64Null(), types.StringNull()); len(batch) > 0 {
-		client["batchConfig"] = batch
-	}
-	if !endpoint.SupportedReports.IsNull() && !endpoint.SupportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, endpoint.SupportedReports, diags)
-	}
-	paramsJSON, err := json.Marshal(params)
-	if err != nil {
-		diags.AddError("Error serializing log file client params", err.Error())
-		return nil
-	}
-	client["params"] = string(paramsJSON)
-
-	return client
+	return buildClientFromEndpoint(
+		ctx,
+		"LogFile",
+		endpoint.Enabled,
+		endpoint.SupportedReports,
+		endpoint.BatchSizeIndex,
+		endpoint.BatchWindowSeconds,
+		endpoint.BatchSizeInBytes,
+		endpoint.BatchDelimiter,
+		params,
+		diags,
+	)
 }
 
 func buildJamfCloudClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
@@ -587,27 +554,53 @@ func buildJamfCloudClient(ctx context.Context, obj types.Object, diags *diag.Dia
 	if diags.HasError() {
 		return nil
 	}
-	if !boolValueOrTrue(endpoint.Enabled) {
-		return nil
-	}
 
 	params := map[string]any{}
 	if !endpoint.DestinationFilter.IsNull() && !endpoint.DestinationFilter.IsUnknown() {
 		params["destinationFilter"] = endpoint.DestinationFilter.ValueString()
 	}
+	return buildClientFromEndpoint(
+		ctx,
+		"JamfCloud",
+		endpoint.Enabled,
+		endpoint.SupportedReports,
+		endpoint.BatchSizeIndex,
+		endpoint.BatchWindowSeconds,
+		endpoint.BatchSizeInBytes,
+		endpoint.BatchDelimiter,
+		params,
+		diags,
+	)
+}
+
+func buildClientFromEndpoint(
+	ctx context.Context,
+	clientType string,
+	enabled types.Bool,
+	supportedReports types.List,
+	batchSizeIndex types.Int64,
+	batchWindowSeconds types.Int64,
+	batchSizeInBytes types.Int64,
+	batchDelimiter types.String,
+	params map[string]any,
+	diags *diag.Diagnostics,
+) map[string]any {
+	if !boolValueOrTrue(enabled) {
+		return nil
+	}
 
 	client := map[string]any{
-		"type": "JamfCloud",
+		"type": clientType,
 	}
-	if batch := buildBatchConfig(endpoint.BatchSizeIndex, endpoint.BatchWindowSeconds, types.Int64Null(), types.StringNull()); len(batch) > 0 {
+	if batch := buildBatchConfig(batchSizeIndex, batchWindowSeconds, batchSizeInBytes, batchDelimiter); len(batch) > 0 {
 		client["batchConfig"] = batch
 	}
-	if !endpoint.SupportedReports.IsNull() && !endpoint.SupportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, endpoint.SupportedReports, diags)
+	if !supportedReports.IsNull() && !supportedReports.IsUnknown() {
+		client["supportedReports"] = common.ListToStrings(ctx, supportedReports, diags)
 	}
 	paramsJSON, err := json.Marshal(params)
 	if err != nil {
-		diags.AddError("Error serializing Jamf Cloud client params", err.Error())
+		diags.AddError("Error serializing "+clientType+" client params", err.Error())
 		return nil
 	}
 	client["params"] = string(paramsJSON)
