@@ -66,6 +66,10 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 		GetAnalytic *analyticAPIModel `json:"getAnalytic"`
 	}
 	if err := r.client.Query(ctx, getAnalyticQuery, vars, &result); err != nil {
+		if common.IsNotFoundError(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading analytic", err.Error())
 		return
 	}
