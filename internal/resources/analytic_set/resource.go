@@ -17,10 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &AnalyticSetResource{}
 var _ resource.ResourceWithImportState = &AnalyticSetResource{}
+var _ resource.ResourceWithModifyPlan = &AnalyticSetResource{}
 
 func NewAnalyticSetResource() resource.Resource {
 	return &AnalyticSetResource{}
@@ -28,7 +30,7 @@ func NewAnalyticSetResource() resource.Resource {
 
 // AnalyticSetResource manages a Jamf Protect analytic set.
 type AnalyticSetResource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 func (r *AnalyticSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -92,7 +94,7 @@ func (r *AnalyticSetResource) Configure(ctx context.Context, req resource.Config
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	r.client = client
+	r.service = jamfprotect.NewService(client)
 }
 
 func (r *AnalyticSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
