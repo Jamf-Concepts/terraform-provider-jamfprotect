@@ -15,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	graphql "github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 	"golang.org/x/sync/singleflight"
@@ -46,6 +45,10 @@ type Logger interface {
 	LogResponse(ctx context.Context, statusCode int, headers http.Header, body []byte)
 }
 
+type httpDoer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 const tokenExpirySkew = 60 * time.Second
 
 // tokenRequest is the payload sent to the /token endpoint.
@@ -59,6 +62,21 @@ type tokenResponse struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int64  `json:"expires_in,omitempty"`
 	TokenType   string `json:"token_type,omitempty"`
+}
+
+type graphQLRequest struct {
+	Query     string         `json:"query"`
+	Variables map[string]any `json:"variables,omitempty"`
+}
+
+type graphQLResponse struct {
+	Data   json.RawMessage `json:"data"`
+	Errors []graphQLError  `json:"errors"`
+}
+
+type graphQLError struct {
+	Message    string         `json:"message"`
+	Extensions map[string]any `json:"extensions,omitempty"`
 }
 
 // NewClient creates a new Jamf Protect GraphQL client.
@@ -196,52 +214,63 @@ func (c *Client) fetchToken(ctx context.Context) (*oauth2.Token, error) {
 // Query executes a GraphQL query/mutation against the /app endpoint and
 // decodes the result into target.
 func (c *Client) Query(ctx context.Context, query string, variables map[string]any, target any) error {
-	token, err := c.authenticate(ctx)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrAuthentication, err)
-	}
-
-	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
-		r.Header.Set("Authorization", token.AccessToken)
-		r.Header.Set("User-Agent", c.userAgent)
-	})
-
-	if target == nil {
-		_, err := client.ExecRaw(ctx, query, variables)
-		return c.mapGraphQLError(err)
-	}
-
-	return c.mapGraphQLError(client.Exec(ctx, query, target, variables))
+	return c.DoGraphQL(ctx, query, variables, target)
 }
 
-// QueryStruct executes a GraphQL query built from a struct definition.
-func (c *Client) QueryStruct(ctx context.Context, query any, variables map[string]any) error {
+// DoGraphQL executes a raw GraphQL query/mutation against the /app endpoint.
+// This is the transport-level API used by higher layers.
+func (c *Client) DoGraphQL(ctx context.Context, query string, variables map[string]any, target any) error {
 	token, err := c.authenticate(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
-	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
-		r.Header.Set("Authorization", token.AccessToken)
-		r.Header.Set("User-Agent", c.userAgent)
+	payload, err := json.Marshal(graphQLRequest{
+		Query:     query,
+		Variables: variables,
 	})
-
-	return c.mapGraphQLError(client.Query(ctx, query, variables))
-}
-
-// MutateStruct executes a GraphQL mutation built from a struct definition.
-func (c *Client) MutateStruct(ctx context.Context, mutation any, variables map[string]any) error {
-	token, err := c.authenticate(ctx)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrAuthentication, err)
+		return fmt.Errorf("encoding graphql request: %w", err)
 	}
 
-	client := c.newGraphQLClient().WithRequestModifier(func(r *http.Request) {
-		r.Header.Set("Authorization", token.AccessToken)
-		r.Header.Set("User-Agent", c.userAgent)
-	})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/app", bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("creating graphql request: %w", err)
+	}
+	req.Header.Set("Authorization", token.AccessToken)
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Content-Type", "application/json")
 
-	return c.mapGraphQLError(client.Mutate(ctx, mutation, variables))
+	doer := c.httpDoer()
+	resp, err := doer.Do(req)
+	if err != nil {
+		return fmt.Errorf("executing graphql request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading graphql response: %w", err)
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("graphql request returned %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var gqlResp graphQLResponse
+	if err := json.Unmarshal(respBody, &gqlResp); err != nil {
+		return fmt.Errorf("decoding graphql response: %w", err)
+	}
+	if err := mapGraphQLErrors(gqlResp.Errors); err != nil {
+		return err
+	}
+
+	if target == nil || len(gqlResp.Data) == 0 {
+		return nil
+	}
+	if err := json.Unmarshal(gqlResp.Data, target); err != nil {
+		return fmt.Errorf("decoding graphql data: %w", err)
+	}
+	return nil
 }
 
 // AccessToken ensures a valid token is available and returns it.
@@ -266,11 +295,7 @@ func WithHTTPClient(httpClient *http.Client) Option {
 	}
 }
 
-func (c *Client) newGraphQLClient() *graphql.Client {
-	return graphql.NewClient(c.baseURL+"/app", c.graphqlDoer())
-}
-
-func (c *Client) graphqlDoer() graphql.Doer {
+func (c *Client) httpDoer() httpDoer {
 	if c.logger == nil {
 		return c.httpClient
 	}
@@ -281,29 +306,16 @@ func (c *Client) graphqlDoer() graphql.Doer {
 	}
 }
 
-func (c *Client) mapGraphQLError(err error) error {
-	if err == nil {
+func mapGraphQLErrors(errs []graphQLError) error {
+	if len(errs) == 0 {
 		return nil
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-		return err
-	}
-
-	var gqlErrs graphql.Errors
-	if !errors.As(err, &gqlErrs) {
-		return err
-	}
-
-	if isRequestError(gqlErrs) {
-		return err
-	}
-
-	messages := make([]string, 0, len(gqlErrs))
+	messages := make([]string, 0, len(errs))
 	isNotFound := false
-	for _, e := range gqlErrs {
+	for _, e := range errs {
 		msg := e.Message
 		if msg == "" {
-			msg = e.Error()
+			continue
 		}
 		messages = append(messages, msg)
 		lower := strings.ToLower(msg)
@@ -312,7 +324,7 @@ func (c *Client) mapGraphQLError(err error) error {
 		}
 	}
 	if len(messages) == 0 {
-		return err
+		return ErrGraphQL
 	}
 
 	errMsg := strings.Join(messages, "; ")
@@ -322,29 +334,8 @@ func (c *Client) mapGraphQLError(err error) error {
 	return fmt.Errorf("%w: %s", ErrGraphQL, errMsg)
 }
 
-func isRequestError(errs graphql.Errors) bool {
-	for _, e := range errs {
-		code, ok := e.Extensions["code"].(string)
-		if !ok {
-			continue
-		}
-		switch code {
-		case graphql.ErrRequestError,
-			graphql.ErrJsonEncode,
-			graphql.ErrJsonDecode,
-			graphql.ErrGraphQLEncode,
-			graphql.ErrGraphQLDecode,
-			graphql.ErrGraphQLExtensionsDecode:
-			return true
-		default:
-			continue
-		}
-	}
-	return false
-}
-
 type loggingDoer struct {
-	base   graphql.Doer
+	base   httpDoer
 	logger Logger
 }
 
