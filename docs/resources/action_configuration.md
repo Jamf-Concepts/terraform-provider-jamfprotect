@@ -131,7 +131,6 @@ resource "jamfprotect_action_configuration" "example" {
     scheme               = "tls"
     supported_reports    = ["AlertHigh"]
   }
-  timeouts = null
 }
 ```
 
