@@ -8,136 +8,13 @@ import (
 	"encoding/json"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
-
-// ---------------------------------------------------------------------------
-// GraphQL queries — stripped of @skip/@include RBAC directives.
-// ---------------------------------------------------------------------------
-
-const actionConfigFields = `
-fragment ActionConfigsFields on ActionConfigs {
-    id
-    name
-    description
-    hash
-    created
-    updated
-    alertConfig {
-        data {
-            binary { attrs related }
-            clickEvent { attrs related }
-            downloadEvent { attrs related }
-            file { attrs related }
-            fsEvent { attrs related }
-            group { attrs related }
-            procEvent { attrs related }
-            process { attrs related }
-            screenshotEvent { attrs related }
-            usbEvent { attrs related }
-            user { attrs related }
-            gkEvent { attrs related }
-            keylogRegisterEvent { attrs related }
-            mrtEvent { attrs related }
-        }
-    }
-    clients {
-        id
-        type
-        supportedReports
-        batchConfig {
-            delimiter
-            sizeIndex
-            windowInSeconds
-            sizeInBytes
-        }
-        params {
-            ... on JamfCloudClientParams { destinationFilter }
-            ... on HttpClientParams { headers { header value } method url }
-            ... on KafkaClientParams { host port topic clientCN serverCN }
-            ... on SyslogClientParams { host port scheme }
-            ... on LogFileClientParams { path permissions maxSizeMB ownership backups }
-        }
-    }
-}
-`
-
-const createActionConfigMutation = `
-mutation createActionConfigs(
-    $name: String!,
-    $description: String!,
-    $alertConfig: ActionConfigsAlertConfigInput!,
-    $clients: [ReportClientInput!]
-) {
-    createActionConfigs(input: {
-        name: $name,
-        description: $description,
-        alertConfig: $alertConfig,
-        clients: $clients
-    }) {
-        ...ActionConfigsFields
-    }
-}
-` + actionConfigFields
-
-const getActionConfigQuery = `
-query getActionConfigs($id: ID!) {
-    getActionConfigs(id: $id) {
-        ...ActionConfigsFields
-    }
-}
-` + actionConfigFields
-
-const updateActionConfigMutation = `
-mutation updateActionConfigs(
-    $id: ID!,
-    $name: String!,
-    $description: String!,
-    $alertConfig: ActionConfigsAlertConfigInput!,
-    $clients: [ReportClientInput!]
-) {
-    updateActionConfigs(id: $id, input: {
-        name: $name,
-        description: $description,
-        alertConfig: $alertConfig,
-        clients: $clients
-    }) {
-        ...ActionConfigsFields
-    }
-}
-` + actionConfigFields
-
-const deleteActionConfigMutation = `
-mutation deleteActionConfigs($id: ID!) {
-    deleteActionConfigs(id: $id) {
-        id
-    }
-}
-`
-
-const listActionConfigsQuery = `
-query listActionConfigs($nextToken: String, $direction: OrderDirection!, $field: ActionConfigsOrderField!) {
-    listActionConfigs(
-        input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-    ) {
-        items {
-            id
-            name
-            description
-            created
-            updated
-        }
-        pageInfo {
-            next
-            total
-        }
-    }
-}
-`
 
 // ---------------------------------------------------------------------------
 // Alert config attribute type definitions for ObjectValue construction
@@ -306,15 +183,15 @@ func extractEventType(ctx context.Context, dataObj types.Object, tfName string, 
 	return et
 }
 
-func (r *ActionConfigResource) buildVariables(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name": data.Name.ValueString(),
+func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) *jamfprotect.ActionConfigInput {
+	input := &jamfprotect.ActionConfigInput{
+		Name: data.Name.ValueString(),
 	}
 
 	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
+		input.Description = data.Description.ValueString()
 	} else {
-		vars["description"] = ""
+		input.Description = ""
 	}
 
 	// Extract the data_collection -> data nested structure.
@@ -336,7 +213,7 @@ func (r *ActionConfigResource) buildVariables(ctx context.Context, data ActionCo
 		}
 	}
 
-	vars["alertConfig"] = map[string]any{
+	input.AlertConfig = map[string]any{
 		"data": apiData,
 	}
 
@@ -345,12 +222,12 @@ func (r *ActionConfigResource) buildVariables(ctx context.Context, data ActionCo
 		return nil
 	}
 	if len(clients) > 0 {
-		vars["clients"] = clients
+		input.Clients = clients
 	} else {
-		vars["clients"] = nil
+		input.Clients = nil
 	}
 
-	return vars
+	return input
 }
 
 func (r *ActionConfigResource) buildClients(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) []map[string]any {
@@ -633,9 +510,9 @@ func boolValueOrTrue(value types.Bool) bool {
 }
 
 // eventTypeToObjectValue converts an API event type model to a Terraform ObjectValue.
-func eventTypeToObjectValue(et *alertEventTypeAPIModel, diags *diag.Diagnostics) types.Object {
+func eventTypeToObjectValue(et *jamfprotect.AlertEventType, diags *diag.Diagnostics) types.Object {
 	if et == nil {
-		et = &alertEventTypeAPIModel{Attrs: []string{}, Related: []string{}}
+		et = &jamfprotect.AlertEventType{Attrs: []string{}, Related: []string{}}
 	}
 
 	attrs := map[string]attr.Value{
@@ -649,7 +526,7 @@ func eventTypeToObjectValue(et *alertEventTypeAPIModel, diags *diag.Diagnostics)
 }
 
 // apiEventTypeGetter returns the API event type model for a given API field name.
-func apiEventTypeGetter(apiData *alertDataAPIModel, apiName string) *alertEventTypeAPIModel {
+func apiEventTypeGetter(apiData *jamfprotect.AlertData, apiName string) *jamfprotect.AlertEventType {
 	switch apiName {
 	case "binary":
 		return apiData.Binary
@@ -684,7 +561,7 @@ func apiEventTypeGetter(apiData *alertDataAPIModel, apiName string) *alertEventT
 	}
 }
 
-func (r *ActionConfigResource) apiToState(_ context.Context, data *ActionConfigResourceModel, api actionConfigAPIModel, diags *diag.Diagnostics) {
+func (r *ActionConfigResource) apiToState(_ context.Context, data *ActionConfigResourceModel, api jamfprotect.ActionConfig, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Hash = types.StringValue(api.Hash)
 	data.Name = types.StringValue(api.Name)
@@ -747,7 +624,7 @@ func (r *ActionConfigResource) apiToState(_ context.Context, data *ActionConfigR
 	}
 }
 
-func apiHTTPToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) types.Object {
+func apiHTTPToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	headersList := types.ListNull(types.ObjectType{AttrTypes: endpointHeaderAttrTypes})
 	if len(client.Params.Headers) > 0 {
 		items := make([]attr.Value, 0, len(client.Params.Headers))
@@ -781,7 +658,7 @@ func apiHTTPToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) 
 	return obj
 }
 
-func apiKafkaToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) types.Object {
+func apiKafkaToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
 		"enabled":              types.BoolValue(true),
 		"supported_reports":    common.StringsToList(client.SupportedReports),
@@ -801,7 +678,7 @@ func apiKafkaToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics)
 	return obj
 }
 
-func apiSyslogToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) types.Object {
+func apiSyslogToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
 		"enabled":              types.BoolValue(true),
 		"supported_reports":    common.StringsToList(client.SupportedReports),
@@ -819,7 +696,7 @@ func apiSyslogToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics
 	return obj
 }
 
-func apiLogFileToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) types.Object {
+func apiLogFileToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
 		"enabled":              types.BoolValue(true),
 		"supported_reports":    common.StringsToList(client.SupportedReports),
@@ -839,7 +716,7 @@ func apiLogFileToObjectValue(client reportClientAPIModel, diags *diag.Diagnostic
 	return obj
 }
 
-func apiJamfCloudToObjectValue(client reportClientAPIModel, diags *diag.Diagnostics) types.Object {
+func apiJamfCloudToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
 		"enabled":              types.BoolValue(true),
 		"supported_reports":    common.StringsToList(client.SupportedReports),
@@ -855,7 +732,7 @@ func apiJamfCloudToObjectValue(client reportClientAPIModel, diags *diag.Diagnost
 	return obj
 }
 
-func int64ValueOrNull(batch *batchConfigAPIModel, field string) attr.Value {
+func int64ValueOrNull(batch *jamfprotect.BatchConfig, field string) attr.Value {
 	if batch == nil {
 		return types.Int64Null()
 	}
@@ -871,7 +748,7 @@ func int64ValueOrNull(batch *batchConfigAPIModel, field string) attr.Value {
 	}
 }
 
-func stringValueOrNull(batch *batchConfigAPIModel, field string) attr.Value {
+func stringValueOrNull(batch *jamfprotect.BatchConfig, field string) attr.Value {
 	if batch == nil {
 		return types.StringNull()
 	}

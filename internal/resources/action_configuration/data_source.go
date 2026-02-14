@@ -7,14 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &ActionConfigsDataSource{}
@@ -25,7 +24,7 @@ func NewActionConfigsDataSource() datasource.DataSource {
 
 // ActionConfigsDataSource lists all action configurations in Jamf Protect.
 type ActionConfigsDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // ActionConfigsDataSourceModel maps the data source schema.
@@ -94,56 +93,22 @@ func (d *ActionConfigsDataSource) Configure(ctx context.Context, req datasource.
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
-}
-
-// actionConfigListItemAPIModel represents the limited fields returned by listActionConfigs.
-type actionConfigListItemAPIModel struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Created     string `json:"created"`
-	Updated     string `json:"updated"`
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *ActionConfigsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ActionConfigsDataSourceModel
 
-	var allItems []actionConfigListItemAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListActionConfigs struct {
-				Items    []actionConfigListItemAPIModel `json:"items"`
-				PageInfo common.PageInfo                `json:"pageInfo"`
-			} `json:"listActionConfigs"`
-		}
-		if err := d.client.Query(ctx, listActionConfigsQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing action configs", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListActionConfigs.Items...)
-
-		if result.ListActionConfigs.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListActionConfigs.PageInfo.Next
+	itemsAPI, err := d.service.ListActionConfigs(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing action configs", err.Error())
+		return
 	}
 
-	tflog.Trace(ctx, "listed action configs", map[string]any{"count": len(allItems)})
+	tflog.Trace(ctx, "listed action configs", map[string]any{"count": len(itemsAPI)})
 
-	items := make([]ActionConfigDataSourceItemModel, 0, len(allItems))
-	for _, api := range allItems {
+	items := make([]ActionConfigDataSourceItemModel, 0, len(itemsAPI))
+	for _, api := range itemsAPI {
 		item := ActionConfigDataSourceItemModel{
 			ID:      types.StringValue(api.ID),
 			Name:    types.StringValue(api.Name),

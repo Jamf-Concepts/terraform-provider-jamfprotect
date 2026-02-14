@@ -27,20 +27,21 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	input := r.buildInput(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var result struct {
-		CreateActionConfigs actionConfigAPIModel `json:"createActionConfigs"`
+	if input == nil {
+		return
 	}
-	if err := r.client.Query(ctx, createActionConfigMutation, vars, &result); err != nil {
+
+	result, err := r.service.CreateActionConfig(ctx, *input)
+	if err != nil {
 		resp.Diagnostics.AddError("Error creating action config", err.Error())
 		return
 	}
 
-	r.apiToState(ctx, &data, result.CreateActionConfigs, &resp.Diagnostics)
+	r.apiToState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -63,11 +64,8 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	vars := map[string]any{"id": data.ID.ValueString()}
-	var result struct {
-		GetActionConfigs *actionConfigAPIModel `json:"getActionConfigs"`
-	}
-	if err := r.client.Query(ctx, getActionConfigQuery, vars, &result); err != nil {
+	result, err := r.service.GetActionConfig(ctx, data.ID.ValueString())
+	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
 			return
@@ -75,12 +73,12 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 		resp.Diagnostics.AddError("Error reading action config", err.Error())
 		return
 	}
-	if result.GetActionConfigs == nil {
+	if result == nil {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	r.apiToState(ctx, &data, *result.GetActionConfigs, &resp.Diagnostics)
+	r.apiToState(ctx, &data, *result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -109,21 +107,21 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	input := r.buildInput(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	vars["id"] = data.ID.ValueString()
-
-	var result struct {
-		UpdateActionConfigs actionConfigAPIModel `json:"updateActionConfigs"`
+	if input == nil {
+		return
 	}
-	if err := r.client.Query(ctx, updateActionConfigMutation, vars, &result); err != nil {
+
+	result, err := r.service.UpdateActionConfig(ctx, data.ID.ValueString(), *input)
+	if err != nil {
 		resp.Diagnostics.AddError("Error updating action config", err.Error())
 		return
 	}
 
-	r.apiToState(ctx, &data, result.UpdateActionConfigs, &resp.Diagnostics)
+	r.apiToState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -145,8 +143,7 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	vars := map[string]any{"id": data.ID.ValueString()}
-	if err := r.client.Query(ctx, deleteActionConfigMutation, vars, nil); err != nil {
+	if err := r.service.DeleteActionConfig(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "action config already deleted", map[string]any{"id": data.ID.ValueString()})
 			return
