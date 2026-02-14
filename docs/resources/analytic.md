@@ -13,30 +13,25 @@ Manages a custom analytic in Jamf Protect. Analytics define detection rules that
 ## Example Usage
 
 ```terraform
-resource "jamfprotect_analytic" "suspicious_process" {
-  name        = "Detect Suspicious Process"
-  input_type  = "GPProcessEvent"
-  description = "Detect execution of suspicious binaries."
-  filter      = "( $event.type == 1 )"
-  level       = 5
-  severity    = "High"
-
-  tags           = ["security", "threat-hunting"]
-  categories     = ["Execution"]
-  snapshot_files = ["/usr/bin/malware"]
-
-  analytic_actions = [{
-    name = "SmartGroup"
-    parameters = {
-      id = "smartgroup"
-    }
-  }]
-
-  context = [{
-    name  = "process_path"
-    type  = "String"
-    exprs = ["$event.process.path"]
-  }]
+resource "jamfprotect_analytic" "example" {
+  name                            = "Example Analytic"
+  description                     = "Created by Terraform"
+  sensor_type                     = "GPFSEvent"
+  predicate                       = "( $event.type  CONTAINS[d] Thingie )"
+  add_to_jamf_pro_smart_group     = true
+  jamf_pro_smart_group_identifier = "my-group"
+  categories                      = ["Evasion"]
+  level                           = 0
+  severity                        = "Medium"
+  snapshot_files                  = ["/path/to/test.doc"]
+  tags                            = ["Research", "T1560"]
+  context_item = [
+    {
+      expressions = ["first", "second", "third"]
+      name        = "Example Context Item"
+      type        = "String"
+    },
+  ]
 }
 ```
 
@@ -45,13 +40,13 @@ resource "jamfprotect_analytic" "suspicious_process" {
 
 ### Required
 
-- `analytic_actions` (Attributes List) Structured actions to perform when the analytic triggers. (see [below for nested schema](#nestedatt--analytic_actions))
 - `categories` (List of String) A list of categories for the analytic.
-- `context` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context))
-- `filter` (String) The predicate filter expression for the analytic.
-- `input_type` (String) The input type for the analytic. Determines which endpoint event stream the analytic monitors.
+- `context_item` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context_item))
+- `description` (String) A description of the analytic.
 - `level` (Number) The log level (integer) for the analytic. Valid values are 0-10.
 - `name` (String) The name of the analytic.
+- `predicate` (String) The predicate expression for the analytic.
+- `sensor_type` (String) The sensor type for the analytic. Determines which endpoint event stream the analytic monitors.
 - `severity` (String) The severity of the analytic.
 - `snapshot_files` (List of String) A list of snapshot file paths to collect when the analytic triggers.
 - `tags` (List of String) A list of tags for the analytic.
@@ -59,33 +54,28 @@ resource "jamfprotect_analytic" "suspicious_process" {
 ### Optional
 
 - `actions` (List of String) A list of legacy action names.
-- `description` (String) A description of the analytic.
+- `add_to_jamf_pro_smart_group` (Boolean) Whether to add the device to a Jamf Pro Smart Group when this analytic triggers.
+- `jamf_pro_smart_group_identifier` (String) Identifier for the Jamf Pro extension attribute (only used when adding to a Smart Group).
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the analytic.
+- `jamf` (Boolean) Indicates whether the analytic is Jamf-managed (read-only).
+- `label` (String) Display label for the analytic (read-only).
+- `long_description` (String) Long-form description for the analytic (read-only).
+- `remediation` (String) Remediation guidance associated with the analytic (read-only).
+- `tenant_actions` (Attributes List) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--tenant_actions))
+- `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
 
-<a id="nestedatt--analytic_actions"></a>
-### Nested Schema for `analytic_actions`
+<a id="nestedatt--context_item"></a>
+### Nested Schema for `context_item`
 
 Required:
 
-- `name` (String) The action name (e.g. `Log`, `SmartGroup`, `Webhook`).
-
-Optional:
-
-- `parameters` (Map of String) Action parameters as key-value pairs (e.g. `{id = "smartgroup"}`).
-
-
-<a id="nestedatt--context"></a>
-### Nested Schema for `context`
-
-Required:
-
-- `exprs` (List of String) Expressions to evaluate for this context variable.
+- `expressions` (List of String) Expressions to evaluate for this context variable.
 - `name` (String) The context variable name.
 - `type` (String) The context variable type.
 
@@ -99,6 +89,15 @@ Optional:
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+
+
+<a id="nestedatt--tenant_actions"></a>
+### Nested Schema for `tenant_actions`
+
+Read-Only:
+
+- `name` (String) The action name (e.g. `Log`, `SmartGroup`, `Webhook`).
+- `parameters` (Map of String) Action parameters as key-value pairs (e.g. `{id = "smartgroup"}`).
 
 ## Import
 

@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -51,8 +51,8 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "The name of the analytic.",
 				Required:            true,
 			},
-			"input_type": schema.StringAttribute{
-				MarkdownDescription: "The input type for the analytic. Determines which endpoint event stream the analytic monitors.",
+			"sensor_type": schema.StringAttribute{
+				MarkdownDescription: "The sensor type for the analytic. Determines which endpoint event stream the analytic monitors.",
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{
@@ -71,12 +71,18 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the analytic.",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(""),
+				Required:            true,
 			},
-			"filter": schema.StringAttribute{
-				MarkdownDescription: "The predicate filter expression for the analytic.",
+			"label": schema.StringAttribute{
+				MarkdownDescription: "Display label for the analytic (read-only).",
+				Computed:            true,
+			},
+			"long_description": schema.StringAttribute{
+				MarkdownDescription: "Long-form description for the analytic (read-only).",
+				Computed:            true,
+			},
+			"predicate": schema.StringAttribute{
+				MarkdownDescription: "The predicate expression for the analytic.",
 				Required:            true,
 			},
 			"level": schema.Int64Attribute{
@@ -113,24 +119,17 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
-			"analytic_actions": schema.ListNestedAttribute{
-				MarkdownDescription: "Structured actions to perform when the analytic triggers.",
-				Required:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							MarkdownDescription: "The action name (e.g. `Log`, `SmartGroup`, `Webhook`).",
-							Required:            true,
-						},
-						"parameters": schema.MapAttribute{
-							MarkdownDescription: "Action parameters as key-value pairs (e.g. `{id = \"smartgroup\"}`).",
-							Optional:            true,
-							ElementType:         types.StringType,
-						},
-					},
-				},
+			"add_to_jamf_pro_smart_group": schema.BoolAttribute{
+				MarkdownDescription: "Whether to add the device to a Jamf Pro Smart Group when this analytic triggers.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
-			"context": schema.ListNestedAttribute{
+			"jamf_pro_smart_group_identifier": schema.StringAttribute{
+				MarkdownDescription: "Identifier for the Jamf Pro extension attribute (only used when adding to a Smart Group).",
+				Optional:            true,
+			},
+			"context_item": schema.ListNestedAttribute{
 				MarkdownDescription: "Context enrichment definitions for the analytic.",
 				Required:            true,
 				NestedObject: schema.NestedAttributeObject{
@@ -143,7 +142,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 							MarkdownDescription: "The context variable type.",
 							Required:            true,
 						},
-						"exprs": schema.ListAttribute{
+						"expressions": schema.ListAttribute{
 							MarkdownDescription: "Expressions to evaluate for this context variable.",
 							Required:            true,
 							ElementType:         types.StringType,
@@ -158,6 +157,35 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"updated": schema.StringAttribute{
 				MarkdownDescription: "The last-updated timestamp.",
+				Computed:            true,
+			},
+			"tenant_actions": schema.ListNestedAttribute{
+				MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							MarkdownDescription: "The action name (e.g. `Log`, `SmartGroup`, `Webhook`).",
+							Computed:            true,
+						},
+						"parameters": schema.MapAttribute{
+							MarkdownDescription: "Action parameters as key-value pairs (e.g. `{id = \"smartgroup\"}`).",
+							Computed:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
+			"tenant_severity": schema.StringAttribute{
+				MarkdownDescription: "Tenant-level severity override (Jamf-managed analytics).",
+				Computed:            true,
+			},
+			"jamf": schema.BoolAttribute{
+				MarkdownDescription: "Indicates whether the analytic is Jamf-managed (read-only).",
+				Computed:            true,
+			},
+			"remediation": schema.StringAttribute{
+				MarkdownDescription: "Remediation guidance associated with the analytic (read-only).",
 				Computed:            true,
 			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{

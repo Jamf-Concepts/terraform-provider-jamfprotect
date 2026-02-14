@@ -23,9 +23,11 @@ const analyticFields = `
 fragment AnalyticFields on Analytic {
   uuid
   name
+	label
   inputType
   filter
   description
+	longDescription
   created
   updated
   actions
@@ -33,9 +35,14 @@ fragment AnalyticFields on Analytic {
     name
     parameters
   }
+	tenantActions {
+		name
+		parameters
+	}
   tags
   level
   severity
+	tenantSeverity
   snapshotFiles
   context {
     name
@@ -43,6 +50,8 @@ fragment AnalyticFields on Analytic {
     exprs
   }
   categories
+	jamf
+	remediation
 }
 `
 
@@ -153,8 +162,8 @@ query listAnalytics {
 func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticResourceModel, diags *diag.Diagnostics) map[string]any {
 	vars := map[string]any{
 		"name":      data.Name.ValueString(),
-		"inputType": data.InputType.ValueString(),
-		"filter":    data.Filter.ValueString(),
+		"inputType": data.SensorType.ValueString(),
+		"filter":    data.Predicate.ValueString(),
 		"level":     data.Level.ValueInt64(),
 		"severity":  data.Severity.ValueString(),
 	}
@@ -175,45 +184,35 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 	}
 
 	// Analytic actions.
-	var actions []map[string]any
-	if !data.AnalyticActions.IsNull() {
-		var actionModels []analyticActionModel
-		diags.Append(data.AnalyticActions.ElementsAs(ctx, &actionModels, false)...)
-		for _, a := range actionModels {
-			m := map[string]any{"name": a.Name.ValueString()}
-			if !a.Parameters.IsNull() && len(a.Parameters.Elements()) > 0 {
-				// Convert the map to a JSON-encoded string for the API.
-				paramMap := make(map[string]string, len(a.Parameters.Elements()))
-				diags.Append(a.Parameters.ElementsAs(ctx, &paramMap, false)...)
-				jsonBytes, err := json.Marshal(paramMap)
-				if err != nil {
-					diags.AddError("Error encoding parameters", err.Error())
-					return nil
-				}
-				m["parameters"] = string(jsonBytes)
-			} else {
-				// The API requires parameters as AWSJSON! (non-null),
-				// so send an empty JSON object when no parameters are provided.
-				m["parameters"] = "{}"
+	actions := []map[string]any{}
+	if !data.AddToJamfProSmartGroup.IsNull() && data.AddToJamfProSmartGroup.ValueBool() {
+		paramValue := "{}"
+		if !data.JamfProSmartGroupIdentifier.IsNull() && data.JamfProSmartGroupIdentifier.ValueString() != "" {
+			paramMap := map[string]string{"id": data.JamfProSmartGroupIdentifier.ValueString()}
+			jsonBytes, err := json.Marshal(paramMap)
+			if err != nil {
+				diags.AddError("Error encoding Smart Group identifier", err.Error())
+				return nil
 			}
-			actions = append(actions, m)
+			paramValue = string(jsonBytes)
 		}
-	}
-	if actions == nil {
-		actions = []map[string]any{}
+		actions = append(actions, map[string]any{
+			"name":       "SmartGroup",
+			"parameters": paramValue,
+		})
 	}
 	vars["analyticActions"] = actions
 
 	// Context.
 	var ctxEntries []map[string]any
-	if !data.Context.IsNull() {
+	if !data.ContextItem.IsNull() {
 		var contextModels []analyticContextModel
-		diags.Append(data.Context.ElementsAs(ctx, &contextModels, false)...)
+		diags.Append(data.ContextItem.ElementsAs(ctx, &contextModels, false)...)
 		for _, c := range contextModels {
 			ctxEntries = append(ctxEntries, map[string]any{
 				"name":  c.Name.ValueString(),
 				"type":  c.Type.ValueString(),
-				"exprs": common.ListToStrings(ctx, c.Exprs, diags),
+				"exprs": common.ListToStrings(ctx, c.Expressions, diags),
 			})
 		}
 	}
@@ -229,17 +228,29 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceModel, api analyticAPIModel, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
-	data.InputType = types.StringValue(api.InputType)
-	data.Filter = types.StringValue(api.Filter)
+	data.SensorType = types.StringValue(api.InputType)
+	data.Predicate = types.StringValue(api.Filter)
 	data.Level = types.Int64Value(api.Level)
 	data.Severity = types.StringValue(api.Severity)
 	data.Created = types.StringValue(api.Created)
 	data.Updated = types.StringValue(api.Updated)
 
+	if api.Label != "" {
+		data.Label = types.StringValue(api.Label)
+	} else {
+		data.Label = types.StringNull()
+	}
+
 	if api.Description != "" {
 		data.Description = types.StringValue(api.Description)
 	} else {
 		data.Description = types.StringNull()
+	}
+
+	if api.LongDescription != "" {
+		data.LongDescription = types.StringValue(api.LongDescription)
+	} else {
+		data.LongDescription = types.StringNull()
 	}
 
 	data.Tags = common.StringsToList(api.Tags)
@@ -254,20 +265,94 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 		data.Actions = common.StringsToList(api.Actions)
 	}
 
-	// Analytic actions.
+	data.AddToJamfProSmartGroup = types.BoolValue(false)
+	data.JamfProSmartGroupIdentifier = types.StringNull()
+	for _, action := range api.AnalyticActions {
+		if action.Name != "SmartGroup" {
+			continue
+		}
+		data.AddToJamfProSmartGroup = types.BoolValue(true)
+		if action.Parameters != "" && action.Parameters != "{}" {
+			var paramMap map[string]string
+			if err := json.Unmarshal([]byte(action.Parameters), &paramMap); err != nil {
+				diags.AddError("Error decoding Smart Group parameters",
+					fmt.Sprintf("Failed to parse parameters JSON %q: %s", action.Parameters, err.Error()))
+				break
+			}
+			if id, ok := paramMap["id"]; ok && id != "" {
+				data.JamfProSmartGroupIdentifier = types.StringValue(id)
+			}
+		}
+		break
+	}
+
+	data.TenantActions = apiActionsToList(api.TenantActions, true, diags)
+
+	if api.TenantSeverity != "" {
+		data.TenantSeverity = types.StringValue(api.TenantSeverity)
+	} else {
+		data.TenantSeverity = types.StringNull()
+	}
+
+	// Context.
+	ctxAttrTypes := map[string]attr.Type{
+		"name":        types.StringType,
+		"type":        types.StringType,
+		"expressions": types.ListType{ElemType: types.StringType},
+	}
+	var ctxVals []attr.Value
+	for _, c := range api.Context {
+		ctxVals = append(ctxVals, types.ObjectValueMust(ctxAttrTypes, map[string]attr.Value{
+			"name":        types.StringValue(c.Name),
+			"type":        types.StringValue(c.Type),
+			"expressions": common.StringsToList(c.Exprs),
+		}))
+	}
+	if len(ctxVals) == 0 {
+		data.ContextItem = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
+	} else {
+		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
+		diags.Append(d...)
+		data.ContextItem = ctxList
+	}
+
+	data.Jamf = types.BoolValue(api.Jamf)
+
+	if api.Remediation != "" {
+		data.Remediation = types.StringValue(api.Remediation)
+	} else {
+		data.Remediation = types.StringNull()
+	}
+}
+
+// apiActionsToList maps AnalyticActions to a Terraform list of objects. When nullOnNil is true and the API field is absent/null,
+// return a null list to preserve provider semantics (avoiding diffs from null → []).
+func apiActionsToList(api []analyticActionAPIModel, nullOnNil bool, diags *diag.Diagnostics) types.List {
 	actionAttrTypes := map[string]attr.Type{
 		"name":       types.StringType,
 		"parameters": types.MapType{ElemType: types.StringType},
 	}
+
+	if api == nil {
+		if nullOnNil {
+			return types.ListNull(types.ObjectType{AttrTypes: actionAttrTypes})
+		}
+		return types.ListValueMust(types.ObjectType{AttrTypes: actionAttrTypes}, []attr.Value{})
+	}
+
+	if len(api) == 0 {
+		return types.ListValueMust(types.ObjectType{AttrTypes: actionAttrTypes}, []attr.Value{})
+	}
+
 	var actionVals []attr.Value
-	for _, a := range api.AnalyticActions {
+	for _, a := range api {
 		paramVal := types.MapNull(types.StringType)
 		if a.Parameters != "" && a.Parameters != "{}" {
 			var paramMap map[string]string
 			if err := json.Unmarshal([]byte(a.Parameters), &paramMap); err != nil {
 				diags.AddError("Error decoding parameters",
 					fmt.Sprintf("Failed to parse parameters JSON %q: %s", a.Parameters, err.Error()))
-				return
+				return types.ListNull(types.ObjectType{AttrTypes: actionAttrTypes})
 			}
 			if len(paramMap) > 0 {
 				paramElements := make(map[string]attr.Value, len(paramMap))
@@ -279,38 +364,14 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 				paramVal = mapVal
 			}
 		}
+
 		actionVals = append(actionVals, types.ObjectValueMust(actionAttrTypes, map[string]attr.Value{
 			"name":       types.StringValue(a.Name),
 			"parameters": paramVal,
 		}))
 	}
-	if len(actionVals) == 0 {
-		data.AnalyticActions = types.ListValueMust(types.ObjectType{AttrTypes: actionAttrTypes}, []attr.Value{})
-	} else {
-		actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
-		diags.Append(d...)
-		data.AnalyticActions = actionList
-	}
 
-	// Context.
-	ctxAttrTypes := map[string]attr.Type{
-		"name":  types.StringType,
-		"type":  types.StringType,
-		"exprs": types.ListType{ElemType: types.StringType},
-	}
-	var ctxVals []attr.Value
-	for _, c := range api.Context {
-		ctxVals = append(ctxVals, types.ObjectValueMust(ctxAttrTypes, map[string]attr.Value{
-			"name":  types.StringValue(c.Name),
-			"type":  types.StringValue(c.Type),
-			"exprs": common.StringsToList(c.Exprs),
-		}))
-	}
-	if len(ctxVals) == 0 {
-		data.Context = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
-	} else {
-		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
-		diags.Append(d...)
-		data.Context = ctxList
-	}
+	actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
+	diags.Append(d...)
+	return actionList
 }
