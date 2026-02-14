@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &AnalyticResource{}
@@ -31,7 +32,7 @@ func NewAnalyticResource() resource.Resource {
 
 // AnalyticResource manages a Jamf Protect custom analytic.
 type AnalyticResource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 func (r *AnalyticResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -208,7 +209,7 @@ func (r *AnalyticResource) Configure(ctx context.Context, req resource.Configure
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	r.client = client
+	r.service = jamfprotect.NewService(client)
 }
 
 func (r *AnalyticResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

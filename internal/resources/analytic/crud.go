@@ -24,20 +24,21 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	input := r.buildInput(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var result struct {
-		CreateAnalytic analyticAPIModel `json:"createAnalytic"`
+	if input == nil {
+		return
 	}
-	if err := r.client.Query(ctx, createAnalyticMutation, vars, &result); err != nil {
+
+	result, err := r.service.CreateAnalytic(ctx, *input)
+	if err != nil {
 		resp.Diagnostics.AddError("Error creating analytic", err.Error())
 		return
 	}
 
-	r.apiToState(ctx, &data, result.CreateAnalytic, &resp.Diagnostics)
+	r.apiToState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -61,11 +62,8 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	vars := map[string]any{"uuid": data.ID.ValueString()}
-	var result struct {
-		GetAnalytic *analyticAPIModel `json:"getAnalytic"`
-	}
-	if err := r.client.Query(ctx, getAnalyticQuery, vars, &result); err != nil {
+	result, err := r.service.GetAnalytic(ctx, data.ID.ValueString())
+	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
 			return
@@ -73,12 +71,12 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.Diagnostics.AddError("Error reading analytic", err.Error())
 		return
 	}
-	if result.GetAnalytic == nil {
+	if result == nil {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	r.apiToState(ctx, &data, *result.GetAnalytic, &resp.Diagnostics)
+	r.apiToState(ctx, &data, *result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -109,21 +107,21 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
+	input := r.buildInput(ctx, data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	vars["uuid"] = data.ID.ValueString()
-
-	var result struct {
-		UpdateAnalytic analyticAPIModel `json:"updateAnalytic"`
+	if input == nil {
+		return
 	}
-	if err := r.client.Query(ctx, updateAnalyticMutation, vars, &result); err != nil {
+
+	result, err := r.service.UpdateAnalytic(ctx, data.ID.ValueString(), *input)
+	if err != nil {
 		resp.Diagnostics.AddError("Error updating analytic", err.Error())
 		return
 	}
 
-	r.apiToState(ctx, &data, result.UpdateAnalytic, &resp.Diagnostics)
+	r.apiToState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -146,8 +144,7 @@ func (r *AnalyticResource) Delete(ctx context.Context, req resource.DeleteReques
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	vars := map[string]any{"uuid": data.ID.ValueString()}
-	if err := r.client.Query(ctx, deleteAnalyticMutation, vars, nil); err != nil {
+	if err := r.service.DeleteAnalytic(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "analytic already deleted", map[string]any{"uuid": data.ID.ValueString()})
 			return
