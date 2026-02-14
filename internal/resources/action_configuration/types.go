@@ -67,6 +67,7 @@ type endpointHTTPModel struct {
 	Headers            types.List   `tfsdk:"headers"`
 }
 
+// endpointKafkaModel maps the Kafka endpoint block with its specific fields.
 type endpointKafkaModel struct {
 	Enabled            types.Bool   `tfsdk:"enabled"`
 	SupportedReports   types.List   `tfsdk:"supported_reports"`
@@ -81,6 +82,7 @@ type endpointKafkaModel struct {
 	ServerCN           types.String `tfsdk:"server_cn"`
 }
 
+// endpointSyslogModel maps the Syslog endpoint block with its specific fields.
 type endpointSyslogModel struct {
 	Enabled            types.Bool   `tfsdk:"enabled"`
 	SupportedReports   types.List   `tfsdk:"supported_reports"`
@@ -93,6 +95,7 @@ type endpointSyslogModel struct {
 	Scheme             types.String `tfsdk:"scheme"`
 }
 
+// endpointLogFileModel maps the Log File endpoint block with its specific fields.
 type endpointLogFileModel struct {
 	Enabled            types.Bool   `tfsdk:"enabled"`
 	SupportedReports   types.List   `tfsdk:"supported_reports"`
@@ -107,6 +110,7 @@ type endpointLogFileModel struct {
 	Backups            types.Int64  `tfsdk:"backups"`
 }
 
+// endpointJamfCloudModel maps the Jamf Cloud endpoint block with its specific fields.
 type endpointJamfCloudModel struct {
 	Enabled            types.Bool   `tfsdk:"enabled"`
 	SupportedReports   types.List   `tfsdk:"supported_reports"`
@@ -117,6 +121,7 @@ type endpointJamfCloudModel struct {
 	DestinationFilter  types.String `tfsdk:"destination_filter"`
 }
 
+// endpointHeaderModel maps the nested headers block used in HTTP and Jamf Cloud endpoints.
 type endpointHeaderModel struct {
 	Header types.String `tfsdk:"header"`
 	Value  types.String `tfsdk:"value"`
@@ -137,10 +142,12 @@ type actionConfigAPIModel struct {
 	Clients     []reportClientAPIModel `json:"clients"`
 }
 
+// alertConfigAPIModel maps the alertConfig field in the API response, which contains all event type configurations.
 type alertConfigAPIModel struct {
 	Data *alertDataAPIModel `json:"data"`
 }
 
+// alertDataAPIModel maps the data field in alertConfig, containing each event type with its attrs and related fields.
 type alertDataAPIModel struct {
 	Binary              *alertEventTypeAPIModel `json:"binary"`
 	ClickEvent          *alertEventTypeAPIModel `json:"clickEvent"`
@@ -158,11 +165,13 @@ type alertDataAPIModel struct {
 	MrtEvent            *alertEventTypeAPIModel `json:"mrtEvent"`
 }
 
+// alertEventTypeAPIModel maps the structure of each event type in the API response, which includes lists of attrs and related fields.
 type alertEventTypeAPIModel struct {
 	Attrs   []string `json:"attrs"`
 	Related []string `json:"related"`
 }
 
+// reportClientAPIModel maps the structure of each client in the API response, which includes client details and its batch config and params.
 type reportClientAPIModel struct {
 	ID               string                     `json:"id"`
 	Type             string                     `json:"type"`
@@ -171,6 +180,7 @@ type reportClientAPIModel struct {
 	Params           reportClientParamsAPIModel `json:"params"`
 }
 
+// batchConfigAPIModel maps the batchConfig field in the API response, which contains batch processing settings for endpoints.
 type batchConfigAPIModel struct {
 	Delimiter       string `json:"delimiter"`
 	SizeIndex       int64  `json:"sizeIndex"`
@@ -178,6 +188,7 @@ type batchConfigAPIModel struct {
 	SizeInBytes     int64  `json:"sizeInBytes"`
 }
 
+// reportClientParamsAPIModel maps the params field in each client in the API response, which contains endpoint-specific settings.
 type reportClientParamsAPIModel struct {
 	DestinationFilter string                       `json:"destinationFilter"`
 	Headers           []reportClientHeaderAPIModel `json:"headers"`
@@ -196,6 +207,7 @@ type reportClientParamsAPIModel struct {
 	Backups           int64                        `json:"backups"`
 }
 
+// reportClientHeaderAPIModel maps the structure of each header in the params of a client in the API response, which includes header name and value.
 type reportClientHeaderAPIModel struct {
 	Header string `json:"header"`
 	Value  string `json:"value"`
