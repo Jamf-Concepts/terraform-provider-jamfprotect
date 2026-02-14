@@ -7,140 +7,34 @@ import (
 	"context"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
-
-// ---------------------------------------------------------------------------
-// GraphQL queries
-// ---------------------------------------------------------------------------
-
-const exceptionSetFields = `
-fragment ExceptionSetFields on ExceptionSet {
-  uuid
-  name
-  description
-  exceptions @skip(if: $minimal) {
-    type
-    value
-    appSigningInfo {
-      appId
-      teamId
-    }
-    ignoreActivity
-    analyticTypes
-    analyticUuid
-  }
-  esExceptions @skip(if: $minimal) {
-    type
-    value
-    appSigningInfo {
-      appId
-      teamId
-    }
-    ignoreActivity
-    ignoreListType
-    ignoreListSubType
-    eventType
-  }
-  created
-  updated
-  managed
-}
-`
-
-const createExceptionSetMutation = `
-mutation createExceptionSet(
-  $name: String!,
-  $description: String,
-  $exceptions: [ExceptionInput!]!,
-  $esExceptions: [EsExceptionInput!]!,
-  $minimal: Boolean!,
-  $RBAC_Analytic: Boolean!,
-  $RBAC_Plan: Boolean!
-) {
-  createExceptionSet(input: {
-    name: $name,
-    description: $description,
-    exceptions: $exceptions,
-    esExceptions: $esExceptions
-  }) {
-    ...ExceptionSetFields
-  }
-}
-` + exceptionSetFields
-
-const getExceptionSetQuery = `
-query getExceptionSet(
-  $uuid: ID!,
-  $minimal: Boolean!,
-  $RBAC_Analytic: Boolean!,
-  $RBAC_Plan: Boolean!
-) {
-  getExceptionSet(uuid: $uuid) {
-    ...ExceptionSetFields
-  }
-}
-` + exceptionSetFields
-
-const updateExceptionSetMutation = `
-mutation updateExceptionSet(
-  $uuid: ID!,
-  $name: String!,
-  $description: String,
-  $exceptions: [ExceptionInput!]!,
-  $esExceptions: [EsExceptionInput!]!,
-  $minimal: Boolean!,
-  $RBAC_Analytic: Boolean!,
-  $RBAC_Plan: Boolean!
-) {
-  updateExceptionSet(uuid: $uuid, input: {
-    name: $name,
-    description: $description,
-    exceptions: $exceptions,
-    esExceptions: $esExceptions
-  }) {
-    ...ExceptionSetFields
-  }
-}
-` + exceptionSetFields
-
-const deleteExceptionSetMutation = `
-mutation deleteExceptionSet($uuid: ID!) {
-  deleteExceptionSet(uuid: $uuid) {
-    uuid
-  }
-}
-`
 
 // ---------------------------------------------------------------------------
 // Attribute type definitions for nested objects
 // ---------------------------------------------------------------------------
 
-// appSigningInfoAttrTypes defines the attribute types for app_signing_info.
-var appSigningInfoAttrTypes = map[string]attr.Type{
-	"app_id":  types.StringType,
-	"team_id": types.StringType,
-}
-
 // exceptionAttrTypes defines the attribute types for exceptions.
 var exceptionAttrTypes = map[string]attr.Type{
-	"type":             types.StringType,
-	"value":            types.StringType,
-	"app_signing_info": types.ObjectType{AttrTypes: appSigningInfoAttrTypes},
-	"ignore_activity":  types.StringType,
-	"analytic_types":   types.ListType{ElemType: types.StringType},
-	"analytic_uuid":    types.StringType,
+	"type":            types.StringType,
+	"value":           types.StringType,
+	"app_id":          types.StringType,
+	"team_id":         types.StringType,
+	"ignore_activity": types.StringType,
+	"analytic_types":  types.ListType{ElemType: types.StringType},
+	"analytic_uuid":   types.StringType,
 }
 
 // esExceptionAttrTypes defines the attribute types for es_exceptions.
 var esExceptionAttrTypes = map[string]attr.Type{
 	"type":                types.StringType,
 	"value":               types.StringType,
-	"app_signing_info":    types.ObjectType{AttrTypes: appSigningInfoAttrTypes},
+	"app_id":              types.StringType,
+	"team_id":             types.StringType,
 	"ignore_activity":     types.StringType,
 	"ignore_list_type":    types.StringType,
 	"ignore_list_subtype": types.StringType,
@@ -151,80 +45,72 @@ var esExceptionAttrTypes = map[string]attr.Type{
 // Helpers
 // ---------------------------------------------------------------------------
 
-// buildVariables converts the Terraform model into GraphQL mutation variables.
-func (r *ExceptionSetResource) buildVariables(ctx context.Context, data ExceptionSetResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name":          data.Name.ValueString(),
-		"minimal":       false,
-		"RBAC_Analytic": true,
-		"RBAC_Plan":     true,
+// buildInput converts the Terraform model into the service input.
+func (r *ExceptionSetResource) buildInput(ctx context.Context, data ExceptionSetResourceModel, diags *diag.Diagnostics) *jamfprotect.ExceptionSetInput {
+	input := &jamfprotect.ExceptionSetInput{
+		Name: data.Name.ValueString(),
 	}
 
 	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
+		input.Description = data.Description.ValueString()
 	} else {
-		vars["description"] = ""
+		input.Description = ""
 	}
 
-	// Build exceptions array
-	vars["exceptions"] = buildExceptionsArray(ctx, data.Exceptions, diags)
+	// Build exceptions array.
+	input.Exceptions = buildExceptionsArray(ctx, data.Exceptions, diags)
 	if diags.HasError() {
 		return nil
 	}
 
-	// Build esExceptions array
-	vars["esExceptions"] = buildEsExceptionsArray(ctx, data.EsExceptions, diags)
+	// Build esExceptions array.
+	input.EsExceptions = buildEsExceptionsArray(ctx, data.EsExceptions, diags)
 	if diags.HasError() {
 		return nil
 	}
 
-	return vars
+	return input
 }
 
 // buildExceptionsArray converts the exceptions list to API format.
-func buildExceptionsArray(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
-	if list.IsNull() || list.IsUnknown() {
-		return []map[string]any{}
+func buildExceptionsArray(ctx context.Context, set types.Set, diags *diag.Diagnostics) []jamfprotect.ExceptionInput {
+	if set.IsNull() || set.IsUnknown() {
+		return []jamfprotect.ExceptionInput{}
 	}
 
 	var exceptions []exceptionModel
-	diags.Append(list.ElementsAs(ctx, &exceptions, false)...)
+	diags.Append(set.ElementsAs(ctx, &exceptions, false)...)
 	if diags.HasError() {
 		return nil
 	}
 
-	result := make([]map[string]any, 0, len(exceptions))
+	result := make([]jamfprotect.ExceptionInput, 0, len(exceptions))
 	for _, exc := range exceptions {
-		item := map[string]any{
-			"type":           exc.Type.ValueString(),
-			"ignoreActivity": exc.IgnoreActivity.ValueString(),
+		item := jamfprotect.ExceptionInput{
+			Type:           exc.Type.ValueString(),
+			IgnoreActivity: exc.IgnoreActivity.ValueString(),
 		}
 
-		// Value is optional when using app_signing_info
+		// Value is optional when using app_signing_info.
 		if !exc.Value.IsNull() && !exc.Value.IsUnknown() {
-			item["value"] = exc.Value.ValueString()
+			item.Value = exc.Value.ValueString()
 		}
 
-		// Handle app_signing_info if present
-		if !exc.AppSigningInfo.IsNull() && !exc.AppSigningInfo.IsUnknown() {
-			var appInfo appSigningInfoModel
-			diags.Append(exc.AppSigningInfo.As(ctx, &appInfo, basetypes.ObjectAsOptions{})...)
-			if !diags.HasError() {
-				item["appSigningInfo"] = map[string]any{
-					"appId":  appInfo.AppId.ValueString(),
-					"teamId": appInfo.TeamId.ValueString(),
-				}
+		if !exc.AppID.IsNull() && !exc.AppID.IsUnknown() && !exc.TeamID.IsNull() && !exc.TeamID.IsUnknown() {
+			item.AppSigningInfo = &jamfprotect.AppSigningInfoInput{
+				AppId:  exc.AppID.ValueString(),
+				TeamId: exc.TeamID.ValueString(),
 			}
 		}
 
-		// Handle analytic_types if present
+		// Handle analytic_types if present.
 		if !exc.AnalyticTypes.IsNull() && !exc.AnalyticTypes.IsUnknown() {
-			item["analyticTypes"] = common.ListToStrings(ctx, exc.AnalyticTypes, diags)
+			item.AnalyticTypes = common.ListToStrings(ctx, exc.AnalyticTypes, diags)
 		}
 
-		// Handle analytic_uuid if present
+		// Handle analytic_uuid if present.
 		if !exc.AnalyticUuid.IsNull() && !exc.AnalyticUuid.IsUnknown() {
-			item["analyticUuid"] = exc.AnalyticUuid.ValueString()
+			item.AnalyticUuid = exc.AnalyticUuid.ValueString()
 		}
 
 		result = append(result, item)
@@ -234,49 +120,44 @@ func buildExceptionsArray(ctx context.Context, list types.List, diags *diag.Diag
 }
 
 // buildEsExceptionsArray converts the es_exceptions list to API format.
-func buildEsExceptionsArray(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
-	if list.IsNull() || list.IsUnknown() {
-		return []map[string]any{}
+func buildEsExceptionsArray(ctx context.Context, set types.Set, diags *diag.Diagnostics) []jamfprotect.EsExceptionInput {
+	if set.IsNull() || set.IsUnknown() {
+		return []jamfprotect.EsExceptionInput{}
 	}
 
 	var esExceptions []esExceptionModel
-	diags.Append(list.ElementsAs(ctx, &esExceptions, false)...)
+	diags.Append(set.ElementsAs(ctx, &esExceptions, false)...)
 	if diags.HasError() {
 		return nil
 	}
 
-	result := make([]map[string]any, 0, len(esExceptions))
+	result := make([]jamfprotect.EsExceptionInput, 0, len(esExceptions))
 	for _, exc := range esExceptions {
-		item := map[string]any{
-			"type":           exc.Type.ValueString(),
-			"ignoreActivity": exc.IgnoreActivity.ValueString(),
+		item := jamfprotect.EsExceptionInput{
+			Type:           exc.Type.ValueString(),
+			IgnoreActivity: exc.IgnoreActivity.ValueString(),
 		}
 
-		// Value is optional
+		// Value is optional.
 		if !exc.Value.IsNull() && !exc.Value.IsUnknown() {
-			item["value"] = exc.Value.ValueString()
+			item.Value = exc.Value.ValueString()
 		}
 
-		// Handle optional fields
+		// Handle optional fields.
 		if !exc.IgnoreListType.IsNull() && !exc.IgnoreListType.IsUnknown() {
-			item["ignoreListType"] = exc.IgnoreListType.ValueString()
+			item.IgnoreListType = exc.IgnoreListType.ValueString()
 		}
 		if !exc.IgnoreListSubType.IsNull() && !exc.IgnoreListSubType.IsUnknown() {
-			item["ignoreListSubType"] = exc.IgnoreListSubType.ValueString()
+			item.IgnoreListSubType = exc.IgnoreListSubType.ValueString()
 		}
 		if !exc.EventType.IsNull() && !exc.EventType.IsUnknown() {
-			item["eventType"] = exc.EventType.ValueString()
+			item.EventType = exc.EventType.ValueString()
 		}
 
-		// Handle app_signing_info if present
-		if !exc.AppSigningInfo.IsNull() && !exc.AppSigningInfo.IsUnknown() {
-			var appInfo appSigningInfoModel
-			diags.Append(exc.AppSigningInfo.As(ctx, &appInfo, basetypes.ObjectAsOptions{})...)
-			if !diags.HasError() {
-				item["appSigningInfo"] = map[string]any{
-					"appId":  appInfo.AppId.ValueString(),
-					"teamId": appInfo.TeamId.ValueString(),
-				}
+		if !exc.AppID.IsNull() && !exc.AppID.IsUnknown() && !exc.TeamID.IsNull() && !exc.TeamID.IsUnknown() {
+			item.AppSigningInfo = &jamfprotect.AppSigningInfoInput{
+				AppId:  exc.AppID.ValueString(),
+				TeamId: exc.TeamID.ValueString(),
 			}
 		}
 
@@ -287,7 +168,7 @@ func buildEsExceptionsArray(ctx context.Context, list types.List, diags *diag.Di
 }
 
 // apiToState maps the API response into the Terraform state model.
-func (r *ExceptionSetResource) apiToState(ctx context.Context, data *ExceptionSetResourceModel, api exceptionSetResourceAPIModel, diags *diag.Diagnostics) {
+func (r *ExceptionSetResource) apiToState(ctx context.Context, data *ExceptionSetResourceModel, api jamfprotect.ExceptionSet, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
@@ -300,36 +181,33 @@ func (r *ExceptionSetResource) apiToState(ctx context.Context, data *ExceptionSe
 		data.Description = types.StringValue("")
 	}
 
-	// Convert exceptions array
+	// Convert exceptions array.
 	data.Exceptions = apiExceptionsToList(ctx, api.Exceptions, diags)
 
-	// Convert esExceptions array
+	// Convert esExceptions array.
 	data.EsExceptions = apiEsExceptionsToList(ctx, api.EsExceptions, diags)
 }
 
 // apiExceptionsToList converts API exceptions to a Terraform list.
-func apiExceptionsToList(_ context.Context, apiExceptions []exceptionAPIModel, diags *diag.Diagnostics) types.List {
+func apiExceptionsToList(_ context.Context, apiExceptions []jamfprotect.Exception, diags *diag.Diagnostics) types.Set {
 	if len(apiExceptions) == 0 {
-		return types.ListValueMust(types.ObjectType{AttrTypes: exceptionAttrTypes}, []attr.Value{})
+		return types.SetValueMust(types.ObjectType{AttrTypes: exceptionAttrTypes}, []attr.Value{})
 	}
 
 	elements := make([]attr.Value, 0, len(apiExceptions))
 	for _, apiExc := range apiExceptions {
-		// Build app_signing_info object
-		var appSigningInfoObj types.Object
+		appIDStr := types.StringNull()
+		teamIDStr := types.StringNull()
 		if apiExc.AppSigningInfo != nil {
-			appSigningInfoObj = types.ObjectValueMust(
-				appSigningInfoAttrTypes,
-				map[string]attr.Value{
-					"app_id":  types.StringValue(apiExc.AppSigningInfo.AppId),
-					"team_id": types.StringValue(apiExc.AppSigningInfo.TeamId),
-				},
-			)
-		} else {
-			appSigningInfoObj = types.ObjectNull(appSigningInfoAttrTypes)
+			if apiExc.AppSigningInfo.AppId != "" {
+				appIDStr = types.StringValue(apiExc.AppSigningInfo.AppId)
+			}
+			if apiExc.AppSigningInfo.TeamId != "" {
+				teamIDStr = types.StringValue(apiExc.AppSigningInfo.TeamId)
+			}
 		}
 
-		// Build analytic_types list
+		// Build analytic_types list.
 		var analyticTypesList types.List
 		if len(apiExc.AnalyticTypes) > 0 {
 			analyticTypesList = common.StringsToList(apiExc.AnalyticTypes)
@@ -337,60 +215,62 @@ func apiExceptionsToList(_ context.Context, apiExceptions []exceptionAPIModel, d
 			analyticTypesList = types.ListNull(types.StringType)
 		}
 
-		// Handle optional value
+		// Handle optional value.
 		valueStr := types.StringNull()
 		if apiExc.Value != "" {
 			valueStr = types.StringValue(apiExc.Value)
 		}
 
-		// Handle optional analytic_uuid
+		// Handle optional analytic_uuid (via direct field or analytic reference).
+		analyticUUID := apiExc.AnalyticUuid
+		if analyticUUID == "" && apiExc.Analytic != nil {
+			analyticUUID = apiExc.Analytic.UUID
+		}
 		analyticUuidStr := types.StringNull()
-		if apiExc.AnalyticUuid != "" {
-			analyticUuidStr = types.StringValue(apiExc.AnalyticUuid)
+		if analyticUUID != "" {
+			analyticUuidStr = types.StringValue(analyticUUID)
 		}
 
 		obj := types.ObjectValueMust(
 			exceptionAttrTypes,
 			map[string]attr.Value{
-				"type":             types.StringValue(apiExc.Type),
-				"value":            valueStr,
-				"app_signing_info": appSigningInfoObj,
-				"ignore_activity":  types.StringValue(apiExc.IgnoreActivity),
-				"analytic_types":   analyticTypesList,
-				"analytic_uuid":    analyticUuidStr,
+				"type":            types.StringValue(apiExc.Type),
+				"value":           valueStr,
+				"app_id":          appIDStr,
+				"team_id":         teamIDStr,
+				"ignore_activity": types.StringValue(apiExc.IgnoreActivity),
+				"analytic_types":  analyticTypesList,
+				"analytic_uuid":   analyticUuidStr,
 			},
 		)
 		elements = append(elements, obj)
 	}
 
-	list, d := types.ListValue(types.ObjectType{AttrTypes: exceptionAttrTypes}, elements)
+	list, d := types.SetValue(types.ObjectType{AttrTypes: exceptionAttrTypes}, elements)
 	diags.Append(d...)
 	return list
 }
 
 // apiEsExceptionsToList converts API esExceptions to a Terraform list.
-func apiEsExceptionsToList(_ context.Context, apiEsExceptions []esExceptionAPIModel, diags *diag.Diagnostics) types.List {
+func apiEsExceptionsToList(_ context.Context, apiEsExceptions []jamfprotect.EsException, diags *diag.Diagnostics) types.Set {
 	if len(apiEsExceptions) == 0 {
-		return types.ListValueMust(types.ObjectType{AttrTypes: esExceptionAttrTypes}, []attr.Value{})
+		return types.SetValueMust(types.ObjectType{AttrTypes: esExceptionAttrTypes}, []attr.Value{})
 	}
 
 	elements := make([]attr.Value, 0, len(apiEsExceptions))
 	for _, apiExc := range apiEsExceptions {
-		// Build app_signing_info object
-		var appSigningInfoObj types.Object
+		appIDStr := types.StringNull()
+		teamIDStr := types.StringNull()
 		if apiExc.AppSigningInfo != nil {
-			appSigningInfoObj = types.ObjectValueMust(
-				appSigningInfoAttrTypes,
-				map[string]attr.Value{
-					"app_id":  types.StringValue(apiExc.AppSigningInfo.AppId),
-					"team_id": types.StringValue(apiExc.AppSigningInfo.TeamId),
-				},
-			)
-		} else {
-			appSigningInfoObj = types.ObjectNull(appSigningInfoAttrTypes)
+			if apiExc.AppSigningInfo.AppId != "" {
+				appIDStr = types.StringValue(apiExc.AppSigningInfo.AppId)
+			}
+			if apiExc.AppSigningInfo.TeamId != "" {
+				teamIDStr = types.StringValue(apiExc.AppSigningInfo.TeamId)
+			}
 		}
 
-		// Handle optional fields with null handling
+		// Handle optional fields with null handling.
 		valueStr := types.StringNull()
 		if apiExc.Value != "" {
 			valueStr = types.StringValue(apiExc.Value)
@@ -416,7 +296,8 @@ func apiEsExceptionsToList(_ context.Context, apiEsExceptions []esExceptionAPIMo
 			map[string]attr.Value{
 				"type":                types.StringValue(apiExc.Type),
 				"value":               valueStr,
-				"app_signing_info":    appSigningInfoObj,
+				"app_id":              appIDStr,
+				"team_id":             teamIDStr,
 				"ignore_activity":     types.StringValue(apiExc.IgnoreActivity),
 				"ignore_list_type":    ignoreListTypeStr,
 				"ignore_list_subtype": ignoreListSubTypeStr,
@@ -426,7 +307,7 @@ func apiEsExceptionsToList(_ context.Context, apiEsExceptions []esExceptionAPIMo
 		elements = append(elements, obj)
 	}
 
-	list, d := types.ListValue(types.ObjectType{AttrTypes: esExceptionAttrTypes}, elements)
+	list, d := types.SetValue(types.ObjectType{AttrTypes: esExceptionAttrTypes}, elements)
 	diags.Append(d...)
 	return list
 }
