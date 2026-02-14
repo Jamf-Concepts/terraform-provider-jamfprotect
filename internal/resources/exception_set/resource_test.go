@@ -28,9 +28,12 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test exception set description"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.type", "SHA256Hash"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.value", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
+						"type":            "PlatformBinary",
+						"value":           "com.example.app",
+						"ignore_activity": "Analytics",
+					}),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed"),
@@ -66,11 +69,15 @@ func TestAccExceptionSetResource_withEsExceptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "es_exceptions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "es_exceptions.0.type", "ProcessPath"),
-					resource.TestCheckResourceAttr(resourceName, "es_exceptions.0.value", "/usr/bin/test"),
-					resource.TestCheckResourceAttr(resourceName, "es_exceptions.0.ignore_list_type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "es_exceptions.0.event_type", "ES_EVENT_TYPE_AUTH_EXEC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_security_exception.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_security_exception.*", map[string]string{
+						"type":                "Executable",
+						"value":               "/usr/bin/test",
+						"ignore_activity":     "TelemetryV2",
+						"ignore_list_type":    "sourceIgnore",
+						"ignore_list_subtype": "parent",
+						"event_type":          "exec",
+					}),
 				),
 			},
 		},
@@ -90,11 +97,13 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.type", "SigningId"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.value", "com.example.app"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.app_signing_info.app_id", "com.example.app"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.0.app_signing_info.team_id", "ABC123DEF4"),
+					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
+						"type":            "AppSigningInfo",
+						"app_id":          "com.example.app",
+						"team_id":         "ABC123DEF4",
+						"ignore_activity": "Analytics",
+					}),
 				),
 			},
 		},
@@ -107,13 +116,11 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = %[2]q
 
-  exceptions = [
-    {
-      type            = "SHA256Hash"
-      value           = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      ignore_activity = false
-    }
-  ]
+	exception {
+		type            = "PlatformBinary"
+		value           = "com.example.app"
+		ignore_activity = "Analytics"
+	}
 }
 `, name, description)
 }
@@ -124,18 +131,14 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = "Test exception set with ES exceptions"
 
-  exceptions = []
-
-  es_exceptions = [
-    {
-      type                = "ProcessPath"
-      value               = "/usr/bin/test"
-      ignore_activity     = false
-      ignore_list_type    = "ALLOW"
-      ignore_list_subtype = "NONE"
-      event_type          = "ES_EVENT_TYPE_AUTH_EXEC"
-    }
-  ]
+	endpoint_security_exception {
+		type                = "Executable"
+		value               = "/usr/bin/test"
+		ignore_activity     = "TelemetryV2"
+		ignore_list_type    = "sourceIgnore"
+		ignore_list_subtype = "parent"
+		event_type          = "exec"
+	}
 }
 `, name)
 }
@@ -146,17 +149,12 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = "Test exception set with app signing info"
 
-  exceptions = [
-    {
-      type  = "SigningId"
-      value = "com.example.app"
-      app_signing_info = {
-        app_id  = "com.example.app"
-        team_id = "ABC123DEF4"
-      }
-      ignore_activity = false
-    }
-  ]
+	exception {
+		type            = "AppSigningInfo"
+		app_id          = "com.example.app"
+		team_id         = "ABC123DEF4"
+		ignore_activity = "Analytics"
+	}
 }
 `, name)
 }
