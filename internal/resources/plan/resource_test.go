@@ -5,8 +5,9 @@ package plan_test
 
 import (
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 	"testing"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -54,7 +55,7 @@ func TestAccPlanResource_basic(t *testing.T) {
 // The action config is created inline to provide a valid action_configs ID.
 func testAccPlanResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
-resource "jamfprotect_action_config" "test" {
+resource "jamfprotect_action_configuration" "test" {
   name        = "%[1]s-ac"
   description = "Action config for plan test"
 
@@ -81,7 +82,7 @@ resource "jamfprotect_action_config" "test" {
 resource "jamfprotect_plan" "test" {
   name           = %[1]q
   description    = %[2]q
-  action_configs = jamfprotect_action_config.test.id
+  action_configs = jamfprotect_action_configuration.test.id
 
   comms_config = {
     fqdn     = "example.protect.jamfcloud.com"

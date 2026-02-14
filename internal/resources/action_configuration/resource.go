@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -35,7 +36,7 @@ type ActionConfigResource struct {
 }
 
 func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_action_config"
+	resp.TypeName = req.ProviderTypeName + "_action_configuration"
 }
 
 func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -52,6 +53,44 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 		},
 	}
 
+	cloneAttrs := func(src map[string]schema.Attribute) map[string]schema.Attribute {
+		dst := make(map[string]schema.Attribute, len(src))
+		for k, v := range src {
+			dst[k] = v
+		}
+		return dst
+	}
+
+	endpointBaseAttrs := map[string]schema.Attribute{
+		"enabled": schema.BoolAttribute{
+			MarkdownDescription: "Whether this data endpoint is enabled.",
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(true),
+		},
+		"supported_reports": schema.ListAttribute{
+			MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+			Optional:            true,
+			ElementType:         types.StringType,
+		},
+		"batch_size_index": schema.Int64Attribute{
+			MarkdownDescription: "Batch size index used by the endpoint.",
+			Optional:            true,
+		},
+		"batch_window_seconds": schema.Int64Attribute{
+			MarkdownDescription: "Batching window in seconds.",
+			Optional:            true,
+		},
+		"batch_size_in_bytes": schema.Int64Attribute{
+			MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+			Optional:            true,
+		},
+		"batch_delimiter": schema.StringAttribute{
+			MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+			Optional:            true,
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an action configuration in Jamf Protect. Action configurations define the alert data enrichment settings and reporting clients for a plan.",
 		Attributes: map[string]schema.Attribute{
@@ -63,7 +102,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			"hash": schema.StringAttribute{
 				MarkdownDescription: "The configuration hash.",
 				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the action configuration.",
@@ -75,21 +113,21 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
 			},
-			"alert_config": schema.SingleNestedAttribute{
-				MarkdownDescription: "Alert configuration defining which data attributes and related objects to include in alerts for each event type.",
+			"data_collection": schema.SingleNestedAttribute{
+				MarkdownDescription: "Alert data collection options from the Jamf Protect UI.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"data": schema.SingleNestedAttribute{
-						MarkdownDescription: "Data enrichment settings per event type.",
+						MarkdownDescription: "Included attributes and related objects by event type.",
 						Required:            true,
 						Attributes: map[string]schema.Attribute{
 							"binary": schema.SingleNestedAttribute{
-								MarkdownDescription: "Binary/executable metadata enrichment.",
+								MarkdownDescription: "Binary metadata enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
-							"click_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Click event enrichment.",
+							"synthetic_click_event": schema.SingleNestedAttribute{
+								MarkdownDescription: "Synthetic click event enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
@@ -103,7 +141,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
-							"fs_event": schema.SingleNestedAttribute{
+							"file_system_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "File system event enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
@@ -113,7 +151,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
-							"proc_event": schema.SingleNestedAttribute{
+							"process_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Process event enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
@@ -138,7 +176,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
-							"gk_event": schema.SingleNestedAttribute{
+							"gatekeeper_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Gatekeeper event enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
@@ -148,7 +186,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								Required:            true,
 								Attributes:          eventTypeAttrs,
 							},
-							"mrt_event": schema.SingleNestedAttribute{
+							"malware_removal_tool_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Malware Removal Tool event enrichment.",
 								Required:            true,
 								Attributes:          eventTypeAttrs,
@@ -156,6 +194,120 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 				},
+			},
+			"endpoint_http": schema.SingleNestedAttribute{
+				MarkdownDescription: "HTTP data endpoint.",
+				Optional:            true,
+				Attributes: func() map[string]schema.Attribute {
+					attrs := cloneAttrs(endpointBaseAttrs)
+					attrs["url"] = schema.StringAttribute{
+						MarkdownDescription: "HTTP destination URL.",
+						Optional:            true,
+					}
+					attrs["method"] = schema.StringAttribute{
+						MarkdownDescription: "HTTP request method.",
+						Optional:            true,
+					}
+					attrs["headers"] = schema.ListNestedAttribute{
+						MarkdownDescription: "HTTP headers.",
+						Optional:            true,
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"header": schema.StringAttribute{Optional: true},
+								"value":  schema.StringAttribute{Optional: true},
+							},
+						},
+					}
+					return attrs
+				}(),
+			},
+			"endpoint_kafka": schema.SingleNestedAttribute{
+				MarkdownDescription: "Kafka data endpoint.",
+				Optional:            true,
+				Attributes: func() map[string]schema.Attribute {
+					attrs := cloneAttrs(endpointBaseAttrs)
+					attrs["host"] = schema.StringAttribute{
+						MarkdownDescription: "Kafka host.",
+						Optional:            true,
+					}
+					attrs["port"] = schema.Int64Attribute{
+						MarkdownDescription: "Kafka port.",
+						Optional:            true,
+					}
+					attrs["topic"] = schema.StringAttribute{
+						MarkdownDescription: "Kafka topic.",
+						Optional:            true,
+					}
+					attrs["client_cn"] = schema.StringAttribute{
+						MarkdownDescription: "Kafka client certificate CN.",
+						Optional:            true,
+					}
+					attrs["server_cn"] = schema.StringAttribute{
+						MarkdownDescription: "Kafka server certificate CN.",
+						Optional:            true,
+					}
+					return attrs
+				}(),
+			},
+			"endpoint_syslog": schema.SingleNestedAttribute{
+				MarkdownDescription: "Syslog data endpoint.",
+				Optional:            true,
+				Attributes: func() map[string]schema.Attribute {
+					attrs := cloneAttrs(endpointBaseAttrs)
+					attrs["host"] = schema.StringAttribute{
+						MarkdownDescription: "Syslog host.",
+						Optional:            true,
+					}
+					attrs["port"] = schema.Int64Attribute{
+						MarkdownDescription: "Syslog port.",
+						Optional:            true,
+					}
+					attrs["scheme"] = schema.StringAttribute{
+						MarkdownDescription: "Syslog scheme (e.g. tls).",
+						Optional:            true,
+					}
+					return attrs
+				}(),
+			},
+			"endpoint_log_file": schema.SingleNestedAttribute{
+				MarkdownDescription: "Log file data endpoint.",
+				Optional:            true,
+				Attributes: func() map[string]schema.Attribute {
+					attrs := cloneAttrs(endpointBaseAttrs)
+					attrs["path"] = schema.StringAttribute{
+						MarkdownDescription: "Log file path.",
+						Optional:            true,
+					}
+					attrs["permissions"] = schema.StringAttribute{
+						MarkdownDescription: "Log file permissions.",
+						Optional:            true,
+					}
+					attrs["max_size_mb"] = schema.Int64Attribute{
+						MarkdownDescription: "Maximum log file size in MB.",
+						Optional:            true,
+					}
+					attrs["ownership"] = schema.StringAttribute{
+						MarkdownDescription: "Log file ownership.",
+						Optional:            true,
+					}
+					attrs["backups"] = schema.Int64Attribute{
+						MarkdownDescription: "Number of log backups to keep.",
+						Optional:            true,
+					}
+					return attrs
+				}(),
+			},
+			"endpoint_jamf_cloud": schema.SingleNestedAttribute{
+				MarkdownDescription: "Jamf Cloud data endpoint.",
+				Optional:            true,
+				Attributes: func() map[string]schema.Attribute {
+					attrs := cloneAttrs(endpointBaseAttrs)
+					attrs["destination_filter"] = schema.StringAttribute{
+						MarkdownDescription: "Destination filter (if configured).",
+						Optional:            true,
+					}
+					return attrs
+				}(),
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
@@ -249,6 +401,10 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 		GetActionConfigs *actionConfigAPIModel `json:"getActionConfigs"`
 	}
 	if err := r.client.Query(ctx, getActionConfigQuery, vars, &result); err != nil {
+		if common.IsNotFoundError(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading action config", err.Error())
 		return
 	}

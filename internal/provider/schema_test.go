@@ -274,7 +274,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "alert_config"}
+	requiredAttrs := []string{"name", "data_collection"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -310,18 +310,18 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		t.Error("expected 'description' to be computed")
 	}
 
-	// alert_config should be a SingleNestedAttribute containing data with 14 event types.
-	alertConfigAttr, ok := resp.Schema.Attributes["alert_config"]
+	// data_collection should be a SingleNestedAttribute containing data with event types.
+	collectionAttr, ok := resp.Schema.Attributes["data_collection"]
 	if !ok {
-		t.Fatal("expected attribute 'alert_config' in schema")
+		t.Fatal("expected attribute 'data_collection' in schema")
 	}
-	alertConfigNested, ok := alertConfigAttr.(schema.SingleNestedAttribute)
+	collectionNested, ok := collectionAttr.(schema.SingleNestedAttribute)
 	if !ok {
-		t.Fatal("expected 'alert_config' to be a SingleNestedAttribute")
+		t.Fatal("expected 'data_collection' to be a SingleNestedAttribute")
 	}
-	dataAttr, ok := alertConfigNested.Attributes["data"]
+	dataAttr, ok := collectionNested.Attributes["data"]
 	if !ok {
-		t.Fatal("expected 'data' attribute inside alert_config")
+		t.Fatal("expected 'data' attribute inside data_collection")
 	}
 	dataNested, ok := dataAttr.(schema.SingleNestedAttribute)
 	if !ok {
@@ -329,14 +329,14 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	}
 
 	eventTypes := []string{
-		"binary", "click_event", "download_event", "file", "fs_event",
-		"group", "proc_event", "process", "screenshot_event", "usb_event",
-		"user", "gk_event", "keylog_register_event", "mrt_event",
+		"binary", "synthetic_click_event", "download_event", "file", "file_system_event",
+		"group", "process_event", "process", "screenshot_event", "usb_event",
+		"user", "gatekeeper_event", "keylog_register_event", "malware_removal_tool_event",
 	}
 	for _, et := range eventTypes {
 		etAttr, ok := dataNested.Attributes[et]
 		if !ok {
-			t.Errorf("expected event type %q in alert_config.data", et)
+			t.Errorf("expected event type %q in data_collection.data", et)
 			continue
 		}
 		etNested, ok := etAttr.(schema.SingleNestedAttribute)
@@ -365,8 +365,8 @@ func TestActionConfigResourceMetadata(t *testing.T) {
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_action_config" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_config", resp.TypeName)
+	if resp.TypeName != "jamfprotect_action_configuration" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_configuration", resp.TypeName)
 	}
 }
 
@@ -842,8 +842,8 @@ func TestActionConfigsDataSourceMetadata(t *testing.T) {
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_action_configs" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_configs", resp.TypeName)
+	if resp.TypeName != "jamfprotect_action_configurations" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_action_configurations", resp.TypeName)
 	}
 }
 
