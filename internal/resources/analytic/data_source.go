@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &AnalyticsDataSource{}
@@ -28,7 +29,7 @@ func NewAnalyticsDataSource() datasource.DataSource {
 
 // AnalyticsDataSource lists all analytics in Jamf Protect.
 type AnalyticsDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // AnalyticsDataSourceModel maps the data source schema.
@@ -218,27 +219,22 @@ func (d *AnalyticsDataSource) Configure(ctx context.Context, req datasource.Conf
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *AnalyticsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data AnalyticsDataSourceModel
 
-	var result struct {
-		ListAnalytics struct {
-			Items    []analyticAPIModel `json:"items"`
-			PageInfo common.PageInfo    `json:"pageInfo"`
-		} `json:"listAnalytics"`
-	}
-	if err := d.client.Query(ctx, listAnalyticsQuery, nil, &result); err != nil {
+	items, err := d.service.ListAnalytics(ctx)
+	if err != nil {
 		resp.Diagnostics.AddError("Error listing analytics", err.Error())
 		return
 	}
 
-	tflog.Trace(ctx, "listed analytics", map[string]any{"count": len(result.ListAnalytics.Items)})
+	tflog.Trace(ctx, "listed analytics", map[string]any{"count": len(items)})
 
-	analytics := make([]AnalyticDataSourceItemModel, 0, len(result.ListAnalytics.Items))
-	for _, api := range result.ListAnalytics.Items {
+	analytics := make([]AnalyticDataSourceItemModel, 0, len(items))
+	for _, api := range items {
 		item := analyticAPIToDataSourceItem(api, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
@@ -250,8 +246,8 @@ func (d *AnalyticsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// analyticAPIToDataSourceItem maps an analyticAPIModel to AnalyticDataSourceItemModel.
-func analyticAPIToDataSourceItem(api analyticAPIModel, diags *diag.Diagnostics) AnalyticDataSourceItemModel {
+// analyticAPIToDataSourceItem maps a Jamf Protect analytic to AnalyticDataSourceItemModel.
+func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnostics) AnalyticDataSourceItemModel {
 	item := AnalyticDataSourceItemModel{
 		ID:         types.StringValue(api.UUID),
 		Name:       types.StringValue(api.Name),

@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -16,175 +17,36 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// GraphQL queries – stripped of the @skip/@include directives the browser uses
-// ---------------------------------------------------------------------------
-
-const analyticFields = `
-fragment AnalyticFields on Analytic {
-    uuid
-    name
-	label
-    inputType
-    filter
-    description
-	longDescription
-    created
-    updated
-    actions
-    analyticActions {
-        name
-        parameters
-    }
-	tenantActions {
-		name
-		parameters
-	}
-    tags
-    level
-    severity
-	tenantSeverity
-    snapshotFiles
-    context {
-        name
-        type
-        exprs
-    }
-    categories
-	jamf
-	remediation
-}
-`
-
-const createAnalyticMutation = `
-mutation createAnalytic(
-    $name: String!,
-    $inputType: String!,
-    $description: String!,
-    $actions: [String],
-    $analyticActions: [AnalyticActionsInput]!,
-    $tags: [String]!,
-    $categories: [String]!,
-    $filter: String!,
-    $context: [AnalyticContextInput]!,
-    $level: Int!,
-    $severity: SEVERITY!,
-    $snapshotFiles: [String]!
-) {
-    createAnalytic(input: {
-        name: $name,
-        inputType: $inputType,
-        description: $description,
-        actions: $actions,
-        analyticActions: $analyticActions,
-        tags: $tags,
-        categories: $categories,
-        filter: $filter,
-        context: $context,
-        level: $level,
-        severity: $severity,
-        snapshotFiles: $snapshotFiles
-    }) {
-        ...AnalyticFields
-    }
-}
-` + analyticFields
-
-const getAnalyticQuery = `
-query getAnalytic($uuid: ID!) {
-    getAnalytic(uuid: $uuid) {
-        ...AnalyticFields
-    }
-}
-` + analyticFields
-
-const updateAnalyticMutation = `
-mutation updateAnalytic(
-    $uuid: ID!,
-    $name: String!,
-    $inputType: String!,
-    $description: String!,
-    $actions: [String],
-    $analyticActions: [AnalyticActionsInput]!,
-    $tags: [String]!,
-    $categories: [String]!,
-    $filter: String!,
-    $context: [AnalyticContextInput]!,
-    $level: Int!,
-    $severity: SEVERITY,
-    $snapshotFiles: [String]!
-) {
-    updateAnalytic(uuid: $uuid, input: {
-        name: $name,
-        inputType: $inputType,
-        description: $description,
-        actions: $actions,
-        analyticActions: $analyticActions,
-        categories: $categories,
-        tags: $tags,
-        filter: $filter,
-        context: $context,
-        level: $level,
-        severity: $severity,
-        snapshotFiles: $snapshotFiles
-    }) {
-        ...AnalyticFields
-    }
-}
-` + analyticFields
-
-const deleteAnalyticMutation = `
-mutation deleteAnalytic($uuid: ID!) {
-    deleteAnalytic(uuid: $uuid) {
-        uuid
-    }
-}
-`
-
-const listAnalyticsQuery = `
-query listAnalytics {
-    listAnalytics {
-        items {
-            ...AnalyticFields
-        }
-        pageInfo {
-            next
-            total
-        }
-    }
-}
-` + analyticFields
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-// buildVariables converts the Terraform model into GraphQL mutation variables.
-func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name":      data.Name.ValueString(),
-		"inputType": data.SensorType.ValueString(),
-		"filter":    data.Predicate.ValueString(),
-		"level":     data.Level.ValueInt64(),
-		"severity":  data.Severity.ValueString(),
+// buildInput converts the Terraform model into the service input.
+func (r *AnalyticResource) buildInput(ctx context.Context, data AnalyticResourceModel, diags *diag.Diagnostics) *jamfprotect.AnalyticInput {
+	input := &jamfprotect.AnalyticInput{
+		Name:      data.Name.ValueString(),
+		InputType: data.SensorType.ValueString(),
+		Filter:    data.Predicate.ValueString(),
+		Level:     data.Level.ValueInt64(),
+		Severity:  data.Severity.ValueString(),
 	}
 
 	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
+		input.Description = data.Description.ValueString()
 	} else {
-		vars["description"] = ""
+		input.Description = ""
 	}
 
 	// Simple string lists.
-	vars["tags"] = common.ListToStrings(ctx, data.Tags, diags)
-	vars["categories"] = common.ListToStrings(ctx, data.Categories, diags)
-	vars["snapshotFiles"] = common.ListToStrings(ctx, data.SnapshotFiles, diags)
+	input.Tags = common.ListToStrings(ctx, data.Tags, diags)
+	input.Categories = common.ListToStrings(ctx, data.Categories, diags)
+	input.SnapshotFiles = common.ListToStrings(ctx, data.SnapshotFiles, diags)
 
 	if !data.Actions.IsNull() {
-		vars["actions"] = common.ListToStrings(ctx, data.Actions, diags)
+		input.Actions = common.ListToStrings(ctx, data.Actions, diags)
 	}
 
 	// Analytic actions.
-	actions := []map[string]any{}
+	actions := []jamfprotect.AnalyticActionInput{}
 	if !data.AddToJamfProSmartGroup.IsNull() && data.AddToJamfProSmartGroup.ValueBool() {
 		paramValue := "{}"
 		if !data.JamfProSmartGroupIdentifier.IsNull() && data.JamfProSmartGroupIdentifier.ValueString() != "" {
@@ -196,36 +58,36 @@ func (r *AnalyticResource) buildVariables(ctx context.Context, data AnalyticReso
 			}
 			paramValue = string(jsonBytes)
 		}
-		actions = append(actions, map[string]any{
-			"name":       "SmartGroup",
-			"parameters": paramValue,
+		actions = append(actions, jamfprotect.AnalyticActionInput{
+			Name:       "SmartGroup",
+			Parameters: paramValue,
 		})
 	}
-	vars["analyticActions"] = actions
+	input.AnalyticActions = actions
 
 	// Context.
-	var ctxEntries []map[string]any
+	var ctxEntries []jamfprotect.AnalyticContextInput
 	if !data.ContextItem.IsNull() {
 		var contextModels []analyticContextModel
 		diags.Append(data.ContextItem.ElementsAs(ctx, &contextModels, false)...)
 		for _, c := range contextModels {
-			ctxEntries = append(ctxEntries, map[string]any{
-				"name":  c.Name.ValueString(),
-				"type":  c.Type.ValueString(),
-				"exprs": common.ListToStrings(ctx, c.Expressions, diags),
+			ctxEntries = append(ctxEntries, jamfprotect.AnalyticContextInput{
+				Name:  c.Name.ValueString(),
+				Type:  c.Type.ValueString(),
+				Exprs: common.ListToStrings(ctx, c.Expressions, diags),
 			})
 		}
 	}
 	if ctxEntries == nil {
-		ctxEntries = []map[string]any{}
+		ctxEntries = []jamfprotect.AnalyticContextInput{}
 	}
-	vars["context"] = ctxEntries
+	input.Context = ctxEntries
 
-	return vars
+	return input
 }
 
 // apiToState maps the API response into the Terraform state model.
-func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceModel, api analyticAPIModel, diags *diag.Diagnostics) {
+func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceModel, api jamfprotect.Analytic, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.SensorType = types.StringValue(api.InputType)
@@ -327,7 +189,7 @@ func (r *AnalyticResource) apiToState(_ context.Context, data *AnalyticResourceM
 
 // apiActionsToList maps AnalyticActions to a Terraform list of objects. When nullOnNil is true and the API field is absent/null,
 // return a null list to preserve provider semantics (avoiding diffs from null → []).
-func apiActionsToList(api []analyticActionAPIModel, nullOnNil bool, diags *diag.Diagnostics) types.List {
+func apiActionsToList(api []jamfprotect.AnalyticAction, nullOnNil bool, diags *diag.Diagnostics) types.List {
 	actionAttrTypes := map[string]attr.Type{
 		"name":       types.StringType,
 		"parameters": types.MapType{ElemType: types.StringType},
