@@ -67,7 +67,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "input_type", "filter", "level", "severity", "tags", "categories", "snapshot_files", "analytic_actions", "context"}
+	requiredAttrs := []string{"name", "sensor_type", "predicate", "level", "severity", "tags", "categories", "snapshot_files", "context_item"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -91,16 +91,13 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		}
 	}
 
-	// description should be optional + computed.
+	// description should be required.
 	desc, ok := resp.Schema.Attributes["description"]
 	if !ok {
 		t.Fatal("expected attribute 'description' in analytic schema")
 	}
-	if !desc.IsOptional() {
-		t.Error("expected 'description' to be optional")
-	}
-	if !desc.IsComputed() {
-		t.Error("expected 'description' to be computed")
+	if !desc.IsRequired() {
+		t.Error("expected 'description' to be required")
 	}
 
 	// timeouts should exist.

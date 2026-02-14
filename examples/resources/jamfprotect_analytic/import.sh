@@ -1,1 +1,1 @@
-terraform import jamfprotect_analytic.suspicious_process "<analytic-uuid>"
+terraform import jamfprotect_analytic.example "<analytic-uuid>"
