@@ -19,27 +19,3 @@ type AnalyticSetResourceModel struct {
 	Managed     types.Bool     `tfsdk:"managed"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
-
-// ---------------------------------------------------------------------------
-// API models (match the JSON returned by the GraphQL API)
-// ---------------------------------------------------------------------------
-
-// analyticSetResourceAPIModel matches the structure returned by CRUD mutations.
-type analyticSetResourceAPIModel struct {
-	UUID        string   `json:"uuid"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Types       []string `json:"types"`
-	Analytics   []struct {
-		UUID string `json:"uuid"`
-		Name string `json:"name"`
-		Jamf bool   `json:"jamf"`
-	} `json:"analytics"`
-	Plans []struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"plans"`
-	Created string `json:"created"`
-	Updated string `json:"updated"`
-	Managed bool   `json:"managed"`
-}

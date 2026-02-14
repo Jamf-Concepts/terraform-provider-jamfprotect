@@ -5,126 +5,40 @@ package analytic_set
 
 import (
 	"context"
+	"strings"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ---------------------------------------------------------------------------
-// GraphQL queries
-// ---------------------------------------------------------------------------
-
-const analyticSetFields = `
-fragment AnalyticSetFields on AnalyticSet {
-  uuid
-  name
-  description
-  analytics @skip(if: $excludeAnalytics) {
-    uuid
-    name
-    jamf
-  }
-  plans @include(if: $RBAC_Plan) {
-    id
-    name
-  }
-  created
-  updated
-  managed
-  types
-}
-`
-
-const createAnalyticSetMutation = `
-mutation createAnalyticSet(
-  $name: String!,
-  $description: String,
-  $types: [ANALYTIC_SET_TYPE!],
-  $analytics: [ID!]!,
-  $RBAC_Plan: Boolean!,
-  $excludeAnalytics: Boolean!
-) {
-  createAnalyticSet(input: {
-    name: $name,
-    description: $description,
-    analytics: $analytics,
-    types: $types
-  }) {
-    ...AnalyticSetFields
-  }
-}
-` + analyticSetFields
-
-const getAnalyticSetQuery = `
-query getAnalyticSet(
-  $uuid: ID!,
-  $RBAC_Plan: Boolean!,
-  $excludeAnalytics: Boolean!
-) {
-  getAnalyticSet(uuid: $uuid) {
-    ...AnalyticSetFields
-  }
-}
-` + analyticSetFields
-
-const updateAnalyticSetMutation = `
-mutation updateAnalyticSet(
-  $uuid: ID!,
-  $name: String!,
-  $description: String,
-  $types: [ANALYTIC_SET_TYPE!],
-  $analytics: [ID!]!,
-  $RBAC_Plan: Boolean!,
-  $excludeAnalytics: Boolean!
-) {
-  updateAnalyticSet(uuid: $uuid, input: {
-    name: $name,
-    description: $description,
-    analytics: $analytics,
-    types: $types
-  }) {
-    ...AnalyticSetFields
-  }
-}
-` + analyticSetFields
-
-const deleteAnalyticSetMutation = `
-mutation deleteAnalyticSet($uuid: ID!) {
-  deleteAnalyticSet(uuid: $uuid) {
-    uuid
-  }
-}
-`
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-// buildVariables converts the Terraform model into GraphQL mutation variables.
-func (r *AnalyticSetResource) buildVariables(ctx context.Context, data AnalyticSetResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name":             data.Name.ValueString(),
-		"types":            []string{"Report"},
-		"RBAC_Plan":        true,
-		"excludeAnalytics": false,
+// buildInput converts the Terraform model into the service input.
+func (r *AnalyticSetResource) buildInput(ctx context.Context, data AnalyticSetResourceModel, diags *diag.Diagnostics) *jamfprotect.AnalyticSetInput {
+	input := &jamfprotect.AnalyticSetInput{
+		Name:  data.Name.ValueString(),
+		Types: []string{"Report"},
 	}
 
 	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
+		input.Description = data.Description.ValueString()
 	} else {
-		vars["description"] = ""
+		input.Description = ""
 	}
 
-	// Analytics is required
-	vars["analytics"] = common.SetToStrings(ctx, data.Analytics, diags)
+	// Analytics is required.
+	input.Analytics = common.SetToStrings(ctx, data.Analytics, diags)
 
-	return vars
+	return input
 }
 
 // apiToState maps the API response into the Terraform state model.
-func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetResourceModel, api analyticSetResourceAPIModel, _ *diag.Diagnostics) {
+func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetResourceModel, api jamfprotect.AnalyticSet, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
@@ -143,4 +57,38 @@ func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetRes
 		analyticUUIDs = append(analyticUUIDs, a.UUID)
 	}
 	data.Analytics = common.StringsToSet(analyticUUIDs)
+}
+
+// validateAnalyticsExist ensures every analytic UUID exists in Jamf Protect.
+func (r *AnalyticSetResource) validateAnalyticsExist(ctx context.Context, analytics []string, diags *diag.Diagnostics) {
+	if len(analytics) == 0 {
+		return
+	}
+
+	items, err := r.service.ListAnalytics(ctx)
+	if err != nil {
+		diags.AddError("Error listing analytics", err.Error())
+		return
+	}
+
+	existing := map[string]bool{}
+	for _, a := range items {
+		existing[a.UUID] = true
+	}
+
+	missing := []string{}
+	for _, id := range analytics {
+		if id == "" {
+			continue
+		}
+		if !existing[id] {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) > 0 {
+		diags.AddError(
+			"Referenced analytics missing",
+			"This analytic set references analytics that do not exist in Jamf Protect: "+strings.Join(missing, ", ")+". Remove them from your configuration or recreate them before applying.",
+		)
+	}
 }

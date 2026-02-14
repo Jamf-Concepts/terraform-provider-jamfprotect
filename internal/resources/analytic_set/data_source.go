@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &AnalyticSetsDataSource{}
@@ -27,7 +28,7 @@ func NewAnalyticSetsDataSource() datasource.DataSource {
 
 // AnalyticSetsDataSource lists all analytic sets in Jamf Protect.
 type AnalyticSetsDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // AnalyticSetsDataSourceModel maps the data source schema.
@@ -147,48 +148,22 @@ func (d *AnalyticSetsDataSource) Configure(ctx context.Context, req datasource.C
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *AnalyticSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data AnalyticSetsDataSourceModel
 
-	// Fetch all analytic sets with pagination.
-	var allItems []analyticSetAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"RBAC_Plan":        true,
-			"excludeAnalytics": false,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListAnalyticSets struct {
-				Items    []analyticSetAPIModel `json:"items"`
-				PageInfo common.PageInfo       `json:"pageInfo"`
-			} `json:"listAnalyticSets"`
-		}
-		if err := d.client.Query(ctx, listAnalyticSetsQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing analytic sets", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListAnalyticSets.Items...)
-
-		if result.ListAnalyticSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListAnalyticSets.PageInfo.Next
+	items, err := d.service.ListAnalyticSets(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing analytic sets", err.Error())
+		return
 	}
 
-	tflog.Trace(ctx, "listed analytic sets", map[string]any{"count": len(allItems)})
+	tflog.Trace(ctx, "listed analytic sets", map[string]any{"count": len(items)})
 
-	analyticSets := make([]AnalyticSetDataSourceItemModel, 0, len(allItems))
-	for _, api := range allItems {
+	analyticSets := make([]AnalyticSetDataSourceItemModel, 0, len(items))
+	for _, api := range items {
 		item := analyticSetAPIToDataSourceItem(api, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
@@ -200,28 +175,8 @@ func (d *AnalyticSetsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// analyticSetAPIModel matches the client response structure.
-type analyticSetAPIModel struct {
-	UUID        string `json:"uuid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Analytics   []struct {
-		UUID string `json:"uuid"`
-		Name string `json:"name"`
-		Jamf bool   `json:"jamf"`
-	} `json:"analytics"`
-	Plans []struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"plans"`
-	Created string   `json:"created"`
-	Updated string   `json:"updated"`
-	Managed bool     `json:"managed"`
-	Types   []string `json:"types"`
-}
-
-// analyticSetAPIToDataSourceItem maps an analyticSetAPIModel to AnalyticSetDataSourceItemModel.
-func analyticSetAPIToDataSourceItem(api analyticSetAPIModel, diags *diag.Diagnostics) AnalyticSetDataSourceItemModel {
+// analyticSetAPIToDataSourceItem maps a Jamf Protect analytic set to AnalyticSetDataSourceItemModel.
+func analyticSetAPIToDataSourceItem(api jamfprotect.AnalyticSet, diags *diag.Diagnostics) AnalyticSetDataSourceItemModel {
 	item := AnalyticSetDataSourceItemModel{
 		UUID:    types.StringValue(api.UUID),
 		Name:    types.StringValue(api.Name),
@@ -282,34 +237,3 @@ func analyticSetAPIToDataSourceItem(api analyticSetAPIModel, diags *diag.Diagnos
 
 	return item
 }
-
-const listAnalyticSetsQuery = `
-query listAnalyticSets($nextToken: String, $direction: OrderDirection = DESC, $field: AnalyticSetOrderField = created, $RBAC_Plan: Boolean!, $excludeAnalytics: Boolean = false) {
-  listAnalyticSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-  ) {
-    items {
-      uuid
-      name
-      description
-      analytics @skip(if: $excludeAnalytics) {
-        uuid
-        name
-        jamf
-      }
-      plans @include(if: $RBAC_Plan) {
-        id
-        name
-      }
-      created
-      updated
-      managed
-      types
-    }
-    pageInfo {
-      next
-      total
-    }
-  }
-}
-`
