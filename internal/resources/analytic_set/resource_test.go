@@ -51,35 +51,14 @@ func TestAccAnalyticSetResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAnalyticSetResource_withTypes(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-analytic-set")
-	resourceName := "jamfprotect_analytic_set.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAnalyticSetResourceConfigWithTypes(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "types.0", "Report"),
-				),
-			},
-		},
-	})
-}
-
 func testAccAnalyticSetResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 # First create an analytic to reference
 resource "jamfprotect_analytic" "test" {
   name        = "%[1]s-analytic"
-  input_type  = "GPFSEvent"
+	sensor_type = "GPFSEvent"
   description = "Test analytic for set"
-  filter      = "( $event.type == Filter )"
+	predicate   = "( $event.type == Filter )"
   level       = 0
   severity    = "Informational"
 
@@ -87,8 +66,8 @@ resource "jamfprotect_analytic" "test" {
   categories     = ["Testing"]
   snapshot_files = []
 
-  analytic_actions = []
-  context          = []
+	add_to_jamf_pro_smart_group = false
+	context_item                = []
 }
 
 resource "jamfprotect_analytic_set" "test" {
@@ -99,30 +78,6 @@ resource "jamfprotect_analytic_set" "test" {
 `, name, description)
 }
 
-func testAccAnalyticSetResourceConfigWithTypes(name string) string {
-	return fmt.Sprintf(`
-# First create an analytic to reference
-resource "jamfprotect_analytic" "test" {
-  name        = "%[1]s-analytic"
-  input_type  = "GPFSEvent"
-  description = "Test analytic for set"
-  filter      = "( $event.type == Filter )"
-  level       = 0
-  severity    = "Informational"
-
-  tags           = ["terraform-test"]
-  categories     = ["Testing"]
-  snapshot_files = []
-
-  analytic_actions = []
-  context          = []
-}
-
-resource "jamfprotect_analytic_set" "test" {
-  name        = %[1]q
-  description = "Analytic set with types"
-  analytics   = [jamfprotect_analytic.test.id]
-  types       = ["Report"]
-}
-`, name)
+func TestAccAnalyticSetResource_withTypes(t *testing.T) {
+	t.Skip("types are now configured automatically and are no longer part of the resource schema")
 }

@@ -54,13 +54,8 @@ func (r *AnalyticSetResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
 			},
-			"types": schema.ListAttribute{
-				MarkdownDescription: "The types of analytics in this set. Valid values are `Report` and `Prevent`.",
-				Optional:            true,
-				ElementType:         types.StringType,
-			},
-			"analytics": schema.ListAttribute{
-				MarkdownDescription: "A list of analytic UUIDs to include in this set.",
+			"analytics": schema.SetAttribute{
+				MarkdownDescription: "A set of analytic UUIDs to include in this set.",
 				Required:            true,
 				ElementType:         types.StringType,
 			},

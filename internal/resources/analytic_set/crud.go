@@ -70,6 +70,10 @@ func (r *AnalyticSetResource) Read(ctx context.Context, req resource.ReadRequest
 		GetAnalyticSet *analyticSetResourceAPIModel `json:"getAnalyticSet"`
 	}
 	if err := r.client.Query(ctx, getAnalyticSetQuery, vars, &result); err != nil {
+		if common.IsNotFoundError(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading analytic set", err.Error())
 		return
 	}

@@ -24,6 +24,16 @@ func ListToStrings(ctx context.Context, list types.List, diags *diag.Diagnostics
 	return result
 }
 
+// SetToStrings converts a types.Set of strings into a Go []string.
+func SetToStrings(ctx context.Context, set types.Set, diags *diag.Diagnostics) []string {
+	if set.IsNull() || set.IsUnknown() {
+		return []string{}
+	}
+	var result []string
+	diags.Append(set.ElementsAs(ctx, &result, false)...)
+	return result
+}
+
 // StringsToList converts a Go []string into a types.List of strings.
 func StringsToList(vals []string) types.List {
 	if vals == nil {
@@ -34,6 +44,18 @@ func StringsToList(vals []string) types.List {
 		elems[i] = types.StringValue(v)
 	}
 	return types.ListValueMust(types.StringType, elems)
+}
+
+// StringsToSet converts a Go []string into a types.Set of strings.
+func StringsToSet(vals []string) types.Set {
+	if vals == nil {
+		return types.SetValueMust(types.StringType, []attr.Value{})
+	}
+	elems := make([]attr.Value, len(vals))
+	for i, v := range vals {
+		elems[i] = types.StringValue(v)
+	}
+	return types.SetValueMust(types.StringType, elems)
 }
 
 // IsNotFoundError returns true if the error indicates the resource was not found.

@@ -23,6 +23,12 @@ fragment AnalyticSetFields on AnalyticSet {
   description
   analytics @skip(if: $excludeAnalytics) {
     uuid
+    name
+    jamf
+  }
+  plans @include(if: $RBAC_Plan) {
+    id
+    name
   }
   created
   updated
@@ -100,6 +106,7 @@ mutation deleteAnalyticSet($uuid: ID!) {
 func (r *AnalyticSetResource) buildVariables(ctx context.Context, data AnalyticSetResourceModel, diags *diag.Diagnostics) map[string]any {
 	vars := map[string]any{
 		"name":             data.Name.ValueString(),
+		"types":            []string{"Report"},
 		"RBAC_Plan":        true,
 		"excludeAnalytics": false,
 	}
@@ -110,13 +117,8 @@ func (r *AnalyticSetResource) buildVariables(ctx context.Context, data AnalyticS
 		vars["description"] = ""
 	}
 
-	// Types is optional - only include if provided
-	if !data.Types.IsNull() && !data.Types.IsUnknown() {
-		vars["types"] = common.ListToStrings(ctx, data.Types, diags)
-	}
-
 	// Analytics is required
-	vars["analytics"] = common.ListToStrings(ctx, data.Analytics, diags)
+	vars["analytics"] = common.SetToStrings(ctx, data.Analytics, diags)
 
 	return vars
 }
@@ -135,17 +137,10 @@ func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetRes
 		data.Description = types.StringValue("")
 	}
 
-	// Types is optional - preserve null when the API returns an empty array
-	if len(api.Types) == 0 {
-		data.Types = types.ListNull(types.StringType)
-	} else {
-		data.Types = common.StringsToList(api.Types)
-	}
-
 	// Analytics - convert from array of objects to just UUIDs
 	var analyticUUIDs []string
 	for _, a := range api.Analytics {
 		analyticUUIDs = append(analyticUUIDs, a.UUID)
 	}
-	data.Analytics = common.StringsToList(analyticUUIDs)
+	data.Analytics = common.StringsToSet(analyticUUIDs)
 }
