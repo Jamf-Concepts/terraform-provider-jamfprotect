@@ -54,14 +54,13 @@ resource "jamfprotect_analytic_set" "from_datasource" {
 
 ### Required
 
-- `analytics` (List of String) A list of analytic UUIDs to include in this set.
+- `analytics` (Set of String) A set of analytic UUIDs to include in this set.
 - `name` (String) The name of the analytic set.
 
 ### Optional
 
 - `description` (String) A description of the analytic set.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
-- `types` (List of String) The types of analytics in this set. Valid values are `Report` and `Prevent`.
 
 ### Read-Only
 
