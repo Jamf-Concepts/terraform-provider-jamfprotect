@@ -7,14 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &ExceptionSetsDataSource{}
@@ -25,7 +24,7 @@ func NewExceptionSetsDataSource() datasource.DataSource {
 
 // ExceptionSetsDataSource lists all exception sets in Jamf Protect.
 type ExceptionSetsDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // ExceptionSetsDataSourceModel maps the data source schema.
@@ -86,45 +85,22 @@ func (d *ExceptionSetsDataSource) Configure(ctx context.Context, req datasource.
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *ExceptionSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ExceptionSetsDataSourceModel
 
-	// Fetch all exception sets with pagination.
-	var allItems []exceptionSetAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListExceptionSets struct {
-				Items    []exceptionSetAPIModel `json:"items"`
-				PageInfo common.PageInfo        `json:"pageInfo"`
-			} `json:"listExceptionSets"`
-		}
-		if err := d.client.Query(ctx, listExceptionSetsQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing exception sets", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListExceptionSets.Items...)
-
-		if result.ListExceptionSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListExceptionSets.PageInfo.Next
+	items, err := d.service.ListExceptionSets(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing exception sets", err.Error())
+		return
 	}
 
-	tflog.Trace(ctx, "listed exception sets", map[string]any{"count": len(allItems)})
+	tflog.Trace(ctx, "listed exception sets", map[string]any{"count": len(items)})
 
-	exceptionSets := make([]ExceptionSetDataSourceItemModel, 0, len(allItems))
-	for _, api := range allItems {
+	exceptionSets := make([]ExceptionSetDataSourceItemModel, 0, len(items))
+	for _, api := range items {
 		item := ExceptionSetDataSourceItemModel{
 			UUID:    types.StringValue(api.UUID),
 			Name:    types.StringValue(api.Name),
@@ -136,28 +112,3 @@ func (d *ExceptionSetsDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
-
-// exceptionSetAPIModel matches the GraphQL response structure.
-type exceptionSetAPIModel struct {
-	UUID    string `json:"uuid"`
-	Name    string `json:"name"`
-	Managed bool   `json:"managed"`
-}
-
-const listExceptionSetsQuery = `
-query listExceptionSets($nextToken: String, $direction: OrderDirection = DESC, $field: ExceptionSetOrderField = created) {
-  listExceptionSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-  ) {
-    items {
-      uuid
-      name
-      managed
-    }
-    pageInfo {
-      next
-      total
-    }
-  }
-}
-`

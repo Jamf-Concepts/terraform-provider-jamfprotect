@@ -13,219 +13,47 @@ Manages an exception set in Jamf Protect. Exception sets define exceptions to an
 ## Example Usage
 
 ```terraform
-# Exception set with analytics exceptions using analytic types
-resource "jamfprotect_exception_set" "analytics_by_type" {
-  name        = "Development Analytics Exceptions"
-  description = "Exceptions for development tools in analytics"
-
-  # Analytics exceptions targeting specific analytic types
-  exceptions = [
-    # Exclude specific user from file system analytics
-    {
-      type            = "User"
-      value           = "developer"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPFSEvent"]
-    },
-    # Exclude Calculator from process analytics
-    {
-      type            = "PlatformBinary"
-      value           = "com.apple.calculator"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPProcessEvent"]
-    },
-    # Exclude app by signing info from multiple event types
-    {
-      type            = "AppSigningInfo"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPProcessEvent", "GPKeylogRegisterEvent"]
-      app_signing_info = {
-        app_id  = "com.jamf.protect.daemon"
-        team_id = "483DWKW443"
-      }
-    },
-    # Exclude specific path from screenshot analytics
-    {
-      type            = "Path"
-      value           = "/tmp/*"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPScreenshotEvent"]
-    },
-    # Exclude executable from click events
-    {
-      type            = "Executable"
-      value           = "/Applications/Xcode.app/Contents/MacOS/Xcode"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPClickEvent"]
-    }
-  ]
-
-  timeouts {
-    create = "5m"
-    update = "5m"
-    delete = "2m"
+resource "jamfprotect_exception_set" "example" {
+  description = "Managed by Terraform"
+  name        = "Example Exception Set"
+  endpoint_security_exception {
+    ignore_activity  = "ThreatPrevention"
+    ignore_list_type = "ignore"
+    type             = "Groups"
+    value            = "EXAMPLE"
   }
-}
-
-# Exception set with analytics exceptions using specific analytic UUID
-resource "jamfprotect_exception_set" "analytics_by_uuid" {
-  name        = "Custom Analytic Exceptions"
-  description = "Exceptions for a specific custom analytic"
-
-  # Analytics exceptions targeting a specific analytic by UUID
-  exceptions = [
-    {
-      type            = "User"
-      value           = "testuser"
-      ignore_activity = "Analytics"
-      analytic_uuid   = "4c331012-1e61-4fc7-8197-9651bea6cfae"
-    },
-    {
-      type            = "TeamId"
-      value           = "ABC123XYZ"
-      ignore_activity = "Analytics"
-      analytic_uuid   = "4c331012-1e61-4fc7-8197-9651bea6cfae"
-    }
-  ]
-}
-
-# Exception set with threat prevention exceptions
-resource "jamfprotect_exception_set" "threat_prevention" {
-  name        = "Threat Prevention Exceptions"
-  description = "Exceptions for endpoint security threat prevention"
-
-  # Threat Prevention ES exceptions
-  es_exceptions = [
-    # Exclude specific user group from threat prevention
-    {
-      type                = "Groups"
-      value               = "developers"
-      ignore_activity     = "ThreatPrevention"
-      ignore_list_type    = "ignore"
-      ignore_list_subtype = null
-    },
-    # Exclude app by executable path
-    {
-      type                = "Executable"
-      value               = "/Applications/Development.app"
-      ignore_activity     = "ThreatPrevention"
-      ignore_list_type    = "ignore"
-      ignore_list_subtype = null
-    },
-    # Exclude parent process by team ID
-    {
-      type                = "TeamId"
-      value               = "59GAB85EFG"
-      ignore_activity     = "ThreatPrevention"
-      ignore_list_type    = "ignore"
-      ignore_list_subtype = "parent"
-    },
-    # Exclude responsible process by app signing info
-    {
-      type                = "AppSigningInfo"
-      ignore_activity     = "ThreatPrevention"
-      ignore_list_type    = "ignore"
-      ignore_list_subtype = "responsible"
-      app_signing_info = {
-        app_id  = "com.apple.dt.Xcode"
-        team_id = "59GAB85EFG"
-      }
-    }
-  ]
-}
-
-# Exception set with telemetry exceptions
-resource "jamfprotect_exception_set" "telemetry" {
-  name        = "Telemetry V2 Exceptions"
-  description = "Exceptions for telemetry event collection"
-
-  # TelemetryV2 ES exceptions
-  es_exceptions = [
-    # Exclude exec events for specific team ID
-    {
-      type             = "TeamId"
-      value            = "ABC123XYZ"
-      ignore_activity  = "TelemetryV2"
-      ignore_list_type = "events"
-      event_type       = "exec"
-    },
-    # Exclude exec events for platform binary
-    {
-      type             = "PlatformBinary"
-      value            = "com.apple.calculator"
-      ignore_activity  = "TelemetryV2"
-      ignore_list_type = "events"
-      event_type       = "exec"
-    },
-    # Exclude source for user
-    {
-      type             = "User"
-      value            = "systemuser"
-      ignore_activity  = "TelemetryV2"
-      ignore_list_type = "sourceIgnore"
-    },
-    # Exclude parent source by executable
-    {
-      type                = "Executable"
-      value               = "/usr/bin/codesign"
-      ignore_activity     = "TelemetryV2"
-      ignore_list_type    = "sourceIgnore"
-      ignore_list_subtype = "parent"
-    },
-    # Exclude responsible source by app signing info
-    {
-      type                = "AppSigningInfo"
-      ignore_activity     = "TelemetryV2"
-      ignore_list_type    = "sourceIgnore"
-      ignore_list_subtype = "responsible"
-      app_signing_info = {
-        app_id  = "com.jamf.protect.daemon"
-        team_id = "483DWKW443"
-      }
-    }
-  ]
-}
-
-# Comprehensive exception set mixing all types
-resource "jamfprotect_exception_set" "comprehensive" {
-  name        = "Comprehensive Exception Set"
-  description = "Example showing all exception types and configurations"
-
-  # Analytics exceptions
-  exceptions = [
-    # Using wildcards in paths (supported for Path and Executable types)
-    {
-      type            = "Path"
-      value           = "/Users/*/Pictures/Photos Library.photoslibrary/resources/*"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPFSEvent"]
-    },
-    {
-      type            = "Path"
-      value           = "*/Library/Cookies/Cookies.binarycookies*"
-      ignore_activity = "Analytics"
-      analytic_types  = ["GPDownloadEvent"]
-    }
-  ]
-
-  # ES exceptions for multiple scenarios
-  es_exceptions = [
-    # Threat Prevention
-    {
-      type             = "User"
-      value            = "serviceaccount"
-      ignore_activity  = "ThreatPrevention"
-      ignore_list_type = "ignore"
-    },
-    # TelemetryV2 events
-    {
-      type             = "Groups"
-      value            = "admin"
-      ignore_activity  = "TelemetryV2"
-      ignore_list_type = "events"
-      event_type       = "exec"
-    }
-  ]
+  endpoint_security_exception {
+    ignore_activity     = "ThreatPrevention"
+    ignore_list_subtype = "parent"
+    ignore_list_type    = "ignore"
+    type                = "User"
+    value               = "Example"
+  }
+  endpoint_security_exception {
+    app_id              = "Example"
+    ignore_activity     = "ThreatPrevention"
+    ignore_list_subtype = "responsible"
+    ignore_list_type    = "ignore"
+    team_id             = "EXAMPLE"
+    type                = "AppSigningInfo"
+  }
+  exception {
+    analytic_types  = ["GPFSEvent"]
+    ignore_activity = "Analytics"
+    type            = "PlatformBinary"
+    value           = "com.apple.SafariBookmarksSyncAgent"
+  }
+  exception {
+    ignore_activity = "Telemetry"
+    type            = "User"
+    value           = "_spotlight"
+  }
+  exception {
+    analytic_types  = ["GPProcessEvent"]
+    ignore_activity = "Analytics"
+    type            = "TeamId"
+    value           = "PXPZ95SK77"
+  }
 }
 ```
 
@@ -239,8 +67,8 @@ resource "jamfprotect_exception_set" "comprehensive" {
 ### Optional
 
 - `description` (String) A description of the exception set.
-- `es_exceptions` (Attributes List) A list of Endpoint Security exceptions. (see [below for nested schema](#nestedatt--es_exceptions))
-- `exceptions` (Attributes List) A list of exceptions for analytics. (see [below for nested schema](#nestedatt--exceptions))
+- `endpoint_security_exception` (Block Set) A list of Endpoint Security exceptions. (see [below for nested schema](#nestedblock--endpoint_security_exception))
+- `exception` (Block Set) A list of exceptions for analytics. (see [below for nested schema](#nestedblock--exception))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -250,55 +78,39 @@ resource "jamfprotect_exception_set" "comprehensive" {
 - `managed` (Boolean) Whether this is a Jamf-managed exception set.
 - `updated` (String) The last-updated timestamp.
 
-<a id="nestedatt--es_exceptions"></a>
-### Nested Schema for `es_exceptions`
+<a id="nestedblock--endpoint_security_exception"></a>
+### Nested Schema for `endpoint_security_exception`
 
 Required:
 
-- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`.
+- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
 - `type` (String) The type of ES exception. Valid values: `Groups`, `User`, `PlatformBinary`, `Executable`, `TeamId`, `AppSigningInfo`.
 
 Optional:
 
-- `app_signing_info` (Attributes) Application signing information for code signature exceptions. (see [below for nested schema](#nestedatt--es_exceptions--app_signing_info))
+- `app_id` (String) Application identifier for code signature exceptions.
 - `event_type` (String) The endpoint security event type (e.g., `exec`, `open`, `create`).
 - `ignore_list_subtype` (String) The ignore list subtype. Valid values: `parent`, `responsible`, or null.
 - `ignore_list_type` (String) The ignore list type. Valid values: `ignore`, `events`, `sourceIgnore`.
+- `team_id` (String) Team identifier for code signature exceptions.
 - `value` (String) The value to match for this ES exception. Not used when type is `AppSigningInfo`.
 
-<a id="nestedatt--es_exceptions--app_signing_info"></a>
-### Nested Schema for `es_exceptions.app_signing_info`
+
+<a id="nestedblock--exception"></a>
+### Nested Schema for `exception`
 
 Required:
 
-- `app_id` (String) The application identifier.
-- `team_id` (String) The team identifier.
-
-
-
-<a id="nestedatt--exceptions"></a>
-### Nested Schema for `exceptions`
-
-Required:
-
-- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`.
+- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
 - `type` (String) The type of exception. Valid values: `User`, `AppSigningInfo`, `TeamId`, `Executable`, `PlatformBinary`, `Path`.
 
 Optional:
 
 - `analytic_types` (List of String) The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).
 - `analytic_uuid` (String) The UUID of a specific analytic this exception applies to. Mutually exclusive with `analytic_types`.
-- `app_signing_info` (Attributes) Application signing information for code signature exceptions. (see [below for nested schema](#nestedatt--exceptions--app_signing_info))
+- `app_id` (String) Application identifier for code signature exceptions.
+- `team_id` (String) Team identifier for code signature exceptions.
 - `value` (String) The value to match for this exception. Not used when type is `AppSigningInfo`.
-
-<a id="nestedatt--exceptions--app_signing_info"></a>
-### Nested Schema for `exceptions.app_signing_info`
-
-Required:
-
-- `app_id` (String) The application identifier.
-- `team_id` (String) The team identifier.
-
 
 
 <a id="nestedatt--timeouts"></a>
