@@ -40,57 +40,6 @@ func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.Metada
 }
 
 func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	eventTypeAttrs := map[string]schema.Attribute{
-		"attrs": schema.ListAttribute{
-			MarkdownDescription: "Attribute names to include in alert data for this event type.",
-			Required:            true,
-			ElementType:         types.StringType,
-		},
-		"related": schema.ListAttribute{
-			MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
-			Required:            true,
-			ElementType:         types.StringType,
-		},
-	}
-
-	cloneAttrs := func(src map[string]schema.Attribute) map[string]schema.Attribute {
-		dst := make(map[string]schema.Attribute, len(src))
-		for k, v := range src {
-			dst[k] = v
-		}
-		return dst
-	}
-
-	endpointBaseAttrs := map[string]schema.Attribute{
-		"enabled": schema.BoolAttribute{
-			MarkdownDescription: "Whether this data endpoint is enabled.",
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(true),
-		},
-		"supported_reports": schema.ListAttribute{
-			MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
-			Optional:            true,
-			ElementType:         types.StringType,
-		},
-		"batch_size_index": schema.Int64Attribute{
-			MarkdownDescription: "Batch size index used by the endpoint.",
-			Optional:            true,
-		},
-		"batch_window_seconds": schema.Int64Attribute{
-			MarkdownDescription: "Batching window in seconds.",
-			Optional:            true,
-		},
-		"batch_size_in_bytes": schema.Int64Attribute{
-			MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
-			Optional:            true,
-		},
-		"batch_delimiter": schema.StringAttribute{
-			MarkdownDescription: "Delimiter used between batched records (HTTP only).",
-			Optional:            true,
-		},
-	}
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an action configuration in Jamf Protect. Action configurations define the alert data enrichment settings and reporting clients for a plan.",
 		Attributes: map[string]schema.Attribute{
@@ -124,72 +73,226 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							"binary": schema.SingleNestedAttribute{
 								MarkdownDescription: "Binary metadata enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"synthetic_click_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Synthetic click event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"download_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Download event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"file": schema.SingleNestedAttribute{
 								MarkdownDescription: "File metadata enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"file_system_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "File system event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"group": schema.SingleNestedAttribute{
 								MarkdownDescription: "Group metadata enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"process_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Process event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"process": schema.SingleNestedAttribute{
 								MarkdownDescription: "Process metadata enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"screenshot_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Screenshot event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"usb_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "USB device event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"user": schema.SingleNestedAttribute{
 								MarkdownDescription: "User metadata enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"gatekeeper_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Gatekeeper event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"keylog_register_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Keylogger registration event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 							"malware_removal_tool_event": schema.SingleNestedAttribute{
 								MarkdownDescription: "Malware Removal Tool event enrichment.",
 								Required:            true,
-								Attributes:          eventTypeAttrs,
+								Attributes: map[string]schema.Attribute{
+									"attrs": schema.ListAttribute{
+										MarkdownDescription: "Attribute names to include in alert data for this event type.",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+									"related": schema.ListAttribute{
+										MarkdownDescription: "Related object types to include in alert data (e.g. `file`, `process`, `user`).",
+										Required:            true,
+										ElementType:         types.StringType,
+									},
+								},
 							},
 						},
 					},
@@ -198,17 +301,43 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			"endpoint_http": schema.SingleNestedAttribute{
 				MarkdownDescription: "HTTP data endpoint.",
 				Optional:            true,
-				Attributes: func() map[string]schema.Attribute {
-					attrs := cloneAttrs(endpointBaseAttrs)
-					attrs["url"] = schema.StringAttribute{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether this data endpoint is enabled.",
+						Optional:            true,
+						Computed:            true,
+						Default:             booldefault.StaticBool(true),
+					},
+					"supported_reports": schema.ListAttribute{
+						MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"batch_size_index": schema.Int64Attribute{
+						MarkdownDescription: "Batch size index used by the endpoint.",
+						Optional:            true,
+					},
+					"batch_window_seconds": schema.Int64Attribute{
+						MarkdownDescription: "Batching window in seconds.",
+						Optional:            true,
+					},
+					"batch_size_in_bytes": schema.Int64Attribute{
+						MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+						Optional:            true,
+					},
+					"batch_delimiter": schema.StringAttribute{
+						MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+						Optional:            true,
+					},
+					"url": schema.StringAttribute{
 						MarkdownDescription: "HTTP destination URL.",
 						Optional:            true,
-					}
-					attrs["method"] = schema.StringAttribute{
+					},
+					"method": schema.StringAttribute{
 						MarkdownDescription: "HTTP request method.",
 						Optional:            true,
-					}
-					attrs["headers"] = schema.ListNestedAttribute{
+					},
+					"headers": schema.ListNestedAttribute{
 						MarkdownDescription: "HTTP headers.",
 						Optional:            true,
 						NestedObject: schema.NestedAttributeObject{
@@ -217,97 +346,196 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								"value":  schema.StringAttribute{Optional: true},
 							},
 						},
-					}
-					return attrs
-				}(),
+					},
+				},
 			},
 			"endpoint_kafka": schema.SingleNestedAttribute{
 				MarkdownDescription: "Kafka data endpoint.",
 				Optional:            true,
-				Attributes: func() map[string]schema.Attribute {
-					attrs := cloneAttrs(endpointBaseAttrs)
-					attrs["host"] = schema.StringAttribute{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether this data endpoint is enabled.",
+						Optional:            true,
+						Computed:            true,
+						Default:             booldefault.StaticBool(true),
+					},
+					"supported_reports": schema.ListAttribute{
+						MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"batch_size_index": schema.Int64Attribute{
+						MarkdownDescription: "Batch size index used by the endpoint.",
+						Optional:            true,
+					},
+					"batch_window_seconds": schema.Int64Attribute{
+						MarkdownDescription: "Batching window in seconds.",
+						Optional:            true,
+					},
+					"batch_size_in_bytes": schema.Int64Attribute{
+						MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+						Optional:            true,
+					},
+					"batch_delimiter": schema.StringAttribute{
+						MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+						Optional:            true,
+					},
+					"host": schema.StringAttribute{
 						MarkdownDescription: "Kafka host.",
 						Optional:            true,
-					}
-					attrs["port"] = schema.Int64Attribute{
+					},
+					"port": schema.Int64Attribute{
 						MarkdownDescription: "Kafka port.",
 						Optional:            true,
-					}
-					attrs["topic"] = schema.StringAttribute{
+					},
+					"topic": schema.StringAttribute{
 						MarkdownDescription: "Kafka topic.",
 						Optional:            true,
-					}
-					attrs["client_cn"] = schema.StringAttribute{
+					},
+					"client_cn": schema.StringAttribute{
 						MarkdownDescription: "Kafka client certificate CN.",
 						Optional:            true,
-					}
-					attrs["server_cn"] = schema.StringAttribute{
+					},
+					"server_cn": schema.StringAttribute{
 						MarkdownDescription: "Kafka server certificate CN.",
 						Optional:            true,
-					}
-					return attrs
-				}(),
+					},
+				},
 			},
 			"endpoint_syslog": schema.SingleNestedAttribute{
 				MarkdownDescription: "Syslog data endpoint.",
 				Optional:            true,
-				Attributes: func() map[string]schema.Attribute {
-					attrs := cloneAttrs(endpointBaseAttrs)
-					attrs["host"] = schema.StringAttribute{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether this data endpoint is enabled.",
+						Optional:            true,
+						Computed:            true,
+						Default:             booldefault.StaticBool(true),
+					},
+					"supported_reports": schema.ListAttribute{
+						MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"batch_size_index": schema.Int64Attribute{
+						MarkdownDescription: "Batch size index used by the endpoint.",
+						Optional:            true,
+					},
+					"batch_window_seconds": schema.Int64Attribute{
+						MarkdownDescription: "Batching window in seconds.",
+						Optional:            true,
+					},
+					"batch_size_in_bytes": schema.Int64Attribute{
+						MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+						Optional:            true,
+					},
+					"batch_delimiter": schema.StringAttribute{
+						MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+						Optional:            true,
+					},
+					"host": schema.StringAttribute{
 						MarkdownDescription: "Syslog host.",
 						Optional:            true,
-					}
-					attrs["port"] = schema.Int64Attribute{
+					},
+					"port": schema.Int64Attribute{
 						MarkdownDescription: "Syslog port.",
 						Optional:            true,
-					}
-					attrs["scheme"] = schema.StringAttribute{
+					},
+					"scheme": schema.StringAttribute{
 						MarkdownDescription: "Syslog scheme (e.g. tls).",
 						Optional:            true,
-					}
-					return attrs
-				}(),
+					},
+				},
 			},
 			"endpoint_log_file": schema.SingleNestedAttribute{
 				MarkdownDescription: "Log file data endpoint.",
 				Optional:            true,
-				Attributes: func() map[string]schema.Attribute {
-					attrs := cloneAttrs(endpointBaseAttrs)
-					attrs["path"] = schema.StringAttribute{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether this data endpoint is enabled.",
+						Optional:            true,
+						Computed:            true,
+						Default:             booldefault.StaticBool(true),
+					},
+					"supported_reports": schema.ListAttribute{
+						MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"batch_size_index": schema.Int64Attribute{
+						MarkdownDescription: "Batch size index used by the endpoint.",
+						Optional:            true,
+					},
+					"batch_window_seconds": schema.Int64Attribute{
+						MarkdownDescription: "Batching window in seconds.",
+						Optional:            true,
+					},
+					"batch_size_in_bytes": schema.Int64Attribute{
+						MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+						Optional:            true,
+					},
+					"batch_delimiter": schema.StringAttribute{
+						MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+						Optional:            true,
+					},
+					"path": schema.StringAttribute{
 						MarkdownDescription: "Log file path.",
 						Optional:            true,
-					}
-					attrs["permissions"] = schema.StringAttribute{
+					},
+					"permissions": schema.StringAttribute{
 						MarkdownDescription: "Log file permissions.",
 						Optional:            true,
-					}
-					attrs["max_size_mb"] = schema.Int64Attribute{
+					},
+					"max_size_mb": schema.Int64Attribute{
 						MarkdownDescription: "Maximum log file size in MB.",
 						Optional:            true,
-					}
-					attrs["ownership"] = schema.StringAttribute{
+					},
+					"ownership": schema.StringAttribute{
 						MarkdownDescription: "Log file ownership.",
 						Optional:            true,
-					}
-					attrs["backups"] = schema.Int64Attribute{
+					},
+					"backups": schema.Int64Attribute{
 						MarkdownDescription: "Number of log backups to keep.",
 						Optional:            true,
-					}
-					return attrs
-				}(),
+					},
+				},
 			},
 			"endpoint_jamf_cloud": schema.SingleNestedAttribute{
 				MarkdownDescription: "Jamf Cloud data endpoint.",
 				Optional:            true,
-				Attributes: func() map[string]schema.Attribute {
-					attrs := cloneAttrs(endpointBaseAttrs)
-					attrs["destination_filter"] = schema.StringAttribute{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether this data endpoint is enabled.",
+						Optional:            true,
+						Computed:            true,
+						Default:             booldefault.StaticBool(true),
+					},
+					"supported_reports": schema.ListAttribute{
+						MarkdownDescription: "Reports forwarded by this endpoint (e.g. AlertHigh, Telemetry, UnifiedLogging).",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"batch_size_index": schema.Int64Attribute{
+						MarkdownDescription: "Batch size index used by the endpoint.",
+						Optional:            true,
+					},
+					"batch_window_seconds": schema.Int64Attribute{
+						MarkdownDescription: "Batching window in seconds.",
+						Optional:            true,
+					},
+					"batch_size_in_bytes": schema.Int64Attribute{
+						MarkdownDescription: "Maximum batch size in bytes (HTTP only).",
+						Optional:            true,
+					},
+					"batch_delimiter": schema.StringAttribute{
+						MarkdownDescription: "Delimiter used between batched records (HTTP only).",
+						Optional:            true,
+					},
+					"destination_filter": schema.StringAttribute{
 						MarkdownDescription: "Destination filter (if configured).",
 						Optional:            true,
-					}
-					return attrs
-				}(),
+					},
+				},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
