@@ -5,8 +5,9 @@ package analytic_test
 
 import (
 	"fmt"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 	"testing"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +28,7 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test analytic description"),
-					resource.TestCheckResourceAttr(resourceName, "input_type", "GPFSEvent"),
+					resource.TestCheckResourceAttr(resourceName, "sensor_type", "GPFSEvent"),
 					resource.TestCheckResourceAttr(resourceName, "severity", "Informational"),
 					resource.TestCheckResourceAttr(resourceName, "level", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
@@ -35,8 +36,8 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.0", "Testing"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_files.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "context.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "false"),
+					resource.TestCheckResourceAttr(resourceName, "context_item.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
@@ -71,12 +72,11 @@ func TestAccAnalyticResource_withActions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.name", "SmartGroup"),
-					resource.TestCheckResourceAttr(resourceName, "analytic_actions.0.parameters.id", "smartgroup"),
-					resource.TestCheckResourceAttr(resourceName, "context.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context.0.name", "name"),
-					resource.TestCheckResourceAttr(resourceName, "context.0.type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "true"),
+					resource.TestCheckResourceAttr(resourceName, "jamf_pro_smart_group_identifier", "smartgroup"),
+					resource.TestCheckResourceAttr(resourceName, "context_item.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "context_item.0.name", "name"),
+					resource.TestCheckResourceAttr(resourceName, "context_item.0.type", "String"),
 				),
 			},
 		},
@@ -87,9 +87,9 @@ func testAccAnalyticResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-  input_type  = "GPFSEvent"
+	sensor_type  = "GPFSEvent"
   description = %[2]q
-  filter      = "( $event.type == Filter )"
+	predicate   = "( $event.type == Filter )"
   level       = 0
   severity    = "Informational"
 
@@ -97,8 +97,8 @@ resource "jamfprotect_analytic" "test" {
   categories     = ["Testing"]
   snapshot_files = []
 
-  analytic_actions = []
-  context          = []
+	add_to_jamf_pro_smart_group = false
+	context_item                 = []
 }
 `, name, description)
 }
@@ -107,9 +107,9 @@ func testAccAnalyticResourceConfigWithActions(name string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-  input_type  = "GPFSEvent"
+	sensor_type  = "GPFSEvent"
   description = "Analytic with actions"
-  filter      = "( $event.type == Filter )"
+	predicate   = "( $event.type == Filter )"
   level       = 0
   severity    = "Low"
 
@@ -117,17 +117,13 @@ resource "jamfprotect_analytic" "test" {
   categories     = ["Evasion"]
   snapshot_files = ["/tmp/snapshot.log"]
 
-  analytic_actions = [{
-    name       = "SmartGroup"
-    parameters = {
-      id = "smartgroup"
-    }
-  }]
+	add_to_jamf_pro_smart_group   = true
+	jamf_pro_smart_group_identifier = "smartgroup"
 
-  context = [{
+	context_item = [{
     name  = "name"
     type  = "String"
-    exprs = [""]
+		expressions = [""]
   }]
 }
 `, name)

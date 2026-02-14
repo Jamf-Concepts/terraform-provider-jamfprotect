@@ -38,35 +38,42 @@ output "analytic_summary" {
 Read-Only:
 
 - `actions` (List of String) Legacy actions associated with the analytic.
-- `analytic_actions` (Attributes List) Actions to perform when the analytic triggers. (see [below for nested schema](#nestedatt--analytics--analytic_actions))
+- `add_to_jamf_pro_smart_group` (Boolean) Whether the analytic adds devices to a Jamf Pro Smart Group.
 - `categories` (List of String) Categories associated with the analytic.
-- `context` (Attributes List) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context))
+- `context_item` (Attributes List) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context_item))
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the analytic.
-- `filter` (String) The predicate filter expression.
 - `id` (String) The unique identifier of the analytic.
-- `input_type` (String) The input type for the analytic.
+- `jamf` (Boolean) Indicates whether the analytic is Jamf-managed (read-only).
+- `jamf_pro_smart_group_identifier` (String) Identifier for the Jamf Pro extension attribute.
+- `label` (String) Display label for the analytic (read-only).
 - `level` (Number) The alert level.
+- `long_description` (String) Long-form description for the analytic (read-only).
 - `name` (String) The name of the analytic.
+- `predicate` (String) The predicate expression.
+- `remediation` (String) Remediation guidance associated with the analytic (read-only).
+- `sensor_type` (String) The sensor type for the analytic.
 - `severity` (String) The severity level.
 - `snapshot_files` (List of String) Snapshot file paths to capture.
 - `tags` (List of String) Tags associated with the analytic.
+- `tenant_actions` (Attributes List) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--analytics--tenant_actions))
+- `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
 
-<a id="nestedatt--analytics--analytic_actions"></a>
-### Nested Schema for `analytics.analytic_actions`
+<a id="nestedatt--analytics--context_item"></a>
+### Nested Schema for `analytics.context_item`
+
+Read-Only:
+
+- `expressions` (List of String) Expressions for the context entry.
+- `name` (String) The context entry name.
+- `type` (String) The context entry type.
+
+
+<a id="nestedatt--analytics--tenant_actions"></a>
+### Nested Schema for `analytics.tenant_actions`
 
 Read-Only:
 
 - `name` (String) The action name.
 - `parameters` (Map of String) Key-value parameters for the action.
-
-
-<a id="nestedatt--analytics--context"></a>
-### Nested Schema for `analytics.context`
-
-Read-Only:
-
-- `exprs` (List of String) Expressions for the context entry.
-- `name` (String) The context entry name.
-- `type` (String) The context entry type.

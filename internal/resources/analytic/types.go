@@ -10,35 +10,36 @@ import (
 
 // AnalyticResourceModel maps the resource schema data.
 type AnalyticResourceModel struct {
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	InputType       types.String   `tfsdk:"input_type"`
-	Description     types.String   `tfsdk:"description"`
-	Filter          types.String   `tfsdk:"filter"`
-	Level           types.Int64    `tfsdk:"level"`
-	Severity        types.String   `tfsdk:"severity"`
-	Tags            types.List     `tfsdk:"tags"`
-	Categories      types.List     `tfsdk:"categories"`
-	SnapshotFiles   types.List     `tfsdk:"snapshot_files"`
-	Actions         types.List     `tfsdk:"actions"`
-	AnalyticActions types.List     `tfsdk:"analytic_actions"`
-	Context         types.List     `tfsdk:"context"`
-	Created         types.String   `tfsdk:"created"`
-	Updated         types.String   `tfsdk:"updated"`
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-}
-
-// analyticActionModel maps AnalyticActionsInput / response.
-type analyticActionModel struct {
-	Name       types.String `tfsdk:"name"`
-	Parameters types.Map    `tfsdk:"parameters"`
+	ID                          types.String   `tfsdk:"id"`
+	Name                        types.String   `tfsdk:"name"`
+	SensorType                  types.String   `tfsdk:"sensor_type"`
+	Description                 types.String   `tfsdk:"description"`
+	Label                       types.String   `tfsdk:"label"`
+	LongDescription             types.String   `tfsdk:"long_description"`
+	Predicate                   types.String   `tfsdk:"predicate"`
+	Level                       types.Int64    `tfsdk:"level"`
+	Severity                    types.String   `tfsdk:"severity"`
+	Tags                        types.List     `tfsdk:"tags"`
+	Categories                  types.List     `tfsdk:"categories"`
+	SnapshotFiles               types.List     `tfsdk:"snapshot_files"`
+	Actions                     types.List     `tfsdk:"actions"`
+	AddToJamfProSmartGroup      types.Bool     `tfsdk:"add_to_jamf_pro_smart_group"`
+	JamfProSmartGroupIdentifier types.String   `tfsdk:"jamf_pro_smart_group_identifier"`
+	TenantActions               types.List     `tfsdk:"tenant_actions"`
+	TenantSeverity              types.String   `tfsdk:"tenant_severity"`
+	ContextItem                 types.List     `tfsdk:"context_item"`
+	Created                     types.String   `tfsdk:"created"`
+	Updated                     types.String   `tfsdk:"updated"`
+	Jamf                        types.Bool     `tfsdk:"jamf"`
+	Remediation                 types.String   `tfsdk:"remediation"`
+	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
 }
 
 // analyticContextModel maps AnalyticContextInput / response.
 type analyticContextModel struct {
-	Name  types.String `tfsdk:"name"`
-	Type  types.String `tfsdk:"type"`
-	Exprs types.List   `tfsdk:"exprs"`
+	Name        types.String `tfsdk:"name"`
+	Type        types.String `tfsdk:"type"`
+	Expressions types.List   `tfsdk:"expressions"`
 }
 
 // ---------------------------------------------------------------------------
@@ -48,19 +49,25 @@ type analyticContextModel struct {
 type analyticAPIModel struct {
 	UUID            string                    `json:"uuid"`
 	Name            string                    `json:"name"`
+	Label           string                    `json:"label"`
 	InputType       string                    `json:"inputType"`
 	Filter          string                    `json:"filter"`
 	Description     string                    `json:"description"`
+	LongDescription string                    `json:"longDescription"`
 	Created         string                    `json:"created"`
 	Updated         string                    `json:"updated"`
 	Actions         []string                  `json:"actions"`
 	AnalyticActions []analyticActionAPIModel  `json:"analyticActions"`
+	TenantActions   []analyticActionAPIModel  `json:"tenantActions"`
 	Tags            []string                  `json:"tags"`
 	Level           int64                     `json:"level"`
 	Severity        string                    `json:"severity"`
+	TenantSeverity  string                    `json:"tenantSeverity"`
 	SnapshotFiles   []string                  `json:"snapshotFiles"`
 	Context         []analyticContextAPIModel `json:"context"`
 	Categories      []string                  `json:"categories"`
+	Jamf            bool                      `json:"jamf"`
+	Remediation     string                    `json:"remediation"`
 }
 
 type analyticActionAPIModel struct {

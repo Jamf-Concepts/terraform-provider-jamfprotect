@@ -38,21 +38,28 @@ type AnalyticsDataSourceModel struct {
 
 // AnalyticDataSourceItemModel maps a single analytic item (read-only, no timeouts).
 type AnalyticDataSourceItemModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	InputType       types.String `tfsdk:"input_type"`
-	Description     types.String `tfsdk:"description"`
-	Filter          types.String `tfsdk:"filter"`
-	Level           types.Int64  `tfsdk:"level"`
-	Severity        types.String `tfsdk:"severity"`
-	Tags            types.List   `tfsdk:"tags"`
-	Categories      types.List   `tfsdk:"categories"`
-	SnapshotFiles   types.List   `tfsdk:"snapshot_files"`
-	Actions         types.List   `tfsdk:"actions"`
-	AnalyticActions types.List   `tfsdk:"analytic_actions"`
-	Context         types.List   `tfsdk:"context"`
-	Created         types.String `tfsdk:"created"`
-	Updated         types.String `tfsdk:"updated"`
+	ID                          types.String `tfsdk:"id"`
+	Name                        types.String `tfsdk:"name"`
+	SensorType                  types.String `tfsdk:"sensor_type"`
+	Description                 types.String `tfsdk:"description"`
+	Label                       types.String `tfsdk:"label"`
+	LongDescription             types.String `tfsdk:"long_description"`
+	Predicate                   types.String `tfsdk:"predicate"`
+	Level                       types.Int64  `tfsdk:"level"`
+	Severity                    types.String `tfsdk:"severity"`
+	Tags                        types.List   `tfsdk:"tags"`
+	Categories                  types.List   `tfsdk:"categories"`
+	SnapshotFiles               types.List   `tfsdk:"snapshot_files"`
+	Actions                     types.List   `tfsdk:"actions"`
+	AddToJamfProSmartGroup      types.Bool   `tfsdk:"add_to_jamf_pro_smart_group"`
+	JamfProSmartGroupIdentifier types.String `tfsdk:"jamf_pro_smart_group_identifier"`
+	TenantActions               types.List   `tfsdk:"tenant_actions"`
+	TenantSeverity              types.String `tfsdk:"tenant_severity"`
+	ContextItem                 types.List   `tfsdk:"context_item"`
+	Created                     types.String `tfsdk:"created"`
+	Updated                     types.String `tfsdk:"updated"`
+	Jamf                        types.Bool   `tfsdk:"jamf"`
+	Remediation                 types.String `tfsdk:"remediation"`
 }
 
 func (d *AnalyticsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -84,16 +91,24 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The name of the analytic.",
 			Computed:            true,
 		},
-		"input_type": schema.StringAttribute{
-			MarkdownDescription: "The input type for the analytic.",
+		"sensor_type": schema.StringAttribute{
+			MarkdownDescription: "The sensor type for the analytic.",
 			Computed:            true,
 		},
 		"description": schema.StringAttribute{
 			MarkdownDescription: "A description of the analytic.",
 			Computed:            true,
 		},
-		"filter": schema.StringAttribute{
-			MarkdownDescription: "The predicate filter expression.",
+		"label": schema.StringAttribute{
+			MarkdownDescription: "Display label for the analytic (read-only).",
+			Computed:            true,
+		},
+		"long_description": schema.StringAttribute{
+			MarkdownDescription: "Long-form description for the analytic (read-only).",
+			Computed:            true,
+		},
+		"predicate": schema.StringAttribute{
+			MarkdownDescription: "The predicate expression.",
 			Computed:            true,
 		},
 		"level": schema.Int64Attribute{
@@ -124,8 +139,16 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"analytic_actions": schema.ListNestedAttribute{
-			MarkdownDescription: "Actions to perform when the analytic triggers.",
+		"add_to_jamf_pro_smart_group": schema.BoolAttribute{
+			MarkdownDescription: "Whether the analytic adds devices to a Jamf Pro Smart Group.",
+			Computed:            true,
+		},
+		"jamf_pro_smart_group_identifier": schema.StringAttribute{
+			MarkdownDescription: "Identifier for the Jamf Pro extension attribute.",
+			Computed:            true,
+		},
+		"tenant_actions": schema.ListNestedAttribute{
+			MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
 			Computed:            true,
 			NestedObject: schema.NestedAttributeObject{
 				Attributes: map[string]schema.Attribute{
@@ -141,7 +164,11 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 				},
 			},
 		},
-		"context": schema.ListNestedAttribute{
+		"tenant_severity": schema.StringAttribute{
+			MarkdownDescription: "Tenant-level severity override (Jamf-managed analytics).",
+			Computed:            true,
+		},
+		"context_item": schema.ListNestedAttribute{
 			MarkdownDescription: "Context entries for the analytic.",
 			Computed:            true,
 			NestedObject: schema.NestedAttributeObject{
@@ -154,7 +181,7 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 						MarkdownDescription: "The context entry type.",
 						Computed:            true,
 					},
-					"exprs": schema.ListAttribute{
+					"expressions": schema.ListAttribute{
 						MarkdownDescription: "Expressions for the context entry.",
 						Computed:            true,
 						ElementType:         types.StringType,
@@ -168,6 +195,14 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 		},
 		"updated": schema.StringAttribute{
 			MarkdownDescription: "The last-updated timestamp.",
+			Computed:            true,
+		},
+		"jamf": schema.BoolAttribute{
+			MarkdownDescription: "Indicates whether the analytic is Jamf-managed (read-only).",
+			Computed:            true,
+		},
+		"remediation": schema.StringAttribute{
+			MarkdownDescription: "Remediation guidance associated with the analytic (read-only).",
 			Computed:            true,
 		},
 	}
@@ -218,20 +253,32 @@ func (d *AnalyticsDataSource) Read(ctx context.Context, req datasource.ReadReque
 // analyticAPIToDataSourceItem maps an analyticAPIModel to AnalyticDataSourceItemModel.
 func analyticAPIToDataSourceItem(api analyticAPIModel, diags *diag.Diagnostics) AnalyticDataSourceItemModel {
 	item := AnalyticDataSourceItemModel{
-		ID:        types.StringValue(api.UUID),
-		Name:      types.StringValue(api.Name),
-		InputType: types.StringValue(api.InputType),
-		Filter:    types.StringValue(api.Filter),
-		Level:     types.Int64Value(api.Level),
-		Severity:  types.StringValue(api.Severity),
-		Created:   types.StringValue(api.Created),
-		Updated:   types.StringValue(api.Updated),
+		ID:         types.StringValue(api.UUID),
+		Name:       types.StringValue(api.Name),
+		SensorType: types.StringValue(api.InputType),
+		Predicate:  types.StringValue(api.Filter),
+		Level:      types.Int64Value(api.Level),
+		Severity:   types.StringValue(api.Severity),
+		Created:    types.StringValue(api.Created),
+		Updated:    types.StringValue(api.Updated),
+	}
+
+	if api.Label != "" {
+		item.Label = types.StringValue(api.Label)
+	} else {
+		item.Label = types.StringNull()
 	}
 
 	if api.Description != "" {
 		item.Description = types.StringValue(api.Description)
 	} else {
 		item.Description = types.StringNull()
+	}
+
+	if api.LongDescription != "" {
+		item.LongDescription = types.StringValue(api.LongDescription)
+	} else {
+		item.LongDescription = types.StringNull()
 	}
 
 	item.Tags = common.StringsToList(api.Tags)
@@ -244,64 +291,63 @@ func analyticAPIToDataSourceItem(api analyticAPIModel, diags *diag.Diagnostics) 
 		item.Actions = common.StringsToList(api.Actions)
 	}
 
-	// Analytic actions.
-	actionAttrTypes := map[string]attr.Type{
-		"name":       types.StringType,
-		"parameters": types.MapType{ElemType: types.StringType},
-	}
-	var actionVals []attr.Value
-	for _, a := range api.AnalyticActions {
-		paramVal := types.MapNull(types.StringType)
-		if a.Parameters != "" && a.Parameters != "{}" {
+	item.AddToJamfProSmartGroup = types.BoolValue(false)
+	item.JamfProSmartGroupIdentifier = types.StringNull()
+	for _, action := range api.AnalyticActions {
+		if action.Name != "SmartGroup" {
+			continue
+		}
+		item.AddToJamfProSmartGroup = types.BoolValue(true)
+		if action.Parameters != "" && action.Parameters != "{}" {
 			var paramMap map[string]string
-			if err := json.Unmarshal([]byte(a.Parameters), &paramMap); err != nil {
-				diags.AddError("Error decoding parameters",
-					fmt.Sprintf("Failed to parse parameters JSON %q: %s", a.Parameters, err.Error()))
-				return item
+			if err := json.Unmarshal([]byte(action.Parameters), &paramMap); err != nil {
+				diags.AddError("Error decoding Smart Group parameters",
+					fmt.Sprintf("Failed to parse parameters JSON %q: %s", action.Parameters, err.Error()))
+				break
 			}
-			if len(paramMap) > 0 {
-				paramElements := make(map[string]attr.Value, len(paramMap))
-				for k, v := range paramMap {
-					paramElements[k] = types.StringValue(v)
-				}
-				mapVal, d := types.MapValue(types.StringType, paramElements)
-				diags.Append(d...)
-				paramVal = mapVal
+			if id, ok := paramMap["id"]; ok && id != "" {
+				item.JamfProSmartGroupIdentifier = types.StringValue(id)
 			}
 		}
-		actionVals = append(actionVals, types.ObjectValueMust(actionAttrTypes, map[string]attr.Value{
-			"name":       types.StringValue(a.Name),
-			"parameters": paramVal,
-		}))
+		break
 	}
-	if len(actionVals) == 0 {
-		item.AnalyticActions = types.ListValueMust(types.ObjectType{AttrTypes: actionAttrTypes}, []attr.Value{})
+
+	item.TenantActions = apiActionsToList(api.TenantActions, true, diags)
+
+	if api.TenantSeverity != "" {
+		item.TenantSeverity = types.StringValue(api.TenantSeverity)
 	} else {
-		actionList, d := types.ListValue(types.ObjectType{AttrTypes: actionAttrTypes}, actionVals)
-		diags.Append(d...)
-		item.AnalyticActions = actionList
+		item.TenantSeverity = types.StringNull()
 	}
 
 	// Context.
 	ctxAttrTypes := map[string]attr.Type{
-		"name":  types.StringType,
-		"type":  types.StringType,
-		"exprs": types.ListType{ElemType: types.StringType},
+		"name":        types.StringType,
+		"type":        types.StringType,
+		"expressions": types.ListType{ElemType: types.StringType},
 	}
 	var ctxVals []attr.Value
 	for _, c := range api.Context {
 		ctxVals = append(ctxVals, types.ObjectValueMust(ctxAttrTypes, map[string]attr.Value{
-			"name":  types.StringValue(c.Name),
-			"type":  types.StringValue(c.Type),
-			"exprs": common.StringsToList(c.Exprs),
+			"name":        types.StringValue(c.Name),
+			"type":        types.StringValue(c.Type),
+			"expressions": common.StringsToList(c.Exprs),
 		}))
 	}
 	if len(ctxVals) == 0 {
-		item.Context = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
+		item.ContextItem = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
 	} else {
 		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
 		diags.Append(d...)
-		item.Context = ctxList
+		item.ContextItem = ctxList
+	}
+
+	item.Jamf = types.BoolValue(api.Jamf)
+
+	if api.Remediation != "" {
+		item.Remediation = types.StringValue(api.Remediation)
+	} else {
+		item.Remediation = types.StringNull()
 	}
 
 	return item
