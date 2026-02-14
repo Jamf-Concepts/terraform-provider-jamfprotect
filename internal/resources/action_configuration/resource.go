@@ -6,9 +6,6 @@ package action_configuration
 import (
 	"context"
 	"fmt"
-	"time"
-
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -19,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
 
@@ -567,156 +563,6 @@ func (r *ActionConfigResource) Configure(ctx context.Context, req resource.Confi
 		return
 	}
 	r.client = client
-}
-
-// ---------------------------------------------------------------------------
-// CRUD
-// ---------------------------------------------------------------------------
-
-func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data ActionConfigResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var result struct {
-		CreateActionConfigs actionConfigAPIModel `json:"createActionConfigs"`
-	}
-	if err := r.client.Query(ctx, createActionConfigMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error creating action config", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.CreateActionConfigs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tflog.Trace(ctx, "created action config", map[string]any{"id": data.ID.ValueString()})
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data ActionConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, readTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	var result struct {
-		GetActionConfigs *actionConfigAPIModel `json:"getActionConfigs"`
-	}
-	if err := r.client.Query(ctx, getActionConfigQuery, vars, &result); err != nil {
-		if common.IsNotFoundError(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-		resp.Diagnostics.AddError("Error reading action config", err.Error())
-		return
-	}
-	if result.GetActionConfigs == nil {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetActionConfigs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ActionConfigResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var state ActionConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.ID = state.ID
-
-	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	vars["id"] = data.ID.ValueString()
-
-	var result struct {
-		UpdateActionConfigs actionConfigAPIModel `json:"updateActionConfigs"`
-	}
-	if err := r.client.Query(ctx, updateActionConfigMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error updating action config", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.UpdateActionConfigs, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data ActionConfigResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	if err := r.client.Query(ctx, deleteActionConfigMutation, vars, nil); err != nil {
-		if common.IsNotFoundError(err) {
-			tflog.Trace(ctx, "action config already deleted", map[string]any{"id": data.ID.ValueString()})
-			return
-		}
-		resp.Diagnostics.AddError("Error deleting action config", err.Error())
-		return
-	}
-
-	tflog.Trace(ctx, "deleted action config", map[string]any{"id": data.ID.ValueString()})
 }
 
 func (r *ActionConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
