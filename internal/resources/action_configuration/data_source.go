@@ -35,7 +35,7 @@ type ActionConfigsDataSourceModel struct {
 
 // ActionConfigDataSourceItemModel maps a single action config item.
 // Note: The list query only returns basic fields (id, name, description, created, updated).
-// Full alertConfig details require the individual getActionConfigs query.
+// Full data_collection and endpoint details require the individual getActionConfigs query.
 type ActionConfigDataSourceItemModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -45,12 +45,12 @@ type ActionConfigDataSourceItemModel struct {
 }
 
 func (d *ActionConfigsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_action_configs"
+	resp.TypeName = req.ProviderTypeName + "_action_configurations"
 }
 
 func (d *ActionConfigsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the `jamfprotect_action_config` resource to read full details including `alert_config`.",
+		MarkdownDescription: "Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the `jamfprotect_action_configuration` resource to read full details including `data_collection` and endpoints.",
 		Attributes: map[string]schema.Attribute{
 			"action_configs": schema.ListNestedAttribute{
 				MarkdownDescription: "The list of action configurations.",
