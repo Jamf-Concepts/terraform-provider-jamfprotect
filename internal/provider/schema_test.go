@@ -682,7 +682,7 @@ func TestTelemetryV2ResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "log_files", "events"}
+	requiredAttrs := []string{"name", "log_file_path"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -719,7 +719,18 @@ func TestTelemetryV2ResourceSchema(t *testing.T) {
 	}
 
 	// Boolean attrs should be optional + computed (have defaults).
-	for _, attr := range []string{"log_file_collection", "performance_metrics", "file_hashing"} {
+	for _, attr := range []string{
+		"collect_diagnostic_and_crash_reports",
+		"collect_performance_metrics",
+		"file_hashes",
+		"log_applications_and_processes",
+		"log_access_and_authentication",
+		"log_users_and_groups",
+		"log_persistence",
+		"log_hardware_and_software",
+		"log_apple_security",
+		"log_system",
+	} {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
 			t.Errorf("expected attribute %q in telemetry v2 schema", attr)
@@ -958,12 +969,12 @@ func TestTelemetriesV2DataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	telemetriesAttr, ok := resp.Schema.Attributes["telemetries_v2"]
+	telemetriesAttr, ok := resp.Schema.Attributes["telemetries"]
 	if !ok {
-		t.Fatal("expected attribute 'telemetries_v2' in data source schema")
+		t.Fatal("expected attribute 'telemetries' in data source schema")
 	}
 	if !telemetriesAttr.IsComputed() {
-		t.Error("expected 'telemetries_v2' to be computed")
+		t.Error("expected 'telemetries' to be computed")
 	}
 }
 
@@ -974,8 +985,8 @@ func TestTelemetriesV2DataSourceMetadata(t *testing.T) {
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_telemetries_v2" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetries_v2", resp.TypeName)
+	if resp.TypeName != "jamfprotect_telemetries" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_telemetries", resp.TypeName)
 	}
 }
 
