@@ -34,30 +34,29 @@ output "plan_names" {
 
 Read-Only:
 
-- `action_configs` (String) The ID of the action configuration associated with this plan.
+- `action_configuration` (String) The ID of the action configuration associated with this plan.
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan.
 - `analytic_sets` (Set of String) Analytic set UUIDs included in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether auto-updates are enabled for endpoints using this plan.
 - `communications_protocol` (String) The communications protocol used by the plan.
+- `compliance_baseline_reporting` (Boolean) Whether compliance baseline reporting is enabled.
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan.
 - `exception_sets` (List of String) A list of exception set IDs associated with this plan.
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
-- `info_sync` (Attributes) Info sync configuration for the plan. (see [below for nested schema](#nestedatt--plans--info_sync))
 - `log_level` (String) The log level for the plan.
 - `name` (String) The name of the plan.
 - `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
+- `report_architecture` (Boolean) Whether device architecture reporting is enabled.
+- `report_hostname` (Boolean) Whether device hostname reporting is enabled.
+- `report_kernel_version` (Boolean) Whether kernel version reporting is enabled.
+- `report_memory_size` (Boolean) Whether memory size reporting is enabled.
+- `report_model_name` (Boolean) Whether model name reporting is enabled.
+- `report_os_version` (Boolean) Whether OS version reporting is enabled.
+- `report_serial_number` (Boolean) Whether serial number reporting is enabled.
+- `reporting_interval` (Number) The reporting interval in minutes.
 - `tamper_prevention` (String) Tamper Prevention setting for the plan.
-- `telemetry` (String) The ID of the legacy telemetry configuration.
-- `telemetry_v2` (String) The ID of the v2 telemetry configuration.
+- `telemetry` (String) The ID of the telemetry configuration.
 - `updated` (String) The last-updated timestamp.
-
-<a id="nestedatt--plans--info_sync"></a>
-### Nested Schema for `plans.info_sync`
-
-Read-Only:
-
-- `attrs` (List of String) A list of attribute names to sync.
-- `insights_sync_interval` (Number) The interval in seconds for insights data synchronization.

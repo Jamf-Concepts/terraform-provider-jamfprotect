@@ -9,7 +9,6 @@ import (
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -44,14 +43,21 @@ type PlanDataSourceItemModel struct {
 	Description              types.String `tfsdk:"description"`
 	LogLevel                 types.String `tfsdk:"log_level"`
 	AutoUpdate               types.Bool   `tfsdk:"auto_update"`
-	ActionConfigs            types.String `tfsdk:"action_configs"`
+	ActionConfiguration      types.String `tfsdk:"action_configuration"`
 	ExceptionSets            types.List   `tfsdk:"exception_sets"`
 	Telemetry                types.String `tfsdk:"telemetry"`
-	TelemetryV2              types.String `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set    `tfsdk:"analytic_sets"`
 	CommunicationsProtocol   types.String `tfsdk:"communications_protocol"`
-	InfoSync                 types.Object `tfsdk:"info_sync"`
+	ReportingInterval        types.Int64  `tfsdk:"reporting_interval"`
+	ReportArchitecture       types.Bool   `tfsdk:"report_architecture"`
+	ReportHostname           types.Bool   `tfsdk:"report_hostname"`
+	ReportKernelVersion      types.Bool   `tfsdk:"report_kernel_version"`
+	ReportMemorySize         types.Bool   `tfsdk:"report_memory_size"`
+	ReportModelName          types.Bool   `tfsdk:"report_model_name"`
+	ReportSerialNumber       types.Bool   `tfsdk:"report_serial_number"`
+	ComplianceBaseline       types.Bool   `tfsdk:"compliance_baseline_reporting"`
+	ReportOSVersion          types.Bool   `tfsdk:"report_os_version"`
 	EndpointThreatPrevention types.String `tfsdk:"endpoint_threat_prevention"`
 	AdvancedThreatControls   types.String `tfsdk:"advanced_threat_controls"`
 	TamperPrevention         types.String `tfsdk:"tamper_prevention"`
@@ -104,7 +110,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Whether auto-updates are enabled for endpoints using this plan.",
 			Computed:            true,
 		},
-		"action_configs": schema.StringAttribute{
+		"action_configuration": schema.StringAttribute{
 			MarkdownDescription: "The ID of the action configuration associated with this plan.",
 			Computed:            true,
 		},
@@ -114,11 +120,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			ElementType:         types.StringType,
 		},
 		"telemetry": schema.StringAttribute{
-			MarkdownDescription: "The ID of the legacy telemetry configuration.",
-			Computed:            true,
-		},
-		"telemetry_v2": schema.StringAttribute{
-			MarkdownDescription: "The ID of the v2 telemetry configuration.",
+			MarkdownDescription: "The ID of the telemetry configuration.",
 			Computed:            true,
 		},
 		"removable_storage_control_set": schema.StringAttribute{
@@ -134,20 +136,41 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The communications protocol used by the plan.",
 			Computed:            true,
 		},
-		"info_sync": schema.SingleNestedAttribute{
-			MarkdownDescription: "Info sync configuration for the plan.",
+		"reporting_interval": schema.Int64Attribute{
+			MarkdownDescription: "The reporting interval in minutes.",
 			Computed:            true,
-			Attributes: map[string]schema.Attribute{
-				"attrs": schema.ListAttribute{
-					MarkdownDescription: "A list of attribute names to sync.",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
-				"insights_sync_interval": schema.Int64Attribute{
-					MarkdownDescription: "The interval in seconds for insights data synchronization.",
-					Computed:            true,
-				},
-			},
+		},
+		"report_architecture": schema.BoolAttribute{
+			MarkdownDescription: "Whether device architecture reporting is enabled.",
+			Computed:            true,
+		},
+		"report_hostname": schema.BoolAttribute{
+			MarkdownDescription: "Whether device hostname reporting is enabled.",
+			Computed:            true,
+		},
+		"report_kernel_version": schema.BoolAttribute{
+			MarkdownDescription: "Whether kernel version reporting is enabled.",
+			Computed:            true,
+		},
+		"report_memory_size": schema.BoolAttribute{
+			MarkdownDescription: "Whether memory size reporting is enabled.",
+			Computed:            true,
+		},
+		"report_model_name": schema.BoolAttribute{
+			MarkdownDescription: "Whether model name reporting is enabled.",
+			Computed:            true,
+		},
+		"report_serial_number": schema.BoolAttribute{
+			MarkdownDescription: "Whether serial number reporting is enabled.",
+			Computed:            true,
+		},
+		"compliance_baseline_reporting": schema.BoolAttribute{
+			MarkdownDescription: "Whether compliance baseline reporting is enabled.",
+			Computed:            true,
+		},
+		"report_os_version": schema.BoolAttribute{
+			MarkdownDescription: "Whether OS version reporting is enabled.",
+			Computed:            true,
 		},
 		"endpoint_threat_prevention": schema.StringAttribute{
 			MarkdownDescription: "Endpoint threat prevention setting for the plan.",
@@ -233,11 +256,11 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		item.LogLevel = types.StringNull()
 	}
 
-	// Action configs.
+	// Action configuration.
 	if api.ActionConfigs != nil {
-		item.ActionConfigs = types.StringValue(api.ActionConfigs.ID)
+		item.ActionConfiguration = types.StringValue(api.ActionConfigs.ID)
 	} else {
-		item.ActionConfigs = types.StringNull()
+		item.ActionConfiguration = types.StringNull()
 	}
 
 	// Exception sets.
@@ -251,17 +274,11 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		item.ExceptionSets = types.ListNull(types.StringType)
 	}
 
-	// Telemetry references.
-	if api.Telemetry != nil && api.Telemetry.ID != "" {
-		item.Telemetry = types.StringValue(api.Telemetry.ID)
+	// Telemetry reference.
+	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
+		item.Telemetry = types.StringValue(api.TelemetryV2.ID)
 	} else {
 		item.Telemetry = types.StringNull()
-	}
-
-	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
-		item.TelemetryV2 = types.StringValue(api.TelemetryV2.ID)
-	} else {
-		item.TelemetryV2 = types.StringNull()
 	}
 
 	// USB control set.
@@ -290,19 +307,8 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		item.CommunicationsProtocol = types.StringNull()
 	}
 
-	// Info sync.
-	infoSyncAttrTypes := map[string]attr.Type{
-		"attrs":                  types.ListType{ElemType: types.StringType},
-		"insights_sync_interval": types.Int64Type,
-	}
-	if api.InfoSync != nil {
-		item.InfoSync = types.ObjectValueMust(infoSyncAttrTypes, map[string]attr.Value{
-			"attrs":                  common.StringsToList(api.InfoSync.Attrs),
-			"insights_sync_interval": types.Int64Value(api.InfoSync.InsightsSyncInterval),
-		})
-	} else {
-		item.InfoSync = types.ObjectNull(infoSyncAttrTypes)
-	}
+	// Info sync reporting flags.
+	setReportingFlagsDataSource(&item, api.InfoSync)
 
 	// Endpoint threat prevention setting.
 	if api.SignaturesFeedConfig != nil {
@@ -319,4 +325,37 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 	item.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, nil)
 
 	return item
+}
+
+func setReportingFlagsDataSource(item *PlanDataSourceItemModel, infoSync *jamfprotect.PlanInfoSync) {
+	if infoSync == nil {
+		item.ReportingInterval = types.Int64Null()
+		item.ReportArchitecture = types.BoolValue(false)
+		item.ReportHostname = types.BoolValue(false)
+		item.ReportKernelVersion = types.BoolValue(false)
+		item.ReportMemorySize = types.BoolValue(false)
+		item.ReportModelName = types.BoolValue(false)
+		item.ReportSerialNumber = types.BoolValue(false)
+		item.ComplianceBaseline = types.BoolValue(false)
+		item.ReportOSVersion = types.BoolValue(false)
+		return
+	}
+
+	item.ReportingInterval = types.Int64Value(infoSync.InsightsSyncInterval / 60)
+
+	attrSet := map[string]struct{}{}
+	for _, attr := range infoSync.Attrs {
+		attrSet[attr] = struct{}{}
+	}
+
+	item.ReportArchitecture = types.BoolValue(hasAttr(attrSet, "arch"))
+	item.ReportHostname = types.BoolValue(hasAttr(attrSet, "hostName"))
+	item.ReportKernelVersion = types.BoolValue(hasAttr(attrSet, "kernelVersion"))
+	item.ReportMemorySize = types.BoolValue(hasAttr(attrSet, "memorySize"))
+	item.ReportModelName = types.BoolValue(hasAttr(attrSet, "modelName"))
+	item.ReportSerialNumber = types.BoolValue(hasAttr(attrSet, "serial"))
+	item.ComplianceBaseline = types.BoolValue(hasAttr(attrSet, "insights"))
+	item.ReportOSVersion = types.BoolValue(
+		hasAttr(attrSet, "osMajor") || hasAttr(attrSet, "osMinor") || hasAttr(attrSet, "osPatch") || hasAttr(attrSet, "osString"),
+	)
 }

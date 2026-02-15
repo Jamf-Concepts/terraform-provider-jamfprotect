@@ -378,7 +378,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "action_configs", "info_sync"}
+	requiredAttrs := []string{"name", "action_configuration", "reporting_interval"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -402,7 +402,26 @@ func TestPlanResourceSchema(t *testing.T) {
 		}
 	}
 
-	optionalAttrs := []string{"description", "log_level", "communications_protocol", "endpoint_threat_prevention", "advanced_threat_controls", "tamper_prevention", "exception_sets", "telemetry", "telemetry", "removable_storage_control_set", "analytic_sets"}
+	optionalAttrs := []string{
+		"description",
+		"log_level",
+		"communications_protocol",
+		"endpoint_threat_prevention",
+		"advanced_threat_controls",
+		"tamper_prevention",
+		"exception_sets",
+		"telemetry",
+		"removable_storage_control_set",
+		"analytic_sets",
+		"report_architecture",
+		"report_hostname",
+		"report_kernel_version",
+		"report_memory_size",
+		"report_model_name",
+		"report_serial_number",
+		"compliance_baseline_reporting",
+		"report_os_version",
+	}
 	for _, attr := range optionalAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -436,6 +455,15 @@ func TestPlanResourceSchema(t *testing.T) {
 	}
 	if !communicationsProtocol.IsComputed() {
 		t.Error("expected 'communications_protocol' to be computed (has default)")
+	}
+
+	// telemetry should be optional.
+	telemetry, ok := resp.Schema.Attributes["telemetry"]
+	if !ok {
+		t.Fatal("expected attribute 'telemetry' in schema")
+	}
+	if !telemetry.IsOptional() {
+		t.Error("expected 'telemetry' to be optional")
 	}
 
 	// auto_update should be optional + computed (has default).

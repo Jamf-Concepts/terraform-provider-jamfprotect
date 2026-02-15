@@ -16,14 +16,21 @@ type PlanResourceModel struct {
 	Description              types.String   `tfsdk:"description"`
 	LogLevel                 types.String   `tfsdk:"log_level"`
 	AutoUpdate               types.Bool     `tfsdk:"auto_update"`
-	ActionConfigs            types.String   `tfsdk:"action_configs"`
+	ActionConfiguration      types.String   `tfsdk:"action_configuration"`
 	ExceptionSets            types.List     `tfsdk:"exception_sets"`
 	Telemetry                types.String   `tfsdk:"telemetry"`
-	TelemetryV2              types.String   `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String   `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set      `tfsdk:"analytic_sets"`
 	CommunicationsProtocol   types.String   `tfsdk:"communications_protocol"`
-	InfoSync                 types.Object   `tfsdk:"info_sync"`
+	ReportingInterval        types.Int64    `tfsdk:"reporting_interval"`
+	ReportArchitecture       types.Bool     `tfsdk:"report_architecture"`
+	ReportHostname           types.Bool     `tfsdk:"report_hostname"`
+	ReportKernelVersion      types.Bool     `tfsdk:"report_kernel_version"`
+	ReportMemorySize         types.Bool     `tfsdk:"report_memory_size"`
+	ReportModelName          types.Bool     `tfsdk:"report_model_name"`
+	ReportSerialNumber       types.Bool     `tfsdk:"report_serial_number"`
+	ComplianceBaseline       types.Bool     `tfsdk:"compliance_baseline_reporting"`
+	ReportOSVersion          types.Bool     `tfsdk:"report_os_version"`
 	EndpointThreatPrevention types.String   `tfsdk:"endpoint_threat_prevention"`
 	AdvancedThreatControls   types.String   `tfsdk:"advanced_threat_controls"`
 	TamperPrevention         types.String   `tfsdk:"tamper_prevention"`
