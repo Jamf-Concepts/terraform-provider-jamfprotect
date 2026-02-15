@@ -18,24 +18,24 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
-var _ datasource.DataSource = &PreventListsDataSource{}
+var _ datasource.DataSource = &CustomPreventListsDataSource{}
 
-func NewPreventListsDataSource() datasource.DataSource {
-	return &PreventListsDataSource{}
+func NewCustomPreventListsDataSource() datasource.DataSource {
+	return &CustomPreventListsDataSource{}
 }
 
-// PreventListsDataSource lists all custom prevent lists in Jamf Protect.
-type PreventListsDataSource struct {
+// CustomPreventListsDataSource lists all custom prevent lists in Jamf Protect.
+type CustomPreventListsDataSource struct {
 	service *jamfprotect.Service
 }
 
-// PreventListsDataSourceModel maps the data source schema.
-type PreventListsDataSourceModel struct {
-	PreventLists []PreventListDataSourceItemModel `tfsdk:"custom_prevent_lists"`
+// CustomPreventListsDataSourceModel maps the data source schema.
+type CustomPreventListsDataSourceModel struct {
+	CustomPreventLists []CustomPreventListDataSourceItemModel `tfsdk:"custom_prevent_lists"`
 }
 
-// PreventListDataSourceItemModel maps a single prevent list item (read-only, no timeouts).
-type PreventListDataSourceItemModel struct {
+// CustomPreventListDataSourceItemModel maps a single prevent list item (read-only, no timeouts).
+type CustomPreventListDataSourceItemModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
@@ -46,11 +46,11 @@ type PreventListDataSourceItemModel struct {
 	Created     types.String `tfsdk:"created"`
 }
 
-func (d *PreventListsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *CustomPreventListsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_custom_prevent_lists"
 }
 
-func (d *PreventListsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *CustomPreventListsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of all custom prevent lists in Jamf Protect.",
 		Attributes: map[string]schema.Attribute{
@@ -100,7 +100,7 @@ func (d *PreventListsDataSource) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func (d *PreventListsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *CustomPreventListsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -113,8 +113,8 @@ func (d *PreventListsDataSource) Configure(ctx context.Context, req datasource.C
 	d.service = jamfprotect.NewService(client)
 }
 
-func (d *PreventListsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data PreventListsDataSourceModel
+func (d *CustomPreventListsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data CustomPreventListsDataSourceModel
 
 	allItems, err := d.service.ListCustomPreventLists(ctx)
 	if err != nil {
@@ -124,9 +124,9 @@ func (d *PreventListsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Trace(ctx, "listed prevent lists", map[string]any{"count": len(allItems)})
 
-	items := make([]PreventListDataSourceItemModel, 0, len(allItems))
+	items := make([]CustomPreventListDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
-		item := PreventListDataSourceItemModel{
+		item := CustomPreventListDataSourceItemModel{
 			ID:         types.StringValue(api.ID),
 			Name:       types.StringValue(api.Name),
 			Type:       types.StringValue(api.Type),
@@ -142,7 +142,7 @@ func (d *PreventListsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		}
 		items = append(items, item)
 	}
-	data.PreventLists = items
+	data.CustomPreventLists = items
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
