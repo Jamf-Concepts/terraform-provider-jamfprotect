@@ -7,110 +7,110 @@ import "context"
 
 const removableStorageControlSetFields = `
 fragment USBControlSetFields on USBControlSet {
-  id
-  name
-  description
-  defaultMountAction
-  defaultMessageAction
-  rules {
-    mountAction
-    messageAction
-    type
-    ... on VendorRule {
-      vendors
-      applyTo
-    }
-    ... on SerialRule {
-      serials
-      applyTo
-    }
-    ... on ProductRule {
-      products {
-        vendor
-        product
-      }
-      applyTo
-    }
-  }
-  plans {
-    id
-    name
-  }
-  created
-  updated
+	id
+	name
+	description
+	defaultMountAction
+	defaultMessageAction
+	rules {
+		mountAction
+		messageAction
+		type
+		... on VendorRule {
+			vendors
+			applyTo
+		}
+		... on SerialRule {
+			serials
+			applyTo
+		}
+		... on ProductRule {
+			products {
+			vendor
+			product
+		}
+			applyTo
+		}
+	}
+	plans {
+		id
+		name
+	}
+	created
+	updated
 }
 `
 
 const createRemovableStorageControlSetMutation = `
 mutation createUSBControlSet(
-  $name: String!,
-  $description: String,
-  $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-  $defaultMessageAction: String,
-  $rules: [USBControlRuleInput!]!
+	$name: String!,
+	$description: String,
+	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
+	$defaultMessageAction: String,
+	$rules: [USBControlRuleInput!]!
 ) {
-  createUSBControlSet(input: {
-    name: $name,
-    description: $description,
-    defaultMountAction: $defaultMountAction,
-    defaultMessageAction: $defaultMessageAction,
-    rules: $rules
-  }) {
-    ...USBControlSetFields
-  }
+	createUSBControlSet(input: {
+		name: $name,
+		description: $description,
+		defaultMountAction: $defaultMountAction,
+		defaultMessageAction: $defaultMessageAction,
+		rules: $rules
+	}) {
+		...USBControlSetFields
+	}
 }
 ` + removableStorageControlSetFields
 
 const getRemovableStorageControlSetQuery = `
 query getUSBControlSet($id: ID!) {
-  getUSBControlSet(id: $id) {
-    ...USBControlSetFields
-  }
+	getUSBControlSet(id: $id) {
+		...USBControlSetFields
+	}
 }
 ` + removableStorageControlSetFields
 
 const updateRemovableStorageControlSetMutation = `
 mutation updateUSBControlSet(
-  $id: ID!,
-  $name: String!,
-  $description: String,
-  $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-  $defaultMessageAction: String,
-  $rules: [USBControlRuleInput!]!
+	$id: ID!,
+	$name: String!,
+	$description: String,
+	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
+	$defaultMessageAction: String,
+	$rules: [USBControlRuleInput!]!
 ) {
-  updateUSBControlSet(id: $id, input: {
-    name: $name,
-    description: $description,
-    defaultMountAction: $defaultMountAction,
-    defaultMessageAction: $defaultMessageAction,
-    rules: $rules
-  }) {
-    ...USBControlSetFields
-  }
+	updateUSBControlSet(id: $id, input: {
+		name: $name,
+		description: $description,
+		defaultMountAction: $defaultMountAction,
+		defaultMessageAction: $defaultMessageAction,
+		rules: $rules
+	}) {
+		...USBControlSetFields
+	}
 }
 ` + removableStorageControlSetFields
 
 const deleteRemovableStorageControlSetMutation = `
 mutation deleteUSBControlSet($id: ID!) {
-  deleteUSBControlSet(id: $id) {
-    id
-  }
+	deleteUSBControlSet(id: $id) {
+		id
+	}
 }
 `
 
 const listRemovableStorageControlSetsQuery = `
 query listUSBControlSets($nextToken: String, $direction: OrderDirection!, $field: USBControlOrderField!) {
-  listUSBControlSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-  ) {
-    items {
-      ...USBControlSetFields
-    }
-    pageInfo {
-      next
-      total
-    }
-  }
+	listUSBControlSets(
+		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+	) {
+		items {
+			...USBControlSetFields
+		}
+		pageInfo {
+			next
+			total
+		}
+	}
 }
 ` + removableStorageControlSetFields
 
