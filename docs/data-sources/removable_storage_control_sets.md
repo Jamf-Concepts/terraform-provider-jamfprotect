@@ -3,12 +3,12 @@
 page_title: "jamfprotect_removable_storage_control_sets Data Source - jamfprotect"
 subcategory: ""
 description: |-
-  Retrieves a list of all USB control sets in Jamf Protect.
+  Retrieves a list of all removable storage control sets in Jamf Protect.
 ---
 
 # jamfprotect_removable_storage_control_sets (Data Source)
 
-Retrieves a list of all USB control sets in Jamf Protect.
+Retrieves a list of all removable storage control sets in Jamf Protect.
 
 
 
@@ -17,7 +17,7 @@ Retrieves a list of all USB control sets in Jamf Protect.
 
 ### Read-Only
 
-- `removable_storage_control_sets` (Attributes List) The list of USB control sets. (see [below for nested schema](#nestedatt--removable_storage_control_sets))
+- `removable_storage_control_sets` (Attributes List) The list of removable storage control sets. (see [below for nested schema](#nestedatt--removable_storage_control_sets))
 
 <a id="nestedatt--removable_storage_control_sets"></a>
 ### Nested Schema for `removable_storage_control_sets`
@@ -25,12 +25,12 @@ Retrieves a list of all USB control sets in Jamf Protect.
 Read-Only:
 
 - `created` (String) The creation timestamp.
-- `default_message_action` (String) The default message action for USB devices.
-- `default_mount_action` (String) The default mount action for USB devices.
-- `description` (String) A description of the USB control set.
-- `id` (String) The unique identifier of the USB control set.
-- `name` (String) The name of the USB control set.
-- `rules` (Attributes List) The USB control rules. (see [below for nested schema](#nestedatt--removable_storage_control_sets--rules))
+- `default_message_action` (String) The default message action for removable storage devices.
+- `default_mount_action` (String) The default mount action for removable storage devices.
+- `description` (String) A description of the removable storage control set.
+- `id` (String) The unique identifier of the removable storage control set.
+- `name` (String) The name of the removable storage control set.
+- `rules` (Attributes List) The removable storage control rules. (see [below for nested schema](#nestedatt--removable_storage_control_sets--rules))
 - `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--removable_storage_control_sets--rules"></a>

@@ -15,88 +15,89 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
-var _ datasource.DataSource = &USBControlSetsDataSource{}
+var _ datasource.DataSource = &RemovableStorageControlSetsDataSource{}
 
-func NewUSBControlSetsDataSource() datasource.DataSource {
-	return &USBControlSetsDataSource{}
+func NewRemovableStorageControlSetsDataSource() datasource.DataSource {
+	return &RemovableStorageControlSetsDataSource{}
 }
 
-// USBControlSetsDataSource lists all USB control sets in Jamf Protect.
-type USBControlSetsDataSource struct {
-	client *client.Client
+// RemovableStorageControlSetsDataSource lists all removable storage control sets in Jamf Protect.
+type RemovableStorageControlSetsDataSource struct {
+	service *jamfprotect.Service
 }
 
-// USBControlSetsDataSourceModel maps the data source schema.
-type USBControlSetsDataSourceModel struct {
-	USBControlSets []USBControlSetDataSourceItemModel `tfsdk:"removable_storage_control_sets"`
+// RemovableStorageControlSetsDataSourceModel maps the data source schema.
+type RemovableStorageControlSetsDataSourceModel struct {
+	RemovableStorageControlSets []RemovableStorageControlSetDataSourceItemModel `tfsdk:"removable_storage_control_sets"`
 }
 
-// USBControlSetDataSourceItemModel maps a single USB control set item (read-only, no timeouts).
-type USBControlSetDataSourceItemModel struct {
-	ID                   types.String                 `tfsdk:"id"`
-	Name                 types.String                 `tfsdk:"name"`
-	Description          types.String                 `tfsdk:"description"`
-	DefaultMountAction   types.String                 `tfsdk:"default_mount_action"`
-	DefaultMessageAction types.String                 `tfsdk:"default_message_action"`
-	Rules                []USBRuleDataSourceItemModel `tfsdk:"rules"`
-	Created              types.String                 `tfsdk:"created"`
-	Updated              types.String                 `tfsdk:"updated"`
+// RemovableStorageControlSetDataSourceItemModel maps a single removable storage control set item (read-only, no timeouts).
+type RemovableStorageControlSetDataSourceItemModel struct {
+	ID                   types.String                              `tfsdk:"id"`
+	Name                 types.String                              `tfsdk:"name"`
+	Description          types.String                              `tfsdk:"description"`
+	DefaultMountAction   types.String                              `tfsdk:"default_mount_action"`
+	DefaultMessageAction types.String                              `tfsdk:"default_message_action"`
+	Rules                []RemovableStorageRuleDataSourceItemModel `tfsdk:"rules"`
+	Created              types.String                              `tfsdk:"created"`
+	Updated              types.String                              `tfsdk:"updated"`
 }
 
-// USBRuleDataSourceItemModel represents a single rule in the USB control set (read-only).
-type USBRuleDataSourceItemModel struct {
-	Type          types.String                    `tfsdk:"type"`
-	MountAction   types.String                    `tfsdk:"mount_action"`
-	MessageAction types.String                    `tfsdk:"message_action"`
-	ApplyTo       types.String                    `tfsdk:"apply_to"`
-	Vendors       types.List                      `tfsdk:"vendors"`
-	Serials       types.List                      `tfsdk:"serials"`
-	Products      []USBProductDataSourceItemModel `tfsdk:"products"`
+// RemovableStorageRuleDataSourceItemModel represents a single rule in the removable storage control set (read-only).
+type RemovableStorageRuleDataSourceItemModel struct {
+	Type          types.String                                 `tfsdk:"type"`
+	MountAction   types.String                                 `tfsdk:"mount_action"`
+	MessageAction types.String                                 `tfsdk:"message_action"`
+	ApplyTo       types.String                                 `tfsdk:"apply_to"`
+	Vendors       types.List                                   `tfsdk:"vendors"`
+	Serials       types.List                                   `tfsdk:"serials"`
+	Products      []RemovableStorageProductDataSourceItemModel `tfsdk:"products"`
 }
 
-// USBProductDataSourceItemModel represents a vendor+product pair (read-only).
-type USBProductDataSourceItemModel struct {
+// RemovableStorageProductDataSourceItemModel represents a vendor+product pair (read-only).
+type RemovableStorageProductDataSourceItemModel struct {
 	Vendor  types.String `tfsdk:"vendor"`
 	Product types.String `tfsdk:"product"`
 }
 
-func (d *USBControlSetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *RemovableStorageControlSetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_sets"
 }
 
-func (d *USBControlSetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves a list of all USB control sets in Jamf Protect.",
+		MarkdownDescription: "Retrieves a list of all removable storage control sets in Jamf Protect.",
 		Attributes: map[string]schema.Attribute{
 			"removable_storage_control_sets": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of USB control sets.",
+				MarkdownDescription: "The list of removable storage control sets.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							MarkdownDescription: "The unique identifier of the USB control set.",
+							MarkdownDescription: "The unique identifier of the removable storage control set.",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							MarkdownDescription: "The name of the USB control set.",
+							MarkdownDescription: "The name of the removable storage control set.",
 							Computed:            true,
 						},
 						"description": schema.StringAttribute{
-							MarkdownDescription: "A description of the USB control set.",
+							MarkdownDescription: "A description of the removable storage control set.",
 							Computed:            true,
 						},
 						"default_mount_action": schema.StringAttribute{
-							MarkdownDescription: "The default mount action for USB devices.",
+							MarkdownDescription: "The default mount action for removable storage devices.",
 							Computed:            true,
 						},
 						"default_message_action": schema.StringAttribute{
-							MarkdownDescription: "The default message action for USB devices.",
+							MarkdownDescription: "The default message action for removable storage devices.",
 							Computed:            true,
 						},
 						"rules": schema.ListNestedAttribute{
-							MarkdownDescription: "The USB control rules.",
+							MarkdownDescription: "The removable storage control rules.",
 							Computed:            true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
@@ -160,7 +161,7 @@ func (d *USBControlSetsDataSource) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *USBControlSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *RemovableStorageControlSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -170,48 +171,23 @@ func (d *USBControlSetsDataSource) Configure(ctx context.Context, req datasource
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
-func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data USBControlSetsDataSourceModel
+func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data RemovableStorageControlSetsDataSourceModel
 
-	var allItems []usbControlSetAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListUSBControlSets struct {
-				Items    []usbControlSetAPIModel `graphql:"items"`
-				PageInfo common.PageInfo         `graphql:"pageInfo"`
-			} `graphql:"listUSBControlSets"`
-		}
-		if err := d.client.Query(ctx, listUSBControlSetsQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing USB control sets", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListUSBControlSets.Items...)
-
-		if result.ListUSBControlSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListUSBControlSets.PageInfo.Next
+	allItems, err := d.service.ListRemovableStorageControlSets(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing removable storage control sets", err.Error())
+		return
 	}
 
-	tflog.Trace(ctx, "listed USB control sets", map[string]any{"count": len(allItems)})
+	tflog.Trace(ctx, "listed removable storage control sets", map[string]any{"count": len(allItems)})
 
-	items := make([]USBControlSetDataSourceItemModel, 0, len(allItems))
+	items := make([]RemovableStorageControlSetDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
-		item := USBControlSetDataSourceItemModel{
+		item := RemovableStorageControlSetDataSourceItemModel{
 			ID:                 types.StringValue(api.ID),
 			Name:               types.StringValue(api.Name),
 			DefaultMountAction: types.StringValue(api.DefaultMountAction),
@@ -231,10 +207,11 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 			item.DefaultMessageAction = types.StringNull()
 		}
 
-		rules := make([]USBRuleDataSourceItemModel, 0, len(api.Rules))
+		rules := make([]RemovableStorageRuleDataSourceItemModel, 0, len(api.Rules))
 		for _, apiRule := range api.Rules {
-			rule := USBRuleDataSourceItemModel{
-				Type:        types.StringValue(normalizeUSBRuleType(apiRule.Type)),
+			ruleType := normalizeRemovableStorageRuleType(apiRule.Type)
+			rule := RemovableStorageRuleDataSourceItemModel{
+				Type:        types.StringValue(ruleType),
 				MountAction: types.StringValue(apiRule.MountAction),
 			}
 
@@ -244,52 +221,36 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 				rule.MessageAction = types.StringNull()
 			}
 
-			applyTo := ""
-			switch normalizeUSBRuleType(apiRule.Type) {
+			if apiRule.ApplyTo != "" {
+				rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
+			} else {
+				rule.ApplyTo = types.StringNull()
+			}
+
+			switch ruleType {
 			case "Vendor":
-				if apiRule.VendorRule != nil {
-					applyTo = apiRule.VendorRule.ApplyTo
-					rule.Vendors = common.StringsToList(apiRule.VendorRule.Vendors)
-				} else {
-					rule.Vendors = types.ListNull(types.StringType)
-				}
+				rule.Vendors = common.StringsToList(apiRule.Vendors)
 				rule.Serials = types.ListNull(types.StringType)
+				rule.Products = nil
 			case "Serial":
-				if apiRule.SerialRule != nil {
-					applyTo = apiRule.SerialRule.ApplyTo
-					rule.Serials = common.StringsToList(apiRule.SerialRule.Serials)
-				} else {
-					rule.Serials = types.ListNull(types.StringType)
-				}
+				rule.Serials = common.StringsToList(apiRule.Serials)
 				rule.Vendors = types.ListNull(types.StringType)
+				rule.Products = nil
 			case "Product":
-				if apiRule.ProductRule != nil {
-					applyTo = apiRule.ProductRule.ApplyTo
-					products := make([]USBProductDataSourceItemModel, 0, len(apiRule.ProductRule.Products))
-					for _, p := range apiRule.ProductRule.Products {
-						products = append(products, USBProductDataSourceItemModel{
-							Vendor:  types.StringValue(p.Vendor),
-							Product: types.StringValue(p.Product),
-						})
-					}
-					rule.Products = products
-				} else {
-					rule.Products = nil
+				products := make([]RemovableStorageProductDataSourceItemModel, 0, len(apiRule.Products))
+				for _, p := range apiRule.Products {
+					products = append(products, RemovableStorageProductDataSourceItemModel{
+						Vendor:  types.StringValue(p.Vendor),
+						Product: types.StringValue(p.Product),
+					})
 				}
-				rule.Vendors = types.ListNull(types.StringType)
-				rule.Serials = types.ListNull(types.StringType)
-			case "Encryption":
+				rule.Products = products
 				rule.Vendors = types.ListNull(types.StringType)
 				rule.Serials = types.ListNull(types.StringType)
 			default:
 				rule.Vendors = types.ListNull(types.StringType)
 				rule.Serials = types.ListNull(types.StringType)
-			}
-
-			if applyTo != "" {
-				rule.ApplyTo = types.StringValue(applyTo)
-			} else {
-				rule.ApplyTo = types.StringNull()
+				rule.Products = nil
 			}
 
 			rules = append(rules, rule)
@@ -298,7 +259,7 @@ func (d *USBControlSetsDataSource) Read(ctx context.Context, req datasource.Read
 
 		items = append(items, item)
 	}
-	data.USBControlSets = items
+	data.RemovableStorageControlSets = items
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

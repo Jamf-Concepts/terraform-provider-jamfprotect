@@ -7,205 +7,95 @@ import (
 	"context"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ---------------------------------------------------------------------------
-// GraphQL queries
-// ---------------------------------------------------------------------------
-
-const usbControlSetFields = `
-fragment USBControlSetFields on USBControlSet {
-	id
-	name
-	description
-	defaultMountAction
-	defaultMessageAction
-	rules {
-		mountAction
-		messageAction
-		type
-		... on VendorRule {
-			vendors
-			applyTo
-		}
-		... on SerialRule {
-			serials
-			applyTo
-		}
-		... on ProductRule {
-			products {
-				vendor
-				product
-			}
-			applyTo
-		}
-	}
-	created
-	updated
-}
-`
-
-const createUSBControlSetMutation = `
-mutation createUSBControlSet(
-	$name: String!,
-	$description: String,
-	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-	$defaultMessageAction: String,
-	$rules: [USBControlRuleInput!]!
-) {
-	createUSBControlSet(input: {
-		name: $name,
-		description: $description,
-		defaultMountAction: $defaultMountAction,
-		defaultMessageAction: $defaultMessageAction,
-		rules: $rules
-	}) {
-		...USBControlSetFields
-	}
-}
-` + usbControlSetFields
-
-const getUSBControlSetQuery = `
-query getUSBControlSet($id: ID!) {
-	getUSBControlSet(id: $id) {
-		...USBControlSetFields
-	}
-}
-` + usbControlSetFields
-
-const updateUSBControlSetMutation = `
-mutation updateUSBControlSet(
-	$id: ID!,
-	$name: String!,
-	$description: String,
-	$defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!,
-	$defaultMessageAction: String,
-	$rules: [USBControlRuleInput!]!
-) {
-	updateUSBControlSet(id: $id, input: {
-		name: $name,
-		description: $description,
-		defaultMountAction: $defaultMountAction,
-		defaultMessageAction: $defaultMessageAction,
-		rules: $rules
-	}) {
-		...USBControlSetFields
-	}
-}
-` + usbControlSetFields
-
-const deleteUSBControlSetMutation = `
-mutation deleteUSBControlSet($id: ID!) {
-	deleteUSBControlSet(id: $id) {
-		id
-	}
-}
-`
-
-const listUSBControlSetsQuery = `
-query listUSBControlSets($nextToken: String, $direction: OrderDirection!, $field: USBControlOrderField!) {
-	listUSBControlSets(
-		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-	) {
-		items {
-			...USBControlSetFields
-		}
-		pageInfo {
-			next
-			total
-		}
-	}
-}
-` + usbControlSetFields
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-func (r *USBControlSetResource) buildVariables(ctx context.Context, data USBControlSetResourceModel, diags *diag.Diagnostics) map[string]any {
-	vars := map[string]any{
-		"name":               data.Name.ValueString(),
-		"defaultMountAction": data.DefaultMountAction.ValueString(),
+func (r *RemovableStorageControlSetResource) buildInput(ctx context.Context, data RemovableStorageControlSetResourceModel, diags *diag.Diagnostics) *jamfprotect.RemovableStorageControlSetInput {
+	input := jamfprotect.RemovableStorageControlSetInput{
+		Name:               data.Name.ValueString(),
+		DefaultMountAction: data.DefaultMountAction.ValueString(),
 	}
 
 	if !data.Description.IsNull() {
-		vars["description"] = data.Description.ValueString()
+		input.Description = data.Description.ValueString()
 	} else {
-		vars["description"] = ""
+		input.Description = ""
 	}
 
 	if !data.DefaultMessageAction.IsNull() {
-		vars["defaultMessageAction"] = data.DefaultMessageAction.ValueString()
+		input.DefaultMessageAction = data.DefaultMessageAction.ValueString()
 	} else {
-		vars["defaultMessageAction"] = ""
+		input.DefaultMessageAction = ""
 	}
 
-	rules := make([]map[string]any, 0, len(data.Rules))
+	rules := make([]jamfprotect.RemovableStorageControlRuleInput, 0, len(data.Rules))
 	for _, rule := range data.Rules {
-		r := buildRuleVariable(ctx, rule, diags)
+		ruleInput := buildRuleInput(ctx, rule, diags)
 		if diags.HasError() {
 			return nil
 		}
-		rules = append(rules, r)
+		rules = append(rules, ruleInput)
 	}
-	vars["rules"] = rules
-	return vars
+	input.Rules = rules
+	return &input
 }
 
-func buildRuleVariable(ctx context.Context, rule USBRuleModel, diags *diag.Diagnostics) map[string]any {
-	ruleType := normalizeUSBRuleType(rule.Type.ValueString())
-	input := map[string]any{"type": ruleType}
-	baseRule := map[string]any{
-		"mountAction": rule.MountAction.ValueString(),
+func buildRuleInput(ctx context.Context, rule RemovableStorageRuleModel, diags *diag.Diagnostics) jamfprotect.RemovableStorageControlRuleInput {
+	ruleType := normalizeRemovableStorageRuleType(rule.Type.ValueString())
+	input := jamfprotect.RemovableStorageControlRuleInput{Type: ruleType}
+
+	baseRule := jamfprotect.RemovableStorageControlRuleDetails{
+		MountAction: rule.MountAction.ValueString(),
 	}
-	var messageAction *string
 	if !rule.MessageAction.IsNull() {
 		value := rule.MessageAction.ValueString()
-		messageAction = &value
+		baseRule.MessageAction = &value
 	}
-	var applyTo *string
 	if !rule.ApplyTo.IsNull() {
 		value := rule.ApplyTo.ValueString()
-		applyTo = &value
-	}
-	if messageAction != nil {
-		baseRule["messageAction"] = *messageAction
-	}
-	if applyTo != nil {
-		baseRule["applyTo"] = *applyTo
+		baseRule.ApplyTo = &value
 	}
 
 	switch ruleType {
 	case "Vendor":
-		baseRule["vendors"] = common.ListToStrings(ctx, rule.Vendors, diags)
-		input["vendorRule"] = baseRule
+		baseRule.Vendors = common.ListToStrings(ctx, rule.Vendors, diags)
+		input.VendorRule = &baseRule
 	case "Serial":
-		baseRule["serials"] = common.ListToStrings(ctx, rule.Serials, diags)
-		input["serialRule"] = baseRule
+		baseRule.Serials = common.ListToStrings(ctx, rule.Serials, diags)
+		input.SerialRule = &baseRule
 	case "Product":
-		products := make([]map[string]any, 0, len(rule.Products))
+		products := make([]jamfprotect.RemovableStorageControlProductPair, 0, len(rule.Products))
 		for _, p := range rule.Products {
-			products = append(products, map[string]any{
-				"vendor":  p.Vendor.ValueString(),
-				"product": p.Product.ValueString(),
+			products = append(products, jamfprotect.RemovableStorageControlProductPair{
+				Vendor:  p.Vendor.ValueString(),
+				Product: p.Product.ValueString(),
 			})
 		}
-		baseRule["products"] = products
-		input["productRule"] = baseRule
+		productRule := jamfprotect.RemovableStorageControlProductRuleDetails{
+			MountAction:   baseRule.MountAction,
+			MessageAction: baseRule.MessageAction,
+			ApplyTo:       baseRule.ApplyTo,
+			Products:      products,
+		}
+		input.ProductRule = &productRule
 	case "Encryption":
-		input["encryptionRule"] = baseRule
+		input.EncryptionRule = &baseRule
 	default:
-		diags.AddError("Unsupported USB control rule type", "Unsupported rule type: "+rule.Type.ValueString())
-		return map[string]any{}
+		diags.AddError("Unsupported removable storage control rule type", "Unsupported rule type: "+rule.Type.ValueString())
+		return jamfprotect.RemovableStorageControlRuleInput{}
 	}
 
 	return input
 }
 
-func normalizeUSBRuleType(ruleType string) string {
+func normalizeRemovableStorageRuleType(ruleType string) string {
 	switch ruleType {
 	case "VendorRule":
 		return "Vendor"
@@ -220,7 +110,7 @@ func normalizeUSBRuleType(ruleType string) string {
 	}
 }
 
-func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSetResourceModel, api usbControlSetAPIModel, _ *diag.Diagnostics) {
+func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data *RemovableStorageControlSetResourceModel, api jamfprotect.RemovableStorageControlSet, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.DefaultMountAction = types.StringValue(api.DefaultMountAction)
@@ -239,10 +129,11 @@ func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSe
 		data.DefaultMessageAction = types.StringNull()
 	}
 
-	rules := make([]USBRuleModel, 0, len(api.Rules))
+	rules := make([]RemovableStorageRuleModel, 0, len(api.Rules))
 	for _, apiRule := range api.Rules {
-		rule := USBRuleModel{
-			Type:        types.StringValue(normalizeUSBRuleType(apiRule.Type)),
+		ruleType := normalizeRemovableStorageRuleType(apiRule.Type)
+		rule := RemovableStorageRuleModel{
+			Type:        types.StringValue(ruleType),
 			MountAction: types.StringValue(apiRule.MountAction),
 		}
 
@@ -252,52 +143,36 @@ func (r *USBControlSetResource) apiToState(_ context.Context, data *USBControlSe
 			rule.MessageAction = types.StringNull()
 		}
 
-		applyTo := ""
-		switch normalizeUSBRuleType(apiRule.Type) {
+		if apiRule.ApplyTo != "" {
+			rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
+		} else {
+			rule.ApplyTo = types.StringNull()
+		}
+
+		switch ruleType {
 		case "Vendor":
-			if apiRule.VendorRule != nil {
-				applyTo = apiRule.VendorRule.ApplyTo
-				rule.Vendors = common.StringsToList(apiRule.VendorRule.Vendors)
-			} else {
-				rule.Vendors = types.ListNull(types.StringType)
-			}
+			rule.Vendors = common.StringsToList(apiRule.Vendors)
 			rule.Serials = types.ListNull(types.StringType)
+			rule.Products = nil
 		case "Serial":
-			if apiRule.SerialRule != nil {
-				applyTo = apiRule.SerialRule.ApplyTo
-				rule.Serials = common.StringsToList(apiRule.SerialRule.Serials)
-			} else {
-				rule.Serials = types.ListNull(types.StringType)
-			}
+			rule.Serials = common.StringsToList(apiRule.Serials)
 			rule.Vendors = types.ListNull(types.StringType)
+			rule.Products = nil
 		case "Product":
-			if apiRule.ProductRule != nil {
-				applyTo = apiRule.ProductRule.ApplyTo
-				products := make([]USBProductModel, 0, len(apiRule.ProductRule.Products))
-				for _, p := range apiRule.ProductRule.Products {
-					products = append(products, USBProductModel{
-						Vendor:  types.StringValue(p.Vendor),
-						Product: types.StringValue(p.Product),
-					})
-				}
-				rule.Products = products
-			} else {
-				rule.Products = nil
+			products := make([]RemovableStorageProductModel, 0, len(apiRule.Products))
+			for _, p := range apiRule.Products {
+				products = append(products, RemovableStorageProductModel{
+					Vendor:  types.StringValue(p.Vendor),
+					Product: types.StringValue(p.Product),
+				})
 			}
-			rule.Vendors = types.ListNull(types.StringType)
-			rule.Serials = types.ListNull(types.StringType)
-		case "Encryption":
+			rule.Products = products
 			rule.Vendors = types.ListNull(types.StringType)
 			rule.Serials = types.ListNull(types.StringType)
 		default:
 			rule.Vendors = types.ListNull(types.StringType)
 			rule.Serials = types.ListNull(types.StringType)
-		}
-
-		if applyTo != "" {
-			rule.ApplyTo = types.StringValue(applyTo)
-		} else {
-			rule.ApplyTo = types.StringNull()
+			rule.Products = nil
 		}
 
 		rules = append(rules, rule)

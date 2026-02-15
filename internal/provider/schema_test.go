@@ -456,10 +456,10 @@ func TestPlanResourceMetadata(t *testing.T) {
 	}
 }
 
-func TestUSBControlSetResourceSchema(t *testing.T) {
+func TestRemovableStorageControlSetResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := removable_storage_control_set.NewUSBControlSetResource()
+	r := removable_storage_control_set.NewRemovableStorageControlSetResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -471,7 +471,7 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
-			t.Errorf("expected attribute %q in USB control set schema", attr)
+			t.Errorf("expected attribute %q in RemovableStorage control set schema", attr)
 			continue
 		}
 		if !a.IsRequired() {
@@ -483,7 +483,7 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
-			t.Errorf("expected attribute %q in USB control set schema", attr)
+			t.Errorf("expected attribute %q in RemovableStorage control set schema", attr)
 			continue
 		}
 		if !a.IsComputed() {
@@ -494,7 +494,7 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 	// description should be optional + computed.
 	desc, ok := resp.Schema.Attributes["description"]
 	if !ok {
-		t.Fatal("expected attribute 'description' in USB control set schema")
+		t.Fatal("expected attribute 'description' in RemovableStorage control set schema")
 	}
 	if !desc.IsOptional() {
 		t.Error("expected 'description' to be optional")
@@ -506,7 +506,7 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 	// default_message_action should be optional + computed.
 	msgAction, ok := resp.Schema.Attributes["default_message_action"]
 	if !ok {
-		t.Fatal("expected attribute 'default_message_action' in USB control set schema")
+		t.Fatal("expected attribute 'default_message_action' in RemovableStorage control set schema")
 	}
 	if !msgAction.IsOptional() {
 		t.Error("expected 'default_message_action' to be optional")
@@ -518,7 +518,7 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 	// rules should be a ListNestedAttribute.
 	rulesAttr, ok := resp.Schema.Attributes["rules"]
 	if !ok {
-		t.Fatal("expected attribute 'rules' in USB control set schema")
+		t.Fatal("expected attribute 'rules' in RemovableStorage control set schema")
 	}
 	rulesNested, ok := rulesAttr.(schema.ListNestedAttribute)
 	if !ok {
@@ -545,14 +545,14 @@ func TestUSBControlSetResourceSchema(t *testing.T) {
 
 	// timeouts should exist.
 	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
-		t.Error("expected attribute 'timeouts' in USB control set schema")
+		t.Error("expected attribute 'timeouts' in RemovableStorage control set schema")
 	}
 }
 
-func TestUSBControlSetResourceMetadata(t *testing.T) {
+func TestRemovableStorageControlSetResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := removable_storage_control_set.NewUSBControlSetResource()
+	r := removable_storage_control_set.NewRemovableStorageControlSetResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -926,10 +926,10 @@ func TestUnifiedLoggingFiltersDataSourceMetadata(t *testing.T) {
 	}
 }
 
-func TestUSBControlSetsDataSourceSchema(t *testing.T) {
+func TestRemovableStorageControlSetsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := removable_storage_control_set.NewUSBControlSetsDataSource()
+	ds := removable_storage_control_set.NewRemovableStorageControlSetsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -937,19 +937,19 @@ func TestUSBControlSetsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	usbAttr, ok := resp.Schema.Attributes["removable_storage_control_sets"]
+	removableStorageAttr, ok := resp.Schema.Attributes["removable_storage_control_sets"]
 	if !ok {
 		t.Fatal("expected attribute 'removable_storage_control_sets' in data source schema")
 	}
-	if !usbAttr.IsComputed() {
+	if !removableStorageAttr.IsComputed() {
 		t.Error("expected 'removable_storage_control_sets' to be computed")
 	}
 }
 
-func TestUSBControlSetsDataSourceMetadata(t *testing.T) {
+func TestRemovableStorageControlSetsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := removable_storage_control_set.NewUSBControlSetsDataSource()
+	ds := removable_storage_control_set.NewRemovableStorageControlSetsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
