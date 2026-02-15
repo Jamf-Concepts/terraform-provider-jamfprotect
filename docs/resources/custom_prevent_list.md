@@ -47,10 +47,9 @@ resource "jamfprotect_custom_prevent_list" "blocked_team_ids" {
 
 - `created` (String) The creation timestamp.
 - `entry_count` (Number) The number of entries in the custom prevent list.
-- `id` (String) The unique identifier of the custom prevent list.
+- `id` (String) The unique identifier of the prevent list.
 
 <a id="nestedatt--timeouts"></a>
-
 ### Nested Schema for `timeouts`
 
 Optional:

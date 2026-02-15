@@ -33,7 +33,6 @@ output "prevent_list_summary" {
 - `custom_prevent_lists` (Attributes List) The list of custom prevent lists. (see [below for nested schema](#nestedatt--custom_prevent_lists))
 
 <a id="nestedatt--custom_prevent_lists"></a>
-
 ### Nested Schema for `custom_prevent_lists`
 
 Read-Only:
