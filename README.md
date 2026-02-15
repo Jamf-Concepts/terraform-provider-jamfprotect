@@ -155,9 +155,8 @@ resource "jamfprotect_plan" "endpoint_security" {
 resource "jamfprotect_custom_prevent_list" "trusted_team_ids" {
   name        = "Trusted Team IDs"
   description = "Allow list for trusted developer teams"
-  type        = "TEAMID"
-  tags        = ["security"]
-  list        = ["ABC123DEF4"]
+  prevent_type = "TEAMID"
+  list_data   = ["ABC123DEF4"]
 }
 ```
 

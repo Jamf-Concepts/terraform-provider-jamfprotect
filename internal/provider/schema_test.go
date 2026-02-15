@@ -117,7 +117,7 @@ func TestCustomPreventListResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "type", "tags", "list"}
+	requiredAttrs := []string{"name", "prevent_type", "list_data"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
