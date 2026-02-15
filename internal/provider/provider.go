@@ -18,9 +18,9 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
@@ -133,7 +133,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		analytic_set.NewAnalyticSetResource,
 		exception_set.NewExceptionSetResource,
 		plan.NewPlanResource,
-		prevent_list.NewPreventListResource,
+		custom_prevent_list.NewPreventListResource,
 		telemetry.NewTelemetryV2Resource,
 		unified_logging_filter.NewUnifiedLoggingFilterResource,
 		removable_storage_control_set.NewRemovableStorageControlSetResource,
@@ -147,7 +147,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		analytic_set.NewAnalyticSetsDataSource,
 		exception_set.NewExceptionSetsDataSource,
 		plan.NewPlansDataSource,
-		prevent_list.NewPreventListsDataSource,
+		custom_prevent_list.NewPreventListsDataSource,
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
 		removable_storage_control_set.NewRemovableStorageControlSetsDataSource,
