@@ -13,9 +13,8 @@ type CustomPreventListResourceModel struct {
 	ID          types.String   `tfsdk:"id"`
 	Name        types.String   `tfsdk:"name"`
 	Description types.String   `tfsdk:"description"`
-	Type        types.String   `tfsdk:"type"`
-	Tags        types.List     `tfsdk:"tags"`
-	List        types.List     `tfsdk:"list"`
+	PreventType types.String   `tfsdk:"prevent_type"`
+	ListData    types.List     `tfsdk:"list_data"`
 	EntryCount  types.Int64    `tfsdk:"entry_count"`
 	Created     types.String   `tfsdk:"created"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`

@@ -13,18 +13,11 @@ Manages a custom prevent list in Jamf Protect. Custom prevent lists allow you to
 ## Example Usage
 
 ```terraform
-provider "jamfprotect" {
-  url           = "https://your-tenant.protect.jamfcloud.com"
-  client_id     = "your-client-id"
-  client_secret = "your-client-secret"
-}
-
-resource "jamfprotect_custom_prevent_list" "blocked_team_ids" {
-  name        = "Blocked Team IDs"
-  description = "Block known malicious Team IDs."
-  type        = "TEAMID"
-  tags        = ["threat-prevention", "block"]
-  list        = ["ABCDE12345", "FGHIJ67890"]
+resource "jamfprotect_custom_prevent_list" "example" {
+  description  = "Managed by Terraform"
+  list_data    = ["EXAMPLE"]
+  name         = "Example"
+  prevent_type = "TEAMID"
 }
 ```
 
@@ -33,10 +26,9 @@ resource "jamfprotect_custom_prevent_list" "blocked_team_ids" {
 
 ### Required
 
-- `list` (List of String) The list of entries (identifiers) in the custom prevent list.
+- `list_data` (List of String) The list of entries (identifiers) in the custom prevent list.
 - `name` (String) The name of the custom prevent list.
-- `tags` (List of String) A list of tags for the custom prevent list.
-- `type` (String) The type of custom prevent list.
+- `prevent_type` (String) The type of custom prevent list.
 
 ### Optional
 
@@ -66,5 +58,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import jamfprotect_custom_prevent_list.blocked_team_ids "<prevent-list-id>"
+terraform import jamfprotect_custom_prevent_list.example "<prevent-list-id>"
 ```
