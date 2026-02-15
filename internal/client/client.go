@@ -211,15 +211,16 @@ func (c *Client) fetchToken(ctx context.Context) (*oauth2.Token, error) {
 	}, nil
 }
 
-// Query executes a GraphQL query/mutation against the /app endpoint and
-// decodes the result into target.
-func (c *Client) Query(ctx context.Context, query string, variables map[string]any, target any) error {
-	return c.DoGraphQL(ctx, query, variables, target)
-}
+// DoGraphQL executes a raw GraphQL query/mutation against a custom endpoint path.
+// Use "/app" for the main API and "/graphql" for the limited schema endpoint.
+func (c *Client) DoGraphQL(ctx context.Context, path, query string, variables map[string]any, target any) error {
+	if path == "" {
+		return fmt.Errorf("graphql endpoint path is required")
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
 
-// DoGraphQL executes a raw GraphQL query/mutation against the /app endpoint.
-// This is the transport-level API used by higher layers.
-func (c *Client) DoGraphQL(ctx context.Context, query string, variables map[string]any, target any) error {
 	token, err := c.authenticate(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAuthentication, err)
@@ -233,7 +234,7 @@ func (c *Client) DoGraphQL(ctx context.Context, query string, variables map[stri
 		return fmt.Errorf("encoding graphql request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/app", bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("creating graphql request: %w", err)
 	}

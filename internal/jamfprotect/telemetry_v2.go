@@ -153,7 +153,7 @@ func (s *Service) CreateTelemetryV2(ctx context.Context, input TelemetryV2Input)
 	var result struct {
 		CreateTelemetryV2 TelemetryV2 `json:"createTelemetryV2"`
 	}
-	if err := s.client.DoGraphQL(ctx, createTelemetryV2Mutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createTelemetryV2Mutation, vars, &result); err != nil {
 		return TelemetryV2{}, err
 	}
 	return result.CreateTelemetryV2, nil
@@ -168,7 +168,7 @@ func (s *Service) GetTelemetryV2(ctx context.Context, id string) (*TelemetryV2, 
 	var result struct {
 		GetTelemetryV2 *TelemetryV2 `json:"getTelemetryV2"`
 	}
-	if err := s.client.DoGraphQL(ctx, getTelemetryV2Query, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getTelemetryV2Query, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetTelemetryV2, nil
@@ -190,7 +190,7 @@ func (s *Service) UpdateTelemetryV2(ctx context.Context, id string, input Teleme
 	var result struct {
 		UpdateTelemetryV2 TelemetryV2 `json:"updateTelemetryV2"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateTelemetryV2Mutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateTelemetryV2Mutation, vars, &result); err != nil {
 		return TelemetryV2{}, err
 	}
 	return result.UpdateTelemetryV2, nil
@@ -199,7 +199,7 @@ func (s *Service) UpdateTelemetryV2(ctx context.Context, id string, input Teleme
 // DeleteTelemetryV2 deletes telemetry v2 by ID.
 func (s *Service) DeleteTelemetryV2(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, deleteTelemetryV2Mutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteTelemetryV2Mutation, vars, nil)
 }
 
 // ListTelemetriesV2 retrieves all telemetry v2 configurations.
@@ -226,7 +226,7 @@ func (s *Service) ListTelemetriesV2(ctx context.Context) ([]TelemetryV2, error) 
 				} `json:"pageInfo"`
 			} `json:"listTelemetriesV2"`
 		}
-		if err := s.client.DoGraphQL(ctx, listTelemetriesV2Query, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/app", listTelemetriesV2Query, vars, &result); err != nil {
 			return nil, err
 		}
 

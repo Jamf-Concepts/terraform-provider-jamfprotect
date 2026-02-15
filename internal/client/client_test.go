@@ -91,7 +91,7 @@ func TestClient_Query_Success(t *testing.T) {
 			Name string `json:"name"`
 		} `json:"getAnalytic"`
 	}
-	err := client.Query(context.Background(), "query { getAnalytic { uuid name } }", nil, &result)
+	err := client.DoGraphQL(context.Background(), "/app", "query { getAnalytic { uuid name } }", nil, &result)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestClient_Query_GraphQLErrors(t *testing.T) {
 	defer srv.Close()
 
 	client := NewClient(srv.URL, "cid", "csecret")
-	err := client.Query(context.Background(), "query { bad }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { bad }", nil, nil)
 
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -145,7 +145,7 @@ func TestClient_Query_AuthFailure(t *testing.T) {
 	defer srv.Close()
 
 	client := NewClient(srv.URL, "bad", "bad")
-	err := client.Query(context.Background(), "query { x }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil)
 
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -178,7 +178,7 @@ func TestClient_TokenCaching(t *testing.T) {
 
 	// Make multiple queries — token should be fetched only once.
 	for range 3 {
-		if err := client.Query(context.Background(), "query { x }", nil, nil); err != nil {
+		if err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	}
@@ -205,7 +205,7 @@ func TestClient_Query_NilTarget(t *testing.T) {
 
 	client := NewClient(srv.URL, "cid", "csecret")
 	// nil target should not panic (used for mutations like delete).
-	if err := client.Query(context.Background(), "mutation { deleteAnalytic }", nil, nil); err != nil {
+	if err := client.DoGraphQL(context.Background(), "/app", "mutation { deleteAnalytic }", nil, nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -249,7 +249,7 @@ func TestClient_Query_UserAgentHeader(t *testing.T) {
 
 	client := NewClientWithVersion(srv.URL, "cid", "csecret", "1.0.0")
 
-	err := client.Query(context.Background(), "query { test }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { test }", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -309,7 +309,7 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 			defer srv.Close()
 
 			client := NewClient(srv.URL, "cid", "csecret")
-			err := client.Query(context.Background(), "query { x }", nil, nil)
+			err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil)
 
 			if err == nil {
 				t.Fatal("expected error, got nil")
@@ -349,7 +349,7 @@ func TestClient_Query_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
-	err := client.Query(ctx, "query { x }", nil, nil)
+	err := client.DoGraphQL(ctx, "/app", "query { x }", nil, nil)
 	if err == nil {
 		t.Fatal("expected error from cancelled context, got nil")
 	}
@@ -373,7 +373,7 @@ func TestClient_Query_HTTPError(t *testing.T) {
 	defer srv.Close()
 
 	client := NewClient(srv.URL, "cid", "csecret")
-	err := client.Query(context.Background(), "query { x }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil)
 
 	if err == nil {
 		t.Fatal("expected error from HTTP 500, got nil")
@@ -398,7 +398,7 @@ func TestClient_Query_MalformedJSON(t *testing.T) {
 	defer srv.Close()
 
 	client := NewClient(srv.URL, "cid", "csecret")
-	err := client.Query(context.Background(), "query { x }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil)
 
 	if err == nil {
 		t.Fatal("expected error from malformed JSON, got nil")
@@ -416,7 +416,7 @@ func TestClient_Authenticate_EmptyToken(t *testing.T) {
 	defer srv.Close()
 
 	client := NewClient(srv.URL, "cid", "csecret")
-	err := client.Query(context.Background(), "query { x }", nil, nil)
+	err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil)
 
 	if err == nil {
 		t.Fatal("expected error from empty token, got nil")
@@ -485,7 +485,7 @@ func TestClient_Query_WithVariables(t *testing.T) {
 	query := "query GetItem($id: ID!) { getItem(id: $id) { name } }"
 	vars := map[string]any{"id": "123"}
 
-	err := client.Query(context.Background(), query, vars, nil)
+	err := client.DoGraphQL(context.Background(), "/app", query, vars, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -516,7 +516,7 @@ func TestClient_Query_NullData(t *testing.T) {
 	var result struct {
 		Item *string `json:"item"`
 	}
-	err := client.Query(context.Background(), "query { item }", nil, &result)
+	err := client.DoGraphQL(context.Background(), "/app", "query { item }", nil, &result)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

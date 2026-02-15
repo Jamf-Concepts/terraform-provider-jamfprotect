@@ -15,7 +15,7 @@ import (
 
 func TestAccPreventListResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-pl")
-	resourceName := "jamfprotect_prevent_list.test"
+	resourceName := "jamfprotect_custom_prevent_list.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
@@ -58,7 +58,7 @@ func TestAccPreventListResource_basic(t *testing.T) {
 
 func TestAccPreventListResource_fileHash(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-pl")
-	resourceName := "jamfprotect_prevent_list.test"
+	resourceName := "jamfprotect_custom_prevent_list.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
@@ -77,7 +77,7 @@ func TestAccPreventListResource_fileHash(t *testing.T) {
 
 func testAccPreventListResourceConfig(name, listType, description string) string {
 	return fmt.Sprintf(`
-resource "jamfprotect_prevent_list" "test" {
+resource "jamfprotect_custom_prevent_list" "test" {
   name        = %[1]q
   type        = %[2]q
   description = %[3]q
