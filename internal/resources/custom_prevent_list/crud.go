@@ -12,8 +12,8 @@ import (
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
-func (r *PreventListResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data PreventListResourceModel
+func (r *CustomPreventListResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -46,8 +46,8 @@ func (r *PreventListResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data PreventListResourceModel
+func (r *CustomPreventListResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -61,7 +61,7 @@ func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	preventList, err := r.service.GetCustomPreventList(ctx, data.ID.ValueString())
+	customPreventList, err := r.service.GetCustomPreventList(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -70,26 +70,26 @@ func (r *PreventListResource) Read(ctx context.Context, req resource.ReadRequest
 		resp.Diagnostics.AddError("Error reading custom prevent list", err.Error())
 		return
 	}
-	if preventList == nil {
+	if customPreventList == nil {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	r.apiToState(ctx, &data, *preventList, &resp.Diagnostics)
+	r.apiToState(ctx, &data, *customPreventList, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *PreventListResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PreventListResourceModel
+func (r *CustomPreventListResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var state PreventListResourceModel
+	var state CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,8 +121,8 @@ func (r *PreventListResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *PreventListResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data PreventListResourceModel
+func (r *CustomPreventListResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
