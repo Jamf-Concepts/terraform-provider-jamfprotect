@@ -3,12 +3,12 @@
 page_title: "jamfprotect_removable_storage_control_set Resource - jamfprotect"
 subcategory: ""
 description: |-
-  Manages a USB control set in Jamf Protect. USB control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.
+  Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.
 ---
 
 # jamfprotect_removable_storage_control_set (Resource)
 
-Manages a USB control set in Jamf Protect. USB control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.
+Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.
 
 
 
@@ -17,20 +17,20 @@ Manages a USB control set in Jamf Protect. USB control sets define policies for 
 
 ### Required
 
-- `default_mount_action` (String) The default mount action for USB devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
-- `name` (String) The name of the USB control set.
-- `rules` (Attributes List) A list of USB control rules. Each rule targets devices by vendor ID, serial number, or product ID. (see [below for nested schema](#nestedatt--rules))
+- `default_mount_action` (String) The default mount action for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
+- `name` (String) The name of the removable storage control set.
+- `rules` (Attributes List) A list of removable storage control rules. Each rule targets devices by vendor ID, serial number, or product ID. (see [below for nested schema](#nestedatt--rules))
 
 ### Optional
 
-- `default_message_action` (String) The default message displayed to users when a USB device action is triggered.
-- `description` (String) A description of the USB control set.
+- `default_message_action` (String) The default message displayed to users when a removable storage device action is triggered.
+- `description` (String) A description of the removable storage control set.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `created` (String) The creation timestamp.
-- `id` (String) The unique identifier of the USB control set.
+- `id` (String) The unique identifier of the removable storage control set.
 - `updated` (String) The last update timestamp.
 
 <a id="nestedatt--rules"></a>

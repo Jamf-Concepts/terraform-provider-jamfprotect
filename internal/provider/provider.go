@@ -136,7 +136,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		prevent_list.NewPreventListResource,
 		telemetry.NewTelemetryV2Resource,
 		unified_logging_filter.NewUnifiedLoggingFilterResource,
-		removable_storage_control_set.NewUSBControlSetResource,
+		removable_storage_control_set.NewRemovableStorageControlSetResource,
 	}
 }
 
@@ -150,7 +150,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		prevent_list.NewPreventListsDataSource,
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
-		removable_storage_control_set.NewUSBControlSetsDataSource,
+		removable_storage_control_set.NewRemovableStorageControlSetsDataSource,
 	}
 }
 

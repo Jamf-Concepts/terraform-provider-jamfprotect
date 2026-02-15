@@ -6,9 +6,6 @@ package removable_storage_control_set
 import (
 	"context"
 	"fmt"
-	"time"
-
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -20,61 +17,61 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
-var _ resource.Resource = &USBControlSetResource{}
-var _ resource.ResourceWithImportState = &USBControlSetResource{}
+var _ resource.Resource = &RemovableStorageControlSetResource{}
+var _ resource.ResourceWithImportState = &RemovableStorageControlSetResource{}
 
-func NewUSBControlSetResource() resource.Resource {
-	return &USBControlSetResource{}
+func NewRemovableStorageControlSetResource() resource.Resource {
+	return &RemovableStorageControlSetResource{}
 }
 
-// USBControlSetResource manages a Jamf Protect USB control set.
-type USBControlSetResource struct {
-	client *client.Client
+// RemovableStorageControlSetResource manages a Jamf Protect removable storage control set.
+type RemovableStorageControlSetResource struct {
+	service *jamfprotect.Service
 }
 
-func (r *USBControlSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *RemovableStorageControlSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_set"
 }
 
-func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	mountActionValidator := stringvalidator.OneOf("ReadOnly", "ReadWrite", "Prevented")
 	ruleTypeValidator := stringvalidator.OneOf("Vendor", "Serial", "Product", "Encryption", "VendorRule", "SerialRule", "ProductRule", "EncryptionRule")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a USB control set in Jamf Protect. USB control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.",
+		MarkdownDescription: "Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the USB control set.",
+				MarkdownDescription: "The unique identifier of the removable storage control set.",
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "The name of the USB control set.",
+				MarkdownDescription: "The name of the removable storage control set.",
 				Required:            true,
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "A description of the USB control set.",
+				MarkdownDescription: "A description of the removable storage control set.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
 			},
 			"default_mount_action": schema.StringAttribute{
-				MarkdownDescription: "The default mount action for USB devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+				MarkdownDescription: "The default mount action for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
 				Required:            true,
 				Validators:          []validator.String{mountActionValidator},
 			},
 			"default_message_action": schema.StringAttribute{
-				MarkdownDescription: "The default message displayed to users when a USB device action is triggered.",
+				MarkdownDescription: "The default message displayed to users when a removable storage device action is triggered.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"rules": schema.ListNestedAttribute{
-				MarkdownDescription: "A list of USB control rules. Each rule targets devices by vendor ID, serial number, or product ID.",
+				MarkdownDescription: "A list of removable storage control rules. Each rule targets devices by vendor ID, serial number, or product ID.",
 				Required:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -146,7 +143,7 @@ func (r *USBControlSetResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *USBControlSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *RemovableStorageControlSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -156,155 +153,9 @@ func (r *USBControlSetResource) Configure(ctx context.Context, req resource.Conf
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	r.client = client
+	r.service = jamfprotect.NewService(client)
 }
 
-// ---------------------------------------------------------------------------
-// CRUD
-// ---------------------------------------------------------------------------
-
-func (r *USBControlSetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data USBControlSetResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var result struct {
-		CreateUSBControlSet usbControlSetAPIModel `graphql:"createUSBControlSet"`
-	}
-	if err := r.client.Query(ctx, createUSBControlSetMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error creating USB control set", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.CreateUSBControlSet, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tflog.Trace(ctx, "created USB control set", map[string]any{"id": data.ID.ValueString()})
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *USBControlSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data USBControlSetResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, readTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	var result struct {
-		GetUSBControlSet *usbControlSetAPIModel `graphql:"getUSBControlSet"`
-	}
-	if err := r.client.Query(ctx, getUSBControlSetQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error reading USB control set", err.Error())
-		return
-	}
-	if result.GetUSBControlSet == nil {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetUSBControlSet, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *USBControlSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data USBControlSetResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var state USBControlSetResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.ID = state.ID
-
-	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	vars["id"] = data.ID.ValueString()
-
-	var result struct {
-		UpdateUSBControlSet usbControlSetAPIModel `graphql:"updateUSBControlSet"`
-	}
-	if err := r.client.Query(ctx, updateUSBControlSetMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error updating USB control set", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.UpdateUSBControlSet, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *USBControlSetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data USBControlSetResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	if err := r.client.Query(ctx, deleteUSBControlSetMutation, vars, nil); err != nil {
-		if common.IsNotFoundError(err) {
-			tflog.Trace(ctx, "USB control set already deleted", map[string]any{"id": data.ID.ValueString()})
-			return
-		}
-		resp.Diagnostics.AddError("Error deleting USB control set", err.Error())
-		return
-	}
-
-	tflog.Trace(ctx, "deleted USB control set", map[string]any{"id": data.ID.ValueString()})
-}
-
-func (r *USBControlSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *RemovableStorageControlSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
