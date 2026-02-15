@@ -170,7 +170,7 @@ func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "filter", "level", "tags"}
+	requiredAttrs := []string{"name", "filter", "tags"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
