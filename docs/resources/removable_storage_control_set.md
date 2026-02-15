@@ -13,46 +13,38 @@ Manages a removable storage control set in Jamf Protect. Removable storage contr
 ## Example Usage
 
 ```terraform
-# A basic removable storage control set that restricts devices to read-only.
-resource "jamfprotect_removable_storage_control_set" "default" {
-  name                               = "Default Removable Storage Policy"
-  description                        = "Restrict removable storage to read-only by default."
-  default_permission                 = "ReadOnly"
-  default_local_notification_message = "This removable storage device is limited to read-only."
-}
-
-# A removable storage control set with override blocks.
-resource "jamfprotect_removable_storage_control_set" "with_overrides" {
-  name                               = "Removable Storage Policy with Overrides"
-  description                        = "Allow specific vendors and serials, block everything else."
+resource "jamfprotect_removable_storage_control_set" "example" {
+  default_local_notification_message = "This removable storage device is not allowed.."
   default_permission                 = "Prevented"
-  default_local_notification_message = "Removable storage devices are not allowed."
-
-  override_vendor_id {
-    permission = "ReadWrite"
-    apply_to   = "All"
-    vendor_ids = ["05ac", "1234"]
-  }
-
-  override_serial_number {
-    permission     = "ReadWrite"
-    apply_to       = "All"
-    serial_numbers = ["ABC123", "DEF456"]
-  }
-
-  override_product_id {
-    permission = "ReadOnly"
-    apply_to   = "All"
-    product_id = [{
-      vendor_id  = "05ac"
-      product_id = "1234"
-    }]
-  }
-
+  description                        = "Managed by Terraform"
+  name                               = "Example"
+  timeouts                           = null
   override_encrypted_devices {
-    permission                 = "ReadWrite"
+    local_notification_message = "This removable storage device is limited to read-only."
+    permission                 = "ReadOnly"
+  }
+  override_product_id {
     apply_to                   = "All"
-    local_notification_message = "Encrypted devices are allowed."
+    local_notification_message = "This removable storage device is limited to read-only."
+    permission                 = "ReadOnly"
+    product_id = [
+      {
+        product_id = "0x1434"
+        vendor_id  = "0x1921"
+      },
+    ]
+  }
+  override_serial_number {
+    apply_to                   = "All"
+    local_notification_message = "This removable storage device is limited to read-only."
+    permission                 = "ReadOnly"
+    serial_numbers             = ["EXAMPLE"]
+  }
+  override_vendor_id {
+    apply_to                   = "All"
+    local_notification_message = "This removable storage device is limited to read-only."
+    permission                 = "ReadOnly"
+    vendor_ids                 = ["0x1921", "0x1434"]
   }
 }
 ```
@@ -153,3 +145,13 @@ Optional:
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+terraform import jamfprotect_removable_storage_control_set.example "<removable-storage-control-set-id>"
+```
