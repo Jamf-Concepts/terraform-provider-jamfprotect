@@ -167,7 +167,6 @@ resource "jamfprotect_unified_logging_filter" "auth_events" {
   name        = "Auth Events"
   description = "Captures authentication events"
   filter      = "subsystem == \"com.apple.securityd\""
-  level       = "DEFAULT"
   tags        = ["auth"]
   enabled     = true
 }

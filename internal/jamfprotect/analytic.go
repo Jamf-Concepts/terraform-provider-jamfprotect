@@ -244,7 +244,7 @@ func (s *Service) GetAnalytic(ctx context.Context, uuid string) (*Analytic, erro
 	var result struct {
 		GetAnalytic *Analytic `json:"getAnalytic"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", getAnalyticQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", getAnalyticQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetAnalytic, nil
@@ -289,7 +289,7 @@ func (s *Service) ListAnalytics(ctx context.Context) ([]Analytic, error) {
 			Items []Analytic `json:"items"`
 		} `json:"listAnalytics"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", listAnalyticsQuery, nil, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", listAnalyticsQuery, nil, &result); err != nil {
 		return nil, err
 	}
 	return result.ListAnalytics.Items, nil

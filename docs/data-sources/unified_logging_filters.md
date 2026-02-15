@@ -42,7 +42,6 @@ Read-Only:
 - `enabled` (Boolean) Whether the filter is enabled.
 - `filter` (String) The predicate filter expression.
 - `id` (String) The unique identifier of the unified logging filter.
-- `level` (String) The unified logging level.
 - `name` (String) The name of the unified logging filter.
 - `tags` (List of String) Tags associated with the filter.
 - `updated` (String) The last-updated timestamp.
