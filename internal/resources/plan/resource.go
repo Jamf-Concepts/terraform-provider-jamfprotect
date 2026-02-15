@@ -51,7 +51,6 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"hash": schema.StringAttribute{
 				MarkdownDescription: "The configuration hash of the plan.",
 				Computed:            true,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the plan.",
@@ -104,23 +103,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
-			"comms_config": schema.SingleNestedAttribute{
-				MarkdownDescription: "Communications configuration for the plan.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"fqdn": schema.StringAttribute{
-						MarkdownDescription: "The fully qualified domain name for communications.",
-						Required:            true,
-					},
-					"protocol": schema.StringAttribute{
-						MarkdownDescription: "The protocol to use. Defaults to `mqtt`.",
-						Optional:            true,
-						Computed:            true,
-						Default:             stringdefault.StaticString("mqtt"),
-						Validators: []validator.String{
-							stringvalidator.OneOf("mqtt"),
-						},
-					},
+			"communications_protocol": schema.StringAttribute{
+				MarkdownDescription: "The communications protocol to use. Defaults to `mqtt`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("mqtt"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("mqtt", "wss/mqtt"),
 				},
 			},
 			"info_sync": schema.SingleNestedAttribute{

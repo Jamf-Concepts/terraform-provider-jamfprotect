@@ -133,10 +133,7 @@ resource "jamfprotect_plan" "endpoint_security" {
   action_configs = jamfprotect_action_config.default.id
   auto_update    = true
 
-  comms_config = {
-    fqdn     = "your-tenant.protect.jamfcloud.com"
-    protocol = "mqtt"
-  }
+  communications_protocol = "mqtt"
 
   info_sync = {
     attrs                  = ["arch", "hostName", "serial"]

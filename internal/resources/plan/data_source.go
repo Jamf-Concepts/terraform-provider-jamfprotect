@@ -50,7 +50,7 @@ type PlanDataSourceItemModel struct {
 	TelemetryV2              types.String `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set    `tfsdk:"analytic_sets"`
-	CommsConfig              types.Object `tfsdk:"comms_config"`
+	CommunicationsProtocol   types.String `tfsdk:"communications_protocol"`
 	InfoSync                 types.Object `tfsdk:"info_sync"`
 	EndpointThreatPrevention types.String `tfsdk:"endpoint_threat_prevention"`
 	AdvancedThreatControls   types.String `tfsdk:"advanced_threat_controls"`
@@ -130,19 +130,9 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"comms_config": schema.SingleNestedAttribute{
-			MarkdownDescription: "Communications configuration for the plan.",
+		"communications_protocol": schema.StringAttribute{
+			MarkdownDescription: "The communications protocol used by the plan.",
 			Computed:            true,
-			Attributes: map[string]schema.Attribute{
-				"fqdn": schema.StringAttribute{
-					MarkdownDescription: "The fully qualified domain name for communications.",
-					Computed:            true,
-				},
-				"protocol": schema.StringAttribute{
-					MarkdownDescription: "The protocol to use.",
-					Computed:            true,
-				},
-			},
 		},
 		"info_sync": schema.SingleNestedAttribute{
 			MarkdownDescription: "Info sync configuration for the plan.",
@@ -293,18 +283,11 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		item.AnalyticSets = types.SetNull(types.StringType)
 	}
 
-	// Comms config.
-	commsAttrTypes := map[string]attr.Type{
-		"fqdn":     types.StringType,
-		"protocol": types.StringType,
-	}
-	if api.CommsConfig != nil {
-		item.CommsConfig = types.ObjectValueMust(commsAttrTypes, map[string]attr.Value{
-			"fqdn":     types.StringValue(api.CommsConfig.FQDN),
-			"protocol": types.StringValue(api.CommsConfig.Protocol),
-		})
+	// Communications protocol.
+	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
+		item.CommunicationsProtocol = types.StringValue(api.CommsConfig.Protocol)
 	} else {
-		item.CommsConfig = types.ObjectNull(commsAttrTypes)
+		item.CommunicationsProtocol = types.StringNull()
 	}
 
 	// Info sync.

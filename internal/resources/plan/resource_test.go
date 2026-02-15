@@ -84,10 +84,7 @@ resource "jamfprotect_plan" "test" {
   description    = %[2]q
   action_configs = jamfprotect_action_configuration.test.id
 
-  comms_config = {
-    fqdn     = "example.protect.jamfcloud.com"
-    protocol = "mqtt"
-  }
+	communications_protocol = "mqtt"
 
   info_sync = {
     attrs                  = ["arch", "os_version"]
