@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccUSBControlSetResource_basic(t *testing.T) {
+func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping acceptance test")
 	}
@@ -23,8 +23,8 @@ func TestAccUSBControlSetResource_basic(t *testing.T) {
 			{
 				Config: `
 resource "jamfprotect_removable_storage_control_set" "test" {
-  name                 = "tf-acc-test-usb"
-  description          = "Acceptance test USB control set"
+  name                 = "tf-acc-test-removablestorage"
+  description          = "Acceptance test removable storage control set"
   default_mount_action = "ReadOnly"
   default_message_action = "This removable storage device is limited to read-only."
   rules                = []
@@ -32,7 +32,7 @@ resource "jamfprotect_removable_storage_control_set" "test" {
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("jamfprotect_removable_storage_control_set.test", "id"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-usb"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage"),
 					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_mount_action", "ReadOnly"),
 				),
 			},
@@ -46,15 +46,15 @@ resource "jamfprotect_removable_storage_control_set" "test" {
 			{
 				Config: `
 resource "jamfprotect_removable_storage_control_set" "test" {
-  name                 = "tf-acc-test-usb-updated"
-  description          = "Updated USB control set"
+  name                 = "tf-acc-test-removablestorage-updated"
+  description          = "Updated removable storage control set"
   default_mount_action = "Prevented"
-  default_message_action = "USB devices are not allowed."
+  default_message_action = "Removable storage devices are not allowed."
   rules                = []
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-usb-updated"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage-updated"),
 					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_mount_action", "Prevented"),
 				),
 			},
