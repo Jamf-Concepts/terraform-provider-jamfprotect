@@ -16,7 +16,6 @@ fragment UnifiedLoggingFilterFields on UnifiedLoggingFilter {
 	filter
 	tags
 	enabled
-	level
 }
 `
 
@@ -27,11 +26,10 @@ mutation createUnifiedLoggingFilter(
 	$description: String,
 	$tags: [String]!,
 	$filter: String!,
-	$enabled: Boolean,
-	$level: UNIFIED_LOGGING_LEVEL!
+	$enabled: Boolean
 ) {
 	createUnifiedLoggingFilter(
-		input: {name: $name, description: $description, tags: $tags, filter: $filter, enabled: $enabled, level: $level}
+		input: {name: $name, description: $description, tags: $tags, filter: $filter, enabled: $enabled}
 	) {
 		...UnifiedLoggingFilterFields
 	}
@@ -57,12 +55,11 @@ mutation updateUnifiedLoggingFilter(
 	$description: String,
 	$filter: String!,
 	$tags: [String]!,
-	$enabled: Boolean,
-	$level: UNIFIED_LOGGING_LEVEL!
+	$enabled: Boolean
 ) {
 	updateUnifiedLoggingFilter(
 		uuid: $uuid
-		input: {name: $name, description: $description, filter: $filter, tags: $tags, enabled: $enabled, level: $level}
+		input: {name: $name, description: $description, filter: $filter, tags: $tags, enabled: $enabled}
 	) {
 		...UnifiedLoggingFilterFields
 	}
@@ -104,7 +101,6 @@ type UnifiedLoggingFilterInput struct {
 	Tags        []string
 	Filter      string
 	Enabled     bool
-	Level       string
 }
 
 // UnifiedLoggingFilter represents a unified logging filter.
@@ -117,7 +113,6 @@ type UnifiedLoggingFilter struct {
 	Filter      string   `json:"filter"`
 	Tags        []string `json:"tags"`
 	Enabled     bool     `json:"enabled"`
-	Level       string   `json:"level"`
 }
 
 // CreateUnifiedLoggingFilter creates a new unified logging filter.
@@ -128,12 +123,11 @@ func (s *Service) CreateUnifiedLoggingFilter(ctx context.Context, input UnifiedL
 		"tags":        input.Tags,
 		"filter":      input.Filter,
 		"enabled":     input.Enabled,
-		"level":       input.Level,
 	}
 	var result struct {
 		CreateUnifiedLoggingFilter UnifiedLoggingFilter `json:"createUnifiedLoggingFilter"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", createUnifiedLoggingFilterMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", createUnifiedLoggingFilterMutation, vars, &result); err != nil {
 		return UnifiedLoggingFilter{}, err
 	}
 	return result.CreateUnifiedLoggingFilter, nil
@@ -145,7 +139,7 @@ func (s *Service) GetUnifiedLoggingFilter(ctx context.Context, uuid string) (*Un
 	var result struct {
 		GetUnifiedLoggingFilter *UnifiedLoggingFilter `json:"getUnifiedLoggingFilter"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", getUnifiedLoggingFilterQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", getUnifiedLoggingFilterQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetUnifiedLoggingFilter, nil
@@ -160,12 +154,11 @@ func (s *Service) UpdateUnifiedLoggingFilter(ctx context.Context, uuid string, i
 		"tags":        input.Tags,
 		"filter":      input.Filter,
 		"enabled":     input.Enabled,
-		"level":       input.Level,
 	}
 	var result struct {
 		UpdateUnifiedLoggingFilter UnifiedLoggingFilter `json:"updateUnifiedLoggingFilter"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", updateUnifiedLoggingFilterMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", updateUnifiedLoggingFilterMutation, vars, &result); err != nil {
 		return UnifiedLoggingFilter{}, err
 	}
 	return result.UpdateUnifiedLoggingFilter, nil
@@ -174,7 +167,7 @@ func (s *Service) UpdateUnifiedLoggingFilter(ctx context.Context, uuid string, i
 // DeleteUnifiedLoggingFilter deletes a unified logging filter by UUID.
 func (s *Service) DeleteUnifiedLoggingFilter(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, "/app", deleteUnifiedLoggingFilterMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/graphql", deleteUnifiedLoggingFilterMutation, vars, nil)
 }
 
 // ListUnifiedLoggingFilters retrieves all unified logging filters.
@@ -201,7 +194,7 @@ func (s *Service) ListUnifiedLoggingFilters(ctx context.Context) ([]UnifiedLoggi
 				} `json:"pageInfo"`
 			} `json:"listUnifiedLoggingFilters"`
 		}
-		if err := s.client.DoGraphQL(ctx, "/app", listUnifiedLoggingFiltersQuery, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/graphql", listUnifiedLoggingFiltersQuery, vars, &result); err != nil {
 			return nil, err
 		}
 

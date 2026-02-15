@@ -29,7 +29,6 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test filter description"),
 					resource.TestCheckResourceAttr(resourceName, "filter", `subsystem == "com.apple.securityd"`),
-					resource.TestCheckResourceAttr(resourceName, "level", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "terraform-test"),
@@ -61,7 +60,6 @@ resource "jamfprotect_unified_logging_filter" "test" {
   name        = %[1]q
   description = %[2]q
   filter      = "subsystem == \"com.apple.securityd\""
-  level       = "DEFAULT"
   enabled     = %[3]t
   tags        = ["terraform-test"]
 }

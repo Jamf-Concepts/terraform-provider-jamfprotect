@@ -207,7 +207,7 @@ func (s *Service) UpdateAnalyticSet(ctx context.Context, uuid string, input Anal
 	var result struct {
 		UpdateAnalyticSet AnalyticSet `json:"updateAnalyticSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, "/app", updateAnalyticSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/graphql", updateAnalyticSetMutation, vars, &result); err != nil {
 		return AnalyticSet{}, err
 	}
 	return result.UpdateAnalyticSet, nil

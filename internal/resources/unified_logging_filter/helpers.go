@@ -24,7 +24,6 @@ func (r *UnifiedLoggingFilterResource) buildInput(ctx context.Context, data Unif
 		Enabled: data.Enabled.ValueBool(),
 		Tags:    common.SetToStrings(ctx, data.Tags, diags),
 	}
-	input.Level = "DEFAULT"
 	if !data.Description.IsNull() {
 		input.Description = data.Description.ValueString()
 	} else {

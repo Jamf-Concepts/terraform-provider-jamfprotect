@@ -40,7 +40,6 @@ type UnifiedLoggingFilterDataSourceItemModel struct {
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
 	Filter      types.String `tfsdk:"filter"`
-	Level       types.String `tfsdk:"level"`
 	Enabled     types.Bool   `tfsdk:"enabled"`
 	Tags        types.List   `tfsdk:"tags"`
 	Created     types.String `tfsdk:"created"`
@@ -74,10 +73,6 @@ func (d *UnifiedLoggingFiltersDataSource) Schema(ctx context.Context, req dataso
 						},
 						"filter": schema.StringAttribute{
 							MarkdownDescription: "The predicate filter expression.",
-							Computed:            true,
-						},
-						"level": schema.StringAttribute{
-							MarkdownDescription: "The unified logging level.",
 							Computed:            true,
 						},
 						"enabled": schema.BoolAttribute{
@@ -134,7 +129,6 @@ func (d *UnifiedLoggingFiltersDataSource) Read(ctx context.Context, req datasour
 			ID:      types.StringValue(api.UUID),
 			Name:    types.StringValue(api.Name),
 			Filter:  types.StringValue(api.Filter),
-			Level:   types.StringValue(api.Level),
 			Enabled: types.BoolValue(api.Enabled),
 			Tags:    common.StringsToList(api.Tags),
 			Created: types.StringValue(api.Created),
