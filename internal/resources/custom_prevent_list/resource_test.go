@@ -27,23 +27,20 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "TEAMID"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_type", "TEAMID"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test prevent list"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.0", "terraform-test"),
-					resource.TestCheckResourceAttr(resourceName, "list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "list.0", "ABC123DEF4"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.0", "ABC123DEF4"),
 					resource.TestCheckResourceAttr(resourceName, "entry_count", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 				),
 			},
 			// ImportState testing.
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// Tags are not returned by getCustomPreventList.
-				ImportStateVerifyIgnore: []string{"tags"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 			// Update and Read testing.
 			{
@@ -68,7 +65,7 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 				Config: testAccCustomPreventListResourceConfig(rName, "FILEHASH", "File hash list"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "type", "FILEHASH"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_type", "FILEHASH"),
 				),
 			},
 		},
@@ -79,10 +76,9 @@ func testAccCustomPreventListResourceConfig(name, listType, description string) 
 	return fmt.Sprintf(`
 resource "jamfprotect_custom_prevent_list" "test" {
   name        = %[1]q
-  type        = %[2]q
+	prevent_type = %[2]q
   description = %[3]q
-  tags        = ["terraform-test"]
-  list        = ["ABC123DEF4"]
+	list_data   = ["ABC123DEF4"]
 }
 `, name, listType, description)
 }

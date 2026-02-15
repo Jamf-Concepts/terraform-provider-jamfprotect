@@ -57,7 +57,7 @@ func (r *CustomPreventListResource) Schema(ctx context.Context, req resource.Sch
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
 			},
-			"type": schema.StringAttribute{
+			"prevent_type": schema.StringAttribute{
 				MarkdownDescription: "The type of custom prevent list.",
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
@@ -65,12 +65,7 @@ func (r *CustomPreventListResource) Schema(ctx context.Context, req resource.Sch
 					stringvalidator.OneOf("TEAMID", "FILEHASH", "CDHASH", "SIGNINGID"),
 				},
 			},
-			"tags": schema.ListAttribute{
-				MarkdownDescription: "A list of tags for the custom prevent list.",
-				Required:            true,
-				ElementType:         types.StringType,
-			},
-			"list": schema.ListAttribute{
+			"list_data": schema.ListAttribute{
 				MarkdownDescription: "The list of entries (identifiers) in the custom prevent list.",
 				Required:            true,
 				ElementType:         types.StringType,

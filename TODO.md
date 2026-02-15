@@ -32,12 +32,12 @@ _(None — all schema improvements and data sources complete)_
 - [x] **#1** Add `stringvalidator.OneOf()` to all enum fields across all resources
   - `analytic`: `input_type`, `severity`
   - `plan`: `log_level`, `signatures_feed_config.mode`, `comms_config.protocol`, `analytic_sets.type`
-  - `custom_prevent_list`: `type`
+  - `custom_prevent_list`: `prevent_type`
   - `unified_logging_filter`: `level`
 - [x] **#3** Replace analytic `analytic_actions.parameters` JSON string with `MapAttribute{ElementType: StringType}`
 - [x] **#4** Standardize `description` to `Optional + Computed` across all resources
 - [x] **#5** Standardize ID naming to `id` everywhere, mapping to `uuid` internally where the API uses it
-- [x] **#6** Add `RequiresReplace()` to immutable fields (`input_type` on analytic, `type` on custom_prevent_list)
+- [x] **#6** Add `RequiresReplace()` to immutable fields (`input_type` on analytic, `prevent_type` on custom_prevent_list)
 - [x] **#7** Add defaults for fields with known API defaults
   - `plan.log_level` default `"ERROR"`
   - `plan.signatures_feed_config.mode` default `"blocking"`

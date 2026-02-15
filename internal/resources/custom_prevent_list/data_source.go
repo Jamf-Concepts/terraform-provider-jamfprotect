@@ -39,10 +39,9 @@ type CustomPreventListDataSourceItemModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	Type        types.String `tfsdk:"type"`
-	Tags        types.List   `tfsdk:"tags"`
+	PreventType types.String `tfsdk:"prevent_type"`
 	EntryCount  types.Int64  `tfsdk:"entry_count"`
-	List        types.List   `tfsdk:"list"`
+	ListData    types.List   `tfsdk:"list_data"`
 	Created     types.String `tfsdk:"created"`
 }
 
@@ -71,20 +70,15 @@ func (d *CustomPreventListsDataSource) Schema(ctx context.Context, req datasourc
 							MarkdownDescription: "A description of the custom prevent list.",
 							Computed:            true,
 						},
-						"type": schema.StringAttribute{
+						"prevent_type": schema.StringAttribute{
 							MarkdownDescription: "The type of custom prevent list.",
 							Computed:            true,
-						},
-						"tags": schema.ListAttribute{
-							MarkdownDescription: "Tags assigned to the custom prevent list.",
-							Computed:            true,
-							ElementType:         types.StringType,
 						},
 						"entry_count": schema.Int64Attribute{
 							MarkdownDescription: "The number of entries in the custom prevent list.",
 							Computed:            true,
 						},
-						"list": schema.ListAttribute{
+						"list_data": schema.ListAttribute{
 							MarkdownDescription: "The entries in the custom prevent list.",
 							Computed:            true,
 							ElementType:         types.StringType,
@@ -127,13 +121,12 @@ func (d *CustomPreventListsDataSource) Read(ctx context.Context, req datasource.
 	items := make([]CustomPreventListDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
 		item := CustomPreventListDataSourceItemModel{
-			ID:         types.StringValue(api.ID),
-			Name:       types.StringValue(api.Name),
-			Type:       types.StringValue(api.Type),
-			EntryCount: types.Int64Value(api.Count),
-			List:       common.StringsToList(api.List),
-			Tags:       common.StringsToList(api.Tags),
-			Created:    types.StringValue(api.Created),
+			ID:          types.StringValue(api.ID),
+			Name:        types.StringValue(api.Name),
+			PreventType: types.StringValue(api.Type),
+			EntryCount:  types.Int64Value(api.Count),
+			ListData:    common.StringsToList(api.List),
+			Created:     types.StringValue(api.Created),
 		}
 		if api.Description != "" {
 			item.Description = types.StringValue(api.Description)

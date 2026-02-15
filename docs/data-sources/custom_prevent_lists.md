@@ -19,8 +19,8 @@ data "jamfprotect_custom_prevent_lists" "all" {}
 # Output the names and types of all custom prevent lists.
 output "prevent_list_summary" {
   value = [for pl in data.jamfprotect_custom_prevent_lists.all.custom_prevent_lists : {
-    name = pl.name
-    type = pl.type
+    name         = pl.name
+    prevent_type = pl.prevent_type
   }]
 }
 ```
@@ -41,7 +41,6 @@ Read-Only:
 - `description` (String) A description of the custom prevent list.
 - `entry_count` (Number) The number of entries in the custom prevent list.
 - `id` (String) The unique identifier of the custom prevent list.
-- `list` (List of String) The entries in the custom prevent list.
+- `list_data` (List of String) The entries in the custom prevent list.
 - `name` (String) The name of the custom prevent list.
-- `tags` (List of String) Tags assigned to the custom prevent list.
-- `type` (String) The type of custom prevent list.
+- `prevent_type` (String) The type of custom prevent list.
