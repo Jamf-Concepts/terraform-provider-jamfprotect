@@ -31,7 +31,7 @@ type TelemetriesV2DataSource struct {
 
 // TelemetriesV2DataSourceModel maps the data source schema.
 type TelemetriesV2DataSourceModel struct {
-	TelemetriesV2 []TelemetryV2DataSourceItemModel `tfsdk:"telemetries`
+	TelemetriesV2 []TelemetryV2DataSourceItemModel `tfsdk:"telemetries"`
 }
 
 // TelemetryV2DataSourceItemModel maps a single v2 telemetry item (read-only, no timeouts).
