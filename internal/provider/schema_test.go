@@ -14,9 +14,9 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
@@ -109,7 +109,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 func TestPreventListResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := prevent_list.NewPreventListResource()
+	r := custom_prevent_list.NewPreventListResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -239,7 +239,7 @@ func TestAnalyticResourceMetadata(t *testing.T) {
 func TestPreventListResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := prevent_list.NewPreventListResource()
+	r := custom_prevent_list.NewPreventListResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -851,7 +851,7 @@ func TestActionConfigsDataSourceMetadata(t *testing.T) {
 func TestPreventListsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := prevent_list.NewPreventListsDataSource()
+	ds := custom_prevent_list.NewPreventListsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -871,7 +871,7 @@ func TestPreventListsDataSourceSchema(t *testing.T) {
 func TestPreventListsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := prevent_list.NewPreventListsDataSource()
+	ds := custom_prevent_list.NewPreventListsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
