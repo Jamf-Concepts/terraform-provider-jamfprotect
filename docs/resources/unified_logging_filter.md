@@ -60,5 +60,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import jamfprotect_unified_logging_filter.example "<filter-uuid>"
+terraform import jamfprotect_unified_logging_filter.example "<unified-logging-filter-id>"
 ```
