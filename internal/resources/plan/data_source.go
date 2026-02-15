@@ -49,7 +49,7 @@ type PlanDataSourceItemModel struct {
 	Telemetry                types.String `tfsdk:"telemetry"`
 	TelemetryV2              types.String `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
-	AnalyticSets             types.List   `tfsdk:"analytic_sets"`
+	AnalyticSets             types.Set    `tfsdk:"analytic_sets"`
 	CommsConfig              types.Object `tfsdk:"comms_config"`
 	InfoSync                 types.Object `tfsdk:"info_sync"`
 	EndpointThreatPrevention types.String `tfsdk:"endpoint_threat_prevention"`
@@ -125,21 +125,10 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The ID of the USB control set associated with this plan.",
 			Computed:            true,
 		},
-		"analytic_sets": schema.ListNestedAttribute{
-			MarkdownDescription: "Analytic sets included in this plan.",
+		"analytic_sets": schema.SetAttribute{
+			MarkdownDescription: "Analytic set UUIDs included in this plan. The type is always `Report`.",
 			Computed:            true,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of analytic set.",
-						Computed:            true,
-					},
-					"analytic_set": schema.StringAttribute{
-						MarkdownDescription: "The UUID of the analytic set.",
-						Computed:            true,
-					},
-				},
-			},
+			ElementType:         types.StringType,
 		},
 		"comms_config": schema.SingleNestedAttribute{
 			MarkdownDescription: "Communications configuration for the plan.",
@@ -293,22 +282,15 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 	}
 
 	// Analytic sets (exclude managed ones with dedicated attributes).
-	analyticSetAttrTypes := map[string]attr.Type{
-		"type":         types.StringType,
-		"analytic_set": types.StringType,
-	}
 	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
 	if len(filteredAnalyticSets) > 0 {
-		var setVals []attr.Value
-		for _, as := range filteredAnalyticSets {
-			setVals = append(setVals, types.ObjectValueMust(analyticSetAttrTypes, map[string]attr.Value{
-				"type":         types.StringValue(as.Type),
-				"analytic_set": types.StringValue(as.AnalyticSet.UUID),
-			}))
+		uuids := make([]string, len(filteredAnalyticSets))
+		for i, as := range filteredAnalyticSets {
+			uuids[i] = as.AnalyticSet.UUID
 		}
-		item.AnalyticSets = types.ListValueMust(types.ObjectType{AttrTypes: analyticSetAttrTypes}, setVals)
+		item.AnalyticSets = common.StringsToSet(uuids)
 	} else {
-		item.AnalyticSets = types.ListNull(types.ObjectType{AttrTypes: analyticSetAttrTypes})
+		item.AnalyticSets = types.SetNull(types.StringType)
 	}
 
 	// Comms config.

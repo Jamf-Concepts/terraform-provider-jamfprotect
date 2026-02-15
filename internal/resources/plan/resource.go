@@ -99,24 +99,10 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "The ID of the USB control set to associate with this plan.",
 				Optional:            true,
 			},
-			"analytic_sets": schema.ListNestedAttribute{
-				MarkdownDescription: "Analytic sets to include in this plan.",
+			"analytic_sets": schema.SetAttribute{
+				MarkdownDescription: "Analytic set UUIDs to include in this plan. The type is always `Report`.",
 				Optional:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of analytic set.",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("Report", "Prevent"),
-							},
-						},
-						"analytic_set": schema.StringAttribute{
-							MarkdownDescription: "The UUID of the analytic set.",
-							Required:            true,
-						},
-					},
-				},
+				ElementType:         types.StringType,
 			},
 			"comms_config": schema.SingleNestedAttribute{
 				MarkdownDescription: "Communications configuration for the plan.",

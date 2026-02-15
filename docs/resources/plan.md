@@ -74,7 +74,7 @@ resource "jamfprotect_plan" "endpoint_security" {
 ### Optional
 
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.
-- `analytic_sets` (Attributes List) Analytic sets to include in this plan. (see [below for nested schema](#nestedatt--analytic_sets))
+- `analytic_sets` (Set of String) Analytic set UUIDs to include in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.
@@ -112,15 +112,6 @@ Required:
 
 - `attrs` (List of String) A list of attribute names to sync.
 - `insights_sync_interval` (Number) The interval in seconds for insights data synchronization.
-
-
-<a id="nestedatt--analytic_sets"></a>
-### Nested Schema for `analytic_sets`
-
-Required:
-
-- `analytic_set` (String) The UUID of the analytic set.
-- `type` (String) The type of analytic set.
 
 
 <a id="nestedatt--timeouts"></a>
