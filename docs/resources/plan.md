@@ -45,10 +45,7 @@ resource "jamfprotect_plan" "endpoint_security" {
   action_configs = jamfprotect_action_config.default.id
   auto_update    = true
 
-  comms_config = {
-    fqdn     = "your-tenant.protect.jamfcloud.com"
-    protocol = "mqtt"
-  }
+  communications_protocol = "mqtt"
 
   info_sync = {
     attrs                  = ["arch", "hostName", "serial"]
@@ -67,7 +64,6 @@ resource "jamfprotect_plan" "endpoint_security" {
 ### Required
 
 - `action_configs` (String) The ID of the action configuration to associate with this plan.
-- `comms_config` (Attributes) Communications configuration for the plan. (see [below for nested schema](#nestedatt--comms_config))
 - `info_sync` (Attributes) Info sync configuration for the plan. (see [below for nested schema](#nestedatt--info_sync))
 - `name` (String) The name of the plan.
 
@@ -76,6 +72,7 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.
 - `analytic_sets` (Set of String) Analytic set UUIDs to include in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
+- `communications_protocol` (String) The communications protocol to use. Defaults to `mqtt`.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
@@ -92,18 +89,6 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
 - `updated` (String) The last-updated timestamp.
-
-<a id="nestedatt--comms_config"></a>
-### Nested Schema for `comms_config`
-
-Required:
-
-- `fqdn` (String) The fully qualified domain name for communications.
-
-Optional:
-
-- `protocol` (String) The protocol to use. Defaults to `mqtt`.
-
 
 <a id="nestedatt--info_sync"></a>
 ### Nested Schema for `info_sync`
