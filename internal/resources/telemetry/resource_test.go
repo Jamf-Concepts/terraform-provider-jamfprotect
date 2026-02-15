@@ -25,17 +25,17 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 resource "jamfprotect_telemetry" "test" {
   name               = "tf-acc-test-telemetry"
   description        = "Acceptance test telemetry v2"
-  log_files          = []
-  log_file_collection = false
-  performance_metrics = false
-  file_hashing       = false
-  events             = ["exec", "sudo"]
+	log_file_path       = []
+	collect_diagnostic_and_crash_reports = false
+	collect_performance_metrics = false
+	file_hashes         = false
+	log_access_and_authentication = true
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("jamfprotect_telemetry.test", "id"),
 					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "name", "tf-acc-test-telemetry"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "events.#", "2"),
+					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "log_access_and_authentication", "true"),
 				),
 			},
 			// Import.
@@ -50,17 +50,18 @@ resource "jamfprotect_telemetry" "test" {
 resource "jamfprotect_telemetry" "test" {
   name                = "tf-acc-test-telemetry-updated"
   description         = "Updated telemetry v2"
-  log_files           = ["/var/log/system.log"]
-  log_file_collection = true
-  performance_metrics = true
-  file_hashing        = true
-  events              = ["exec", "sudo", "mount", "authentication"]
+	log_file_path        = ["/var/log/system.log"]
+	collect_diagnostic_and_crash_reports = true
+	collect_performance_metrics = true
+	file_hashes          = true
+	log_access_and_authentication = true
+	log_hardware_and_software     = true
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "name", "tf-acc-test-telemetry-updated"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "log_file_collection", "true"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "events.#", "4"),
+					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "collect_diagnostic_and_crash_reports", "true"),
+					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "log_hardware_and_software", "true"),
 				),
 			},
 		},

@@ -10,32 +10,21 @@ import (
 
 // TelemetryV2ResourceModel maps the resource schema data.
 type TelemetryV2ResourceModel struct {
-	ID                 types.String   `tfsdk:"id"`
-	Name               types.String   `tfsdk:"name"`
-	Description        types.String   `tfsdk:"description"`
-	LogFiles           types.List     `tfsdk:"log_files"`
-	LogFileCollection  types.Bool     `tfsdk:"log_file_collection"`
-	PerformanceMetrics types.Bool     `tfsdk:"performance_metrics"`
-	Events             types.List     `tfsdk:"events"`
-	FileHashing        types.Bool     `tfsdk:"file_hashing"`
-	Created            types.String   `tfsdk:"created"`
-	Updated            types.String   `tfsdk:"updated"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-}
-
-// ---------------------------------------------------------------------------
-// API model (matches the JSON returned by the GraphQL API)
-// ---------------------------------------------------------------------------
-
-type telemetryV2APIModel struct {
-	ID                 string   `json:"id"`
-	Name               string   `json:"name"`
-	Description        string   `json:"description"`
-	LogFiles           []string `json:"logFiles"`
-	LogFileCollection  bool     `json:"logFileCollection"`
-	PerformanceMetrics bool     `json:"performanceMetrics"`
-	Events             []string `json:"events"`
-	FileHashing        bool     `json:"fileHashing"`
-	Created            string   `json:"created"`
-	Updated            string   `json:"updated"`
+	ID                  types.String   `tfsdk:"id"`
+	Name                types.String   `tfsdk:"name"`
+	Description         types.String   `tfsdk:"description"`
+	LogFilePath         types.List     `tfsdk:"log_file_path"`
+	DiagnosticReports   types.Bool     `tfsdk:"collect_diagnostic_and_crash_reports"`
+	PerformanceMetrics  types.Bool     `tfsdk:"collect_performance_metrics"`
+	FileHashes          types.Bool     `tfsdk:"file_hashes"`
+	LogAppsProcesses    types.Bool     `tfsdk:"log_applications_and_processes"`
+	LogAccessAuth       types.Bool     `tfsdk:"log_access_and_authentication"`
+	LogUsersGroups      types.Bool     `tfsdk:"log_users_and_groups"`
+	LogPersistence      types.Bool     `tfsdk:"log_persistence"`
+	LogHardwareSoftware types.Bool     `tfsdk:"log_hardware_and_software"`
+	LogAppleSecurity    types.Bool     `tfsdk:"log_apple_security"`
+	LogSystem           types.Bool     `tfsdk:"log_system"`
+	Created             types.String   `tfsdk:"created"`
+	Updated             types.String   `tfsdk:"updated"`
+	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
