@@ -1,1 +1,1 @@
-terraform import jamfprotect_unified_logging_filter.example "<filter-uuid>"
+terraform import jamfprotect_unified_logging_filter.example "<unified-logging-filter-id>"
