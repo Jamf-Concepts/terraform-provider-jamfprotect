@@ -22,23 +22,23 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
-var _ resource.Resource = &PreventListResource{}
-var _ resource.ResourceWithImportState = &PreventListResource{}
+var _ resource.Resource = &CustomPreventListResource{}
+var _ resource.ResourceWithImportState = &CustomPreventListResource{}
 
-func NewPreventListResource() resource.Resource {
-	return &PreventListResource{}
+func NewCustomPreventListResource() resource.Resource {
+	return &CustomPreventListResource{}
 }
 
-// PreventListResource manages a Jamf Protect prevent list (threat prevention allow/block list).
-type PreventListResource struct {
+// CustomPreventListResource manages a Jamf Protect prevent list (threat prevention allow/block list).
+type CustomPreventListResource struct {
 	service *jamfprotect.Service
 }
 
-func (r *PreventListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *CustomPreventListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_custom_prevent_list"
 }
 
-func (r *PreventListResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CustomPreventListResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a custom prevent list in Jamf Protect. Custom prevent lists allow you to define allow/block entries by Team ID, file hash, CDHash, or signing ID for threat prevention.",
 		Attributes: map[string]schema.Attribute{
@@ -94,7 +94,7 @@ func (r *PreventListResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *PreventListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CustomPreventListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -107,6 +107,6 @@ func (r *PreventListResource) Configure(ctx context.Context, req resource.Config
 	r.service = jamfprotect.NewService(client)
 }
 
-func (r *PreventListResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *CustomPreventListResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -17,7 +17,7 @@ import (
 // Helpers
 // ---------------------------------------------------------------------------
 
-func (r *PreventListResource) buildVariables(ctx context.Context, data PreventListResourceModel, diags *diag.Diagnostics) *jamfprotect.CustomPreventListInput {
+func (r *CustomPreventListResource) buildVariables(ctx context.Context, data CustomPreventListResourceModel, diags *diag.Diagnostics) *jamfprotect.CustomPreventListInput {
 	input := &jamfprotect.CustomPreventListInput{
 		Name: data.Name.ValueString(),
 		Type: data.Type.ValueString(),
@@ -32,7 +32,7 @@ func (r *PreventListResource) buildVariables(ctx context.Context, data PreventLi
 	return input
 }
 
-func (r *PreventListResource) apiToState(_ context.Context, data *PreventListResourceModel, api jamfprotect.CustomPreventList, _ *diag.Diagnostics) {
+func (r *CustomPreventListResource) apiToState(_ context.Context, data *CustomPreventListResourceModel, api jamfprotect.CustomPreventList, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Type = types.StringValue(api.Type)

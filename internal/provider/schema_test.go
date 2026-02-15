@@ -106,10 +106,10 @@ func TestAnalyticResourceSchema(t *testing.T) {
 	}
 }
 
-func TestPreventListResourceSchema(t *testing.T) {
+func TestCustomPreventListResourceSchema(t *testing.T) {
 	t.Parallel()
 
-	r := custom_prevent_list.NewPreventListResource()
+	r := custom_prevent_list.NewCustomPreventListResource()
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 
@@ -236,10 +236,10 @@ func TestAnalyticResourceMetadata(t *testing.T) {
 	}
 }
 
-func TestPreventListResourceMetadata(t *testing.T) {
+func TestCustomPreventListResourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	r := custom_prevent_list.NewPreventListResource()
+	r := custom_prevent_list.NewCustomPreventListResource()
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
@@ -848,10 +848,10 @@ func TestActionConfigsDataSourceMetadata(t *testing.T) {
 	}
 }
 
-func TestPreventListsDataSourceSchema(t *testing.T) {
+func TestCustomPreventListsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
-	ds := custom_prevent_list.NewPreventListsDataSource()
+	ds := custom_prevent_list.NewCustomPreventListsDataSource()
 	resp := &datasource.SchemaResponse{}
 	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
 
@@ -859,19 +859,19 @@ func TestPreventListsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	preventListsAttr, ok := resp.Schema.Attributes["custom_prevent_lists"]
+	customPreventListsAttr, ok := resp.Schema.Attributes["custom_prevent_lists"]
 	if !ok {
 		t.Fatal("expected attribute 'custom_prevent_lists' in data source schema")
 	}
-	if !preventListsAttr.IsComputed() {
+	if !customPreventListsAttr.IsComputed() {
 		t.Error("expected 'custom_prevent_lists' to be computed")
 	}
 }
 
-func TestPreventListsDataSourceMetadata(t *testing.T) {
+func TestCustomPreventListsDataSourceMetadata(t *testing.T) {
 	t.Parallel()
 
-	ds := custom_prevent_list.NewPreventListsDataSource()
+	ds := custom_prevent_list.NewCustomPreventListsDataSource()
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 

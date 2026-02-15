@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccPreventListResource_basic(t *testing.T) {
+func TestAccCustomPreventListResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-pl")
 	resourceName := "jamfprotect_custom_prevent_list.test"
 
@@ -23,7 +23,7 @@ func TestAccPreventListResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
-				Config: testAccPreventListResourceConfig(rName, "TEAMID", "Test prevent list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "TEAMID", "Test prevent list"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -42,12 +42,12 @@ func TestAccPreventListResource_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// Tags are not returned by getPreventList.
+				// Tags are not returned by getCustomPreventList.
 				ImportStateVerifyIgnore: []string{"tags"},
 			},
 			// Update and Read testing.
 			{
-				Config: testAccPreventListResourceConfig(rName, "TEAMID", "Updated description"),
+				Config: testAccCustomPreventListResourceConfig(rName, "TEAMID", "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
 				),
@@ -56,7 +56,7 @@ func TestAccPreventListResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccPreventListResource_fileHash(t *testing.T) {
+func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-pl")
 	resourceName := "jamfprotect_custom_prevent_list.test"
 
@@ -65,7 +65,7 @@ func TestAccPreventListResource_fileHash(t *testing.T) {
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPreventListResourceConfig(rName, "FILEHASH", "File hash list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "FILEHASH", "File hash list"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "FILEHASH"),
@@ -75,7 +75,7 @@ func TestAccPreventListResource_fileHash(t *testing.T) {
 	})
 }
 
-func testAccPreventListResourceConfig(name, listType, description string) string {
+func testAccCustomPreventListResourceConfig(name, listType, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_custom_prevent_list" "test" {
   name        = %[1]q
