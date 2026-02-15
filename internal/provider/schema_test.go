@@ -467,7 +467,7 @@ func TestRemovableStorageControlSetResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "default_mount_action", "rules"}
+	requiredAttrs := []string{"name", "default_permission"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -503,43 +503,29 @@ func TestRemovableStorageControlSetResourceSchema(t *testing.T) {
 		t.Error("expected 'description' to be computed")
 	}
 
-	// default_message_action should be optional + computed.
-	msgAction, ok := resp.Schema.Attributes["default_message_action"]
+	// default_local_notification_message should be optional + computed.
+	msgAction, ok := resp.Schema.Attributes["default_local_notification_message"]
 	if !ok {
-		t.Fatal("expected attribute 'default_message_action' in RemovableStorage control set schema")
+		t.Fatal("expected attribute 'default_local_notification_message' in RemovableStorage control set schema")
 	}
 	if !msgAction.IsOptional() {
-		t.Error("expected 'default_message_action' to be optional")
+		t.Error("expected 'default_local_notification_message' to be optional")
 	}
 	if !msgAction.IsComputed() {
-		t.Error("expected 'default_message_action' to be computed")
+		t.Error("expected 'default_local_notification_message' to be computed")
 	}
 
-	// rules should be a ListNestedAttribute.
-	rulesAttr, ok := resp.Schema.Attributes["rules"]
-	if !ok {
-		t.Fatal("expected attribute 'rules' in RemovableStorage control set schema")
-	}
-	rulesNested, ok := rulesAttr.(schema.ListNestedAttribute)
-	if !ok {
-		t.Fatal("expected 'rules' to be a ListNestedAttribute")
-	}
-
-	// Verify rule nested attributes.
-	ruleAttrs := rulesNested.NestedObject.Attributes
-	for _, attr := range []string{"type", "mount_action"} {
-		a, ok := ruleAttrs[attr]
+	// override blocks should exist.
+	for _, block := range []string{
+		"override_encrypted_devices",
+		"override_vendor_id",
+		"override_product_id",
+		"override_serial_number",
+	} {
+		_, ok := resp.Schema.Blocks[block]
 		if !ok {
-			t.Errorf("expected attribute %q in rules nested object", attr)
+			t.Errorf("expected block %q in RemovableStorage control set schema", block)
 			continue
-		}
-		if !a.IsRequired() {
-			t.Errorf("expected rule attribute %q to be required", attr)
-		}
-	}
-	for _, attr := range []string{"message_action", "apply_to", "vendors", "serials", "products"} {
-		if _, ok := ruleAttrs[attr]; !ok {
-			t.Errorf("expected attribute %q in rules nested object", attr)
 		}
 	}
 
@@ -937,12 +923,9 @@ func TestRemovableStorageControlSetsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	removableStorageAttr, ok := resp.Schema.Attributes["removable_storage_control_sets"]
+	_, ok := resp.Schema.Blocks["removable_storage_control_sets"]
 	if !ok {
-		t.Fatal("expected attribute 'removable_storage_control_sets' in data source schema")
-	}
-	if !removableStorageAttr.IsComputed() {
-		t.Error("expected 'removable_storage_control_sets' to be computed")
+		t.Fatal("expected block 'removable_storage_control_sets' in data source schema")
 	}
 }
 

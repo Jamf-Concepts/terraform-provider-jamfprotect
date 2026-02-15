@@ -1,1 +1,1 @@
-terraform import jamfprotect_analytic.example "<analytic-uuid>"
+terraform import jamfprotect_analytic.example "<analytic-id>"

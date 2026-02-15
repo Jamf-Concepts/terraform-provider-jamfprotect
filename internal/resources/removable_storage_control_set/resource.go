@@ -39,11 +39,10 @@ func (r *RemovableStorageControlSetResource) Metadata(ctx context.Context, req r
 }
 
 func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	mountActionValidator := stringvalidator.OneOf("ReadOnly", "ReadWrite", "Prevented")
-	ruleTypeValidator := stringvalidator.OneOf("Vendor", "Serial", "Product", "Encryption", "VendorRule", "SerialRule", "ProductRule", "EncryptionRule")
+	permissionValidator := stringvalidator.OneOf("ReadOnly", "ReadWrite", "Prevented")
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default mount behavior and vendor/serial/product-specific rules.",
+		MarkdownDescription: "Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default permissions and device-specific overrides for encrypted devices, vendors, serial numbers, and product IDs.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the removable storage control set.",
@@ -60,69 +59,15 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
 			},
-			"default_mount_action": schema.StringAttribute{
-				MarkdownDescription: "The default mount action for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+			"default_permission": schema.StringAttribute{
+				MarkdownDescription: "The default permission for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
 				Required:            true,
-				Validators:          []validator.String{mountActionValidator},
+				Validators:          []validator.String{permissionValidator},
 			},
-			"default_message_action": schema.StringAttribute{
-				MarkdownDescription: "The default message displayed to users when a removable storage device action is triggered.",
+			"default_local_notification_message": schema.StringAttribute{
+				MarkdownDescription: "The default local notification message displayed to users when a removable storage device action is triggered.",
 				Optional:            true,
 				Computed:            true,
-			},
-			"rules": schema.ListNestedAttribute{
-				MarkdownDescription: "A list of removable storage control rules. Each rule targets devices by vendor ID, serial number, or product ID.",
-				Required:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of rule. Valid values: `Vendor`, `Serial`, `Product`, `Encryption`.",
-							Required:            true,
-							Validators:          []validator.String{ruleTypeValidator},
-						},
-						"mount_action": schema.StringAttribute{
-							MarkdownDescription: "The mount action for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
-							Required:            true,
-							Validators:          []validator.String{mountActionValidator},
-						},
-						"message_action": schema.StringAttribute{
-							MarkdownDescription: "The message displayed to users when this rule is triggered.",
-							Optional:            true,
-							Computed:            true,
-						},
-						"apply_to": schema.StringAttribute{
-							MarkdownDescription: "Specifies which device categories the rule applies to.",
-							Optional:            true,
-							Computed:            true,
-						},
-						"vendors": schema.ListAttribute{
-							MarkdownDescription: "A list of vendor IDs (used when type is `VendorRule`).",
-							Optional:            true,
-							ElementType:         types.StringType,
-						},
-						"serials": schema.ListAttribute{
-							MarkdownDescription: "A list of serial numbers (used when type is `SerialRule`).",
-							Optional:            true,
-							ElementType:         types.StringType,
-						},
-						"products": schema.ListNestedAttribute{
-							MarkdownDescription: "A list of vendor+product ID pairs (used when type is `ProductRule`).",
-							Optional:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"vendor": schema.StringAttribute{
-										MarkdownDescription: "The vendor ID.",
-										Required:            true,
-									},
-									"product": schema.StringAttribute{
-										MarkdownDescription: "The product ID.",
-										Required:            true,
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
@@ -139,6 +84,117 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Update: true,
 				Delete: true,
 			}),
+		},
+		Blocks: map[string]schema.Block{
+			"override_encrypted_devices": schema.ListNestedBlock{
+				MarkdownDescription: "Overrides applied to encrypted devices.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"permission": schema.StringAttribute{
+							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							Required:            true,
+							Validators:          []validator.String{permissionValidator},
+						},
+						"local_notification_message": schema.StringAttribute{
+							MarkdownDescription: "The local notification message displayed to users when this override is triggered.",
+							Optional:            true,
+							Computed:            true,
+						},
+					},
+				},
+			},
+			"override_vendor_id": schema.ListNestedBlock{
+				MarkdownDescription: "Overrides applied to vendor IDs.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"permission": schema.StringAttribute{
+							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							Required:            true,
+							Validators:          []validator.String{permissionValidator},
+						},
+						"local_notification_message": schema.StringAttribute{
+							MarkdownDescription: "The local notification message displayed to users when this override is triggered.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"apply_to": schema.StringAttribute{
+							MarkdownDescription: "Specifies which device categories the override applies to.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"vendor_ids": schema.ListAttribute{
+							MarkdownDescription: "A list of vendor IDs that this override applies to.",
+							Required:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
+			"override_product_id": schema.ListNestedBlock{
+				MarkdownDescription: "Overrides applied to product IDs.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"permission": schema.StringAttribute{
+							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							Required:            true,
+							Validators:          []validator.String{permissionValidator},
+						},
+						"local_notification_message": schema.StringAttribute{
+							MarkdownDescription: "The local notification message displayed to users when this override is triggered.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"apply_to": schema.StringAttribute{
+							MarkdownDescription: "Specifies which device categories the override applies to.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"product_id": schema.ListNestedAttribute{
+							MarkdownDescription: "Vendor and product IDs that this override applies to.",
+							Required:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"vendor_id": schema.StringAttribute{
+										MarkdownDescription: "The vendor ID.",
+										Required:            true,
+									},
+									"product_id": schema.StringAttribute{
+										MarkdownDescription: "The product ID.",
+										Required:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"override_serial_number": schema.ListNestedBlock{
+				MarkdownDescription: "Overrides applied to serial numbers.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"permission": schema.StringAttribute{
+							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							Required:            true,
+							Validators:          []validator.String{permissionValidator},
+						},
+						"local_notification_message": schema.StringAttribute{
+							MarkdownDescription: "The local notification message displayed to users when this override is triggered.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"apply_to": schema.StringAttribute{
+							MarkdownDescription: "Specifies which device categories the override applies to.",
+							Optional:            true,
+							Computed:            true,
+						},
+						"serial_numbers": schema.ListAttribute{
+							MarkdownDescription: "A list of serial numbers that this override applies to.",
+							Required:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
 		},
 	}
 }

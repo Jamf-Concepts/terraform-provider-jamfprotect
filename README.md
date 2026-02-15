@@ -17,7 +17,7 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 | `jamfprotect_prevent_list`           | Manage prevent lists (allow/block lists)       |
 | `jamfprotect_telemetry_v2`           | Manage telemetry v2 configurations             |
 | `jamfprotect_unified_logging_filter` | Manage unified logging filters                 |
-| `jamfprotect_usb_control_set`        | Manage USB control sets (device access policy) |
+| `jamfprotect_removable_storage_control_set` | Manage removable storage control sets (device access policy) |
 
 All resources support full CRUD operations and `terraform import`.
 
@@ -33,7 +33,7 @@ All resources support full CRUD operations and `terraform import`.
 | `jamfprotect_prevent_lists`              | List all prevent lists (allow/block lists)    |
 | `jamfprotect_telemetries_v2`             | List all telemetry v2 configurations          |
 | `jamfprotect_unified_logging_filters`    | List all unified logging filters              |
-| `jamfprotect_usb_control_sets`           | List all USB control sets                     |
+| `jamfprotect_removable_storage_control_sets` | List all removable storage control sets        |
 
 ## Requirements
 
@@ -230,17 +230,20 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 ### Release Process
 
 1. Ensure all tests pass:
+
    ```shell
    mise run check
    ```
 
 2. Regenerate documentation and verify no drift:
+
    ```shell
    mise run build:generate-docs
    git diff --exit-code
    ```
 
 3. Create and push a version tag:
+
    ```shell
    git tag v0.1.0-alpha.1
    git push origin v0.1.0-alpha.1
