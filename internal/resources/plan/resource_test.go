@@ -94,9 +94,7 @@ resource "jamfprotect_plan" "test" {
     insights_sync_interval = 86400
   }
 
-  signatures_feed_config = {
-    mode = "blocking"
-  }
+	endpoint_threat_prevention = "BlockAndReport"
 }
 `, name, description)
 }

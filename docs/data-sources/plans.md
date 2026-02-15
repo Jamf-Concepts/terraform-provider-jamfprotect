@@ -35,11 +35,13 @@ output "plan_names" {
 Read-Only:
 
 - `action_configs` (String) The ID of the action configuration associated with this plan.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan.
 - `analytic_sets` (Attributes List) Analytic sets included in this plan. (see [below for nested schema](#nestedatt--plans--analytic_sets))
 - `auto_update` (Boolean) Whether auto-updates are enabled for endpoints using this plan.
 - `comms_config` (Attributes) Communications configuration for the plan. (see [below for nested schema](#nestedatt--plans--comms_config))
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the plan.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan.
 - `exception_sets` (List of String) A list of exception set IDs associated with this plan.
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
@@ -47,7 +49,7 @@ Read-Only:
 - `log_level` (String) The log level for the plan.
 - `name` (String) The name of the plan.
 - `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
-- `signatures_feed_config` (Attributes) Signatures feed configuration for the plan. (see [below for nested schema](#nestedatt--plans--signatures_feed_config))
+- `tamper_prevention` (String) Tamper Prevention setting for the plan.
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `updated` (String) The last-updated timestamp.
@@ -77,11 +79,3 @@ Read-Only:
 
 - `attrs` (List of String) A list of attribute names to sync.
 - `insights_sync_interval` (Number) The interval in seconds for insights data synchronization.
-
-
-<a id="nestedatt--plans--signatures_feed_config"></a>
-### Nested Schema for `plans.signatures_feed_config`
-
-Read-Only:
-
-- `mode` (String) The signatures feed mode.

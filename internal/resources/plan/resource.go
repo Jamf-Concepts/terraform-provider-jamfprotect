@@ -6,9 +6,6 @@ package plan
 import (
 	"context"
 	"fmt"
-	"time"
-
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -21,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &PlanResource{}
@@ -35,7 +32,7 @@ func NewPlanResource() resource.Resource {
 
 // PlanResource manages a Jamf Protect plan.
 type PlanResource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 func (r *PlanResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -155,19 +152,31 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
-			"signatures_feed_config": schema.SingleNestedAttribute{
-				MarkdownDescription: "Signatures feed configuration for the plan.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"mode": schema.StringAttribute{
-						MarkdownDescription: "The signatures feed mode. Defaults to `blocking`.",
-						Optional:            true,
-						Computed:            true,
-						Default:             stringdefault.StaticString("blocking"),
-						Validators: []validator.String{
-							stringvalidator.OneOf("blocking", "monitoring", "off"),
-						},
-					},
+			"endpoint_threat_prevention": schema.StringAttribute{
+				MarkdownDescription: "Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("BlockAndReport"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("BlockAndReport", "Report", "Disable"),
+				},
+			},
+			"advanced_threat_controls": schema.StringAttribute{
+				MarkdownDescription: "Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Validators: []validator.String{
+					stringvalidator.OneOf("BlockAndReport", "ReportOnly", "Disable"),
+				},
+			},
+			"tamper_prevention": schema.StringAttribute{
+				MarkdownDescription: "Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `BlockAndReport` -> `Prevent`, `Disable` -> omit.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Validators: []validator.String{
+					stringvalidator.OneOf("BlockAndReport", "Disable"),
 				},
 			},
 			"created": schema.StringAttribute{
@@ -199,157 +208,12 @@ func (r *PlanResource) Configure(ctx context.Context, req resource.ConfigureRequ
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	r.client = client
+	r.service = jamfprotect.NewService(client)
 }
 
 // ---------------------------------------------------------------------------
 // CRUD
 // ---------------------------------------------------------------------------
-
-func (r *PlanResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data PlanResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var result struct {
-		CreatePlan planAPIModel `json:"createPlan"`
-	}
-	if err := r.client.DoGraphQL(ctx, "/app", createPlanMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error creating plan", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.CreatePlan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Trace(ctx, "created plan", map[string]any{"id": data.ID.ValueString()})
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *PlanResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data PlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, readTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	var result struct {
-		GetPlan *planAPIModel `json:"getPlan"`
-	}
-	if err := r.client.DoGraphQL(ctx, "/app", getPlanQuery, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error reading plan", err.Error())
-		return
-	}
-	if result.GetPlan == nil {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	r.apiToState(ctx, &data, *result.GetPlan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PlanResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var state PlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.ID = state.ID
-
-	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
-	defer cancel()
-
-	vars := r.buildVariables(ctx, data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	vars["id"] = data.ID.ValueString()
-
-	var result struct {
-		UpdatePlan planAPIModel `json:"updatePlan"`
-	}
-	if err := r.client.DoGraphQL(ctx, "/app", updatePlanMutation, vars, &result); err != nil {
-		resp.Diagnostics.AddError("Error updating plan", err.Error())
-		return
-	}
-
-	r.apiToState(ctx, &data, result.UpdatePlan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *PlanResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data PlanResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
-	defer cancel()
-
-	vars := map[string]any{"id": data.ID.ValueString()}
-	if err := r.client.DoGraphQL(ctx, "/app", deletePlanMutation, vars, nil); err != nil {
-		if common.IsNotFoundError(err) {
-			tflog.Trace(ctx, "plan already deleted", map[string]any{"id": data.ID.ValueString()})
-			return
-		}
-		resp.Diagnostics.AddError("Error deleting plan", err.Error())
-		return
-	}
-
-	tflog.Trace(ctx, "deleted plan", map[string]any{"id": data.ID.ValueString()})
-}
 
 func (r *PlanResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
