@@ -21,7 +21,7 @@ type PlanResourceModel struct {
 	Telemetry                types.String   `tfsdk:"telemetry"`
 	TelemetryV2              types.String   `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String   `tfsdk:"removable_storage_control_set"`
-	AnalyticSets             types.List     `tfsdk:"analytic_sets"`
+	AnalyticSets             types.Set      `tfsdk:"analytic_sets"`
 	CommsConfig              types.Object   `tfsdk:"comms_config"`
 	InfoSync                 types.Object   `tfsdk:"info_sync"`
 	EndpointThreatPrevention types.String   `tfsdk:"endpoint_threat_prevention"`
@@ -30,10 +30,4 @@ type PlanResourceModel struct {
 	Created                  types.String   `tfsdk:"created"`
 	Updated                  types.String   `tfsdk:"updated"`
 	Timeouts                 timeouts.Value `tfsdk:"timeouts"`
-}
-
-// planAnalyticSetModel maps PlanAnalyticSetInput / response.
-type planAnalyticSetModel struct {
-	Type        types.String `tfsdk:"type"`
-	AnalyticSet types.String `tfsdk:"analytic_set"`
 }

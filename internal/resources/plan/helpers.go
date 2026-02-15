@@ -63,15 +63,14 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.ExceptionSets = common.ListToStrings(ctx, data.ExceptionSets, diags)
 	}
 
-	// Analytic sets.
+	// Analytic sets (Report type only).
 	var analyticSets []jamfprotect.PlanAnalyticSetInput
 	if !data.AnalyticSets.IsNull() {
-		var setModels []planAnalyticSetModel
-		diags.Append(data.AnalyticSets.ElementsAs(ctx, &setModels, false)...)
-		for _, s := range setModels {
+		uuids := common.SetToStrings(ctx, data.AnalyticSets, diags)
+		for _, uuid := range uuids {
 			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: s.Type.ValueString(),
-				UUID: s.AnalyticSet.ValueString(),
+				Type: "Report",
+				UUID: uuid,
 			})
 		}
 	}
@@ -261,24 +260,15 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 	}
 
 	// Analytic sets (exclude managed ones with dedicated attributes).
-	analyticSetAttrTypes := map[string]attr.Type{
-		"type":         types.StringType,
-		"analytic_set": types.StringType,
-	}
 	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
 	if len(filteredAnalyticSets) > 0 {
-		var setVals []attr.Value
-		for _, as := range filteredAnalyticSets {
-			setVals = append(setVals, types.ObjectValueMust(analyticSetAttrTypes, map[string]attr.Value{
-				"type":         types.StringValue(as.Type),
-				"analytic_set": types.StringValue(as.AnalyticSet.UUID),
-			}))
+		uuids := make([]string, len(filteredAnalyticSets))
+		for i, as := range filteredAnalyticSets {
+			uuids[i] = as.AnalyticSet.UUID
 		}
-		setList, d := types.ListValue(types.ObjectType{AttrTypes: analyticSetAttrTypes}, setVals)
-		diags.Append(d...)
-		data.AnalyticSets = setList
+		data.AnalyticSets = common.StringsToSet(uuids)
 	} else {
-		data.AnalyticSets = types.ListNull(types.ObjectType{AttrTypes: analyticSetAttrTypes})
+		data.AnalyticSets = types.SetNull(types.StringType)
 	}
 
 	// Comms config.
