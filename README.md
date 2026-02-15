@@ -130,15 +130,15 @@ resource "jamfprotect_analytic" "suspicious_process" {
 resource "jamfprotect_plan" "endpoint_security" {
   name           = "Endpoint Security Plan"
   description    = "Standard endpoint security plan with threat prevention."
-  action_configs = jamfprotect_action_config.default.id
+  action_configuration = jamfprotect_action_config.default.id
   auto_update    = true
 
   communications_protocol = "mqtt"
 
-  info_sync = {
-    attrs                  = ["arch", "hostName", "serial"]
-    insights_sync_interval = 86400
-  }
+  reporting_interval    = 1440
+  report_architecture   = true
+  report_hostname       = true
+  report_serial_number  = true
 
   endpoint_threat_prevention = "BlockAndReport"
   advanced_threat_controls   = "ReportOnly"

@@ -40,17 +40,17 @@ resource "jamfprotect_action_config" "default" {
 
 # Create a plan that uses the action configuration.
 resource "jamfprotect_plan" "endpoint_security" {
-  name           = "Endpoint Security Plan"
-  description    = "Standard endpoint security plan with threat prevention."
-  action_configs = jamfprotect_action_config.default.id
-  auto_update    = true
+  name                 = "Endpoint Security Plan"
+  description          = "Standard endpoint security plan with threat prevention."
+  action_configuration = jamfprotect_action_config.default.id
+  auto_update          = true
 
   communications_protocol = "mqtt"
 
-  info_sync = {
-    attrs                  = ["arch", "hostName", "serial"]
-    insights_sync_interval = 86400
-  }
+  reporting_interval   = 1440
+  report_architecture  = true
+  report_hostname      = true
+  report_serial_number = true
 
   endpoint_threat_prevention = "BlockAndReport"
   advanced_threat_controls   = "ReportOnly"
@@ -63,9 +63,9 @@ resource "jamfprotect_plan" "endpoint_security" {
 
 ### Required
 
-- `action_configs` (String) The ID of the action configuration to associate with this plan.
-- `info_sync` (Attributes) Info sync configuration for the plan. (see [below for nested schema](#nestedatt--info_sync))
+- `action_configuration` (String) The ID of the action configuration to associate with this plan.
 - `name` (String) The name of the plan.
+- `reporting_interval` (Number) The reporting interval in minutes.
 
 ### Optional
 
@@ -73,14 +73,21 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `analytic_sets` (Set of String) Analytic set UUIDs to include in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `communications_protocol` (String) The communications protocol to use. Defaults to `mqtt`.
+- `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Defaults to `ERROR`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
+- `report_architecture` (Boolean) Report the device architecture.
+- `report_hostname` (Boolean) Report the device hostname.
+- `report_kernel_version` (Boolean) Report the kernel version.
+- `report_memory_size` (Boolean) Report the device memory size.
+- `report_model_name` (Boolean) Report the device model name.
+- `report_os_version` (Boolean) Report the OS version details.
+- `report_serial_number` (Boolean) Report the device serial number.
 - `tamper_prevention` (String) Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `BlockAndReport` -> `Prevent`, `Disable` -> omit.
-- `telemetry` (String) The ID of the legacy telemetry configuration.
-- `telemetry_v2` (String) The ID of the v2 telemetry configuration.
+- `telemetry` (String) The ID of the telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -89,15 +96,6 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
 - `updated` (String) The last-updated timestamp.
-
-<a id="nestedatt--info_sync"></a>
-### Nested Schema for `info_sync`
-
-Required:
-
-- `attrs` (List of String) A list of attribute names to sync.
-- `insights_sync_interval` (Number) The interval in seconds for insights data synchronization.
-
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -6,9 +6,10 @@ This document outlines potential improvements to make the terraform-provider-jam
 
 ### 1. **Simplified Plan Resource with Inline Resources** (HIGH IMPACT)
 
-**Problem:** Users must create separate resources for action_configs, analytic_sets, etc., then reference them by ID in plans.
+**Problem:** Users must create separate resources for action_configuration, analytic_sets, etc., then reference them by ID in plans.
 
 **Current Experience:**
+
 ```hcl
 resource "jamfprotect_action_config" "default" {
   name = "Default Action Config"
@@ -17,20 +18,21 @@ resource "jamfprotect_action_config" "default" {
 
 resource "jamfprotect_plan" "main" {
   name           = "My Plan"
-  action_configs = jamfprotect_action_config.default.id  # String ID reference
+  action_configuration = jamfprotect_action_config.default.id  # String ID reference
 }
 ```
 
 **Improved Experience:**
+
 ```hcl
 resource "jamfprotect_plan" "main" {
   name = "My Plan"
   
   # Option 1: Reference existing resource
-  action_configs = jamfprotect_action_config.default.id
+  action_configuration = jamfprotect_action_config.default.id
   
   # Option 2: Inline definition (provider manages lifecycle)
-  action_config {
+  action_configuration {
     name = "Inline Action Config"
     alert_config {
       # ... configuration
@@ -40,12 +42,14 @@ resource "jamfprotect_plan" "main" {
 ```
 
 **Implementation:**
-- Add `action_config` SingleNestedBlock alongside `action_configs` string attribute
+
+- Add `action_configuration` SingleNestedBlock alongside `action_configuration` string attribute
 - Use ConflictsWith validator to ensure only one is set
 - Provider internally creates/updates/deletes the inline resource
 - Similar pattern for: `analytic_set`, `exception_set`, `telemetry_v2`, `usb_control_set`
 
 **Benefits:**
+
 - Reduces boilerplate by 50%+
 - Clearer ownership model (plan owns inline resources)
 - Easier for beginners
@@ -59,6 +63,7 @@ resource "jamfprotect_plan" "main" {
 **Solution:** Provide a Terraform module with pre-built analytics as a library.
 
 **Structure:**
+
 ```
 modules/
   analytic-library/
@@ -78,6 +83,7 @@ modules/
 ```
 
 **Usage:**
+
 ```hcl
 module "security_analytics" {
   source = "github.com/smithjw/terraform-jamfprotect-analytics"
@@ -101,6 +107,7 @@ resource "jamfprotect_analytic_set" "critical" {
 ```
 
 **Benefits:**
+
 - Immediate value - users don't need to learn Jamf Protect query language
 - Best practices codified
 - Community contributions
@@ -115,6 +122,7 @@ resource "jamfprotect_analytic_set" "critical" {
 **Solution:** Provide plan "profiles" as preset configurations.
 
 **Implementation via Module:**
+
 ```hcl
 module "standard_plan" {
   source = "./modules/plan-profiles"
@@ -135,6 +143,7 @@ output "plan_id" {
 ```
 
 **Profiles:**
+
 - `endpoint-protection` - Balanced security + performance
 - `compliance` - NIST, CIS benchmarks
 - `threat-hunting` - Maximum telemetry, all analytics
@@ -150,6 +159,7 @@ output "plan_id" {
 **Problem:** Users must manually list analytic UUIDs or use complex for-loops with data sources.
 
 **Current:**
+
 ```hcl
 data "jamfprotect_analytics" "all" {}
 
@@ -162,6 +172,7 @@ resource "jamfprotect_analytic_set" "critical" {
 ```
 
 **Improved with Dynamic Block Helper:**
+
 ```hcl
 resource "jamfprotect_analytic_set" "critical" {
   name = "Critical Analytics"
@@ -178,6 +189,7 @@ resource "jamfprotect_analytic_set" "critical" {
 ```
 
 **Implementation:**
+
 - Add `analytic_filter` block to `jamfprotect_analytic_set` resource
 - Provider queries analytics data source internally
 - Filters applied server-side or client-side
@@ -190,6 +202,7 @@ resource "jamfprotect_analytic_set" "critical" {
 **Problem:** Users don't know if their filter expressions or context types are valid until Terraform apply fails.
 
 **Solution 1: Plan-Time Validation**
+
 ```hcl
 resource "jamfprotect_analytic" "test" {
   name       = "Test Analytic"
@@ -204,6 +217,7 @@ resource "jamfprotect_analytic" "test" {
 ```
 
 **Solution 2: Terraform `validate` Command Support**
+
 ```bash
 terraform validate
 # Provider checks:
@@ -214,6 +228,7 @@ terraform validate
 ```
 
 **Implementation:**
+
 - Add custom validators using `terraform-plugin-framework/resource/schema/validator`
 - Optionally: HTTP call to Jamf Protect API for server-side validation (with caching)
 
@@ -224,6 +239,7 @@ terraform validate
 **Problem:** Exception sets have complex nested structure with many optional fields.
 
 **Current:**
+
 ```hcl
 resource "jamfprotect_exception_set" "dev" {
   name = "Developer Exceptions"
@@ -241,6 +257,7 @@ resource "jamfprotect_exception_set" "dev" {
 ```
 
 **Improved with Helper Functions (Terraform 1.8+):**
+
 ```hcl
 resource "jamfprotect_exception_set" "dev" {
   name = "Developer Exceptions"
@@ -265,6 +282,7 @@ resource "jamfprotect_exception_set" "dev" {
 **Problem:** Jamf Protect allows manual edits in UI. Terraform doesn't detect some field changes.
 
 **Solution:** Add computed fields for commonly modified attributes:
+
 ```hcl
 resource "jamfprotect_plan" "main" {
   name = "Production Plan"
@@ -279,6 +297,7 @@ resource "jamfprotect_plan" "main" {
 ```
 
 **Implementation:**
+
 - Add `lastModifiedBy`, `lastModifiedAt` to GraphQL queries
 - Provider compares configuration hash with API hash
 - Set `modified_in_ui` computed field when mismatch detected
@@ -292,6 +311,7 @@ resource "jamfprotect_plan" "main" {
 **Solution:** CLI tool to generate Terraform configuration from existing tenant.
 
 **Usage:**
+
 ```bash
 # Export all resources from tenant
 tfprotect export \
@@ -310,6 +330,7 @@ tfprotect export \
 ```
 
 **Implementation:**
+
 - Separate CLI tool (not in provider)
 - Uses same GraphQL client
 - Generates `.tf` files + `terraform import` script
@@ -324,6 +345,7 @@ tfprotect export \
 **Solution:** Provide state migration resources or documentation.
 
 **Documentation:**
+
 ```markdown
 ## Migrating from v0.1.0 to v0.2.0
 
@@ -338,6 +360,7 @@ analytic_actions = [{
 ```
 
 After (v0.2.0):
+
 ```hcl
 analytic_actions = [{
   name       = "SmartGroup"
@@ -348,11 +371,13 @@ analytic_actions = [{
 ```
 
 **Migration:**
+
 ```bash
 # Update terraform configuration, then:
 terraform state rm 'jamfprotect_analytic.example'
 terraform import 'jamfprotect_analytic.example' uuid-here
 ```
+
 ```
 
 ---
@@ -381,6 +406,7 @@ resource "jamfprotect_analytic" "test" {
 ```
 
 Or provide a data source for validation:
+
 ```hcl
 data "jamfprotect_analytic_validation" "test" {
   input_type = "GPProcessEvent"
@@ -416,17 +442,20 @@ output "is_valid" {
 ## 🎯 Recommended Roadmap
 
 ### v0.2.0 - Quick Wins (Next Release)
+
 - ✅ Analytic Library Module (external repo)
 - ✅ Plan Templates Module (external repo)
 - ✅ Basic validation helpers
 - ✅ Documentation improvements
 
 ### v0.3.0 - Major UX Improvements
+
 - ✅ Inline resource support for Plans
 - ✅ Analytic Set smart filtering
 - ✅ Exception Set builder functions
 
 ### v0.4.0 - Advanced Features
+
 - ✅ Bulk import tool
 - ✅ Enhanced drift detection
 - ✅ Testing utilities
@@ -436,16 +465,19 @@ output "is_valid" {
 ## 💡 Additional Considerations
 
 ### Error Messages
+
 - Add more helpful error messages with suggestions
 - Include links to documentation
 - Provide examples of correct syntax
 
 ### Documentation
+
 - Add more examples for common use cases
 - Create video tutorials
 - Provide migration guides
 
 ### Community
+
 - Set up GitHub Discussions for questions
 - Create examples repository
 - Encourage community contributions
