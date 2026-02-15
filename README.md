@@ -143,9 +143,9 @@ resource "jamfprotect_plan" "endpoint_security" {
     insights_sync_interval = 86400
   }
 
-  signatures_feed_config = {
-    mode = "blocking"
-  }
+  endpoint_threat_prevention = "BlockAndReport"
+  advanced_threat_controls   = "ReportOnly"
+  tamper_prevention          = "BlockAndReport"
 }
 ```
 

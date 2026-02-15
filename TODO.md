@@ -31,7 +31,7 @@ _(None — all schema improvements and data sources complete)_
   - Updated schema tests to verify `timeouts` attribute exists
 - [x] **#1** Add `stringvalidator.OneOf()` to all enum fields across all resources
   - `analytic`: `input_type`, `severity`
-  - `plan`: `log_level`, `signatures_feed_config.mode`, `comms_config.protocol`, `analytic_sets.type`
+  - `plan`: `log_level`, `endpoint_threat_prevention`, `comms_config.protocol`, `analytic_sets.type`
   - `custom_prevent_list`: `prevent_type`
   - `unified_logging_filter`: `level`
 - [x] **#3** Replace analytic `analytic_actions.parameters` JSON string with `MapAttribute{ElementType: StringType}`
@@ -40,6 +40,6 @@ _(None — all schema improvements and data sources complete)_
 - [x] **#6** Add `RequiresReplace()` to immutable fields (`input_type` on analytic, `prevent_type` on custom_prevent_list)
 - [x] **#7** Add defaults for fields with known API defaults
   - `plan.log_level` default `"ERROR"`
-  - `plan.signatures_feed_config.mode` default `"blocking"`
+  - `plan.endpoint_threat_prevention` default `"BlockAndReport"`
   - `plan.comms_config.protocol` default `"mqtt"`
 - [x] **#8** Split resource files into `*_resource.go` / `*_types.go` / `*_helpers.go` per resource
