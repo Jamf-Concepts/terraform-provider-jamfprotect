@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &PlansDataSource{}
@@ -27,7 +28,7 @@ func NewPlansDataSource() datasource.DataSource {
 
 // PlansDataSource lists all plans in Jamf Protect.
 type PlansDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // PlansDataSourceModel maps the data source schema.
@@ -37,23 +38,25 @@ type PlansDataSourceModel struct {
 
 // PlanDataSourceItemModel maps a single plan item (read-only, no timeouts).
 type PlanDataSourceItemModel struct {
-	ID                   types.String `tfsdk:"id"`
-	Hash                 types.String `tfsdk:"hash"`
-	Name                 types.String `tfsdk:"name"`
-	Description          types.String `tfsdk:"description"`
-	LogLevel             types.String `tfsdk:"log_level"`
-	AutoUpdate           types.Bool   `tfsdk:"auto_update"`
-	ActionConfigs        types.String `tfsdk:"action_configs"`
-	ExceptionSets        types.List   `tfsdk:"exception_sets"`
-	Telemetry            types.String `tfsdk:"telemetry"`
-	TelemetryV2          types.String `tfsdk:"telemetry_v2"`
-	USBControlSet        types.String `tfsdk:"removable_storage_control_set"`
-	AnalyticSets         types.List   `tfsdk:"analytic_sets"`
-	CommsConfig          types.Object `tfsdk:"comms_config"`
-	InfoSync             types.Object `tfsdk:"info_sync"`
-	SignaturesFeedConfig types.Object `tfsdk:"signatures_feed_config"`
-	Created              types.String `tfsdk:"created"`
-	Updated              types.String `tfsdk:"updated"`
+	ID                       types.String `tfsdk:"id"`
+	Hash                     types.String `tfsdk:"hash"`
+	Name                     types.String `tfsdk:"name"`
+	Description              types.String `tfsdk:"description"`
+	LogLevel                 types.String `tfsdk:"log_level"`
+	AutoUpdate               types.Bool   `tfsdk:"auto_update"`
+	ActionConfigs            types.String `tfsdk:"action_configs"`
+	ExceptionSets            types.List   `tfsdk:"exception_sets"`
+	Telemetry                types.String `tfsdk:"telemetry"`
+	TelemetryV2              types.String `tfsdk:"telemetry_v2"`
+	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
+	AnalyticSets             types.List   `tfsdk:"analytic_sets"`
+	CommsConfig              types.Object `tfsdk:"comms_config"`
+	InfoSync                 types.Object `tfsdk:"info_sync"`
+	EndpointThreatPrevention types.String `tfsdk:"endpoint_threat_prevention"`
+	AdvancedThreatControls   types.String `tfsdk:"advanced_threat_controls"`
+	TamperPrevention         types.String `tfsdk:"tamper_prevention"`
+	Created                  types.String `tfsdk:"created"`
+	Updated                  types.String `tfsdk:"updated"`
 }
 
 func (d *PlansDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -167,15 +170,17 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 				},
 			},
 		},
-		"signatures_feed_config": schema.SingleNestedAttribute{
-			MarkdownDescription: "Signatures feed configuration for the plan.",
+		"endpoint_threat_prevention": schema.StringAttribute{
+			MarkdownDescription: "Endpoint threat prevention setting for the plan.",
 			Computed:            true,
-			Attributes: map[string]schema.Attribute{
-				"mode": schema.StringAttribute{
-					MarkdownDescription: "The signatures feed mode.",
-					Computed:            true,
-				},
-			},
+		},
+		"advanced_threat_controls": schema.StringAttribute{
+			MarkdownDescription: "Advanced Threat Controls setting for the plan.",
+			Computed:            true,
+		},
+		"tamper_prevention": schema.StringAttribute{
+			MarkdownDescription: "Tamper Prevention setting for the plan.",
+			Computed:            true,
 		},
 		"created": schema.StringAttribute{
 			MarkdownDescription: "The creation timestamp.",
@@ -198,42 +203,16 @@ func (d *PlansDataSource) Configure(ctx context.Context, req datasource.Configur
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *PlansDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data PlansDataSourceModel
 
-	var allPlans []planAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
-			"pageSize":  100,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListPlans struct {
-				Items    []planAPIModel  `json:"items"`
-				PageInfo common.PageInfo `json:"pageInfo"`
-			} `json:"listPlans"`
-		}
-		if err := d.client.DoGraphQL(ctx, "/app", listPlansQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing plans", err.Error())
-			return
-		}
-
-		allPlans = append(allPlans, result.ListPlans.Items...)
-
-		if result.ListPlans.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListPlans.PageInfo.Next
+	allPlans, err := d.service.ListPlans(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing plans", err.Error())
+		return
 	}
 
 	tflog.Trace(ctx, "listed plans", map[string]any{"count": len(allPlans)})
@@ -252,8 +231,8 @@ func (d *PlansDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// planAPIToDataSourceItem maps a planAPIModel to PlanDataSourceItemModel.
-func planAPIToDataSourceItem(api planAPIModel, _ *diag.Diagnostics) PlanDataSourceItemModel {
+// planAPIToDataSourceItem maps a plan to PlanDataSourceItemModel.
+func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanDataSourceItemModel {
 	item := PlanDataSourceItemModel{
 		ID:         types.StringValue(api.ID),
 		Hash:       types.StringValue(api.Hash),
@@ -313,14 +292,15 @@ func planAPIToDataSourceItem(api planAPIModel, _ *diag.Diagnostics) PlanDataSour
 		item.USBControlSet = types.StringNull()
 	}
 
-	// Analytic sets.
+	// Analytic sets (exclude managed ones with dedicated attributes).
 	analyticSetAttrTypes := map[string]attr.Type{
 		"type":         types.StringType,
 		"analytic_set": types.StringType,
 	}
-	if len(api.AnalyticSets) > 0 {
+	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
+	if len(filteredAnalyticSets) > 0 {
 		var setVals []attr.Value
-		for _, as := range api.AnalyticSets {
+		for _, as := range filteredAnalyticSets {
 			setVals = append(setVals, types.ObjectValueMust(analyticSetAttrTypes, map[string]attr.Value{
 				"type":         types.StringValue(as.Type),
 				"analytic_set": types.StringValue(as.AnalyticSet.UUID),
@@ -359,17 +339,19 @@ func planAPIToDataSourceItem(api planAPIModel, _ *diag.Diagnostics) PlanDataSour
 		item.InfoSync = types.ObjectNull(infoSyncAttrTypes)
 	}
 
-	// Signatures feed config.
-	sigFeedAttrTypes := map[string]attr.Type{
-		"mode": types.StringType,
-	}
+	// Endpoint threat prevention setting.
 	if api.SignaturesFeedConfig != nil {
-		item.SignaturesFeedConfig = types.ObjectValueMust(sigFeedAttrTypes, map[string]attr.Value{
-			"mode": types.StringValue(api.SignaturesFeedConfig.Mode),
-		})
+		if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
+			item.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
+		} else {
+			item.EndpointThreatPrevention = types.StringNull()
+		}
 	} else {
-		item.SignaturesFeedConfig = types.ObjectNull(sigFeedAttrTypes)
+		item.EndpointThreatPrevention = types.StringNull()
 	}
+
+	item.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, nil)
+	item.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, nil)
 
 	return item
 }

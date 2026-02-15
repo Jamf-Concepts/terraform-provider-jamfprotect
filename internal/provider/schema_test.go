@@ -378,7 +378,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "action_configs", "comms_config", "info_sync", "signatures_feed_config"}
+	requiredAttrs := []string{"name", "action_configs", "comms_config", "info_sync"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -402,7 +402,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		}
 	}
 
-	optionalAttrs := []string{"description", "log_level", "exception_sets", "telemetry", "telemetry", "removable_storage_control_set", "analytic_sets"}
+	optionalAttrs := []string{"description", "log_level", "endpoint_threat_prevention", "advanced_threat_controls", "tamper_prevention", "exception_sets", "telemetry", "telemetry", "removable_storage_control_set", "analytic_sets"}
 	for _, attr := range optionalAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -436,6 +436,40 @@ func TestPlanResourceSchema(t *testing.T) {
 	}
 	if !autoUpdate.IsComputed() {
 		t.Error("expected 'auto_update' to be computed (has default)")
+	}
+
+	// endpoint_threat_prevention should be optional + computed (has default).
+	endpointThreatPrevention, ok := resp.Schema.Attributes["endpoint_threat_prevention"]
+	if !ok {
+		t.Fatal("expected attribute 'endpoint_threat_prevention' in schema")
+	}
+	if !endpointThreatPrevention.IsOptional() {
+		t.Error("expected 'endpoint_threat_prevention' to be optional")
+	}
+	if !endpointThreatPrevention.IsComputed() {
+		t.Error("expected 'endpoint_threat_prevention' to be computed (has default)")
+	}
+
+	advancedThreatControls, ok := resp.Schema.Attributes["advanced_threat_controls"]
+	if !ok {
+		t.Fatal("expected attribute 'advanced_threat_controls' in schema")
+	}
+	if !advancedThreatControls.IsOptional() {
+		t.Error("expected 'advanced_threat_controls' to be optional")
+	}
+	if !advancedThreatControls.IsComputed() {
+		t.Error("expected 'advanced_threat_controls' to be computed")
+	}
+
+	tamperPrevention, ok := resp.Schema.Attributes["tamper_prevention"]
+	if !ok {
+		t.Fatal("expected attribute 'tamper_prevention' in schema")
+	}
+	if !tamperPrevention.IsOptional() {
+		t.Error("expected 'tamper_prevention' to be optional")
+	}
+	if !tamperPrevention.IsComputed() {
+		t.Error("expected 'tamper_prevention' to be computed")
 	}
 
 	// timeouts should exist.

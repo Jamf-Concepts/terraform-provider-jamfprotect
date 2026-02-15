@@ -55,9 +55,9 @@ resource "jamfprotect_plan" "endpoint_security" {
     insights_sync_interval = 86400
   }
 
-  signatures_feed_config = {
-    mode = "blocking"
-  }
+  endpoint_threat_prevention = "BlockAndReport"
+  advanced_threat_controls   = "ReportOnly"
+  tamper_prevention          = "BlockAndReport"
 }
 ```
 
@@ -70,16 +70,18 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `comms_config` (Attributes) Communications configuration for the plan. (see [below for nested schema](#nestedatt--comms_config))
 - `info_sync` (Attributes) Info sync configuration for the plan. (see [below for nested schema](#nestedatt--info_sync))
 - `name` (String) The name of the plan.
-- `signatures_feed_config` (Attributes) Signatures feed configuration for the plan. (see [below for nested schema](#nestedatt--signatures_feed_config))
 
 ### Optional
 
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.
 - `analytic_sets` (Attributes List) Analytic sets to include in this plan. (see [below for nested schema](#nestedatt--analytic_sets))
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `description` (String) A description of the plan.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Defaults to `ERROR`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `BlockAndReport` -> `Prevent`, `Disable` -> omit.
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -110,14 +112,6 @@ Required:
 
 - `attrs` (List of String) A list of attribute names to sync.
 - `insights_sync_interval` (Number) The interval in seconds for insights data synchronization.
-
-
-<a id="nestedatt--signatures_feed_config"></a>
-### Nested Schema for `signatures_feed_config`
-
-Optional:
-
-- `mode` (String) The signatures feed mode. Defaults to `blocking`.
 
 
 <a id="nestedatt--analytic_sets"></a>
