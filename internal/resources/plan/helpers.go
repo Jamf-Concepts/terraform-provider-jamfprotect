@@ -10,7 +10,6 @@ import (
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -29,7 +28,7 @@ const (
 func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, commsFQDN string, diags *diag.Diagnostics) *jamfprotect.PlanInput {
 	input := &jamfprotect.PlanInput{
 		Name:          data.Name.ValueString(),
-		ActionConfigs: data.ActionConfigs.ValueString(),
+		ActionConfigs: data.ActionConfiguration.ValueString(),
 		AutoUpdate:    data.AutoUpdate.ValueBool(),
 	}
 
@@ -44,14 +43,11 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.LogLevel = &logLevel
 	}
 
-	if !data.Telemetry.IsNull() {
+	if data.Telemetry.IsNull() {
+		input.TelemetryV2Null = true
+	} else if !data.Telemetry.IsUnknown() {
 		telemetry := data.Telemetry.ValueString()
-		input.Telemetry = &telemetry
-	}
-
-	if !data.TelemetryV2.IsNull() {
-		telemetryV2 := data.TelemetryV2.ValueString()
-		input.TelemetryV2 = &telemetryV2
+		input.TelemetryV2 = &telemetry
 	}
 
 	if !data.USBControlSet.IsNull() {
@@ -144,27 +140,13 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	// Info sync (required).
-	if !data.InfoSync.IsNull() {
-		infoAttrs := data.InfoSync.Attributes()
-		attrsList, ok := infoAttrs["attrs"].(types.List)
-		if !ok {
-			diags.AddError("Type assertion failed", "attrs is not a types.List")
-			return nil
-		}
-		syncInterval, ok := infoAttrs["insights_sync_interval"].(types.Int64)
-		if !ok {
-			diags.AddError("Type assertion failed", "insights_sync_interval is not a types.Int64")
-			return nil
-		}
-		input.InfoSync = jamfprotect.PlanInfoSyncInput{
-			Attrs:                common.ListToStrings(ctx, attrsList, diags),
-			InsightsSyncInterval: syncInterval.ValueInt64(),
-		}
-	} else {
-		input.InfoSync = jamfprotect.PlanInfoSyncInput{
-			Attrs:                []string{},
-			InsightsSyncInterval: 0,
-		}
+	if data.ReportingInterval.IsNull() {
+		diags.AddError("Missing reporting interval", "reporting_interval must be set.")
+		return nil
+	}
+	input.InfoSync = jamfprotect.PlanInfoSyncInput{
+		Attrs:                buildInfoSyncAttrs(data),
+		InsightsSyncInterval: data.ReportingInterval.ValueInt64() * 60,
 	}
 
 	// Endpoint threat prevention setting (required).
@@ -212,7 +194,9 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 
 	// Action configs — the API returns an object with id+name; we store just the ID.
 	if api.ActionConfigs != nil {
-		data.ActionConfigs = types.StringValue(api.ActionConfigs.ID)
+		data.ActionConfiguration = types.StringValue(api.ActionConfigs.ID)
+	} else {
+		data.ActionConfiguration = types.StringNull()
 	}
 
 	// Exception sets — extract UUIDs.
@@ -223,20 +207,14 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		}
 		data.ExceptionSets = common.StringsToList(uuids)
 	} else {
-		data.ExceptionSets = types.ListNull(types.StringType)
+		data.ExceptionSets = common.StringsToList([]string{})
 	}
 
-	// Telemetry references.
-	if api.Telemetry != nil && api.Telemetry.ID != "" {
-		data.Telemetry = types.StringValue(api.Telemetry.ID)
+	// Telemetry reference.
+	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
+		data.Telemetry = types.StringValue(api.TelemetryV2.ID)
 	} else {
 		data.Telemetry = types.StringNull()
-	}
-
-	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
-		data.TelemetryV2 = types.StringValue(api.TelemetryV2.ID)
-	} else {
-		data.TelemetryV2 = types.StringNull()
 	}
 
 	// USB control set.
@@ -255,7 +233,7 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		}
 		data.AnalyticSets = common.StringsToSet(uuids)
 	} else {
-		data.AnalyticSets = types.SetNull(types.StringType)
+		data.AnalyticSets = common.StringsToSet([]string{})
 	}
 
 	// Communications protocol.
@@ -265,19 +243,8 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		data.CommunicationsProtocol = types.StringNull()
 	}
 
-	// Info sync.
-	infoSyncAttrTypes := map[string]attr.Type{
-		"attrs":                  types.ListType{ElemType: types.StringType},
-		"insights_sync_interval": types.Int64Type,
-	}
-	if api.InfoSync != nil {
-		data.InfoSync = types.ObjectValueMust(infoSyncAttrTypes, map[string]attr.Value{
-			"attrs":                  common.StringsToList(api.InfoSync.Attrs),
-			"insights_sync_interval": types.Int64Value(api.InfoSync.InsightsSyncInterval),
-		})
-	} else {
-		data.InfoSync = types.ObjectNull(infoSyncAttrTypes)
-	}
+	// Info sync reporting flags.
+	setReportingFlags(data, api.InfoSync)
 
 	// Endpoint threat prevention setting.
 	if api.SignaturesFeedConfig != nil {
@@ -326,6 +293,73 @@ func modeToEndpointThreatPrevention(mode string) (string, bool) {
 
 func isKnownString(value types.String) bool {
 	return !value.IsNull() && !value.IsUnknown()
+}
+
+func buildInfoSyncAttrs(data PlanResourceModel) []string {
+	attrs := make([]string, 0, 10)
+	if data.ReportArchitecture.ValueBool() {
+		attrs = append(attrs, "arch")
+	}
+	if data.ReportHostname.ValueBool() {
+		attrs = append(attrs, "hostName")
+	}
+	if data.ReportKernelVersion.ValueBool() {
+		attrs = append(attrs, "kernelVersion")
+	}
+	if data.ReportMemorySize.ValueBool() {
+		attrs = append(attrs, "memorySize")
+	}
+	if data.ReportModelName.ValueBool() {
+		attrs = append(attrs, "modelName")
+	}
+	if data.ReportSerialNumber.ValueBool() {
+		attrs = append(attrs, "serial")
+	}
+	if data.ComplianceBaseline.ValueBool() {
+		attrs = append(attrs, "insights")
+	}
+	if data.ReportOSVersion.ValueBool() {
+		attrs = append(attrs, "osMajor", "osMinor", "osPatch", "osString")
+	}
+	return attrs
+}
+
+func setReportingFlags(data *PlanResourceModel, infoSync *jamfprotect.PlanInfoSync) {
+	if infoSync == nil {
+		data.ReportingInterval = types.Int64Null()
+		data.ReportArchitecture = types.BoolValue(false)
+		data.ReportHostname = types.BoolValue(false)
+		data.ReportKernelVersion = types.BoolValue(false)
+		data.ReportMemorySize = types.BoolValue(false)
+		data.ReportModelName = types.BoolValue(false)
+		data.ReportSerialNumber = types.BoolValue(false)
+		data.ComplianceBaseline = types.BoolValue(false)
+		data.ReportOSVersion = types.BoolValue(false)
+		return
+	}
+
+	data.ReportingInterval = types.Int64Value(infoSync.InsightsSyncInterval / 60)
+
+	attrSet := map[string]struct{}{}
+	for _, attr := range infoSync.Attrs {
+		attrSet[attr] = struct{}{}
+	}
+
+	data.ReportArchitecture = types.BoolValue(hasAttr(attrSet, "arch"))
+	data.ReportHostname = types.BoolValue(hasAttr(attrSet, "hostName"))
+	data.ReportKernelVersion = types.BoolValue(hasAttr(attrSet, "kernelVersion"))
+	data.ReportMemorySize = types.BoolValue(hasAttr(attrSet, "memorySize"))
+	data.ReportModelName = types.BoolValue(hasAttr(attrSet, "modelName"))
+	data.ReportSerialNumber = types.BoolValue(hasAttr(attrSet, "serial"))
+	data.ComplianceBaseline = types.BoolValue(hasAttr(attrSet, "insights"))
+	data.ReportOSVersion = types.BoolValue(
+		hasAttr(attrSet, "osMajor") || hasAttr(attrSet, "osMinor") || hasAttr(attrSet, "osPatch") || hasAttr(attrSet, "osString"),
+	)
+}
+
+func hasAttr(attrs map[string]struct{}, key string) bool {
+	_, ok := attrs[key]
+	return ok
 }
 
 func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags *diag.Diagnostics) map[string]string {

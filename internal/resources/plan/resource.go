@@ -77,7 +77,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
 			},
-			"action_configs": schema.StringAttribute{
+			"action_configuration": schema.StringAttribute{
 				MarkdownDescription: "The ID of the action configuration to associate with this plan.",
 				Required:            true,
 			},
@@ -87,11 +87,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType:         types.StringType,
 			},
 			"telemetry": schema.StringAttribute{
-				MarkdownDescription: "The ID of the legacy telemetry configuration.",
-				Optional:            true,
-			},
-			"telemetry_v2": schema.StringAttribute{
-				MarkdownDescription: "The ID of the v2 telemetry configuration.",
+				MarkdownDescription: "The ID of the telemetry configuration.",
 				Optional:            true,
 			},
 			"removable_storage_control_set": schema.StringAttribute{
@@ -112,20 +108,57 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringvalidator.OneOf("mqtt", "wss/mqtt"),
 				},
 			},
-			"info_sync": schema.SingleNestedAttribute{
-				MarkdownDescription: "Info sync configuration for the plan.",
+			"reporting_interval": schema.Int64Attribute{
+				MarkdownDescription: "The reporting interval in minutes.",
 				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"attrs": schema.ListAttribute{
-						MarkdownDescription: "A list of attribute names to sync.",
-						Required:            true,
-						ElementType:         types.StringType,
-					},
-					"insights_sync_interval": schema.Int64Attribute{
-						MarkdownDescription: "The interval in seconds for insights data synchronization.",
-						Required:            true,
-					},
-				},
+			},
+			"report_architecture": schema.BoolAttribute{
+				MarkdownDescription: "Report the device architecture.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_hostname": schema.BoolAttribute{
+				MarkdownDescription: "Report the device hostname.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_kernel_version": schema.BoolAttribute{
+				MarkdownDescription: "Report the kernel version.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_memory_size": schema.BoolAttribute{
+				MarkdownDescription: "Report the device memory size.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_model_name": schema.BoolAttribute{
+				MarkdownDescription: "Report the device model name.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_serial_number": schema.BoolAttribute{
+				MarkdownDescription: "Report the device serial number.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"compliance_baseline_reporting": schema.BoolAttribute{
+				MarkdownDescription: "Report compliance baseline data.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"report_os_version": schema.BoolAttribute{
+				MarkdownDescription: "Report the OS version details.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
 				MarkdownDescription: "Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.",

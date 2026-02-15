@@ -52,7 +52,7 @@ func TestAccPlanResource_basic(t *testing.T) {
 }
 
 // testAccPlanResourceConfig creates a plan that depends on an action config.
-// The action config is created inline to provide a valid action_configs ID.
+// The action config is created inline to provide a valid action_configuration ID.
 func testAccPlanResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_action_configuration" "test" {
@@ -80,16 +80,13 @@ resource "jamfprotect_action_configuration" "test" {
 }
 
 resource "jamfprotect_plan" "test" {
-  name           = %[1]q
-  description    = %[2]q
-  action_configs = jamfprotect_action_configuration.test.id
-
+	name                  = %[1]q
+	description           = %[2]q
+	action_configuration  = jamfprotect_action_configuration.test.id
 	communications_protocol = "mqtt"
-
-  info_sync = {
-    attrs                  = ["arch", "os_version"]
-    insights_sync_interval = 86400
-  }
+	reporting_interval    = 1440
+	report_architecture   = true
+	report_os_version     = true
 
 	endpoint_threat_prevention = "BlockAndReport"
 }
