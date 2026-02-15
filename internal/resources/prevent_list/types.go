@@ -20,17 +20,3 @@ type PreventListResourceModel struct {
 	Created     types.String   `tfsdk:"created"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
-
-// ---------------------------------------------------------------------------
-// API model (matches the JSON returned by the GraphQL API)
-// ---------------------------------------------------------------------------
-
-type preventListAPIModel struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Type        string   `json:"type"`
-	Count       int64    `json:"count"`
-	List        []string `json:"list"`
-	Created     string   `json:"created"`
-	Description string   `json:"description"`
-}

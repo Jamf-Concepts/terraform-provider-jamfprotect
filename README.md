@@ -14,7 +14,7 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 | `jamfprotect_analytic_set`           | Manage analytic sets (grouped analytics)       |
 | `jamfprotect_exception_set`          | Manage exception sets (analytic exceptions)    |
 | `jamfprotect_plan`                   | Manage plans (endpoint configurations)         |
-| `jamfprotect_prevent_list`           | Manage prevent lists (allow/block lists)       |
+| `jamfprotect_custom_prevent_list`    | Manage custom prevent lists (allow/block lists) |
 | `jamfprotect_telemetry_v2`           | Manage telemetry v2 configurations             |
 | `jamfprotect_unified_logging_filter` | Manage unified logging filters                 |
 | `jamfprotect_removable_storage_control_set` | Manage removable storage control sets (device access policy) |
@@ -30,7 +30,7 @@ All resources support full CRUD operations and `terraform import`.
 | `jamfprotect_analytic_sets`              | List all analytic sets (grouped analytics)    |
 | `jamfprotect_exception_sets`             | List all exception sets (analytic exceptions) |
 | `jamfprotect_plans`                      | List all plans (endpoint configurations)      |
-| `jamfprotect_prevent_lists`              | List all prevent lists (allow/block lists)    |
+| `jamfprotect_custom_prevent_lists`       | List all custom prevent lists (allow/block lists) |
 | `jamfprotect_telemetries_v2`             | List all telemetry v2 configurations          |
 | `jamfprotect_unified_logging_filters`    | List all unified logging filters              |
 | `jamfprotect_removable_storage_control_sets` | List all removable storage control sets        |
@@ -152,7 +152,7 @@ resource "jamfprotect_plan" "endpoint_security" {
 ### Prevent List
 
 ```hcl
-resource "jamfprotect_prevent_list" "trusted_team_ids" {
+resource "jamfprotect_custom_prevent_list" "trusted_team_ids" {
   name        = "Trusted Team IDs"
   description = "Allow list for trusted developer teams"
   type        = "TEAMID"

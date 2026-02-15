@@ -4,7 +4,7 @@ provider "jamfprotect" {
   client_secret = "your-client-secret"
 }
 
-resource "jamfprotect_prevent_list" "blocked_team_ids" {
+resource "jamfprotect_custom_prevent_list" "blocked_team_ids" {
   name        = "Blocked Team IDs"
   description = "Block known malicious Team IDs."
   type        = "TEAMID"

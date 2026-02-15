@@ -232,7 +232,7 @@ func (s *Service) CreateAnalytic(ctx context.Context, input AnalyticInput) (Anal
 	var result struct {
 		CreateAnalytic Analytic `json:"createAnalytic"`
 	}
-	if err := s.client.DoGraphQL(ctx, createAnalyticMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createAnalyticMutation, vars, &result); err != nil {
 		return Analytic{}, err
 	}
 	return result.CreateAnalytic, nil
@@ -244,7 +244,7 @@ func (s *Service) GetAnalytic(ctx context.Context, uuid string) (*Analytic, erro
 	var result struct {
 		GetAnalytic *Analytic `json:"getAnalytic"`
 	}
-	if err := s.client.DoGraphQL(ctx, getAnalyticQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getAnalyticQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetAnalytic, nil
@@ -270,7 +270,7 @@ func (s *Service) UpdateAnalytic(ctx context.Context, uuid string, input Analyti
 	var result struct {
 		UpdateAnalytic Analytic `json:"updateAnalytic"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateAnalyticMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateAnalyticMutation, vars, &result); err != nil {
 		return Analytic{}, err
 	}
 	return result.UpdateAnalytic, nil
@@ -279,7 +279,7 @@ func (s *Service) UpdateAnalytic(ctx context.Context, uuid string, input Analyti
 // DeleteAnalytic deletes an analytic by UUID.
 func (s *Service) DeleteAnalytic(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, deleteAnalyticMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteAnalyticMutation, vars, nil)
 }
 
 // ListAnalytics retrieves all analytics.
@@ -289,7 +289,7 @@ func (s *Service) ListAnalytics(ctx context.Context) ([]Analytic, error) {
 			Items []Analytic `json:"items"`
 		} `json:"listAnalytics"`
 	}
-	if err := s.client.DoGraphQL(ctx, listAnalyticsQuery, nil, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", listAnalyticsQuery, nil, &result); err != nil {
 		return nil, err
 	}
 	return result.ListAnalytics.Items, nil

@@ -228,7 +228,7 @@ func (s *Service) CreateExceptionSet(ctx context.Context, input ExceptionSetInpu
 	var result struct {
 		CreateExceptionSet ExceptionSet `json:"createExceptionSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, createExceptionSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createExceptionSetMutation, vars, &result); err != nil {
 		return ExceptionSet{}, err
 	}
 	return result.CreateExceptionSet, nil
@@ -244,7 +244,7 @@ func (s *Service) GetExceptionSet(ctx context.Context, uuid string) (*ExceptionS
 	var result struct {
 		GetExceptionSet *ExceptionSet `json:"getExceptionSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, getExceptionSetQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getExceptionSetQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetExceptionSet, nil
@@ -264,7 +264,7 @@ func (s *Service) UpdateExceptionSet(ctx context.Context, uuid string, input Exc
 	var result struct {
 		UpdateExceptionSet ExceptionSet `json:"updateExceptionSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateExceptionSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateExceptionSetMutation, vars, &result); err != nil {
 		return ExceptionSet{}, err
 	}
 	return result.UpdateExceptionSet, nil
@@ -273,7 +273,7 @@ func (s *Service) UpdateExceptionSet(ctx context.Context, uuid string, input Exc
 // DeleteExceptionSet deletes an exception set by UUID.
 func (s *Service) DeleteExceptionSet(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, deleteExceptionSetMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteExceptionSetMutation, vars, nil)
 }
 
 // ListExceptionSets retrieves all exception sets.
@@ -296,7 +296,7 @@ func (s *Service) ListExceptionSets(ctx context.Context) ([]ExceptionSetListItem
 				} `json:"pageInfo"`
 			} `json:"listExceptionSets"`
 		}
-		if err := s.client.DoGraphQL(ctx, listExceptionSetsQuery, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/app", listExceptionSetsQuery, vars, &result); err != nil {
 			return nil, err
 		}
 

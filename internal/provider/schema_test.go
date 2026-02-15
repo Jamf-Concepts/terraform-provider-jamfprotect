@@ -243,8 +243,8 @@ func TestPreventListResourceMetadata(t *testing.T) {
 	resp := &resource.MetadataResponse{}
 	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_prevent_list" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_list", resp.TypeName)
+	if resp.TypeName != "jamfprotect_custom_prevent_list" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_custom_prevent_list", resp.TypeName)
 	}
 }
 
@@ -859,12 +859,12 @@ func TestPreventListsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	preventListsAttr, ok := resp.Schema.Attributes["prevent_lists"]
+	preventListsAttr, ok := resp.Schema.Attributes["custom_prevent_lists"]
 	if !ok {
-		t.Fatal("expected attribute 'prevent_lists' in data source schema")
+		t.Fatal("expected attribute 'custom_prevent_lists' in data source schema")
 	}
 	if !preventListsAttr.IsComputed() {
-		t.Error("expected 'prevent_lists' to be computed")
+		t.Error("expected 'custom_prevent_lists' to be computed")
 	}
 }
 
@@ -875,8 +875,8 @@ func TestPreventListsDataSourceMetadata(t *testing.T) {
 	resp := &datasource.MetadataResponse{}
 	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
 
-	if resp.TypeName != "jamfprotect_prevent_lists" {
-		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_lists", resp.TypeName)
+	if resp.TypeName != "jamfprotect_custom_prevent_lists" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_custom_prevent_lists", resp.TypeName)
 	}
 }
 

@@ -171,7 +171,7 @@ func (s *Service) CreateAnalyticSet(ctx context.Context, input AnalyticSetInput)
 	var result struct {
 		CreateAnalyticSet AnalyticSet `json:"createAnalyticSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, createAnalyticSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createAnalyticSetMutation, vars, &result); err != nil {
 		return AnalyticSet{}, err
 	}
 	return result.CreateAnalyticSet, nil
@@ -187,7 +187,7 @@ func (s *Service) GetAnalyticSet(ctx context.Context, uuid string) (*AnalyticSet
 	var result struct {
 		GetAnalyticSet *AnalyticSet `json:"getAnalyticSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, getAnalyticSetQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getAnalyticSetQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetAnalyticSet, nil
@@ -207,7 +207,7 @@ func (s *Service) UpdateAnalyticSet(ctx context.Context, uuid string, input Anal
 	var result struct {
 		UpdateAnalyticSet AnalyticSet `json:"updateAnalyticSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateAnalyticSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateAnalyticSetMutation, vars, &result); err != nil {
 		return AnalyticSet{}, err
 	}
 	return result.UpdateAnalyticSet, nil
@@ -216,7 +216,7 @@ func (s *Service) UpdateAnalyticSet(ctx context.Context, uuid string, input Anal
 // DeleteAnalyticSet deletes an analytic set by UUID.
 func (s *Service) DeleteAnalyticSet(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, deleteAnalyticSetMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteAnalyticSetMutation, vars, nil)
 }
 
 // ListAnalyticSets retrieves all analytic sets.
@@ -242,7 +242,7 @@ func (s *Service) ListAnalyticSets(ctx context.Context) ([]AnalyticSet, error) {
 				} `json:"pageInfo"`
 			} `json:"listAnalyticSets"`
 		}
-		if err := s.client.DoGraphQL(ctx, listAnalyticSetsQuery, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/app", listAnalyticSetsQuery, vars, &result); err != nil {
 			return nil, err
 		}
 
