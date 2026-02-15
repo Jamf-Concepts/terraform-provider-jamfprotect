@@ -13,19 +13,12 @@ Manages a unified logging filter in Jamf Protect. Unified logging filters captur
 ## Example Usage
 
 ```terraform
-provider "jamfprotect" {
-  url           = "https://your-tenant.protect.jamfcloud.com"
-  client_id     = "your-client-id"
-  client_secret = "your-client-secret"
-}
-
-resource "jamfprotect_unified_logging_filter" "auth_failures" {
-  name        = "Authentication Failures"
-  description = "Collect authentication failure log entries."
-  filter      = "eventMessage CONTAINS 'Authentication failed'"
-  level       = "DEFAULT"
+resource "jamfprotect_unified_logging_filter" "example" {
+  description = "Managed by Terraform"
   enabled     = true
-  tags        = ["logging", "auth"]
+  filter      = "eventMessage CONTAINS 'Example'"
+  name        = "Example Filter"
+  tags        = ["example_1", "example_2"]
 }
 ```
 
@@ -67,5 +60,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import jamfprotect_unified_logging_filter.auth_failures "<filter-uuid>"
+terraform import jamfprotect_unified_logging_filter.example "<filter-uuid>"
 ```
