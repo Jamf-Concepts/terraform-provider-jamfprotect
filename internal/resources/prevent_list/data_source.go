@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &PreventListsDataSource{}
@@ -23,14 +24,14 @@ func NewPreventListsDataSource() datasource.DataSource {
 	return &PreventListsDataSource{}
 }
 
-// PreventListsDataSource lists all prevent lists in Jamf Protect.
+// PreventListsDataSource lists all custom prevent lists in Jamf Protect.
 type PreventListsDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // PreventListsDataSourceModel maps the data source schema.
 type PreventListsDataSourceModel struct {
-	PreventLists []PreventListDataSourceItemModel `tfsdk:"prevent_lists"`
+	PreventLists []PreventListDataSourceItemModel `tfsdk:"custom_prevent_lists"`
 }
 
 // PreventListDataSourceItemModel maps a single prevent list item (read-only, no timeouts).
@@ -39,46 +40,52 @@ type PreventListDataSourceItemModel struct {
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
 	Type        types.String `tfsdk:"type"`
+	Tags        types.List   `tfsdk:"tags"`
 	EntryCount  types.Int64  `tfsdk:"entry_count"`
 	List        types.List   `tfsdk:"list"`
 	Created     types.String `tfsdk:"created"`
 }
 
 func (d *PreventListsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_prevent_lists"
+	resp.TypeName = req.ProviderTypeName + "_custom_prevent_lists"
 }
 
 func (d *PreventListsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves a list of all prevent lists in Jamf Protect.",
+		MarkdownDescription: "Retrieves a list of all custom prevent lists in Jamf Protect.",
 		Attributes: map[string]schema.Attribute{
-			"prevent_lists": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of prevent lists.",
+			"custom_prevent_lists": schema.ListNestedAttribute{
+				MarkdownDescription: "The list of custom prevent lists.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							MarkdownDescription: "The unique identifier of the prevent list.",
+							MarkdownDescription: "The unique identifier of the custom prevent list.",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							MarkdownDescription: "The name of the prevent list.",
+							MarkdownDescription: "The name of the custom prevent list.",
 							Computed:            true,
 						},
 						"description": schema.StringAttribute{
-							MarkdownDescription: "A description of the prevent list.",
+							MarkdownDescription: "A description of the custom prevent list.",
 							Computed:            true,
 						},
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of prevent list.",
+							MarkdownDescription: "The type of custom prevent list.",
 							Computed:            true,
 						},
+						"tags": schema.ListAttribute{
+							MarkdownDescription: "Tags assigned to the custom prevent list.",
+							Computed:            true,
+							ElementType:         types.StringType,
+						},
 						"entry_count": schema.Int64Attribute{
-							MarkdownDescription: "The number of entries in the list.",
+							MarkdownDescription: "The number of entries in the custom prevent list.",
 							Computed:            true,
 						},
 						"list": schema.ListAttribute{
-							MarkdownDescription: "The entries in the prevent list.",
+							MarkdownDescription: "The entries in the custom prevent list.",
 							Computed:            true,
 							ElementType:         types.StringType,
 						},
@@ -103,41 +110,16 @@ func (d *PreventListsDataSource) Configure(ctx context.Context, req datasource.C
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *PreventListsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data PreventListsDataSourceModel
 
-	var allItems []preventListAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListPreventLists struct {
-				Items    []preventListAPIModel `json:"items"`
-				PageInfo common.PageInfo       `json:"pageInfo"`
-			} `json:"listPreventLists"`
-		}
-		if err := d.client.Query(ctx, listPreventListsQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing prevent lists", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListPreventLists.Items...)
-
-		if result.ListPreventLists.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListPreventLists.PageInfo.Next
+	allItems, err := d.service.ListCustomPreventLists(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing prevent lists", err.Error())
+		return
 	}
 
 	tflog.Trace(ctx, "listed prevent lists", map[string]any{"count": len(allItems)})
@@ -150,6 +132,7 @@ func (d *PreventListsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			Type:       types.StringValue(api.Type),
 			EntryCount: types.Int64Value(api.Count),
 			List:       common.StringsToList(api.List),
+			Tags:       common.StringsToList(api.Tags),
 			Created:    types.StringValue(api.Created),
 		}
 		if api.Description != "" {

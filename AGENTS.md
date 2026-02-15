@@ -63,7 +63,7 @@ internal/
     analytic_set_resource.go     # jamfprotect_analytic_set (CRUD + import)
     exception_set_resource.go    # jamfprotect_exception_set (CRUD + import)
     plan_resource.go             # jamfprotect_plan (CRUD + import)
-    prevent_list_resource.go     # jamfprotect_prevent_list (CRUD + import)
+    prevent_list_resource.go     # jamfprotect_custom_prevent_list (CRUD + import)
     telemetry_v2_resource.go     # jamfprotect_telemetry_v2 (CRUD + import)
     unified_logging_filter_resource.go    # jamfprotect_unified_logging_filter (CRUD + import)
     removable_storage_control_set_resource.go  # jamfprotect_removable_storage_control_set (CRUD + import)
@@ -75,7 +75,7 @@ internal/
     analytic_sets_data_source.go # jamfprotect_analytic_sets data source
     exception_sets_data_source.go # jamfprotect_exception_sets data source
     action_configs_data_source.go        # jamfprotect_action_configs data source
-    prevent_lists_data_source.go         # jamfprotect_prevent_lists data source
+    prevent_lists_data_source.go         # jamfprotect_custom_prevent_lists data source
     telemetries_v2_data_source.go        # jamfprotect_telemetries_v2 data source
     unified_logging_filters_data_source.go  # jamfprotect_unified_logging_filters data source
     removable_storage_control_sets_data_source.go      # jamfprotect_removable_storage_control_sets data source

@@ -229,7 +229,7 @@ func (r *PlanResource) Create(ctx context.Context, req resource.CreateRequest, r
 	var result struct {
 		CreatePlan planAPIModel `json:"createPlan"`
 	}
-	if err := r.client.Query(ctx, createPlanMutation, vars, &result); err != nil {
+	if err := r.client.DoGraphQL(ctx, "/app", createPlanMutation, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error creating plan", err.Error())
 		return
 	}
@@ -262,7 +262,7 @@ func (r *PlanResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	var result struct {
 		GetPlan *planAPIModel `json:"getPlan"`
 	}
-	if err := r.client.Query(ctx, getPlanQuery, vars, &result); err != nil {
+	if err := r.client.DoGraphQL(ctx, "/app", getPlanQuery, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error reading plan", err.Error())
 		return
 	}
@@ -310,7 +310,7 @@ func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var result struct {
 		UpdatePlan planAPIModel `json:"updatePlan"`
 	}
-	if err := r.client.Query(ctx, updatePlanMutation, vars, &result); err != nil {
+	if err := r.client.DoGraphQL(ctx, "/app", updatePlanMutation, vars, &result); err != nil {
 		resp.Diagnostics.AddError("Error updating plan", err.Error())
 		return
 	}
@@ -339,7 +339,7 @@ func (r *PlanResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	defer cancel()
 
 	vars := map[string]any{"id": data.ID.ValueString()}
-	if err := r.client.Query(ctx, deletePlanMutation, vars, nil); err != nil {
+	if err := r.client.DoGraphQL(ctx, "/app", deletePlanMutation, vars, nil); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "plan already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

@@ -242,7 +242,7 @@ func (s *Service) CreateActionConfig(ctx context.Context, input ActionConfigInpu
 	var result struct {
 		CreateActionConfigs ActionConfig `json:"createActionConfigs"`
 	}
-	if err := s.client.DoGraphQL(ctx, createActionConfigMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createActionConfigMutation, vars, &result); err != nil {
 		return ActionConfig{}, err
 	}
 	return result.CreateActionConfigs, nil
@@ -254,7 +254,7 @@ func (s *Service) GetActionConfig(ctx context.Context, id string) (*ActionConfig
 	var result struct {
 		GetActionConfigs *ActionConfig `json:"getActionConfigs"`
 	}
-	if err := s.client.DoGraphQL(ctx, getActionConfigQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getActionConfigQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetActionConfigs, nil
@@ -272,7 +272,7 @@ func (s *Service) UpdateActionConfig(ctx context.Context, id string, input Actio
 	var result struct {
 		UpdateActionConfigs ActionConfig `json:"updateActionConfigs"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateActionConfigMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateActionConfigMutation, vars, &result); err != nil {
 		return ActionConfig{}, err
 	}
 	return result.UpdateActionConfigs, nil
@@ -281,7 +281,7 @@ func (s *Service) UpdateActionConfig(ctx context.Context, id string, input Actio
 // DeleteActionConfig deletes an action configuration by ID.
 func (s *Service) DeleteActionConfig(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, deleteActionConfigMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteActionConfigMutation, vars, nil)
 }
 
 // ListActionConfigs retrieves all action configurations.
@@ -307,7 +307,7 @@ func (s *Service) ListActionConfigs(ctx context.Context) ([]ActionConfigListItem
 				} `json:"pageInfo"`
 			} `json:"listActionConfigs"`
 		}
-		if err := s.client.DoGraphQL(ctx, listActionConfigsQuery, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/app", listActionConfigsQuery, vars, &result); err != nil {
 			return nil, err
 		}
 

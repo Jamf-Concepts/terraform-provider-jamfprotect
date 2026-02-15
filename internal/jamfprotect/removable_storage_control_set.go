@@ -197,7 +197,7 @@ func (s *Service) CreateRemovableStorageControlSet(ctx context.Context, input Re
 	var result struct {
 		CreateRemovableStorageControlSet RemovableStorageControlSet `json:"createUSBControlSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, createRemovableStorageControlSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", createRemovableStorageControlSetMutation, vars, &result); err != nil {
 		return RemovableStorageControlSet{}, err
 	}
 	return result.CreateRemovableStorageControlSet, nil
@@ -209,7 +209,7 @@ func (s *Service) GetRemovableStorageControlSet(ctx context.Context, id string) 
 	var result struct {
 		GetRemovableStorageControlSet *RemovableStorageControlSet `json:"getUSBControlSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, getRemovableStorageControlSetQuery, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", getRemovableStorageControlSetQuery, vars, &result); err != nil {
 		return nil, err
 	}
 	return result.GetRemovableStorageControlSet, nil
@@ -228,7 +228,7 @@ func (s *Service) UpdateRemovableStorageControlSet(ctx context.Context, id strin
 	var result struct {
 		UpdateRemovableStorageControlSet RemovableStorageControlSet `json:"updateUSBControlSet"`
 	}
-	if err := s.client.DoGraphQL(ctx, updateRemovableStorageControlSetMutation, vars, &result); err != nil {
+	if err := s.client.DoGraphQL(ctx, "/app", updateRemovableStorageControlSetMutation, vars, &result); err != nil {
 		return RemovableStorageControlSet{}, err
 	}
 	return result.UpdateRemovableStorageControlSet, nil
@@ -237,7 +237,7 @@ func (s *Service) UpdateRemovableStorageControlSet(ctx context.Context, id strin
 // DeleteRemovableStorageControlSet deletes a removable storage control set by ID.
 func (s *Service) DeleteRemovableStorageControlSet(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, deleteRemovableStorageControlSetMutation, vars, nil)
+	return s.client.DoGraphQL(ctx, "/app", deleteRemovableStorageControlSetMutation, vars, nil)
 }
 
 // ListRemovableStorageControlSets returns all removable storage control sets.
@@ -263,7 +263,7 @@ func (s *Service) ListRemovableStorageControlSets(ctx context.Context) ([]Remova
 				} `json:"pageInfo"`
 			} `json:"listUSBControlSets"`
 		}
-		if err := s.client.DoGraphQL(ctx, listRemovableStorageControlSetsQuery, vars, &result); err != nil {
+		if err := s.client.DoGraphQL(ctx, "/app", listRemovableStorageControlSetsQuery, vars, &result); err != nil {
 			return nil, err
 		}
 

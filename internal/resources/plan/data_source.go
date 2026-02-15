@@ -223,7 +223,7 @@ func (d *PlansDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 				PageInfo common.PageInfo `json:"pageInfo"`
 			} `json:"listPlans"`
 		}
-		if err := d.client.Query(ctx, listPlansQuery, vars, &result); err != nil {
+		if err := d.client.DoGraphQL(ctx, "/app", listPlansQuery, vars, &result); err != nil {
 			resp.Diagnostics.AddError("Error listing plans", err.Error())
 			return
 		}

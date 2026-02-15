@@ -5,7 +5,7 @@ set -e
 
 mkdir -p sandbox
 
-cat > sandbox/.terraformrc << EOF
+cat >sandbox/.terraformrc <<EOF
 provider_installation {
   dev_overrides {
     "smithjw/jamfprotect" = "$PWD"
@@ -15,14 +15,14 @@ provider_installation {
 EOF
 
 if [ ! -f sandbox/mise.toml ]; then
-    cat > sandbox/mise.toml << EOF
+  cat >sandbox/mise.toml <<EOF
 [env]
 TF_CLI_CONFIG_FILE = "{{config_root}}/sandbox/.terraformrc"
 EOF
 fi
 
 if [ ! -f sandbox/provider.tf ]; then
-    cat > sandbox/provider.tf << 'EOF'
+  cat >sandbox/provider.tf <<'EOF'
 terraform {
   required_providers {
     jamfprotect = {
@@ -35,8 +35,8 @@ EOF
 fi
 
 if [ ! -f sandbox/main.tf ]; then
-    cat > sandbox/main.tf << 'EOF'
-resource "jamfprotect_prevent_list" "test" {
+  cat >sandbox/main.tf <<'EOF'
+resource "jamfprotect_custom_prevent_list" "test" {
   name        = "TF Sandbox Test"
   description = "Created by local provider dev"
   type        = "TEAMID"
