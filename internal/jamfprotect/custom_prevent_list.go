@@ -7,87 +7,87 @@ import "context"
 
 const customPreventListFields = `
 fragment CustomPreventListFields on PreventList {
-  id
-  name
-  description
-  type
-  tags
-  list
-  count
-  created
+	id
+	name
+	description
+	type
+	tags
+	list
+	count
+	created
 }
 `
 
 const createCustomPreventListMutation = `
 mutation createPreventList(
-  $name: String!,
-  $tags: [String]!,
-  $type: PREVENT_LIST_TYPE!,
-  $list: [String]!,
-  $description: String
+	$name: String!,
+	$tags: [String]!,
+	$type: PREVENT_LIST_TYPE!,
+	$list: [String]!,
+	$description: String
 ) {
-  createPreventList(input: {
-    name: $name,
-    tags: $tags,
-    type: $type,
-    list: $list,
-    description: $description
-  }) {
-    ...CustomPreventListFields
-  }
+	createPreventList(input: {
+		name: $name,
+		tags: $tags,
+		type: $type,
+		list: $list,
+		description: $description
+	}) {
+		...CustomPreventListFields
+	}
 }
 ` + customPreventListFields
 
 const getCustomPreventListQuery = `
 query getPreventList($id: ID!) {
-  getPreventList(id: $id) {
-    ...CustomPreventListFields
-  }
+	getPreventList(id: $id) {
+		...CustomPreventListFields
+	}
 }
 ` + customPreventListFields
 
 const updateCustomPreventListMutation = `
 mutation updatePreventList(
-  $id: ID!,
-  $name: String!,
-  $tags: [String]!,
-  $type: PREVENT_LIST_TYPE!,
-  $list: [String]!,
-  $description: String
+	$id: ID!,
+	$name: String!,
+	$tags: [String]!,
+	$type: PREVENT_LIST_TYPE!,
+	$list: [String]!,
+	$description: String
 ) {
-  updatePreventList(id: $id, input: {
-    name: $name,
-    tags: $tags,
-    type: $type,
-    list: $list,
-    description: $description
-  }) {
-    ...CustomPreventListFields
-  }
+	updatePreventList(id: $id, input: {
+		name: $name,
+		tags: $tags,
+		type: $type,
+		list: $list,
+		description: $description
+	}) {
+		...CustomPreventListFields
+	}
 }
 ` + customPreventListFields
 
 const deleteCustomPreventListMutation = `
 mutation deletePreventList($id: ID!) {
-  deletePreventList(id: $id) {
-    id
-  }
+	deletePreventList(id: $id) {
+		id
+	}
 }
 `
 
 const listCustomPreventListsQuery = `
 query listPreventLists($nextToken: String, $direction: OrderDirection!, $field: PreventListOrderField!) {
-  listPreventLists(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
-  ) {
-    items {
-      ...CustomPreventListFields
-    }
-    pageInfo {
-      next
-      total
-    }
-  }
+	listPreventLists(
+		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+	) {
+		items {
+			...CustomPreventListFields
+		}
+		pageInfo {
+			next
+			total
+		}
+	}
 }
 ` + customPreventListFields
 
