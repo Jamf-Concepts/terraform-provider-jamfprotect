@@ -36,31 +36,53 @@ type RemovableStorageControlSetsDataSourceModel struct {
 
 // RemovableStorageControlSetDataSourceItemModel maps a single removable storage control set item (read-only, no timeouts).
 type RemovableStorageControlSetDataSourceItemModel struct {
-	ID                   types.String                              `tfsdk:"id"`
-	Name                 types.String                              `tfsdk:"name"`
-	Description          types.String                              `tfsdk:"description"`
-	DefaultMountAction   types.String                              `tfsdk:"default_mount_action"`
-	DefaultMessageAction types.String                              `tfsdk:"default_message_action"`
-	Rules                []RemovableStorageRuleDataSourceItemModel `tfsdk:"rules"`
-	Created              types.String                              `tfsdk:"created"`
-	Updated              types.String                              `tfsdk:"updated"`
+	ID                              types.String                                 `tfsdk:"id"`
+	Name                            types.String                                 `tfsdk:"name"`
+	Description                     types.String                                 `tfsdk:"description"`
+	DefaultPermission               types.String                                 `tfsdk:"default_permission"`
+	DefaultLocalNotificationMessage types.String                                 `tfsdk:"default_local_notification_message"`
+	OverrideEncryptedDevices        []RemovableStorageEncryptedOverrideDataModel `tfsdk:"override_encrypted_devices"`
+	OverrideVendorID                []RemovableStorageVendorOverrideDataModel    `tfsdk:"override_vendor_id"`
+	OverrideProductID               []RemovableStorageProductOverrideDataModel   `tfsdk:"override_product_id"`
+	OverrideSerialNumber            []RemovableStorageSerialOverrideDataModel    `tfsdk:"override_serial_number"`
+	Created                         types.String                                 `tfsdk:"created"`
+	Updated                         types.String                                 `tfsdk:"updated"`
 }
 
-// RemovableStorageRuleDataSourceItemModel represents a single rule in the removable storage control set (read-only).
-type RemovableStorageRuleDataSourceItemModel struct {
-	Type          types.String                                 `tfsdk:"type"`
-	MountAction   types.String                                 `tfsdk:"mount_action"`
-	MessageAction types.String                                 `tfsdk:"message_action"`
-	ApplyTo       types.String                                 `tfsdk:"apply_to"`
-	Vendors       types.List                                   `tfsdk:"vendors"`
-	Serials       types.List                                   `tfsdk:"serials"`
-	Products      []RemovableStorageProductDataSourceItemModel `tfsdk:"products"`
+// RemovableStorageEncryptedOverrideDataModel represents encrypted device overrides (read-only).
+type RemovableStorageEncryptedOverrideDataModel struct {
+	Permission               types.String `tfsdk:"permission"`
+	LocalNotificationMessage types.String `tfsdk:"local_notification_message"`
 }
 
-// RemovableStorageProductDataSourceItemModel represents a vendor+product pair (read-only).
-type RemovableStorageProductDataSourceItemModel struct {
-	Vendor  types.String `tfsdk:"vendor"`
-	Product types.String `tfsdk:"product"`
+// RemovableStorageVendorOverrideDataModel represents vendor ID overrides (read-only).
+type RemovableStorageVendorOverrideDataModel struct {
+	Permission               types.String `tfsdk:"permission"`
+	LocalNotificationMessage types.String `tfsdk:"local_notification_message"`
+	ApplyTo                  types.String `tfsdk:"apply_to"`
+	VendorIDs                types.List   `tfsdk:"vendor_ids"`
+}
+
+// RemovableStorageSerialOverrideDataModel represents serial number overrides (read-only).
+type RemovableStorageSerialOverrideDataModel struct {
+	Permission               types.String `tfsdk:"permission"`
+	LocalNotificationMessage types.String `tfsdk:"local_notification_message"`
+	ApplyTo                  types.String `tfsdk:"apply_to"`
+	SerialNumbers            types.List   `tfsdk:"serial_numbers"`
+}
+
+// RemovableStorageProductOverrideDataModel represents product ID overrides (read-only).
+type RemovableStorageProductOverrideDataModel struct {
+	Permission               types.String                               `tfsdk:"permission"`
+	LocalNotificationMessage types.String                               `tfsdk:"local_notification_message"`
+	ApplyTo                  types.String                               `tfsdk:"apply_to"`
+	ProductIDs               []RemovableStorageProductIDDataSourceModel `tfsdk:"product_id"`
+}
+
+// RemovableStorageProductIDDataSourceModel represents a vendor+product pair (read-only).
+type RemovableStorageProductIDDataSourceModel struct {
+	VendorID  types.String `tfsdk:"vendor_id"`
+	ProductID types.String `tfsdk:"product_id"`
 }
 
 func (d *RemovableStorageControlSetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -70,11 +92,10 @@ func (d *RemovableStorageControlSetsDataSource) Metadata(ctx context.Context, re
 func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of all removable storage control sets in Jamf Protect.",
-		Attributes: map[string]schema.Attribute{
-			"removable_storage_control_sets": schema.ListNestedAttribute{
+		Blocks: map[string]schema.Block{
+			"removable_storage_control_sets": schema.ListNestedBlock{
 				MarkdownDescription: "The list of removable storage control sets.",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
+				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							MarkdownDescription: "The unique identifier of the removable storage control set.",
@@ -88,63 +109,13 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 							MarkdownDescription: "A description of the removable storage control set.",
 							Computed:            true,
 						},
-						"default_mount_action": schema.StringAttribute{
-							MarkdownDescription: "The default mount action for removable storage devices.",
+						"default_permission": schema.StringAttribute{
+							MarkdownDescription: "The default permission for removable storage devices.",
 							Computed:            true,
 						},
-						"default_message_action": schema.StringAttribute{
-							MarkdownDescription: "The default message action for removable storage devices.",
+						"default_local_notification_message": schema.StringAttribute{
+							MarkdownDescription: "The default local notification message for removable storage devices.",
 							Computed:            true,
-						},
-						"rules": schema.ListNestedAttribute{
-							MarkdownDescription: "The removable storage control rules.",
-							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
-										MarkdownDescription: "The rule type (Vendor, Serial, Product, or Encryption).",
-										Computed:            true,
-									},
-									"mount_action": schema.StringAttribute{
-										MarkdownDescription: "The mount action for this rule.",
-										Computed:            true,
-									},
-									"message_action": schema.StringAttribute{
-										MarkdownDescription: "The message action for this rule.",
-										Computed:            true,
-									},
-									"apply_to": schema.StringAttribute{
-										MarkdownDescription: "The scope this rule applies to.",
-										Computed:            true,
-									},
-									"vendors": schema.ListAttribute{
-										MarkdownDescription: "Vendor identifiers (for VendorRule type).",
-										Computed:            true,
-										ElementType:         types.StringType,
-									},
-									"serials": schema.ListAttribute{
-										MarkdownDescription: "Serial numbers (for SerialRule type).",
-										Computed:            true,
-										ElementType:         types.StringType,
-									},
-									"products": schema.ListNestedAttribute{
-										MarkdownDescription: "Vendor+product pairs (for ProductRule type).",
-										Computed:            true,
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"vendor": schema.StringAttribute{
-													MarkdownDescription: "The vendor identifier.",
-													Computed:            true,
-												},
-												"product": schema.StringAttribute{
-													MarkdownDescription: "The product identifier.",
-													Computed:            true,
-												},
-											},
-										},
-									},
-								},
-							},
 						},
 						"created": schema.StringAttribute{
 							MarkdownDescription: "The creation timestamp.",
@@ -153,6 +124,106 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 						"updated": schema.StringAttribute{
 							MarkdownDescription: "The last-updated timestamp.",
 							Computed:            true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"override_encrypted_devices": schema.ListNestedBlock{
+							MarkdownDescription: "Overrides applied to encrypted devices.",
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"permission": schema.StringAttribute{
+										MarkdownDescription: "The permission for matching devices.",
+										Computed:            true,
+									},
+									"local_notification_message": schema.StringAttribute{
+										MarkdownDescription: "The local notification message for this override.",
+										Computed:            true,
+									},
+								},
+							},
+						},
+						"override_vendor_id": schema.ListNestedBlock{
+							MarkdownDescription: "Overrides applied to vendor IDs.",
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"permission": schema.StringAttribute{
+										MarkdownDescription: "The permission for matching devices.",
+										Computed:            true,
+									},
+									"local_notification_message": schema.StringAttribute{
+										MarkdownDescription: "The local notification message for this override.",
+										Computed:            true,
+									},
+									"apply_to": schema.StringAttribute{
+										MarkdownDescription: "The scope this override applies to.",
+										Computed:            true,
+									},
+									"vendor_ids": schema.ListAttribute{
+										MarkdownDescription: "Vendor IDs this override applies to.",
+										Computed:            true,
+										ElementType:         types.StringType,
+									},
+								},
+							},
+						},
+						"override_product_id": schema.ListNestedBlock{
+							MarkdownDescription: "Overrides applied to product IDs.",
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"permission": schema.StringAttribute{
+										MarkdownDescription: "The permission for matching devices.",
+										Computed:            true,
+									},
+									"local_notification_message": schema.StringAttribute{
+										MarkdownDescription: "The local notification message for this override.",
+										Computed:            true,
+									},
+									"apply_to": schema.StringAttribute{
+										MarkdownDescription: "The scope this override applies to.",
+										Computed:            true,
+									},
+									"product_id": schema.ListNestedAttribute{
+										MarkdownDescription: "Vendor and product IDs this override applies to.",
+										Computed:            true,
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"vendor_id": schema.StringAttribute{
+													MarkdownDescription: "The vendor ID.",
+													Computed:            true,
+												},
+												"product_id": schema.StringAttribute{
+													MarkdownDescription: "The product ID.",
+													Computed:            true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"override_serial_number": schema.ListNestedBlock{
+							MarkdownDescription: "Overrides applied to serial numbers.",
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"permission": schema.StringAttribute{
+										MarkdownDescription: "The permission for matching devices.",
+										Computed:            true,
+									},
+									"local_notification_message": schema.StringAttribute{
+										MarkdownDescription: "The local notification message for this override.",
+										Computed:            true,
+									},
+									"apply_to": schema.StringAttribute{
+										MarkdownDescription: "The scope this override applies to.",
+										Computed:            true,
+									},
+									"serial_numbers": schema.ListAttribute{
+										MarkdownDescription: "Serial numbers this override applies to.",
+										Computed:            true,
+										ElementType:         types.StringType,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -188,11 +259,11 @@ func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req da
 	items := make([]RemovableStorageControlSetDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
 		item := RemovableStorageControlSetDataSourceItemModel{
-			ID:                 types.StringValue(api.ID),
-			Name:               types.StringValue(api.Name),
-			DefaultMountAction: types.StringValue(api.DefaultMountAction),
-			Created:            types.StringValue(api.Created),
-			Updated:            types.StringValue(api.Updated),
+			ID:                types.StringValue(api.ID),
+			Name:              types.StringValue(api.Name),
+			DefaultPermission: types.StringValue(api.DefaultMountAction),
+			Created:           types.StringValue(api.Created),
+			Updated:           types.StringValue(api.Updated),
 		}
 
 		if api.Description != "" {
@@ -202,60 +273,68 @@ func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req da
 		}
 
 		if api.DefaultMessageAction != "" {
-			item.DefaultMessageAction = types.StringValue(api.DefaultMessageAction)
+			item.DefaultLocalNotificationMessage = types.StringValue(api.DefaultMessageAction)
 		} else {
-			item.DefaultMessageAction = types.StringNull()
+			item.DefaultLocalNotificationMessage = types.StringNull()
 		}
 
-		rules := make([]RemovableStorageRuleDataSourceItemModel, 0, len(api.Rules))
+		encryptedOverrides := make([]RemovableStorageEncryptedOverrideDataModel, 0)
+		vendorOverrides := make([]RemovableStorageVendorOverrideDataModel, 0)
+		serialOverrides := make([]RemovableStorageSerialOverrideDataModel, 0)
+		productOverrides := make([]RemovableStorageProductOverrideDataModel, 0)
+
 		for _, apiRule := range api.Rules {
 			ruleType := normalizeRemovableStorageRuleType(apiRule.Type)
-			rule := RemovableStorageRuleDataSourceItemModel{
-				Type:        types.StringValue(ruleType),
-				MountAction: types.StringValue(apiRule.MountAction),
-			}
-
+			localMessage := types.StringNull()
 			if apiRule.MessageAction != "" {
-				rule.MessageAction = types.StringValue(apiRule.MessageAction)
-			} else {
-				rule.MessageAction = types.StringNull()
+				localMessage = types.StringValue(apiRule.MessageAction)
 			}
-
+			applyTo := types.StringNull()
 			if apiRule.ApplyTo != "" {
-				rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
-			} else {
-				rule.ApplyTo = types.StringNull()
+				applyTo = types.StringValue(apiRule.ApplyTo)
 			}
 
 			switch ruleType {
+			case "Encryption":
+				encryptedOverrides = append(encryptedOverrides, RemovableStorageEncryptedOverrideDataModel{
+					Permission:               types.StringValue(apiRule.MountAction),
+					LocalNotificationMessage: localMessage,
+				})
 			case "Vendor":
-				rule.Vendors = common.StringsToList(apiRule.Vendors)
-				rule.Serials = types.ListNull(types.StringType)
-				rule.Products = nil
+				vendorOverrides = append(vendorOverrides, RemovableStorageVendorOverrideDataModel{
+					Permission:               types.StringValue(apiRule.MountAction),
+					LocalNotificationMessage: localMessage,
+					ApplyTo:                  applyTo,
+					VendorIDs:                common.StringsToList(apiRule.Vendors),
+				})
 			case "Serial":
-				rule.Serials = common.StringsToList(apiRule.Serials)
-				rule.Vendors = types.ListNull(types.StringType)
-				rule.Products = nil
+				serialOverrides = append(serialOverrides, RemovableStorageSerialOverrideDataModel{
+					Permission:               types.StringValue(apiRule.MountAction),
+					LocalNotificationMessage: localMessage,
+					ApplyTo:                  applyTo,
+					SerialNumbers:            common.StringsToList(apiRule.Serials),
+				})
 			case "Product":
-				products := make([]RemovableStorageProductDataSourceItemModel, 0, len(apiRule.Products))
+				products := make([]RemovableStorageProductIDDataSourceModel, 0, len(apiRule.Products))
 				for _, p := range apiRule.Products {
-					products = append(products, RemovableStorageProductDataSourceItemModel{
-						Vendor:  types.StringValue(p.Vendor),
-						Product: types.StringValue(p.Product),
+					products = append(products, RemovableStorageProductIDDataSourceModel{
+						VendorID:  types.StringValue(p.Vendor),
+						ProductID: types.StringValue(p.Product),
 					})
 				}
-				rule.Products = products
-				rule.Vendors = types.ListNull(types.StringType)
-				rule.Serials = types.ListNull(types.StringType)
-			default:
-				rule.Vendors = types.ListNull(types.StringType)
-				rule.Serials = types.ListNull(types.StringType)
-				rule.Products = nil
+				productOverrides = append(productOverrides, RemovableStorageProductOverrideDataModel{
+					Permission:               types.StringValue(apiRule.MountAction),
+					LocalNotificationMessage: localMessage,
+					ApplyTo:                  applyTo,
+					ProductIDs:               products,
+				})
 			}
-
-			rules = append(rules, rule)
 		}
-		item.Rules = rules
+
+		item.OverrideEncryptedDevices = encryptedOverrides
+		item.OverrideVendorID = vendorOverrides
+		item.OverrideSerialNumber = serialOverrides
+		item.OverrideProductID = productOverrides
 
 		items = append(items, item)
 	}

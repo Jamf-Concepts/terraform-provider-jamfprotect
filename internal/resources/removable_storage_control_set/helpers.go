@@ -20,7 +20,7 @@ import (
 func (r *RemovableStorageControlSetResource) buildInput(ctx context.Context, data RemovableStorageControlSetResourceModel, diags *diag.Diagnostics) *jamfprotect.RemovableStorageControlSetInput {
 	input := jamfprotect.RemovableStorageControlSetInput{
 		Name:               data.Name.ValueString(),
-		DefaultMountAction: data.DefaultMountAction.ValueString(),
+		DefaultMountAction: data.DefaultPermission.ValueString(),
 	}
 
 	if !data.Description.IsNull() {
@@ -29,70 +29,108 @@ func (r *RemovableStorageControlSetResource) buildInput(ctx context.Context, dat
 		input.Description = ""
 	}
 
-	if !data.DefaultMessageAction.IsNull() {
-		input.DefaultMessageAction = data.DefaultMessageAction.ValueString()
+	if !data.DefaultLocalNotificationMessage.IsNull() {
+		input.DefaultMessageAction = data.DefaultLocalNotificationMessage.ValueString()
 	} else {
 		input.DefaultMessageAction = ""
 	}
 
-	rules := make([]jamfprotect.RemovableStorageControlRuleInput, 0, len(data.Rules))
-	for _, rule := range data.Rules {
-		ruleInput := buildRuleInput(ctx, rule, diags)
-		if diags.HasError() {
+	rules := make([]jamfprotect.RemovableStorageControlRuleInput, 0)
+
+	for _, override := range data.OverrideEncryptedDevices {
+		rules = append(rules, buildEncryptedOverrideRule(override))
+	}
+
+	for _, override := range data.OverrideVendorID {
+		rule, ok := buildVendorOverrideRule(ctx, override, diags)
+		if !ok {
 			return nil
 		}
-		rules = append(rules, ruleInput)
+		rules = append(rules, rule)
 	}
+
+	for _, override := range data.OverrideSerialNumber {
+		rule, ok := buildSerialOverrideRule(ctx, override, diags)
+		if !ok {
+			return nil
+		}
+		rules = append(rules, rule)
+	}
+
+	for _, override := range data.OverrideProductID {
+		rules = append(rules, buildProductOverrideRule(override))
+	}
+
 	input.Rules = rules
 	return &input
 }
 
-func buildRuleInput(ctx context.Context, rule RemovableStorageRuleModel, diags *diag.Diagnostics) jamfprotect.RemovableStorageControlRuleInput {
-	ruleType := normalizeRemovableStorageRuleType(rule.Type.ValueString())
-	input := jamfprotect.RemovableStorageControlRuleInput{Type: ruleType}
-
-	baseRule := jamfprotect.RemovableStorageControlRuleDetails{
-		MountAction: rule.MountAction.ValueString(),
+func buildEncryptedOverrideRule(override RemovableStorageEncryptedOverrideModel) jamfprotect.RemovableStorageControlRuleInput {
+	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, types.StringNull())
+	return jamfprotect.RemovableStorageControlRuleInput{
+		Type:           "Encryption",
+		EncryptionRule: &baseRule,
 	}
-	if !rule.MessageAction.IsNull() {
-		value := rule.MessageAction.ValueString()
+}
+
+func buildVendorOverrideRule(ctx context.Context, override RemovableStorageVendorOverrideModel, diags *diag.Diagnostics) (jamfprotect.RemovableStorageControlRuleInput, bool) {
+	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
+	baseRule.Vendors = common.ListToStrings(ctx, override.VendorIDs, diags)
+	if diags.HasError() {
+		return jamfprotect.RemovableStorageControlRuleInput{}, false
+	}
+	return jamfprotect.RemovableStorageControlRuleInput{
+		Type:       "Vendor",
+		VendorRule: &baseRule,
+	}, true
+}
+
+func buildSerialOverrideRule(ctx context.Context, override RemovableStorageSerialOverrideModel, diags *diag.Diagnostics) (jamfprotect.RemovableStorageControlRuleInput, bool) {
+	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
+	baseRule.Serials = common.ListToStrings(ctx, override.SerialNumbers, diags)
+	if diags.HasError() {
+		return jamfprotect.RemovableStorageControlRuleInput{}, false
+	}
+	return jamfprotect.RemovableStorageControlRuleInput{
+		Type:       "Serial",
+		SerialRule: &baseRule,
+	}, true
+}
+
+func buildProductOverrideRule(override RemovableStorageProductOverrideModel) jamfprotect.RemovableStorageControlRuleInput {
+	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
+	products := make([]jamfprotect.RemovableStorageControlProductPair, 0, len(override.ProductIDs))
+	for _, product := range override.ProductIDs {
+		products = append(products, jamfprotect.RemovableStorageControlProductPair{
+			Vendor:  product.VendorID.ValueString(),
+			Product: product.ProductID.ValueString(),
+		})
+	}
+	productRule := jamfprotect.RemovableStorageControlProductRuleDetails{
+		MountAction:   baseRule.MountAction,
+		MessageAction: baseRule.MessageAction,
+		ApplyTo:       baseRule.ApplyTo,
+		Products:      products,
+	}
+	return jamfprotect.RemovableStorageControlRuleInput{
+		Type:        "Product",
+		ProductRule: &productRule,
+	}
+}
+
+func buildRuleDetails(permission types.String, message types.String, applyTo types.String) jamfprotect.RemovableStorageControlRuleDetails {
+	baseRule := jamfprotect.RemovableStorageControlRuleDetails{
+		MountAction: permission.ValueString(),
+	}
+	if !message.IsNull() {
+		value := message.ValueString()
 		baseRule.MessageAction = &value
 	}
-	if !rule.ApplyTo.IsNull() {
-		value := rule.ApplyTo.ValueString()
+	if !applyTo.IsNull() {
+		value := applyTo.ValueString()
 		baseRule.ApplyTo = &value
 	}
-
-	switch ruleType {
-	case "Vendor":
-		baseRule.Vendors = common.ListToStrings(ctx, rule.Vendors, diags)
-		input.VendorRule = &baseRule
-	case "Serial":
-		baseRule.Serials = common.ListToStrings(ctx, rule.Serials, diags)
-		input.SerialRule = &baseRule
-	case "Product":
-		products := make([]jamfprotect.RemovableStorageControlProductPair, 0, len(rule.Products))
-		for _, p := range rule.Products {
-			products = append(products, jamfprotect.RemovableStorageControlProductPair{
-				Vendor:  p.Vendor.ValueString(),
-				Product: p.Product.ValueString(),
-			})
-		}
-		productRule := jamfprotect.RemovableStorageControlProductRuleDetails{
-			MountAction:   baseRule.MountAction,
-			MessageAction: baseRule.MessageAction,
-			ApplyTo:       baseRule.ApplyTo,
-			Products:      products,
-		}
-		input.ProductRule = &productRule
-	case "Encryption":
-		input.EncryptionRule = &baseRule
-	default:
-		diags.AddError("Unsupported removable storage control rule type", "Unsupported rule type: "+rule.Type.ValueString())
-		return jamfprotect.RemovableStorageControlRuleInput{}
-	}
-
-	return input
+	return baseRule
 }
 
 func normalizeRemovableStorageRuleType(ruleType string) string {
@@ -113,7 +151,7 @@ func normalizeRemovableStorageRuleType(ruleType string) string {
 func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data *RemovableStorageControlSetResourceModel, api jamfprotect.RemovableStorageControlSet, _ *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
-	data.DefaultMountAction = types.StringValue(api.DefaultMountAction)
+	data.DefaultPermission = types.StringValue(api.DefaultMountAction)
 	data.Created = types.StringValue(api.Created)
 	data.Updated = types.StringValue(api.Updated)
 
@@ -124,58 +162,66 @@ func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data 
 	}
 
 	if api.DefaultMessageAction != "" {
-		data.DefaultMessageAction = types.StringValue(api.DefaultMessageAction)
+		data.DefaultLocalNotificationMessage = types.StringValue(api.DefaultMessageAction)
 	} else {
-		data.DefaultMessageAction = types.StringNull()
+		data.DefaultLocalNotificationMessage = types.StringNull()
 	}
 
-	rules := make([]RemovableStorageRuleModel, 0, len(api.Rules))
+	encryptedOverrides := make([]RemovableStorageEncryptedOverrideModel, 0)
+	vendorOverrides := make([]RemovableStorageVendorOverrideModel, 0)
+	serialOverrides := make([]RemovableStorageSerialOverrideModel, 0)
+	productOverrides := make([]RemovableStorageProductOverrideModel, 0)
+
 	for _, apiRule := range api.Rules {
 		ruleType := normalizeRemovableStorageRuleType(apiRule.Type)
-		rule := RemovableStorageRuleModel{
-			Type:        types.StringValue(ruleType),
-			MountAction: types.StringValue(apiRule.MountAction),
-		}
-
+		localMessage := types.StringNull()
 		if apiRule.MessageAction != "" {
-			rule.MessageAction = types.StringValue(apiRule.MessageAction)
-		} else {
-			rule.MessageAction = types.StringNull()
+			localMessage = types.StringValue(apiRule.MessageAction)
 		}
-
+		applyTo := types.StringNull()
 		if apiRule.ApplyTo != "" {
-			rule.ApplyTo = types.StringValue(apiRule.ApplyTo)
-		} else {
-			rule.ApplyTo = types.StringNull()
+			applyTo = types.StringValue(apiRule.ApplyTo)
 		}
 
 		switch ruleType {
+		case "Encryption":
+			encryptedOverrides = append(encryptedOverrides, RemovableStorageEncryptedOverrideModel{
+				Permission:               types.StringValue(apiRule.MountAction),
+				LocalNotificationMessage: localMessage,
+			})
 		case "Vendor":
-			rule.Vendors = common.StringsToList(apiRule.Vendors)
-			rule.Serials = types.ListNull(types.StringType)
-			rule.Products = nil
+			vendorOverrides = append(vendorOverrides, RemovableStorageVendorOverrideModel{
+				Permission:               types.StringValue(apiRule.MountAction),
+				LocalNotificationMessage: localMessage,
+				ApplyTo:                  applyTo,
+				VendorIDs:                common.StringsToList(apiRule.Vendors),
+			})
 		case "Serial":
-			rule.Serials = common.StringsToList(apiRule.Serials)
-			rule.Vendors = types.ListNull(types.StringType)
-			rule.Products = nil
+			serialOverrides = append(serialOverrides, RemovableStorageSerialOverrideModel{
+				Permission:               types.StringValue(apiRule.MountAction),
+				LocalNotificationMessage: localMessage,
+				ApplyTo:                  applyTo,
+				SerialNumbers:            common.StringsToList(apiRule.Serials),
+			})
 		case "Product":
-			products := make([]RemovableStorageProductModel, 0, len(apiRule.Products))
+			products := make([]RemovableStorageProductIDModel, 0, len(apiRule.Products))
 			for _, p := range apiRule.Products {
-				products = append(products, RemovableStorageProductModel{
-					Vendor:  types.StringValue(p.Vendor),
-					Product: types.StringValue(p.Product),
+				products = append(products, RemovableStorageProductIDModel{
+					VendorID:  types.StringValue(p.Vendor),
+					ProductID: types.StringValue(p.Product),
 				})
 			}
-			rule.Products = products
-			rule.Vendors = types.ListNull(types.StringType)
-			rule.Serials = types.ListNull(types.StringType)
-		default:
-			rule.Vendors = types.ListNull(types.StringType)
-			rule.Serials = types.ListNull(types.StringType)
-			rule.Products = nil
+			productOverrides = append(productOverrides, RemovableStorageProductOverrideModel{
+				Permission:               types.StringValue(apiRule.MountAction),
+				LocalNotificationMessage: localMessage,
+				ApplyTo:                  applyTo,
+				ProductIDs:               products,
+			})
 		}
-
-		rules = append(rules, rule)
 	}
-	data.Rules = rules
+
+	data.OverrideEncryptedDevices = encryptedOverrides
+	data.OverrideVendorID = vendorOverrides
+	data.OverrideSerialNumber = serialOverrides
+	data.OverrideProductID = productOverrides
 }
