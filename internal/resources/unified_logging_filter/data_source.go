@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &UnifiedLoggingFiltersDataSource{}
@@ -25,7 +26,7 @@ func NewUnifiedLoggingFiltersDataSource() datasource.DataSource {
 
 // UnifiedLoggingFiltersDataSource lists all unified logging filters in Jamf Protect.
 type UnifiedLoggingFiltersDataSource struct {
-	client *client.Client
+	service *jamfprotect.Service
 }
 
 // UnifiedLoggingFiltersDataSourceModel maps the data source schema.
@@ -113,42 +114,16 @@ func (d *UnifiedLoggingFiltersDataSource) Configure(ctx context.Context, req dat
 			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
 		return
 	}
-	d.client = client
+	d.service = jamfprotect.NewService(client)
 }
 
 func (d *UnifiedLoggingFiltersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data UnifiedLoggingFiltersDataSourceModel
 
-	var allItems []unifiedLoggingFilterAPIModel
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
-			"filter":    map[string]any{},
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListUnifiedLoggingFilters struct {
-				Items    []unifiedLoggingFilterAPIModel `json:"items"`
-				PageInfo common.PageInfo                `json:"pageInfo"`
-			} `json:"listUnifiedLoggingFilters"`
-		}
-		if err := d.client.Query(ctx, listUnifiedLoggingFiltersQuery, vars, &result); err != nil {
-			resp.Diagnostics.AddError("Error listing unified logging filters", err.Error())
-			return
-		}
-
-		allItems = append(allItems, result.ListUnifiedLoggingFilters.Items...)
-
-		if result.ListUnifiedLoggingFilters.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListUnifiedLoggingFilters.PageInfo.Next
+	allItems, err := d.service.ListUnifiedLoggingFilters(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing unified logging filters", err.Error())
+		return
 	}
 
 	tflog.Trace(ctx, "listed unified logging filters", map[string]any{"count": len(allItems)})

@@ -1,0 +1,216 @@
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package jamfprotect
+
+import "context"
+
+// unifiedLoggingFilterFields defines the GraphQL fragment for unified logging filter fields.
+const unifiedLoggingFilterFields = `
+fragment UnifiedLoggingFilterFields on UnifiedLoggingFilter {
+	uuid
+	name
+	description
+	created
+	updated
+	filter
+	tags
+	enabled
+	level
+}
+`
+
+// createUnifiedLoggingFilterMutation defines the GraphQL mutation for creating a unified logging filter.
+const createUnifiedLoggingFilterMutation = `
+mutation createUnifiedLoggingFilter(
+	$name: String!,
+	$description: String,
+	$tags: [String]!,
+	$filter: String!,
+	$enabled: Boolean,
+	$level: UNIFIED_LOGGING_LEVEL!
+) {
+	createUnifiedLoggingFilter(
+		input: {name: $name, description: $description, tags: $tags, filter: $filter, enabled: $enabled, level: $level}
+	) {
+		...UnifiedLoggingFilterFields
+	}
+}
+
+` + unifiedLoggingFilterFields
+
+// getUnifiedLoggingFilterQuery defines the GraphQL query for retrieving a unified logging filter by UUID.
+const getUnifiedLoggingFilterQuery = `
+query getUnifiedLoggingFilter($uuid: ID!) {
+	getUnifiedLoggingFilter(uuid: $uuid) {
+		...UnifiedLoggingFilterFields
+	}
+}
+
+` + unifiedLoggingFilterFields
+
+// updateUnifiedLoggingFilterMutation defines the GraphQL mutation for updating a unified logging filter.
+const updateUnifiedLoggingFilterMutation = `
+mutation updateUnifiedLoggingFilter(
+	$uuid: ID!,
+	$name: String!,
+	$description: String,
+	$filter: String!,
+	$tags: [String]!,
+	$enabled: Boolean,
+	$level: UNIFIED_LOGGING_LEVEL!
+) {
+	updateUnifiedLoggingFilter(
+		uuid: $uuid
+		input: {name: $name, description: $description, filter: $filter, tags: $tags, enabled: $enabled, level: $level}
+	) {
+		...UnifiedLoggingFilterFields
+	}
+}
+
+` + unifiedLoggingFilterFields
+
+// deleteUnifiedLoggingFilterMutation defines the GraphQL mutation for deleting a unified logging filter.
+const deleteUnifiedLoggingFilterMutation = `
+mutation deleteUnifiedLoggingFilter($uuid: ID!) {
+	deleteUnifiedLoggingFilter(uuid: $uuid) {
+		uuid
+	}
+}
+`
+
+// listUnifiedLoggingFiltersQuery defines the GraphQL query for listing unified logging filters.
+const listUnifiedLoggingFiltersQuery = `
+query listUnifiedLoggingFilters($nextToken: String, $direction: OrderDirection!, $field: UnifiedLoggingFiltersOrderField!, $filter: UnifiedLoggingFiltersFilterInput!) {
+	listUnifiedLoggingFilters(
+		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100, filter: $filter}
+	) {
+		items {
+			...UnifiedLoggingFilterFields
+		}
+		pageInfo {
+		next
+		total
+		}
+	}
+}
+
+` + unifiedLoggingFilterFields
+
+// UnifiedLoggingFilterInput is the create/update input for a unified logging filter.
+type UnifiedLoggingFilterInput struct {
+	Name        string
+	Description string
+	Tags        []string
+	Filter      string
+	Enabled     bool
+	Level       string
+}
+
+// UnifiedLoggingFilter represents a unified logging filter.
+type UnifiedLoggingFilter struct {
+	UUID        string   `json:"uuid"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Created     string   `json:"created"`
+	Updated     string   `json:"updated"`
+	Filter      string   `json:"filter"`
+	Tags        []string `json:"tags"`
+	Enabled     bool     `json:"enabled"`
+	Level       string   `json:"level"`
+}
+
+// CreateUnifiedLoggingFilter creates a new unified logging filter.
+func (s *Service) CreateUnifiedLoggingFilter(ctx context.Context, input UnifiedLoggingFilterInput) (UnifiedLoggingFilter, error) {
+	vars := map[string]any{
+		"name":        input.Name,
+		"description": input.Description,
+		"tags":        input.Tags,
+		"filter":      input.Filter,
+		"enabled":     input.Enabled,
+		"level":       input.Level,
+	}
+	var result struct {
+		CreateUnifiedLoggingFilter UnifiedLoggingFilter `json:"createUnifiedLoggingFilter"`
+	}
+	if err := s.client.DoGraphQL(ctx, createUnifiedLoggingFilterMutation, vars, &result); err != nil {
+		return UnifiedLoggingFilter{}, err
+	}
+	return result.CreateUnifiedLoggingFilter, nil
+}
+
+// GetUnifiedLoggingFilter retrieves a unified logging filter by UUID.
+func (s *Service) GetUnifiedLoggingFilter(ctx context.Context, uuid string) (*UnifiedLoggingFilter, error) {
+	vars := map[string]any{"uuid": uuid}
+	var result struct {
+		GetUnifiedLoggingFilter *UnifiedLoggingFilter `json:"getUnifiedLoggingFilter"`
+	}
+	if err := s.client.DoGraphQL(ctx, getUnifiedLoggingFilterQuery, vars, &result); err != nil {
+		return nil, err
+	}
+	return result.GetUnifiedLoggingFilter, nil
+}
+
+// UpdateUnifiedLoggingFilter updates a unified logging filter.
+func (s *Service) UpdateUnifiedLoggingFilter(ctx context.Context, uuid string, input UnifiedLoggingFilterInput) (UnifiedLoggingFilter, error) {
+	vars := map[string]any{
+		"uuid":        uuid,
+		"name":        input.Name,
+		"description": input.Description,
+		"tags":        input.Tags,
+		"filter":      input.Filter,
+		"enabled":     input.Enabled,
+		"level":       input.Level,
+	}
+	var result struct {
+		UpdateUnifiedLoggingFilter UnifiedLoggingFilter `json:"updateUnifiedLoggingFilter"`
+	}
+	if err := s.client.DoGraphQL(ctx, updateUnifiedLoggingFilterMutation, vars, &result); err != nil {
+		return UnifiedLoggingFilter{}, err
+	}
+	return result.UpdateUnifiedLoggingFilter, nil
+}
+
+// DeleteUnifiedLoggingFilter deletes a unified logging filter by UUID.
+func (s *Service) DeleteUnifiedLoggingFilter(ctx context.Context, uuid string) error {
+	vars := map[string]any{"uuid": uuid}
+	return s.client.DoGraphQL(ctx, deleteUnifiedLoggingFilterMutation, vars, nil)
+}
+
+// ListUnifiedLoggingFilters retrieves all unified logging filters.
+func (s *Service) ListUnifiedLoggingFilters(ctx context.Context) ([]UnifiedLoggingFilter, error) {
+	var allItems []UnifiedLoggingFilter
+	var nextToken *string
+
+	for {
+		vars := map[string]any{
+			"direction": "ASC",
+			"field":     "NAME",
+			"filter":    map[string]any{},
+		}
+		if nextToken != nil {
+			vars["nextToken"] = *nextToken
+		}
+
+		var result struct {
+			ListUnifiedLoggingFilters struct {
+				Items    []UnifiedLoggingFilter `json:"items"`
+				PageInfo struct {
+					Next  *string `json:"next"`
+					Total int     `json:"total"`
+				} `json:"pageInfo"`
+			} `json:"listUnifiedLoggingFilters"`
+		}
+		if err := s.client.DoGraphQL(ctx, listUnifiedLoggingFiltersQuery, vars, &result); err != nil {
+			return nil, err
+		}
+
+		allItems = append(allItems, result.ListUnifiedLoggingFilters.Items...)
+		if result.ListUnifiedLoggingFilters.PageInfo.Next == nil {
+			break
+		}
+		nextToken = result.ListUnifiedLoggingFilters.PageInfo.Next
+	}
+
+	return allItems, nil
+}
