@@ -38,7 +38,7 @@ Read-Only:
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan.
 - `analytic_sets` (Set of String) Analytic set UUIDs included in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether auto-updates are enabled for endpoints using this plan.
-- `comms_config` (Attributes) Communications configuration for the plan. (see [below for nested schema](#nestedatt--plans--comms_config))
+- `communications_protocol` (String) The communications protocol used by the plan.
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan.
@@ -53,15 +53,6 @@ Read-Only:
 - `telemetry` (String) The ID of the legacy telemetry configuration.
 - `telemetry_v2` (String) The ID of the v2 telemetry configuration.
 - `updated` (String) The last-updated timestamp.
-
-<a id="nestedatt--plans--comms_config"></a>
-### Nested Schema for `plans.comms_config`
-
-Read-Only:
-
-- `fqdn` (String) The fully qualified domain name for communications.
-- `protocol` (String) The protocol to use.
-
 
 <a id="nestedatt--plans--info_sync"></a>
 ### Nested Schema for `plans.info_sync`

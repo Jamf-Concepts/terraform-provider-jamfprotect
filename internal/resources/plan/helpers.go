@@ -22,10 +22,11 @@ import (
 const (
 	advancedThreatControlsName = "Advanced Threat Controls"
 	tamperPreventionName       = "Tamper Prevention"
+	commsFQDNPlaceholder       = "placeholder - will be updated by resolver on create"
 )
 
 // buildVariables converts the Terraform model into a plan input.
-func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, diags *diag.Diagnostics) *jamfprotect.PlanInput {
+func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, commsFQDN string, diags *diag.Diagnostics) *jamfprotect.PlanInput {
 	input := &jamfprotect.PlanInput{
 		Name:          data.Name.ValueString(),
 		ActionConfigs: data.ActionConfigs.ValueString(),
@@ -133,27 +134,13 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	// Comms config (required).
-	if !data.CommsConfig.IsNull() {
-		commsAttrs := data.CommsConfig.Attributes()
-		fqdn, ok := commsAttrs["fqdn"].(types.String)
-		if !ok {
-			diags.AddError("Type assertion failed", "fqdn is not a types.String")
-			return nil
-		}
-		protocol, ok := commsAttrs["protocol"].(types.String)
-		if !ok {
-			diags.AddError("Type assertion failed", "protocol is not a types.String")
-			return nil
-		}
-		input.CommsConfig = jamfprotect.PlanCommsConfigInput{
-			FQDN:     fqdn.ValueString(),
-			Protocol: protocol.ValueString(),
-		}
-	} else {
-		input.CommsConfig = jamfprotect.PlanCommsConfigInput{
-			FQDN:     "",
-			Protocol: "",
-		}
+	protocol := "mqtt"
+	if isKnownString(data.CommunicationsProtocol) {
+		protocol = data.CommunicationsProtocol.ValueString()
+	}
+	input.CommsConfig = jamfprotect.PlanCommsConfigInput{
+		FQDN:     commsFQDN,
+		Protocol: protocol,
 	}
 
 	// Info sync (required).
@@ -271,18 +258,11 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		data.AnalyticSets = types.SetNull(types.StringType)
 	}
 
-	// Comms config.
-	commsAttrTypes := map[string]attr.Type{
-		"fqdn":     types.StringType,
-		"protocol": types.StringType,
-	}
-	if api.CommsConfig != nil {
-		data.CommsConfig = types.ObjectValueMust(commsAttrTypes, map[string]attr.Value{
-			"fqdn":     types.StringValue(api.CommsConfig.FQDN),
-			"protocol": types.StringValue(api.CommsConfig.Protocol),
-		})
+	// Communications protocol.
+	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
+		data.CommunicationsProtocol = types.StringValue(api.CommsConfig.Protocol)
 	} else {
-		data.CommsConfig = types.ObjectNull(commsAttrTypes)
+		data.CommunicationsProtocol = types.StringNull()
 	}
 
 	// Info sync.

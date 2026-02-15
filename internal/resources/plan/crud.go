@@ -24,7 +24,7 @@ func (r *PlanResource) Create(ctx context.Context, req resource.CreateRequest, r
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	input := r.buildVariables(ctx, data, &resp.Diagnostics)
+	input := r.buildVariables(ctx, data, commsFQDNPlaceholder, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -106,7 +106,21 @@ func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	input := r.buildVariables(ctx, data, &resp.Diagnostics)
+	current, err := r.service.GetPlan(ctx, data.ID.ValueString())
+	if err != nil {
+		if common.IsNotFoundError(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading plan for update", err.Error())
+		return
+	}
+	if current == nil || current.CommsConfig == nil || current.CommsConfig.FQDN == "" {
+		resp.Diagnostics.AddError("Missing communications configuration", "Expected commsConfig.fqdn to be set for update.")
+		return
+	}
+
+	input := r.buildVariables(ctx, data, current.CommsConfig.FQDN, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

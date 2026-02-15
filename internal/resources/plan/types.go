@@ -22,7 +22,7 @@ type PlanResourceModel struct {
 	TelemetryV2              types.String   `tfsdk:"telemetry_v2"`
 	USBControlSet            types.String   `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set      `tfsdk:"analytic_sets"`
-	CommsConfig              types.Object   `tfsdk:"comms_config"`
+	CommunicationsProtocol   types.String   `tfsdk:"communications_protocol"`
 	InfoSync                 types.Object   `tfsdk:"info_sync"`
 	EndpointThreatPrevention types.String   `tfsdk:"endpoint_threat_prevention"`
 	AdvancedThreatControls   types.String   `tfsdk:"advanced_threat_controls"`
