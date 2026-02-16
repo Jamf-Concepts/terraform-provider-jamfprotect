@@ -32,6 +32,14 @@ resource "jamfprotect_analytic" "example" {
       type        = "String"
     },
   ]
+
+  # Optional: Configure custom timeouts (defaults to 30s for all operations)
+  # timeouts {
+  #   create = "60s"
+  #   read   = "30s"
+  #   update = "60s"
+  #   delete = "30s"
+  # }
 }
 ```
 

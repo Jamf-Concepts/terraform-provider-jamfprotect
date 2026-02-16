@@ -40,4 +40,12 @@ resource "jamfprotect_plan" "endpoint_security" {
   endpoint_threat_prevention = "BlockAndReport"
   advanced_threat_controls   = "ReportOnly"
   tamper_prevention          = "BlockAndReport"
+
+  # Optional: Configure custom timeouts (defaults to 30s for all operations)
+  # timeouts {
+  #   create = "60s"
+  #   read   = "30s"
+  #   update = "60s"
+  #   delete = "30s"
+  # }
 }

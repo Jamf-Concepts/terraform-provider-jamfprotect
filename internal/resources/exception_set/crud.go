@@ -2,10 +2,10 @@ package exception_set
 
 import (
 	"context"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
@@ -16,7 +16,7 @@ func (r *ExceptionSetResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
+	createTimeout, diags := data.Timeouts.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -54,7 +54,7 @@ func (r *ExceptionSetResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
+	readTimeout, diags := data.Timeouts.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -99,7 +99,7 @@ func (r *ExceptionSetResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	data.ID = state.ID
 
-	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
+	updateTimeout, diags := data.Timeouts.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,7 +136,7 @@ func (r *ExceptionSetResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
