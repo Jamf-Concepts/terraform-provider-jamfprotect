@@ -2,10 +2,10 @@ package telemetry
 
 import (
 	"context"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
@@ -16,7 +16,7 @@ func (r *TelemetryV2Resource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	createTimeout, diags := data.Timeouts.Create(ctx, 30*time.Second)
+	createTimeout, diags := data.Timeouts.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -53,7 +53,7 @@ func (r *TelemetryV2Resource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	readTimeout, diags := data.Timeouts.Read(ctx, 30*time.Second)
+	readTimeout, diags := data.Timeouts.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -96,7 +96,7 @@ func (r *TelemetryV2Resource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	data.ID = state.ID
 
-	updateTimeout, diags := data.Timeouts.Update(ctx, 30*time.Second)
+	updateTimeout, diags := data.Timeouts.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,7 +132,7 @@ func (r *TelemetryV2Resource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, 30*time.Second)
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
