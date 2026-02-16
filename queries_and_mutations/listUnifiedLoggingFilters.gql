@@ -1,6 +1,16 @@
-query listUnifiedLoggingFilters($nextToken: String, $direction: OrderDirection!, $field: UnifiedLoggingFiltersOrderField!, $filter: UnifiedLoggingFiltersFilterInput!) {
+query listUnifiedLoggingFilters(
+  $nextToken: String
+  $direction: OrderDirection!
+  $field: UnifiedLoggingFiltersOrderField!
+  $filter: UnifiedLoggingFiltersFilterInput!
+) {
   listUnifiedLoggingFilters(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100, filter: $filter}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      pageSize: 100
+      filter: $filter
+    }
   ) {
     items {
       ...UnifiedLoggingFilterFields

@@ -1,7 +1,20 @@
-mutation updateUSBControlSet($id: ID!, $name: String!, $description: String, $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!, $defaultMessageAction: String, $rules: [USBControlRuleInput!]!) {
+mutation updateUSBControlSet(
+  $id: ID!
+  $name: String!
+  $description: String
+  $defaultMountAction: USBCONTROL_MOUNT_ACTION_TYPE_ENUM!
+  $defaultMessageAction: String
+  $rules: [USBControlRuleInput!]!
+) {
   updateUSBControlSet(
     id: $id
-    input: {name: $name, description: $description, defaultMountAction: $defaultMountAction, defaultMessageAction: $defaultMessageAction, rules: $rules}
+    input: {
+      name: $name
+      description: $description
+      defaultMountAction: $defaultMountAction
+      defaultMessageAction: $defaultMessageAction
+      rules: $rules
+    }
   ) {
     ...USBControlSetFields
     __typename

@@ -1,7 +1,20 @@
-mutation updateAnalyticSet($uuid: ID!, $name: String!, $description: String, $types: [ANALYTIC_SET_TYPE!], $analytics: [ID!]!, $RBAC_Plan: Boolean!, $excludeAnalytics: Boolean = false) {
+mutation updateAnalyticSet(
+  $uuid: ID!
+  $name: String!
+  $description: String
+  $types: [ANALYTIC_SET_TYPE!]
+  $analytics: [ID!]!
+  $RBAC_Plan: Boolean!
+  $excludeAnalytics: Boolean = false
+) {
   updateAnalyticSet(
     uuid: $uuid
-    input: {name: $name, description: $description, analytics: $analytics, types: $types}
+    input: {
+      name: $name
+      description: $description
+      analytics: $analytics
+      types: $types
+    }
   ) {
     ...AnalyticSetFields
     __typename

@@ -1,6 +1,20 @@
-mutation createUnifiedLoggingFilter($name: String!, $description: String, $tags: [String]!, $filter: String!, $enabled: Boolean, $level: UNIFIED_LOGGING_LEVEL!) {
+mutation createUnifiedLoggingFilter(
+  $name: String!
+  $description: String
+  $tags: [String]!
+  $filter: String!
+  $enabled: Boolean
+  $level: UNIFIED_LOGGING_LEVEL!
+) {
   createUnifiedLoggingFilter(
-    input: {name: $name, description: $description, tags: $tags, filter: $filter, enabled: $enabled, level: $level}
+    input: {
+      name: $name
+      description: $description
+      tags: $tags
+      filter: $filter
+      enabled: $enabled
+      level: $level
+    }
   ) {
     ...UnifiedLoggingFilterFields
     __typename

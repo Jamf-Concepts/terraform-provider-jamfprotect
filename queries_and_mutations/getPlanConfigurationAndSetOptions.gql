@@ -1,6 +1,12 @@
-query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+query getPlanConfigurationAndSetOptions(
+  $RBAC_ActionConfigs: Boolean!
+  $RBAC_Telemetry: Boolean!
+  $RBAC_USBControlSet: Boolean!
+  $RBAC_ExceptionSet: Boolean!
+  $RBAC_AnalyticSet: Boolean!
+) {
   actionConfigs: listActionConfigs(
-    input: {order: {direction: DESC, field: created}}
+    input: { order: { direction: DESC, field: created } }
   ) @include(if: $RBAC_ActionConfigs) {
     items {
       name
@@ -9,7 +15,9 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     }
     __typename
   }
-  telemetries: listTelemetries(input: {order: {direction: DESC, field: created}}) @include(if: $RBAC_Telemetry) {
+  telemetries: listTelemetries(
+    input: { order: { direction: DESC, field: created } }
+  ) @include(if: $RBAC_Telemetry) {
     items {
       name
       id
@@ -18,7 +26,7 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     __typename
   }
   telemetriesV2: listTelemetriesV2(
-    input: {order: {direction: DESC, field: created}}
+    input: { order: { direction: DESC, field: created } }
   ) @include(if: $RBAC_Telemetry) {
     items {
       name
@@ -28,7 +36,7 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     __typename
   }
   usbControlSets: listUSBControlSets(
-    input: {order: {direction: DESC, field: created}}
+    input: { order: { direction: DESC, field: created } }
   ) @include(if: $RBAC_USBControlSet) {
     items {
       name
@@ -38,7 +46,7 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     __typename
   }
   exceptionSets: listExceptionSets(
-    input: {order: {direction: DESC, field: created}}
+    input: { order: { direction: DESC, field: created } }
   ) @include(if: $RBAC_ExceptionSet) {
     items {
       name
@@ -49,7 +57,10 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     __typename
   }
   analyticSets: listAnalyticSets(
-    input: {order: {direction: DESC, field: created}, filter: {managed: {equals: false}}}
+    input: {
+      order: { direction: DESC, field: created }
+      filter: { managed: { equals: false } }
+    }
   ) @include(if: $RBAC_AnalyticSet) {
     items {
       name
@@ -61,7 +72,10 @@ query getPlanConfigurationAndSetOptions($RBAC_ActionConfigs: Boolean!, $RBAC_Tel
     __typename
   }
   managedAnalyticSets: listAnalyticSets(
-    input: {order: {direction: DESC, field: created}, filter: {managed: {equals: true}}}
+    input: {
+      order: { direction: DESC, field: created }
+      filter: { managed: { equals: true } }
+    }
   ) @include(if: $RBAC_AnalyticSet) {
     items {
       name

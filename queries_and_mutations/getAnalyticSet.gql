@@ -1,4 +1,8 @@
-query getAnalyticSet($uuid: ID!, $RBAC_Plan: Boolean!, $excludeAnalytics: Boolean = false) {
+query getAnalyticSet(
+  $uuid: ID!
+  $RBAC_Plan: Boolean!
+  $excludeAnalytics: Boolean = false
+) {
   getAnalyticSet(uuid: $uuid) {
     ...AnalyticSetFields
     __typename

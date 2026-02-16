@@ -1,4 +1,8 @@
-query getActionConfigs($id: ID!, $hasLimitedAppAccess: Boolean!, $RBAC_Plan: Boolean!) {
+query getActionConfigs(
+  $id: ID!
+  $hasLimitedAppAccess: Boolean!
+  $RBAC_Plan: Boolean!
+) {
   getActionConfigs(id: $id) {
     ...ActionConfigsFields
     __typename

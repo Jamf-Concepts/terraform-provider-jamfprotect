@@ -1,7 +1,21 @@
-mutation updateExceptionSet($uuid: ID!, $name: String!, $description: String, $exceptions: [ExceptionInput!]!, $esExceptions: [EsExceptionInput!]!, $minimal: Boolean = false, $RBAC_Analytic: Boolean!, $RBAC_Plan: Boolean!) {
+mutation updateExceptionSet(
+  $uuid: ID!
+  $name: String!
+  $description: String
+  $exceptions: [ExceptionInput!]!
+  $esExceptions: [EsExceptionInput!]!
+  $minimal: Boolean = false
+  $RBAC_Analytic: Boolean!
+  $RBAC_Plan: Boolean!
+) {
   updateExceptionSet(
     uuid: $uuid
-    input: {name: $name, description: $description, exceptions: $exceptions, esExceptions: $esExceptions}
+    input: {
+      name: $name
+      description: $description
+      exceptions: $exceptions
+      esExceptions: $esExceptions
+    }
   ) {
     ...ExceptionSetFields
     __typename

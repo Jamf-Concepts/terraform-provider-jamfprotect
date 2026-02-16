@@ -1,7 +1,20 @@
-mutation updatePreventList($id: ID!, $name: String!, $tags: [String]!, $type: PREVENT_LIST_TYPE!, $list: [String]!, $description: String) {
+mutation updatePreventList(
+  $id: ID!
+  $name: String!
+  $tags: [String]!
+  $type: PREVENT_LIST_TYPE!
+  $list: [String]!
+  $description: String
+) {
   updatePreventList(
     id: $id
-    input: {name: $name, tags: $tags, type: $type, list: $list, description: $description}
+    input: {
+      name: $name
+      tags: $tags
+      type: $type
+      list: $list
+      description: $description
+    }
   ) {
     ...PreventListFields
     __typename

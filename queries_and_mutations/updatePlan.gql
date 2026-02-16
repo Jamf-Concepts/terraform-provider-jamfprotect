@@ -1,7 +1,44 @@
-mutation updatePlan($id: ID!, $hasLimitedAppAccess: Boolean!, $excludeAnalytics: Boolean = false, $name: String!, $description: String!, $logLevel: LOG_LEVEL_ENUM, $actionConfigs: ID!, $exceptionSets: [ID!], $telemetry: ID, $telemetryV2: ID, $analyticSets: [PlanAnalyticSetInput!], $usbControlSet: ID, $commsConfig: CommsConfigInput!, $infoSync: InfoSyncInput!, $autoUpdate: Boolean!, $signaturesFeedConfig: SignaturesFeedConfigInput!, $RBAC_AnalyticSet: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_ActionConfigs: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+mutation updatePlan(
+  $id: ID!
+  $hasLimitedAppAccess: Boolean!
+  $excludeAnalytics: Boolean = false
+  $name: String!
+  $description: String!
+  $logLevel: LOG_LEVEL_ENUM
+  $actionConfigs: ID!
+  $exceptionSets: [ID!]
+  $telemetry: ID
+  $telemetryV2: ID
+  $analyticSets: [PlanAnalyticSetInput!]
+  $usbControlSet: ID
+  $commsConfig: CommsConfigInput!
+  $infoSync: InfoSyncInput!
+  $autoUpdate: Boolean!
+  $signaturesFeedConfig: SignaturesFeedConfigInput!
+  $RBAC_AnalyticSet: Boolean!
+  $RBAC_Telemetry: Boolean!
+  $RBAC_ActionConfigs: Boolean!
+  $RBAC_USBControlSet: Boolean!
+  $RBAC_ExceptionSet: Boolean!
+  $RBAC_AnalyticSet: Boolean!
+) {
   updatePlan(
     id: $id
-    input: {name: $name, description: $description, logLevel: $logLevel, actionConfigs: $actionConfigs, exceptionSets: $exceptionSets, telemetry: $telemetry, telemetryV2: $telemetryV2, analyticSets: $analyticSets, usbControlSet: $usbControlSet, commsConfig: $commsConfig, infoSync: $infoSync, autoUpdate: $autoUpdate, signaturesFeedConfig: $signaturesFeedConfig}
+    input: {
+      name: $name
+      description: $description
+      logLevel: $logLevel
+      actionConfigs: $actionConfigs
+      exceptionSets: $exceptionSets
+      telemetry: $telemetry
+      telemetryV2: $telemetryV2
+      analyticSets: $analyticSets
+      usbControlSet: $usbControlSet
+      commsConfig: $commsConfig
+      infoSync: $infoSync
+      autoUpdate: $autoUpdate
+      signaturesFeedConfig: $signaturesFeedConfig
+    }
   ) {
     ...PlanFields
     __typename

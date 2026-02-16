@@ -1,6 +1,19 @@
-query listExceptionSets($nextToken: String, $direction: OrderDirection!, $field: ExceptionSetOrderField!, $filter: ExceptionSetFiltersInput, $minimal: Boolean = true, $RBAC_Analytic: Boolean!, $RBAC_Plan: Boolean!) {
+query listExceptionSets(
+  $nextToken: String
+  $direction: OrderDirection!
+  $field: ExceptionSetOrderField!
+  $filter: ExceptionSetFiltersInput
+  $minimal: Boolean = true
+  $RBAC_Analytic: Boolean!
+  $RBAC_Plan: Boolean!
+) {
   listExceptionSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, filter: $filter, pageSize: 100}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      filter: $filter
+      pageSize: 100
+    }
   ) {
     items {
       ...ExceptionSetFields
