@@ -1,0 +1,47 @@
+---
+page_title: "{{ .Name }} {{ .Type }} - {{ .ProviderShortName }}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{ .Name }} ({{ .Type }})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{ if .HasExamples -}}
+{{- range .ExampleFiles -}}
+{{ tffile . }}
+
+{{ end -}}
+{{- else -}}
+{{ tffile .ExampleFile }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+{{ if .HasImport -}}
+## Import
+
+### Using terraform import command
+
+{{ codefile "shell" .ImportFile }}
+
+{{ if .HasImportIDConfig -}}
+### Using import blocks (Terraform 1.5+)
+
+**Import by ID:**
+
+{{ tffile .ImportIDConfigFile }}
+{{ end -}}
+
+{{ if .HasImportIdentityConfig -}}
+**Import by identity:**
+
+{{ tffile .ImportIdentityConfigFile }}
+{{ end -}}
+{{- end }}
