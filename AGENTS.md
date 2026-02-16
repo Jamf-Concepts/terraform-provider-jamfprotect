@@ -11,19 +11,19 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 
 ### Available mise tasks
 
-| Task                  | Description                                                          |
-| --------------------- | -------------------------------------------------------------------- |
-| `install`             | Install Go module dependencies                                       |
-| `tidy`                | Tidy Go module dependencies                                         |
-| `build`               | Build the provider and generate documentation (composite)            |
-| `build:provider`      | Build the provider                                                   |
-| `build:generate-docs` | Generate provider documentation with tfplugindocs                    |
-| `dev:install`         | Build and install the provider locally (depends on `build`)          |
-| `fmt`                 | Format Go source files                                               |
-| `lint`                | Run golangci-lint                                                    |
-| `test`                | Run unit tests                                                       |
-| `testacc`             | Run acceptance tests (requires environment variables)                |
-| `check`               | Run fmt, lint, and unit tests (composite)                            |
+| Task                  | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `install`             | Install Go module dependencies                              |
+| `tidy`                | Tidy Go module dependencies                                 |
+| `build`               | Build the provider and generate documentation (composite)   |
+| `build:provider`      | Build the provider                                          |
+| `build:generate-docs` | Generate provider documentation with tfplugindocs           |
+| `dev:install`         | Build and install the provider locally (depends on `build`) |
+| `fmt`                 | Format Go source files                                      |
+| `lint`                | Run golangci-lint                                           |
+| `test`                | Run unit tests                                              |
+| `testacc`             | Run acceptance tests (requires environment variables)       |
+| `check`               | Run fmt, lint, and unit tests (composite)                   |
 
 ## Python Scripts
 

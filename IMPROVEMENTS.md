@@ -27,10 +27,10 @@ resource "jamfprotect_plan" "main" {
 ```hcl
 resource "jamfprotect_plan" "main" {
   name = "My Plan"
-  
+
   # Option 1: Reference existing resource
   action_configuration = jamfprotect_action_config.default.id
-  
+
   # Option 2: Inline definition (provider manages lifecycle)
   action_configuration {
     name = "Inline Action Config"
@@ -54,7 +54,7 @@ resource "jamfprotect_plan" "main" {
 - Clearer ownership model (plan owns inline resources)
 - Easier for beginners
 
----
+______________________________________________________________________
 
 ### 2. **Analytic Library Module** (HIGH IMPACT)
 
@@ -87,15 +87,15 @@ modules/
 ```hcl
 module "security_analytics" {
   source = "github.com/smithjw/terraform-jamfprotect-analytics"
-  
+
   # Enable specific analytics
   enable_suspicious_process    = true
   enable_privilege_escalation  = true
   enable_ransomware_detection  = true
-  
+
   # Customize thresholds
   suspicious_process_severity = "Critical"
-  
+
   # Tags applied to all analytics
   tags = ["production", "finance-dept"]
 }
@@ -113,7 +113,7 @@ resource "jamfprotect_analytic_set" "critical" {
 - Community contributions
 - Version-controlled analytic updates
 
----
+______________________________________________________________________
 
 ### 3. **Plan Templates / Profiles** (MEDIUM IMPACT)
 
@@ -126,9 +126,9 @@ resource "jamfprotect_analytic_set" "critical" {
 ```hcl
 module "standard_plan" {
   source = "./modules/plan-profiles"
-  
+
   profile = "endpoint-protection"  # or "compliance", "threat-hunting", "minimal"
-  
+
   # Customizations
   plan_name        = "Production Endpoints"
   tenant_fqdn      = "example.protect.jamfcloud.com"
@@ -150,7 +150,7 @@ output "plan_id" {
 - `minimal` - Lightweight, essential security only
 - `developer` - Reduced noise, dev-friendly exceptions
 
----
+______________________________________________________________________
 
 ## 🔧 Medium Priority - User Experience
 
@@ -176,7 +176,7 @@ resource "jamfprotect_analytic_set" "critical" {
 ```hcl
 resource "jamfprotect_analytic_set" "critical" {
   name = "Critical Analytics"
-  
+
   # Filter criteria (provider does the lookup)
   analytic_filter {
     tags         = ["critical", "production"]
@@ -195,7 +195,7 @@ resource "jamfprotect_analytic_set" "critical" {
 - Filters applied server-side or client-side
 - Computed `analytics` attribute shows resolved UUIDs
 
----
+______________________________________________________________________
 
 ### 5. **Validation Helpers** (MEDIUM IMPACT)
 
@@ -208,7 +208,7 @@ resource "jamfprotect_analytic" "test" {
   name       = "Test Analytic"
   input_type = "GPProcessEvent"
   filter     = "( $event.process.name == 'malware' )"  # Validated at plan time
-  
+
   # Provider validates:
   # - Filter syntax
   # - Available fields for input_type
@@ -232,7 +232,7 @@ terraform validate
 - Add custom validators using `terraform-plugin-framework/resource/schema/validator`
 - Optionally: HTTP call to Jamf Protect API for server-side validation (with caching)
 
----
+______________________________________________________________________
 
 ### 6. **Exception Set Builder** (LOW-MEDIUM IMPACT)
 
@@ -243,7 +243,7 @@ terraform validate
 ```hcl
 resource "jamfprotect_exception_set" "dev" {
   name = "Developer Exceptions"
-  
+
   exceptions = [
     {
       type            = "User"
@@ -261,7 +261,7 @@ resource "jamfprotect_exception_set" "dev" {
 ```hcl
 resource "jamfprotect_exception_set" "dev" {
   name = "Developer Exceptions"
-  
+
   # Helper functions for common patterns
   exceptions = concat(
     jamfprotect_exception_user(["developer", "tester"], ["GPProcessEvent"]),
@@ -273,7 +273,7 @@ resource "jamfprotect_exception_set" "dev" {
 
 **Note:** This requires provider-defined functions (Terraform Plugin Framework 1.4+). Alternative: use locals for now.
 
----
+______________________________________________________________________
 
 ## 🚀 Advanced Features
 
@@ -286,9 +286,9 @@ resource "jamfprotect_exception_set" "dev" {
 ```hcl
 resource "jamfprotect_plan" "main" {
   name = "Production Plan"
-  
+
   # ... configuration
-  
+
   # Computed attributes for drift detection
   last_modified_by  = "user@example.com"  # Computed
   last_modified_at  = "2026-02-13T..."     # Computed
@@ -302,7 +302,7 @@ resource "jamfprotect_plan" "main" {
 - Provider compares configuration hash with API hash
 - Set `modified_in_ui` computed field when mismatch detected
 
----
+______________________________________________________________________
 
 ### 8. **Bulk Import Tool** (LOW IMPACT)
 
@@ -315,10 +315,10 @@ resource "jamfprotect_plan" "main" {
 ```bash
 # Export all resources from tenant
 tfprotect export \
-  --url https://tenant.protect.jamfcloud.com \
-  --client-id $CLIENT_ID \
-  --client-secret $CLIENT_SECRET \
-  --output ./jamfprotect/
+    --url https://tenant.protect.jamfcloud.com \
+    --client-id $CLIENT_ID \
+    --client-secret $CLIENT_SECRET \
+    --output ./jamfprotect/
 
 # Generates:
 # ./jamfprotect/
@@ -336,7 +336,7 @@ tfprotect export \
 - Generates `.tf` files + `terraform import` script
 - Optional: `--filter` for selective export
 
----
+______________________________________________________________________
 
 ### 9. **State Migration Helpers** (LOW IMPACT)
 
@@ -346,7 +346,7 @@ tfprotect export \
 
 **Documentation:**
 
-```markdown
+````markdown
 ## Migrating from v0.1.0 to v0.2.0
 
 ### Analytic Action Parameters Changed from String to Map
@@ -357,7 +357,7 @@ analytic_actions = [{
   name       = "SmartGroup"
   parameters = "{\"id\":\"smartgroup\"}"
 }]
-```
+````
 
 After (v0.2.0):
 
@@ -378,7 +378,7 @@ terraform state rm 'jamfprotect_analytic.example'
 terraform import 'jamfprotect_analytic.example' uuid-here
 ```
 
-```
+````
 
 ---
 
@@ -394,16 +394,16 @@ resource "jamfprotect_analytic" "test" {
   name       = "Test Analytic"
   input_type = "GPProcessEvent"
   filter     = "( $event.process.name == 'test' )"
-  
+
   # Optional: don't activate in Jamf Protect yet
   enabled = false
-  
+
   lifecycle {
     # Prevent accidental activation
     prevent_destroy = true
   }
 }
-```
+````
 
 Or provide a data source for validation:
 
@@ -411,7 +411,7 @@ Or provide a data source for validation:
 data "jamfprotect_analytic_validation" "test" {
   input_type = "GPProcessEvent"
   filter     = "( $event.process.name == 'test' )"
-  
+
   # Returns: valid, error_message, available_fields
 }
 
@@ -420,24 +420,24 @@ output "is_valid" {
 }
 ```
 
----
+______________________________________________________________________
 
 ## 📊 Priority Matrix
 
-| Feature | Impact | Effort | Priority | Version |
-|---------|--------|--------|----------|---------|
-| Simplified Plan (Inline Resources) | High | High | P1 | v0.3.0 |
-| Analytic Library Module | High | Medium | P1 | v0.2.0 |
-| Plan Templates/Profiles | Medium | Medium | P2 | v0.2.0 |
-| Analytic Set Smart Selection | Medium | Medium | P2 | v0.3.0 |
-| Validation Helpers | Medium | Low | P2 | v0.2.0 |
-| Exception Set Builder | Low-Med | Low | P3 | v0.3.0 |
-| Drift Detection | Low | Low | P3 | v0.4.0 |
-| Bulk Import Tool | Low | High | P3 | v0.4.0 |
-| State Migration Helpers | Low | Low | P4 | As needed |
-| Testing Utilities | Low | Medium | P4 | v0.4.0 |
+| Feature                            | Impact  | Effort | Priority | Version   |
+| ---------------------------------- | ------- | ------ | -------- | --------- |
+| Simplified Plan (Inline Resources) | High    | High   | P1       | v0.3.0    |
+| Analytic Library Module            | High    | Medium | P1       | v0.2.0    |
+| Plan Templates/Profiles            | Medium  | Medium | P2       | v0.2.0    |
+| Analytic Set Smart Selection       | Medium  | Medium | P2       | v0.3.0    |
+| Validation Helpers                 | Medium  | Low    | P2       | v0.2.0    |
+| Exception Set Builder              | Low-Med | Low    | P3       | v0.3.0    |
+| Drift Detection                    | Low     | Low    | P3       | v0.4.0    |
+| Bulk Import Tool                   | Low     | High   | P3       | v0.4.0    |
+| State Migration Helpers            | Low     | Low    | P4       | As needed |
+| Testing Utilities                  | Low     | Medium | P4       | v0.4.0    |
 
----
+______________________________________________________________________
 
 ## 🎯 Recommended Roadmap
 
@@ -460,7 +460,7 @@ output "is_valid" {
 - ✅ Enhanced drift detection
 - ✅ Testing utilities
 
----
+______________________________________________________________________
 
 ## 💡 Additional Considerations
 
@@ -482,23 +482,26 @@ output "is_valid" {
 - Create examples repository
 - Encourage community contributions
 
----
+______________________________________________________________________
 
 ## 🚀 Quick Start for v0.2.0
 
 To implement the highest-impact features in v0.2.0:
 
 1. **Create separate repository: `terraform-jamfprotect-modules`**
+
    - `modules/analytic-library/` - Pre-built analytics
    - `modules/plan-profiles/` - Standard plan configurations
    - `examples/` - Common patterns
 
 2. **Add validation to existing resources**
+
    - Custom validators for filter syntax
    - Validators for enum fields with suggestions
    - Better error messages
 
 3. **Improve documentation**
+
    - Add "Getting Started" guide
    - Add "Common Patterns" guide
    - Add "Best Practices" guide
