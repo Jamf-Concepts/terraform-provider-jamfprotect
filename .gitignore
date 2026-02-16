@@ -29,4 +29,5 @@ mise.local.toml
 META.d/
 
 local_testing/
-.issues/*
+.issues/
+.worktrees/
