@@ -1,6 +1,32 @@
-mutation createAnalytic($name: String!, $inputType: String!, $description: String!, $actions: [String], $analyticActions: [AnalyticActionsInput]!, $tags: [String]!, $categories: [String]!, $filter: String!, $context: [AnalyticContextInput]!, $level: Int!, $severity: SEVERITY!, $snapshotFiles: [String]!) {
+mutation createAnalytic(
+  $name: String!
+  $inputType: String!
+  $description: String!
+  $actions: [String]
+  $analyticActions: [AnalyticActionsInput]!
+  $tags: [String]!
+  $categories: [String]!
+  $filter: String!
+  $context: [AnalyticContextInput]!
+  $level: Int!
+  $severity: SEVERITY!
+  $snapshotFiles: [String]!
+) {
   createAnalytic(
-    input: {name: $name, inputType: $inputType, description: $description, actions: $actions, analyticActions: $analyticActions, tags: $tags, categories: $categories, filter: $filter, context: $context, level: $level, severity: $severity, snapshotFiles: $snapshotFiles}
+    input: {
+      name: $name
+      inputType: $inputType
+      description: $description
+      actions: $actions
+      analyticActions: $analyticActions
+      tags: $tags
+      categories: $categories
+      filter: $filter
+      context: $context
+      level: $level
+      severity: $severity
+      snapshotFiles: $snapshotFiles
+    }
   ) {
     ...AnalyticFields
     __typename

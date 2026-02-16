@@ -1,6 +1,10 @@
-query listTelemetriesCombined($field: TelemetryOrderField!, $direction: OrderDirection!, $RBAC_Plan: Boolean!) {
+query listTelemetriesCombined(
+  $field: TelemetryOrderField!
+  $direction: OrderDirection!
+  $RBAC_Plan: Boolean!
+) {
   listTelemetries(
-    input: {order: {direction: $direction, field: $field}, pageSize: 100}
+    input: { order: { direction: $direction, field: $field }, pageSize: 100 }
   ) {
     items {
       ...TelemetryFields
@@ -14,7 +18,7 @@ query listTelemetriesCombined($field: TelemetryOrderField!, $direction: OrderDir
     __typename
   }
   listTelemetriesV2(
-    input: {order: {direction: $direction, field: $field}, pageSize: 100}
+    input: { order: { direction: $direction, field: $field }, pageSize: 100 }
   ) {
     items {
       id

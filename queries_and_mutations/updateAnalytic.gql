@@ -1,7 +1,34 @@
-mutation updateAnalytic($uuid: ID!, $name: String!, $inputType: String!, $description: String!, $actions: [String], $analyticActions: [AnalyticActionsInput]!, $tags: [String]!, $categories: [String]!, $filter: String!, $context: [AnalyticContextInput]!, $level: Int!, $severity: SEVERITY, $snapshotFiles: [String]!) {
+mutation updateAnalytic(
+  $uuid: ID!
+  $name: String!
+  $inputType: String!
+  $description: String!
+  $actions: [String]
+  $analyticActions: [AnalyticActionsInput]!
+  $tags: [String]!
+  $categories: [String]!
+  $filter: String!
+  $context: [AnalyticContextInput]!
+  $level: Int!
+  $severity: SEVERITY
+  $snapshotFiles: [String]!
+) {
   updateAnalytic(
     uuid: $uuid
-    input: {name: $name, inputType: $inputType, description: $description, actions: $actions, analyticActions: $analyticActions, categories: $categories, tags: $tags, filter: $filter, context: $context, level: $level, severity: $severity, snapshotFiles: $snapshotFiles}
+    input: {
+      name: $name
+      inputType: $inputType
+      description: $description
+      actions: $actions
+      analyticActions: $analyticActions
+      categories: $categories
+      tags: $tags
+      filter: $filter
+      context: $context
+      level: $level
+      severity: $severity
+      snapshotFiles: $snapshotFiles
+    }
   ) {
     ...AnalyticFields
     __typename

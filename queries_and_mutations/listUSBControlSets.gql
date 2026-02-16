@@ -1,6 +1,14 @@
-query listUSBControlSets($nextToken: String, $direction: OrderDirection!, $field: USBControlOrderField!) {
+query listUSBControlSets(
+  $nextToken: String
+  $direction: OrderDirection!
+  $field: USBControlOrderField!
+) {
   listUSBControlSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      pageSize: 100
+    }
   ) {
     items {
       ...USBControlSetFields

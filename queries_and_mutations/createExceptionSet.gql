@@ -1,6 +1,19 @@
-mutation createExceptionSet($name: String!, $description: String, $exceptions: [ExceptionInput!]!, $esExceptions: [EsExceptionInput!]!, $minimal: Boolean = false, $RBAC_Analytic: Boolean!, $RBAC_Plan: Boolean!) {
+mutation createExceptionSet(
+  $name: String!
+  $description: String
+  $exceptions: [ExceptionInput!]!
+  $esExceptions: [EsExceptionInput!]!
+  $minimal: Boolean = false
+  $RBAC_Analytic: Boolean!
+  $RBAC_Plan: Boolean!
+) {
   createExceptionSet(
-    input: {name: $name, description: $description, exceptions: $exceptions, esExceptions: $esExceptions}
+    input: {
+      name: $name
+      description: $description
+      exceptions: $exceptions
+      esExceptions: $esExceptions
+    }
   ) {
     ...ExceptionSetFields
     __typename

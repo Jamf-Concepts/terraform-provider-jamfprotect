@@ -1,4 +1,9 @@
-query getExceptionSet($uuid: ID!, $minimal: Boolean = false, $RBAC_Analytic: Boolean!, $RBAC_Plan: Boolean!) {
+query getExceptionSet(
+  $uuid: ID!
+  $minimal: Boolean = false
+  $RBAC_Analytic: Boolean!
+  $RBAC_Plan: Boolean!
+) {
   getExceptionSet(uuid: $uuid) {
     ...ExceptionSetFields
     __typename

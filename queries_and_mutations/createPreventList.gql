@@ -1,6 +1,18 @@
-mutation createPreventList($name: String!, $tags: [String]!, $type: PREVENT_LIST_TYPE!, $list: [String]!, $description: String) {
+mutation createPreventList(
+  $name: String!
+  $tags: [String]!
+  $type: PREVENT_LIST_TYPE!
+  $list: [String]!
+  $description: String
+) {
   createPreventList(
-    input: {name: $name, tags: $tags, type: $type, list: $list, description: $description}
+    input: {
+      name: $name
+      tags: $tags
+      type: $type
+      list: $list
+      description: $description
+    }
   ) {
     ...PreventListFields
     __typename

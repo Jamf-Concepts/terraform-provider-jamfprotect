@@ -1,4 +1,14 @@
-query getPlan($id: ID!, $hasLimitedAppAccess: Boolean!, $excludeAnalytics: Boolean = false, $RBAC_AnalyticSet: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_ActionConfigs: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+query getPlan(
+  $id: ID!
+  $hasLimitedAppAccess: Boolean!
+  $excludeAnalytics: Boolean = false
+  $RBAC_AnalyticSet: Boolean!
+  $RBAC_Telemetry: Boolean!
+  $RBAC_ActionConfigs: Boolean!
+  $RBAC_USBControlSet: Boolean!
+  $RBAC_ExceptionSet: Boolean!
+  $RBAC_AnalyticSet: Boolean!
+) {
   getPlan(id: $id) {
     ...PlanFields
     __typename

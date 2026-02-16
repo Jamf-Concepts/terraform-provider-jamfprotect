@@ -1,6 +1,23 @@
-query listPlans($nextToken: String, $direction: OrderDirection!, $field: PlanOrderField!, $hasLimitedAppAccess: Boolean!, $excludeAnalytics: Boolean = true, $minimal: Boolean = false, $RBAC_AnalyticSet: Boolean!, $RBAC_Telemetry: Boolean!, $RBAC_ActionConfigs: Boolean!, $RBAC_USBControlSet: Boolean!, $RBAC_ExceptionSet: Boolean!, $RBAC_AnalyticSet: Boolean!) {
+query listPlans(
+  $nextToken: String
+  $direction: OrderDirection!
+  $field: PlanOrderField!
+  $hasLimitedAppAccess: Boolean!
+  $excludeAnalytics: Boolean = true
+  $minimal: Boolean = false
+  $RBAC_AnalyticSet: Boolean!
+  $RBAC_Telemetry: Boolean!
+  $RBAC_ActionConfigs: Boolean!
+  $RBAC_USBControlSet: Boolean!
+  $RBAC_ExceptionSet: Boolean!
+  $RBAC_AnalyticSet: Boolean!
+) {
   listPlans(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      pageSize: 100
+    }
   ) {
     items: items @skip(if: $minimal) {
       ...PlanFields

@@ -1,6 +1,16 @@
-query listPreventLists($nextToken: String, $direction: OrderDirection!, $field: PreventListOrderField!, $filter: PreventListFilterInput) {
+query listPreventLists(
+  $nextToken: String
+  $direction: OrderDirection!
+  $field: PreventListOrderField!
+  $filter: PreventListFilterInput
+) {
   listPreventLists(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100, filter: $filter}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      pageSize: 100
+      filter: $filter
+    }
   ) {
     items {
       ...PreventListFields

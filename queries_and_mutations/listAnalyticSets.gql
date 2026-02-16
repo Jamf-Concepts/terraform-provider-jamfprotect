@@ -1,6 +1,18 @@
-query listAnalyticSets($nextToken: String, $direction: OrderDirection = DESC, $field: AnalyticSetOrderField = created, $filter: AnalyticSetFiltersInput = {and: [{managed: {equals: false}}]}, $RBAC_Plan: Boolean!, $excludeAnalytics: Boolean = false) {
+query listAnalyticSets(
+  $nextToken: String
+  $direction: OrderDirection = DESC
+  $field: AnalyticSetOrderField = created
+  $filter: AnalyticSetFiltersInput = { and: [{ managed: { equals: false } }] }
+  $RBAC_Plan: Boolean!
+  $excludeAnalytics: Boolean = false
+) {
   listAnalyticSets(
-    input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100, filter: $filter}
+    input: {
+      next: $nextToken
+      order: { direction: $direction, field: $field }
+      pageSize: 100
+      filter: $filter
+    }
   ) {
     items {
       ...AnalyticSetFields
