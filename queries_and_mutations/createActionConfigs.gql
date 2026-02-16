@@ -1,6 +1,18 @@
-mutation createActionConfigs($name: String!, $description: String!, $alertConfig: ActionConfigsAlertConfigInput!, $hasLimitedAppAccess: Boolean!, $clients: [ReportClientInput!], $RBAC_Plan: Boolean!) {
+mutation createActionConfigs(
+  $name: String!
+  $description: String!
+  $alertConfig: ActionConfigsAlertConfigInput!
+  $hasLimitedAppAccess: Boolean!
+  $clients: [ReportClientInput!]
+  $RBAC_Plan: Boolean!
+) {
   createActionConfigs(
-    input: {name: $name, description: $description, alertConfig: $alertConfig, clients: $clients}
+    input: {
+      name: $name
+      description: $description
+      alertConfig: $alertConfig
+      clients: $clients
+    }
   ) {
     ...ActionConfigsFields
     __typename
