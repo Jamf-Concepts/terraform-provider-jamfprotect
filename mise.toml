@@ -42,9 +42,18 @@ run = "go build -o terraform-provider-jamfprotect"
 description = "Build the provider and set up the sandbox environment"
 depends = ["dev:build", "dev:sandbox"]
 
-[tasks.fmt]
+[tasks."fmt:go"]
 description = "Format Go source files"
 run = "gofmt -s -w -e ."
+
+[tasks."fmt:md"]
+description = "Format Markdown files"
+run = "prek run mdformat --all-files"
+
+[tasks.fmt]
+alias = "format"
+description = "Format all source files (Go and Markdown)"
+depends = ["fmt:go", "fmt:md"]
 
 [tasks.lint]
 description = "Run golangci-lint"

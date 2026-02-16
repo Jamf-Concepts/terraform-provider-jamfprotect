@@ -22,7 +22,7 @@ mise run tidy
 mise run test
 ```
 
----
+______________________________________________________________________
 
 ## Safe Update Process
 
@@ -39,6 +39,7 @@ go list -m -u all | grep -E "^\w" | head -20
 The output shows: `package current-version [latest-version]`
 
 Example:
+
 ```
 github.com/hashicorp/terraform-plugin-framework v1.17.0 [v1.18.0]
 ```
@@ -125,6 +126,7 @@ open "https://github.com/hashicorp/terraform-plugin-framework/releases"
 ```
 
 **Key Dependencies to Watch:**
+
 - `terraform-plugin-framework` - Core provider framework
 - `terraform-plugin-go` - Protocol implementation
 - `terraform-plugin-testing` - Test framework
@@ -137,7 +139,7 @@ git commit -m "Update Go dependencies to latest versions"
 git push origin main
 ```
 
----
+______________________________________________________________________
 
 ## Dependency Update Strategy
 
@@ -179,7 +181,7 @@ mise run tidy
 
 Example: `v1.17.0` → `v2.0.0` (may break existing code)
 
----
+______________________________________________________________________
 
 ## Current Dependency Analysis
 
@@ -187,14 +189,14 @@ Based on `go list -m -u all`, here are the notable updates available:
 
 ### Direct Dependencies (What We Explicitly Use)
 
-| Package | Current | Latest | Type | Risk |
-|---------|---------|--------|------|------|
-| terraform-plugin-framework | v1.17.0 | v1.17.0 | Current | 🟢 None |
-| terraform-plugin-framework-timeouts | v0.7.0 | v0.7.0 | Current | 🟢 None |
+| Package                               | Current | Latest  | Type    | Risk    |
+| ------------------------------------- | ------- | ------- | ------- | ------- |
+| terraform-plugin-framework            | v1.17.0 | v1.17.0 | Current | 🟢 None |
+| terraform-plugin-framework-timeouts   | v0.7.0  | v0.7.0  | Current | 🟢 None |
 | terraform-plugin-framework-validators | v0.19.0 | v0.19.0 | Current | 🟢 None |
-| terraform-plugin-go | v0.29.0 | v0.29.0 | Current | 🟢 None |
-| terraform-plugin-log | v0.10.0 | v0.10.0 | Current | 🟢 None |
-| terraform-plugin-testing | v1.14.0 | v1.14.0 | Current | 🟢 None |
+| terraform-plugin-go                   | v0.29.0 | v0.29.0 | Current | 🟢 None |
+| terraform-plugin-log                  | v0.10.0 | v0.10.0 | Current | 🟢 None |
+| terraform-plugin-testing              | v1.14.0 | v1.14.0 | Current | 🟢 None |
 
 **Status:** ✅ All direct dependencies are already at latest versions!
 
@@ -202,17 +204,17 @@ Based on `go list -m -u all`, here are the notable updates available:
 
 Several indirect dependencies have updates available:
 
-| Package | Current | Latest | Impact |
-|---------|---------|--------|--------|
-| ProtonMail/go-crypto | v1.1.6 | v1.3.0 | Minor |
-| cloudflare/circl | v1.6.1 | v1.6.3 | Patch |
-| agext/levenshtein | v1.2.2 | v1.2.3 | Patch |
-| Masterminds/semver/v3 | v3.2.0 | v3.4.0 | Minor |
-| creack/pty | v1.1.9 | v1.1.24 | Minor |
+| Package               | Current | Latest  | Impact |
+| --------------------- | ------- | ------- | ------ |
+| ProtonMail/go-crypto  | v1.1.6  | v1.3.0  | Minor  |
+| cloudflare/circl      | v1.6.1  | v1.6.3  | Patch  |
+| agext/levenshtein     | v1.2.2  | v1.2.3  | Patch  |
+| Masterminds/semver/v3 | v3.2.0  | v3.4.0  | Minor  |
+| creack/pty            | v1.1.9  | v1.1.24 | Minor  |
 
 **Status:** 🟡 Updates available but not required (indirect dependencies)
 
----
+______________________________________________________________________
 
 ## Recommendation for v0.1.0
 
@@ -221,6 +223,7 @@ Several indirect dependencies have updates available:
 **✅ Keep current versions** - All direct dependencies are already latest and stable.
 
 **Why:**
+
 - All tests are passing
 - Linter reports 0 issues
 - No security vulnerabilities reported
@@ -237,12 +240,13 @@ git diff --no-index /dev/null dependency-updates.txt
 ```
 
 **Update when:**
+
 - Security vulnerabilities are reported
 - New features needed from dependencies
 - Bug fixes available for known issues
 - Before major version releases (v0.2.0, v1.0.0)
 
----
+______________________________________________________________________
 
 ## Automated Dependency Updates
 
@@ -255,28 +259,29 @@ GitHub Dependabot can automatically create PRs for dependency updates.
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - package-ecosystem: gomod
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: weekly
+      day: monday
     open-pull-requests-limit: 5
     groups:
       # Group Terraform Plugin Framework updates together
       terraform-plugins:
         patterns:
-          - "github.com/hashicorp/terraform-plugin-*"
+          - github.com/hashicorp/terraform-plugin-*
       # Group security updates
       security:
         patterns:
-          - "github.com/ProtonMail/go-crypto"
-          - "github.com/cloudflare/circl"
+          - github.com/ProtonMail/go-crypto
+          - github.com/cloudflare/circl
     labels:
-      - "dependencies"
-      - "go"
+      - dependencies
+      - go
 ```
 
 **Benefits:**
+
 - Automatic PRs for updates
 - Grouped related updates
 - Security alerts
@@ -291,18 +296,26 @@ Renovate provides more customization than Dependabot.
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": [
+    "config:base"
+  ],
   "packageRules": [
     {
-      "matchPackagePatterns": ["github.com/hashicorp/terraform-plugin-*"],
+      "matchPackagePatterns": [
+        "github.com/hashicorp/terraform-plugin-*"
+      ],
       "groupName": "Terraform Plugin Framework"
     },
     {
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": [
+        "patch"
+      ],
       "automerge": true
     }
   ],
-  "schedule": ["before 10am on monday"]
+  "schedule": [
+    "before 10am on monday"
+  ]
 }
 ```
 
@@ -320,7 +333,7 @@ mise run tidy
 mise run test
 ```
 
----
+______________________________________________________________________
 
 ## Security Scanning
 
@@ -335,7 +348,7 @@ go install golang.org/x/vuln/cmd/govulncheck@latest
 govulncheck ./...
 ```
 
----
+______________________________________________________________________
 
 ## Dependency Update Checklist
 
@@ -355,7 +368,7 @@ When updating dependencies, follow this checklist:
 - [ ] Create PR or push to main
 - [ ] Monitor CI/CD for any failures
 
----
+______________________________________________________________________
 
 ## Common Scenarios
 
@@ -418,7 +431,7 @@ git add .
 git commit -m "Update dependencies for v0.2.0 release"
 ```
 
----
+______________________________________________________________________
 
 ## Rollback Procedure
 
@@ -438,7 +451,7 @@ mise run build
 mise run test
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
@@ -451,20 +464,21 @@ mise run test
 7. ✅ **Monitor CI/CD** - Catch issues early in automated tests
 8. ✅ **Document breaking changes** - Update CHANGELOG.md if needed
 
----
+______________________________________________________________________
 
 ## Current Status: v0.1.0
 
 **Dependencies:** ✅ **ALL UP TO DATE**
 
 All direct dependencies are at their latest stable versions:
+
 - terraform-plugin-framework: v1.17.0 ✅
 - terraform-plugin-go: v0.29.0 ✅
 - terraform-plugin-testing: v1.14.0 ✅
 
 **Recommendation:** No updates needed for v0.1.0 release. Dependencies are current and stable.
 
----
+______________________________________________________________________
 
 ## Future: Dependabot Setup
 
@@ -492,6 +506,6 @@ git push origin main
 
 This will automatically create PRs for dependency updates every week.
 
----
+______________________________________________________________________
 
 Would you like me to set up Dependabot now, or keep the current stable dependencies for v0.1.0?

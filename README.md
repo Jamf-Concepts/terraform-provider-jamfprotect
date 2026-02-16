@@ -7,33 +7,33 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 ## Supported Resources
 
-| Resource                             | Description                                    |
-| ------------------------------------ | ---------------------------------------------- |
-| `jamfprotect_action_config`          | Manage action configurations                   |
-| `jamfprotect_analytic`               | Manage analytics (threat detection rules)      |
-| `jamfprotect_analytic_set`           | Manage analytic sets (grouped analytics)       |
-| `jamfprotect_exception_set`          | Manage exception sets (analytic exceptions)    |
-| `jamfprotect_plan`                   | Manage plans (endpoint configurations)         |
-| `jamfprotect_custom_prevent_list`    | Manage custom prevent lists (allow/block lists) |
-| `jamfprotect_telemetry_v2`           | Manage telemetry v2 configurations             |
-| `jamfprotect_unified_logging_filter` | Manage unified logging filters                 |
+| Resource                                    | Description                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `jamfprotect_action_config`                 | Manage action configurations                                 |
+| `jamfprotect_analytic`                      | Manage analytics (threat detection rules)                    |
+| `jamfprotect_analytic_set`                  | Manage analytic sets (grouped analytics)                     |
+| `jamfprotect_exception_set`                 | Manage exception sets (analytic exceptions)                  |
+| `jamfprotect_plan`                          | Manage plans (endpoint configurations)                       |
+| `jamfprotect_custom_prevent_list`           | Manage custom prevent lists (allow/block lists)              |
+| `jamfprotect_telemetry`                     | Manage telemetry configurations                              |
+| `jamfprotect_unified_logging_filter`        | Manage unified logging filters                               |
 | `jamfprotect_removable_storage_control_set` | Manage removable storage control sets (device access policy) |
 
 All resources support full CRUD operations and `terraform import`.
 
 ## Supported Data Sources
 
-| Data Source                              | Description                                  |
-| ---------------------------------------- | -------------------------------------------- |
-| `jamfprotect_action_configs`             | List all action configurations               |
-| `jamfprotect_analytics`                  | List all analytics (threat detection rules)   |
-| `jamfprotect_analytic_sets`              | List all analytic sets (grouped analytics)    |
-| `jamfprotect_exception_sets`             | List all exception sets (analytic exceptions) |
-| `jamfprotect_plans`                      | List all plans (endpoint configurations)      |
-| `jamfprotect_custom_prevent_lists`       | List all custom prevent lists (allow/block lists) |
-| `jamfprotect_telemetries_v2`             | List all telemetry v2 configurations          |
-| `jamfprotect_unified_logging_filters`    | List all unified logging filters              |
-| `jamfprotect_removable_storage_control_sets` | List all removable storage control sets        |
+| Data Source                                  | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
+| `jamfprotect_action_configs`                 | List all action configurations                    |
+| `jamfprotect_analytics`                      | List all analytics (threat detection rules)       |
+| `jamfprotect_analytic_sets`                  | List all analytic sets (grouped analytics)        |
+| `jamfprotect_exception_sets`                 | List all exception sets (analytic exceptions)     |
+| `jamfprotect_plans`                          | List all plans (endpoint configurations)          |
+| `jamfprotect_custom_prevent_lists`           | List all custom prevent lists (allow/block lists) |
+| `jamfprotect_telemetries`                    | List all telemetry configurations                 |
+| `jamfprotect_unified_logging_filters`        | List all unified logging filters                  |
+| `jamfprotect_removable_storage_control_sets` | List all removable storage control sets           |
 
 ## Requirements
 
@@ -245,6 +245,7 @@ The provider is published to the [Terraform Registry](https://registry.terraform
    ```
 
 4. The [release workflow](.github/workflows/release.yml) automatically:
+
    - Builds binaries for all supported platforms (linux, darwin, windows, freebsd × amd64, arm64, etc.)
    - Generates SHA256 checksums and signs them with GPG
    - Creates a GitHub release with the binaries, checksums, and Terraform registry manifest

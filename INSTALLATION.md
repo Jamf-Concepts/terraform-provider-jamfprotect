@@ -15,7 +15,7 @@ export GITHUB_TOKEN="your-github-pat-here"
 ./scripts/install-provider.sh 0.1.0
 ```
 
----
+______________________________________________________________________
 
 ## Manual Installation
 
@@ -35,12 +35,12 @@ uname -sm
 
 Visit the [Releases page](https://github.com/smithjw/terraform-provider-jamfprotect/releases) and download the appropriate file:
 
-| Platform | File |
-|----------|------|
-| macOS Apple Silicon | `terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip` |
-| macOS Intel | `terraform-provider-jamfprotect_0.1.0_darwin_amd64.zip` |
-| Linux 64-bit | `terraform-provider-jamfprotect_0.1.0_linux_amd64.zip` |
-| Windows 64-bit | `terraform-provider-jamfprotect_0.1.0_windows_amd64.zip` |
+| Platform            | File                                                     |
+| ------------------- | -------------------------------------------------------- |
+| macOS Apple Silicon | `terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip`  |
+| macOS Intel         | `terraform-provider-jamfprotect_0.1.0_darwin_amd64.zip`  |
+| Linux 64-bit        | `terraform-provider-jamfprotect_0.1.0_linux_amd64.zip`   |
+| Windows 64-bit      | `terraform-provider-jamfprotect_0.1.0_windows_amd64.zip` |
 
 ### 3. Install to Plugin Directory
 
@@ -86,7 +86,7 @@ Expand-Archive -Path "$env:USERPROFILE\Downloads\terraform-provider-jamfprotect_
 Get-ChildItem $PluginDir
 ```
 
----
+______________________________________________________________________
 
 ## Configuration
 
@@ -97,7 +97,7 @@ Use `github.com` as the source (not `registry.terraform.io`):
 ```hcl
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     jamfprotect = {
       source  = "github.com/smithjw/jamfprotect"
@@ -129,7 +129,7 @@ Then omit provider configuration:
 provider "jamfprotect" {}
 ```
 
----
+______________________________________________________________________
 
 ## Verification
 
@@ -140,6 +140,7 @@ terraform init
 ```
 
 Expected output:
+
 ```
 Initializing provider plugins...
 - Finding github.com/smithjw/jamfprotect versions matching "0.1.0"...
@@ -155,39 +156,45 @@ Test the provider:
 terraform plan
 ```
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
 ### Error: "Failed to query available provider packages"
 
 **Problem:**
+
 ```
 Error: Failed to query available provider packages
 Could not retrieve the list of available versions for provider github.com/smithjw/jamfprotect
 ```
 
 **Solutions:**
+
 1. Verify the provider binary is in the correct directory:
+
    ```bash
    # macOS/Linux
    ls ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/*/
-   
+
    # Windows
    dir %APPDATA%\terraform.d\plugins\github.com\smithjw\jamfprotect\0.1.0\
    ```
 
 2. Ensure the binary is executable (macOS/Linux):
+
    ```bash
    chmod +x ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/*/terraform-provider-*
    ```
 
 3. Check the binary name matches the expected format:
+
    - Should be: `terraform-provider-jamfprotect_v0.1.0`
 
 ### Error: "Checksum verification failed"
 
 **Problem:**
+
 ```
 Error: Failed to install provider
 Checksum verification failed for provider binary
@@ -199,6 +206,7 @@ Re-download the provider binary. The file may have been corrupted.
 ### Error: Permission Denied (macOS)
 
 **Problem:**
+
 ```
 "terraform-provider-jamfprotect_v0.1.0" cannot be opened because the developer cannot be verified
 ```
@@ -217,6 +225,7 @@ xattr -d com.apple.quarantine ~/.terraform.d/plugins/github.com/smithjw/jamfprot
 ### Wrong Platform Error
 
 **Problem:**
+
 ```
 Error: Incompatible provider version
 Provider "github.com/smithjw/jamfprotect" v0.1.0 does not have a package available for your current platform, darwin_arm64
@@ -232,7 +241,7 @@ uname -sm
 # Linux x86_64   → use linux_amd64
 ```
 
----
+______________________________________________________________________
 
 ## Upgrading
 
@@ -251,7 +260,7 @@ terraform init -upgrade
 
 The old version remains installed and can be used by specifying its version.
 
----
+______________________________________________________________________
 
 ## CI/CD Integration
 
@@ -267,21 +276,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.0
-      
+
       - name: Install Jamf Protect Provider
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -fsSL https://raw.githubusercontent.com/smithjw/terraform-provider-jamfprotect/main/scripts/install-provider.sh | bash -s -- 0.1.0
-      
+
       - name: Terraform Init
         run: terraform init
-      
+
       - name: Terraform Plan
         env:
           JAMFPROTECT_URL: ${{ secrets.JAMFPROTECT_URL }}
@@ -290,24 +299,7 @@ jobs:
         run: terraform plan
 ```
 
-### GitLab CI
-
-```yaml
-terraform:
-  image: hashicorp/terraform:1.7
-  before_script:
-    - apk add --no-cache curl unzip
-    - curl -fsSL https://raw.githubusercontent.com/smithjw/terraform-provider-jamfprotect/main/scripts/install-provider.sh | sh -s -- 0.1.0
-  script:
-    - terraform init
-    - terraform plan
-  variables:
-    JAMFPROTECT_URL: $JAMFPROTECT_URL
-    JAMFPROTECT_CLIENT_ID: $JAMFPROTECT_CLIENT_ID
-    JAMFPROTECT_CLIENT_SECRET: $JAMFPROTECT_CLIENT_SECRET
-```
-
----
+______________________________________________________________________
 
 ## Private Repository Access
 
@@ -331,11 +323,11 @@ Or download manually with authentication:
 
 ```bash
 curl -L -H "Authorization: token ghp_your_token_here" \
-  "https://github.com/smithjw/terraform-provider-jamfprotect/releases/download/v0.1.0/terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip" \
-  -o provider.zip
+    "https://github.com/smithjw/terraform-provider-jamfprotect/releases/download/v0.1.0/terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip" \
+    -o provider.zip
 ```
 
----
+______________________________________________________________________
 
 ## Uninstalling
 
@@ -349,7 +341,7 @@ rm -rf ~/.terraform.d/plugins/github.com/smithjw/jamfprotect
 Remove-Item -Recurse -Force "$env:APPDATA\terraform.d\plugins\github.com\smithjw\jamfprotect"
 ```
 
----
+______________________________________________________________________
 
 ## Support
 

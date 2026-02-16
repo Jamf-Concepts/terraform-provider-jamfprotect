@@ -12,7 +12,7 @@ You have several options for distributing a private Terraform provider:
 
 This guide focuses on **Option 1: GitHub Releases** which works great for private distribution.
 
----
+______________________________________________________________________
 
 ## ✅ Option 1: GitHub Releases with Manual Installation
 
@@ -28,6 +28,7 @@ This guide focuses on **Option 1: GitHub Releases** which works great for privat
 The provider is already configured! The `.goreleaser.yml` file will create GitHub releases automatically when you push a tag.
 
 **What happens when you tag a release:**
+
 1. GitHub Actions workflow builds binaries for all platforms
 2. Creates SHA256 checksums and GPG signatures
 3. Creates a GitHub Release with all artifacts attached
@@ -48,6 +49,7 @@ git push origin v0.1.0
 ```
 
 GitHub Actions will automatically:
+
 - Build binaries for darwin, linux, windows (amd64, arm64)
 - Generate checksums
 - Sign with GPG
@@ -239,7 +241,7 @@ Add to your CI workflow:
 ```
 ````
 
----
+______________________________________________________________________
 
 ## ✅ Option 2: Terraform Cloud Private Registry (Enterprise)
 
@@ -267,15 +269,17 @@ terraform {
 ```
 
 **Pros:**
+
 - Automatic updates from GitHub releases
 - Better versioning management
 - Team access control via Terraform Cloud
 
 **Cons:**
+
 - Requires Terraform Cloud for Business ($20/user/month) or Enterprise
 - Adds dependency on Terraform Cloud
 
----
+______________________________________________________________________
 
 ## ✅ Option 3: Network Mirror (Advanced)
 
@@ -288,6 +292,7 @@ For enterprises with strict security requirements:
 3. Configure Terraform CLI to use the mirror
 
 **`.terraformrc` configuration:**
+
 ```hcl
 provider_installation {
   network_mirror {
@@ -297,42 +302,46 @@ provider_installation {
 ```
 
 **Pros:**
+
 - Complete control over distribution
 - No external dependencies
 - Works in air-gapped environments
 
 **Cons:**
+
 - Requires infrastructure to maintain
 - More complex setup
 
----
+______________________________________________________________________
 
 ## Comparison Matrix
 
-| Feature | GitHub Releases | Terraform Cloud Private | Network Mirror | Public Registry |
-|---------|----------------|-------------------------|----------------|-----------------|
-| **Repository Privacy** | ✅ Private | ✅ Private | ✅ Private | ❌ Public |
-| **Setup Complexity** | 🟢 Easy | 🟡 Medium | 🔴 Hard | 🟢 Easy |
-| **Cost** | ✅ Free | 💰 $20/user/month | 💰 Infrastructure | ✅ Free |
-| **Access Control** | GitHub Teams | TFC Teams | Custom | Public |
-| **Version Management** | Manual | Automatic | Manual | Automatic |
-| **Discovery** | Manual docs | Built-in | Custom | Built-in |
-| **Air-gap Support** | ❌ No | ❌ No | ✅ Yes | ❌ No |
-| **Best For** | Small teams | Medium teams | Enterprises | Public use |
+| Feature                | GitHub Releases | Terraform Cloud Private | Network Mirror    | Public Registry |
+| ---------------------- | --------------- | ----------------------- | ----------------- | --------------- |
+| **Repository Privacy** | ✅ Private      | ✅ Private              | ✅ Private        | ❌ Public       |
+| **Setup Complexity**   | 🟢 Easy         | 🟡 Medium               | 🔴 Hard           | 🟢 Easy         |
+| **Cost**               | ✅ Free         | 💰 $20/user/month       | 💰 Infrastructure | ✅ Free         |
+| **Access Control**     | GitHub Teams    | TFC Teams               | Custom            | Public          |
+| **Version Management** | Manual          | Automatic               | Manual            | Automatic       |
+| **Discovery**          | Manual docs     | Built-in                | Custom            | Built-in        |
+| **Air-gap Support**    | ❌ No           | ❌ No                   | ✅ Yes            | ❌ No           |
+| **Best For**           | Small teams     | Medium teams            | Enterprises       | Public use      |
 
----
+______________________________________________________________________
 
 ## Recommended Approach for Private Distribution
 
 ### Phase 1: Start with GitHub Releases (NOW)
 
 **For v0.1.0:**
+
 - ✅ Use GitHub Releases with manual installation
 - ✅ Create `INSTALLATION.md` for users
 - ✅ Keep repository private
 - ✅ Control access via GitHub team permissions
 
 **Benefits:**
+
 - No additional cost
 - Works immediately
 - Full control over access
@@ -341,6 +350,7 @@ provider_installation {
 ### Phase 2: Evaluate Public Registry (LATER)
 
 **After v0.1.0 feedback:**
+
 - Gather feedback from internal users
 - Decide if provider is ready for public use
 - If yes: Make repo public and publish to registry
@@ -349,10 +359,11 @@ provider_installation {
 ### Phase 3: Enterprise Features (OPTIONAL)
 
 **If needed:**
+
 - Terraform Cloud private registry for better UX
 - Network mirror for air-gapped environments
 
----
+______________________________________________________________________
 
 ## Installation Script for Users
 
@@ -372,8 +383,8 @@ OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
 
 case "$ARCH" in
-  x86_64) ARCH="amd64" ;;
-  aarch64|arm64) ARCH="arm64" ;;
+    x86_64) ARCH="amd64" ;;
+    aarch64|arm64) ARCH="arm64" ;;
 esac
 
 echo "Installing terraform-provider-${PROVIDER_NAME} v${VERSION} for ${OS}_${ARCH}..."
@@ -387,9 +398,9 @@ DOWNLOAD_URL="https://github.com/${GITHUB_ORG}/terraform-provider-${PROVIDER_NAM
 
 # Download
 if [ -n "$GITHUB_TOKEN" ]; then
-  curl -L -H "Authorization: token ${GITHUB_TOKEN}" "${DOWNLOAD_URL}" -o /tmp/provider.zip
+    curl -L -H "Authorization: token ${GITHUB_TOKEN}" "${DOWNLOAD_URL}" -o /tmp/provider.zip
 else
-  curl -L "${DOWNLOAD_URL}" -o /tmp/provider.zip
+    curl -L "${DOWNLOAD_URL}" -o /tmp/provider.zip
 fi
 
 # Extract
@@ -407,17 +418,19 @@ echo "  version = \"${VERSION}\""
 ```
 
 Make it executable:
+
 ```bash
 chmod +x scripts/install-provider.sh
 ```
 
----
+______________________________________________________________________
 
 ## Summary
 
 **For v0.1.0 Private Distribution:**
 
 1. ✅ **Push a tag to create GitHub Release** (already configured)
+
    ```bash
    git tag v0.1.0
    git push origin v0.1.0
@@ -430,14 +443,16 @@ chmod +x scripts/install-provider.sh
 4. ✅ **Keep repository private** until you're ready for public release
 
 **When Ready for Public:**
+
 - Make repository public
 - Add GPG key to Terraform Registry
 - Provider auto-appears in registry within 15 minutes
 - Users can switch from `github.com/smithjw/jamfprotect` to `registry.terraform.io/smithjw/jamfprotect`
 
----
+______________________________________________________________________
 
 **Would you like me to:**
+
 1. Create the `INSTALLATION.md` file?
 2. Create the installation script?
 3. Update the `RELEASE_GUIDE.md` to include private distribution instructions?
