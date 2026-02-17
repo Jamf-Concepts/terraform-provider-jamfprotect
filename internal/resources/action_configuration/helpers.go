@@ -6,6 +6,7 @@ package action_configuration
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
@@ -22,12 +23,11 @@ import (
 
 // alertEventTypeAttrTypes defines the attribute types for each event type object.
 var alertEventTypeAttrTypes = map[string]attr.Type{
-	"attrs":   types.ListType{ElemType: types.StringType},
-	"related": types.ListType{ElemType: types.StringType},
+	"extended_data_attributes": types.SetType{ElemType: types.StringType},
 }
 
-// dataCollectionAttrTypes defines the attribute types for the data_collection.data object.
-var dataCollectionAttrTypes = map[string]attr.Type{
+// alertEventTypesAttrTypes defines the attribute types for the alert_data_collection.event_types object.
+var alertEventTypesAttrTypes = map[string]attr.Type{
 	"binary":                     types.ObjectType{AttrTypes: alertEventTypeAttrTypes},
 	"synthetic_click_event":      types.ObjectType{AttrTypes: alertEventTypeAttrTypes},
 	"download_event":             types.ObjectType{AttrTypes: alertEventTypeAttrTypes},
@@ -44,9 +44,9 @@ var dataCollectionAttrTypes = map[string]attr.Type{
 	"malware_removal_tool_event": types.ObjectType{AttrTypes: alertEventTypeAttrTypes},
 }
 
-// dataCollectionWrapperAttrTypes defines the attribute types for the data_collection object.
-var dataCollectionWrapperAttrTypes = map[string]attr.Type{
-	"data": types.ObjectType{AttrTypes: dataCollectionAttrTypes},
+// alertDataCollectionAttrTypes defines the attribute types for alert_data_collection.
+var alertDataCollectionAttrTypes = map[string]attr.Type{
+	"event_types": types.ObjectType{AttrTypes: alertEventTypesAttrTypes},
 }
 
 // eventTypeMapping maps snake_case Terraform attribute names to camelCase API field names.
@@ -70,71 +70,139 @@ var eventTypeMapping = []struct {
 	{"malware_removal_tool_event", "mrtEvent"},
 }
 
+var extendedDataAttributeToAttr = map[string]string{
+	"Sha1":                "sha1hex",
+	"Sha256":              "sha256hex",
+	"Extended Attributes": "xattrs",
+	"Is App Bundle":       "isAppBundle",
+	"Is Screenshot":       "isScreenShot",
+	"Is Quarantined":      "isQuarantined",
+	"Is Download":         "isDownload",
+	"Is Directory":        "isDirectory",
+	"Downloaded From":     "downloadedFrom",
+	"Signing Information": "signingInfo",
+	"Args":                "args",
+	"Is GUI App":          "guiAPP",
+	"App Path":            "appPath",
+	"name":                "name",
+}
+
+var extendedDataAttributeToRelated = map[string]string{
+	"File":                 "file",
+	"Process":              "process",
+	"User":                 "user",
+	"Group":                "group",
+	"Binary":               "binary",
+	"Blocked Process":      "process",
+	"Blocked Binary":       "binary",
+	"Source Process":       "process",
+	"Destination Process":  "process",
+	"Parent":               "process",
+	"Process Group Leader": "process",
+}
+
+var attrToExtendedDataAttribute = map[string]string{
+	"sha1hex":        "Sha1",
+	"sha256hex":      "Sha256",
+	"xattrs":         "Extended Attributes",
+	"isAppBundle":    "Is App Bundle",
+	"isScreenShot":   "Is Screenshot",
+	"isQuarantined":  "Is Quarantined",
+	"isDownload":     "Is Download",
+	"isDirectory":    "Is Directory",
+	"downloadedFrom": "Downloaded From",
+	"signingInfo":    "Signing Information",
+	"args":           "Args",
+	"guiAPP":         "Is GUI App",
+	"appPath":        "App Path",
+	"name":           "name",
+}
+
+var relatedToExtendedDataAttribute = map[string]string{
+	"file":    "File",
+	"process": "Process",
+	"user":    "User",
+	"group":   "Group",
+	"binary":  "Binary",
+}
+
 var endpointHeaderAttrTypes = map[string]attr.Type{
 	"header": types.StringType,
 	"value":  types.StringType,
 }
 
-var endpointHTTPAttrTypes = map[string]attr.Type{
-	"enabled":              types.BoolType,
-	"supported_reports":    types.ListType{ElemType: types.StringType},
-	"batch_size_index":     types.Int64Type,
-	"batch_window_seconds": types.Int64Type,
-	"batch_size_in_bytes":  types.Int64Type,
-	"batch_delimiter":      types.StringType,
-	"url":                  types.StringType,
-	"method":               types.StringType,
-	"headers":              types.ListType{ElemType: types.ObjectType{AttrTypes: endpointHeaderAttrTypes}},
+var batchingAttrTypes = map[string]attr.Type{
+	"events_per_batch":        types.Int64Type,
+	"batching_window_seconds": types.Int64Type,
+	"event_delimiter":         types.StringType,
+	"max_batch_size_bytes":    types.Int64Type,
 }
 
-var endpointKafkaAttrTypes = map[string]attr.Type{
-	"enabled":              types.BoolType,
-	"supported_reports":    types.ListType{ElemType: types.StringType},
-	"batch_size_index":     types.Int64Type,
-	"batch_window_seconds": types.Int64Type,
-	"batch_size_in_bytes":  types.Int64Type,
-	"batch_delimiter":      types.StringType,
-	"host":                 types.StringType,
-	"port":                 types.Int64Type,
-	"topic":                types.StringType,
-	"client_cn":            types.StringType,
-	"server_cn":            types.StringType,
+var httpEndpointAttrTypes = map[string]attr.Type{
+	"url":     types.StringType,
+	"method":  types.StringType,
+	"headers": types.ListType{ElemType: types.ObjectType{AttrTypes: endpointHeaderAttrTypes}},
 }
 
-var endpointSyslogAttrTypes = map[string]attr.Type{
-	"enabled":              types.BoolType,
-	"supported_reports":    types.ListType{ElemType: types.StringType},
-	"batch_size_index":     types.Int64Type,
-	"batch_window_seconds": types.Int64Type,
-	"batch_size_in_bytes":  types.Int64Type,
-	"batch_delimiter":      types.StringType,
-	"host":                 types.StringType,
-	"port":                 types.Int64Type,
-	"scheme":               types.StringType,
+var kafkaEndpointAttrTypes = map[string]attr.Type{
+	"host":      types.StringType,
+	"port":      types.Int64Type,
+	"topic":     types.StringType,
+	"client_cn": types.StringType,
+	"server_cn": types.StringType,
 }
 
-var endpointLogFileAttrTypes = map[string]attr.Type{
-	"enabled":              types.BoolType,
-	"supported_reports":    types.ListType{ElemType: types.StringType},
-	"batch_size_index":     types.Int64Type,
-	"batch_window_seconds": types.Int64Type,
-	"batch_size_in_bytes":  types.Int64Type,
-	"batch_delimiter":      types.StringType,
-	"path":                 types.StringType,
-	"permissions":          types.StringType,
-	"max_size_mb":          types.Int64Type,
-	"ownership":            types.StringType,
-	"backups":              types.Int64Type,
+var syslogEndpointAttrTypes = map[string]attr.Type{
+	"host":     types.StringType,
+	"port":     types.Int64Type,
+	"protocol": types.StringType,
 }
 
-var endpointJamfCloudAttrTypes = map[string]attr.Type{
-	"enabled":              types.BoolType,
-	"supported_reports":    types.ListType{ElemType: types.StringType},
-	"batch_size_index":     types.Int64Type,
-	"batch_window_seconds": types.Int64Type,
-	"batch_size_in_bytes":  types.Int64Type,
-	"batch_delimiter":      types.StringType,
-	"destination_filter":   types.StringType,
+var logFileEndpointAttrTypes = map[string]attr.Type{
+	"path":             types.StringType,
+	"ownership":        types.StringType,
+	"permissions":      types.StringType,
+	"max_file_size_mb": types.Int64Type,
+	"max_backups":      types.Int64Type,
+}
+
+var jamfProtectCloudEndpointAttrTypes = map[string]attr.Type{
+	"destination_filter": types.StringType,
+}
+
+var httpEndpointBlockAttrTypes = map[string]attr.Type{
+	"collect_alerts": types.SetType{ElemType: types.StringType},
+	"collect_logs":   types.SetType{ElemType: types.StringType},
+	"batching":       types.ObjectType{AttrTypes: batchingAttrTypes},
+	"http":           types.ObjectType{AttrTypes: httpEndpointAttrTypes},
+}
+
+var kafkaEndpointBlockAttrTypes = map[string]attr.Type{
+	"collect_alerts": types.SetType{ElemType: types.StringType},
+	"collect_logs":   types.SetType{ElemType: types.StringType},
+	"batching":       types.ObjectType{AttrTypes: batchingAttrTypes},
+	"kafka":          types.ObjectType{AttrTypes: kafkaEndpointAttrTypes},
+}
+
+var syslogEndpointBlockAttrTypes = map[string]attr.Type{
+	"collect_alerts": types.SetType{ElemType: types.StringType},
+	"collect_logs":   types.SetType{ElemType: types.StringType},
+	"batching":       types.ObjectType{AttrTypes: batchingAttrTypes},
+	"syslog":         types.ObjectType{AttrTypes: syslogEndpointAttrTypes},
+}
+
+var logFileEndpointBlockAttrTypes = map[string]attr.Type{
+	"collect_alerts": types.SetType{ElemType: types.StringType},
+	"collect_logs":   types.SetType{ElemType: types.StringType},
+	"batching":       types.ObjectType{AttrTypes: batchingAttrTypes},
+	"log_file":       types.ObjectType{AttrTypes: logFileEndpointAttrTypes},
+}
+
+var jamfProtectCloudEndpointBlockAttrTypes = map[string]attr.Type{
+	"collect_alerts":     types.SetType{ElemType: types.StringType},
+	"collect_logs":       types.SetType{ElemType: types.StringType},
+	"batching":           types.ObjectType{AttrTypes: batchingAttrTypes},
+	"jamf_protect_cloud": types.ObjectType{AttrTypes: jamfProtectCloudEndpointAttrTypes},
 }
 
 // ---------------------------------------------------------------------------
@@ -143,8 +211,11 @@ var endpointJamfCloudAttrTypes = map[string]attr.Type{
 
 // extractEventType extracts an alertEventTypeModel from the alertDataModel for the given field.
 func extractEventType(ctx context.Context, dataObj types.Object, tfName string, diags *diag.Diagnostics) alertEventTypeModel {
-	var dataModel dataCollectionDataModel
+	var dataModel alertEventTypesModel
 	diags.Append(dataObj.As(ctx, &dataModel, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return alertEventTypeModel{}
+	}
 
 	var fieldObj types.Object
 	switch tfName {
@@ -183,6 +254,127 @@ func extractEventType(ctx context.Context, dataObj types.Object, tfName string, 
 	return et
 }
 
+func splitExtendedDataAttributes(values []string, diags *diag.Diagnostics) ([]string, []string) {
+	attrs := []string{}
+	related := []string{}
+	for _, value := range values {
+		if attr, ok := extendedDataAttributeToAttr[value]; ok {
+			attrs = append(attrs, attr)
+			continue
+		}
+		if rel, ok := extendedDataAttributeToRelated[value]; ok {
+			related = append(related, rel)
+			continue
+		}
+		diags.AddError("Unsupported extended data attribute",
+			fmt.Sprintf("%q is not a supported extended data attribute value", value))
+	}
+	return attrs, related
+}
+
+func mergeExtendedDataAttributes(tfName string, attrs []string, related []string, diags *diag.Diagnostics) []string {
+	combined := []string{}
+	seen := map[string]struct{}{}
+	appendLabel := func(label string) {
+		if _, exists := seen[label]; exists {
+			return
+		}
+		seen[label] = struct{}{}
+		combined = append(combined, label)
+	}
+
+	for _, attr := range attrs {
+		label, ok := attrToExtendedDataAttribute[attr]
+		if !ok {
+			diags.AddError("Unsupported alert attribute",
+				fmt.Sprintf("%q is not a supported alert attribute value", attr))
+			continue
+		}
+		appendLabel(label)
+	}
+
+	if len(related) == 0 {
+		return combined
+	}
+
+	switch tfName {
+	case "keylog_register_event":
+		processLabels := []string{"Source Process", "Destination Process"}
+		processCount := 0
+		for _, rel := range related {
+			if rel == "process" {
+				if processCount < len(processLabels) {
+					appendLabel(processLabels[processCount])
+					processCount++
+				} else {
+					appendLabel("Process")
+				}
+				continue
+			}
+			label, ok := relatedToExtendedDataAttribute[rel]
+			if !ok {
+				diags.AddError("Unsupported related object",
+					fmt.Sprintf("%q is not a supported related object value", rel))
+				continue
+			}
+			appendLabel(label)
+		}
+		return combined
+	case "process":
+		processLabels := []string{"Parent", "Process Group Leader"}
+		processCount := 0
+		for _, rel := range related {
+			if rel == "process" {
+				if processCount < len(processLabels) {
+					appendLabel(processLabels[processCount])
+					processCount++
+				} else {
+					appendLabel("Process")
+				}
+				continue
+			}
+			label, ok := relatedToExtendedDataAttribute[rel]
+			if !ok {
+				diags.AddError("Unsupported related object",
+					fmt.Sprintf("%q is not a supported related object value", rel))
+				continue
+			}
+			appendLabel(label)
+		}
+		return combined
+	case "gatekeeper_event":
+		for _, rel := range related {
+			switch rel {
+			case "process":
+				appendLabel("Blocked Process")
+				continue
+			case "binary":
+				appendLabel("Blocked Binary")
+				continue
+			}
+			label, ok := relatedToExtendedDataAttribute[rel]
+			if !ok {
+				diags.AddError("Unsupported related object",
+					fmt.Sprintf("%q is not a supported related object value", rel))
+				continue
+			}
+			appendLabel(label)
+		}
+		return combined
+	default:
+		for _, rel := range related {
+			label, ok := relatedToExtendedDataAttribute[rel]
+			if !ok {
+				diags.AddError("Unsupported related object",
+					fmt.Sprintf("%q is not a supported related object value", rel))
+				continue
+			}
+			appendLabel(label)
+		}
+		return combined
+	}
+}
+
 func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) *jamfprotect.ActionConfigInput {
 	input := &jamfprotect.ActionConfigInput{
 		Name: data.Name.ValueString(),
@@ -194,22 +386,26 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 		input.Description = ""
 	}
 
-	// Extract the data_collection -> data nested structure.
-	var collection dataCollectionModel
-	diags.Append(data.DataCollection.As(ctx, &collection, basetypes.ObjectAsOptions{})...)
+	// Extract the alert_data_collection -> event_types nested structure.
+	var collection alertDataCollectionModel
+	diags.Append(data.AlertDataCollect.As(ctx, &collection, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
 	}
 
 	apiData := map[string]any{}
 	for _, m := range eventTypeMapping {
-		et := extractEventType(ctx, collection.Data, m.tfName, diags)
+		et := extractEventType(ctx, collection.EventTypes, m.tfName, diags)
+		if diags.HasError() {
+			return nil
+		}
+		attrs, related := splitExtendedDataAttributes(common.SetToStrings(ctx, et.ExtendedDataAttributes, diags), diags)
 		if diags.HasError() {
 			return nil
 		}
 		apiData[m.apiName] = map[string]any{
-			"attrs":   common.ListToStrings(ctx, et.Attrs, diags),
-			"related": common.ListToStrings(ctx, et.Related, diags),
+			"attrs":   attrs,
+			"related": related,
 		}
 	}
 
@@ -233,35 +429,218 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 func (r *ActionConfigResource) buildClients(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) []map[string]any {
 	clients := []map[string]any{}
 
-	if client := buildHTTPClient(ctx, data.EndpointHTTP, diags); client != nil {
+	clients = append(clients, buildHTTPEndpointClients(ctx, data.HTTPEndpoints, diags)...)
+	clients = append(clients, buildKafkaEndpointClients(ctx, data.KafkaEndpoints, diags)...)
+	clients = append(clients, buildSyslogEndpointClients(ctx, data.SyslogEndpoints, diags)...)
+	if client := buildLogFileEndpointClient(ctx, data.LogFileEndpoint, diags); client != nil {
 		clients = append(clients, client)
 	}
-	if client := buildKafkaClient(ctx, data.EndpointKafka, diags); client != nil {
-		clients = append(clients, client)
-	}
-	if client := buildSyslogClient(ctx, data.EndpointSyslog, diags); client != nil {
-		clients = append(clients, client)
-	}
-	if client := buildLogFileClient(ctx, data.EndpointLogFile, diags); client != nil {
-		clients = append(clients, client)
-	}
-	if client := buildJamfCloudClient(ctx, data.EndpointJamfCloud, diags); client != nil {
+	if client := buildJamfProtectCloudEndpointClient(ctx, data.JamfCloudEndpoint, diags); client != nil {
 		clients = append(clients, client)
 	}
 
 	return clients
 }
 
-func buildHTTPClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
-	if obj.IsNull() || obj.IsUnknown() {
+func buildEndpointClient(ctx context.Context, clientType string, collectAlerts types.Set, collectLogs types.Set, batching types.Object, params map[string]any, diags *diag.Diagnostics) map[string]any {
+	supportedReports := buildSupportedReports(ctx, collectAlerts, collectLogs, diags)
+	if diags.HasError() {
 		return nil
 	}
 
-	var endpoint endpointHTTPModel
+	batchConfig := buildBatchingConfig(ctx, batching, diags)
+	if diags.HasError() {
+		return nil
+	}
+
+	client := map[string]any{
+		"type": clientType,
+	}
+	if len(batchConfig) > 0 {
+		client["batchConfig"] = batchConfig
+	}
+	if len(supportedReports) > 0 {
+		client["supportedReports"] = supportedReports
+	}
+	paramsJSON, err := json.Marshal(params)
+	if err != nil {
+		diags.AddError("Error serializing "+clientType+" client params", err.Error())
+		return nil
+	}
+	client["params"] = string(paramsJSON)
+
+	return client
+}
+
+func buildHTTPEndpointClients(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
+	clients := []map[string]any{}
+	if list.IsNull() || list.IsUnknown() {
+		return clients
+	}
+	var endpoints []httpEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() {
+		return clients
+	}
+	for _, endpoint := range endpoints {
+		params := buildHTTPParams(ctx, endpoint.HTTP, diags)
+		if diags.HasError() {
+			return clients
+		}
+		if client := buildEndpointClient(ctx, "Http", endpoint.CollectAlerts, endpoint.CollectLogs, endpoint.Batching, params, diags); client != nil {
+			clients = append(clients, client)
+		}
+	}
+	return clients
+}
+
+func buildKafkaEndpointClients(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
+	clients := []map[string]any{}
+	if list.IsNull() || list.IsUnknown() {
+		return clients
+	}
+	var endpoints []kafkaEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() {
+		return clients
+	}
+	for _, endpoint := range endpoints {
+		params := buildKafkaParams(ctx, endpoint.Kafka, diags)
+		if diags.HasError() {
+			return clients
+		}
+		if client := buildEndpointClient(ctx, "Kafka", endpoint.CollectAlerts, endpoint.CollectLogs, endpoint.Batching, params, diags); client != nil {
+			clients = append(clients, client)
+		}
+	}
+	return clients
+}
+
+func buildSyslogEndpointClients(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
+	clients := []map[string]any{}
+	if list.IsNull() || list.IsUnknown() {
+		return clients
+	}
+	var endpoints []syslogEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() {
+		return clients
+	}
+	for _, endpoint := range endpoints {
+		params := buildSyslogParams(ctx, endpoint.Syslog, diags)
+		if diags.HasError() {
+			return clients
+		}
+		if client := buildEndpointClient(ctx, "Syslog", endpoint.CollectAlerts, endpoint.CollectLogs, endpoint.Batching, params, diags); client != nil {
+			clients = append(clients, client)
+		}
+	}
+	return clients
+}
+
+func buildLogFileEndpointClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil
+	}
+	var endpoint logFileEndpointBlockModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
 	}
+	params := buildLogFileParams(ctx, endpoint.LogFile, diags)
+	if diags.HasError() {
+		return nil
+	}
+	return buildEndpointClient(ctx, "LogFile", endpoint.CollectAlerts, endpoint.CollectLogs, endpoint.Batching, params, diags)
+}
+
+func buildJamfProtectCloudEndpointClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil
+	}
+	var endpoint jamfProtectCloudEndpointBlockModel
+	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
+	}
+	params := buildJamfProtectCloudParams(ctx, endpoint.JamfProtectCloud, diags)
+	if diags.HasError() {
+		return nil
+	}
+	return buildEndpointClient(ctx, "JamfCloud", endpoint.CollectAlerts, endpoint.CollectLogs, endpoint.Batching, params, diags)
+}
+
+func buildSupportedReports(ctx context.Context, collectAlerts types.Set, collectLogs types.Set, diags *diag.Diagnostics) []string {
+	reports := map[string]struct{}{}
+
+	for _, alert := range common.SetToStrings(ctx, collectAlerts, diags) {
+		switch alert {
+		case "high":
+			reports["AlertHigh"] = struct{}{}
+		case "medium":
+			reports["AlertMedium"] = struct{}{}
+		case "low":
+			reports["AlertLow"] = struct{}{}
+		case "informational":
+			reports["AlertInformational"] = struct{}{}
+		}
+	}
+
+	for _, logType := range common.SetToStrings(ctx, collectLogs, diags) {
+		switch logType {
+		case "telemetry":
+			reports["Telemetry"] = struct{}{}
+		case "unified_logs":
+			reports["UnifiedLogging"] = struct{}{}
+		}
+	}
+
+	result := make([]string, 0, len(reports))
+	for report := range reports {
+		result = append(result, report)
+	}
+
+	return result
+}
+
+func buildBatchingConfig(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+	if obj.IsNull() || obj.IsUnknown() {
+		return map[string]any{}
+	}
+
+	var batching batchingModel
+	diags.Append(obj.As(ctx, &batching, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return map[string]any{}
+	}
+
+	batch := map[string]any{}
+	if !batching.EventsPerBatch.IsNull() && !batching.EventsPerBatch.IsUnknown() {
+		batch["sizeIndex"] = batching.EventsPerBatch.ValueInt64()
+	}
+	if !batching.BatchingWindowSeconds.IsNull() && !batching.BatchingWindowSeconds.IsUnknown() {
+		batch["windowInSeconds"] = batching.BatchingWindowSeconds.ValueInt64()
+	}
+	if !batching.EventDelimiter.IsNull() && !batching.EventDelimiter.IsUnknown() {
+		batch["delimiter"] = batching.EventDelimiter.ValueString()
+	}
+	if !batching.MaxBatchSizeBytes.IsNull() && !batching.MaxBatchSizeBytes.IsUnknown() {
+		batch["sizeInBytes"] = batching.MaxBatchSizeBytes.ValueInt64()
+	}
+	return batch
+}
+
+func buildHTTPParams(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+	if obj.IsNull() || obj.IsUnknown() {
+		return map[string]any{}
+	}
+
+	var endpoint httpEndpointModel
+	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return map[string]any{}
+	}
+
 	params := map[string]any{}
 	if !endpoint.URL.IsNull() && !endpoint.URL.IsUnknown() {
 		params["url"] = endpoint.URL.ValueString()
@@ -273,7 +652,7 @@ func buildHTTPClient(ctx context.Context, obj types.Object, diags *diag.Diagnost
 		var headers []endpointHeaderModel
 		diags.Append(endpoint.Headers.ElementsAs(ctx, &headers, false)...)
 		if diags.HasError() {
-			return nil
+			return map[string]any{}
 		}
 		headerItems := make([]map[string]any, 0, len(headers))
 		for _, h := range headers {
@@ -291,28 +670,18 @@ func buildHTTPClient(ctx context.Context, obj types.Object, diags *diag.Diagnost
 		params["headers"] = headerItems
 	}
 
-	return buildClientFromEndpoint(
-		ctx,
-		"Http",
-		endpoint.Enabled,
-		endpoint.SupportedReports,
-		endpoint.BatchSizeIndex,
-		endpoint.BatchWindowSeconds,
-		endpoint.BatchSizeInBytes,
-		endpoint.BatchDelimiter,
-		params,
-		diags,
-	)
+	return params
 }
 
-func buildKafkaClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+func buildKafkaParams(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
 	if obj.IsNull() || obj.IsUnknown() {
-		return nil
+		return map[string]any{}
 	}
-	var endpoint endpointKafkaModel
+
+	var endpoint kafkaEndpointModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
+		return map[string]any{}
 	}
 
 	params := map[string]any{}
@@ -332,28 +701,18 @@ func buildKafkaClient(ctx context.Context, obj types.Object, diags *diag.Diagnos
 		params["serverCN"] = endpoint.ServerCN.ValueString()
 	}
 
-	return buildClientFromEndpoint(
-		ctx,
-		"Kafka",
-		endpoint.Enabled,
-		endpoint.SupportedReports,
-		endpoint.BatchSizeIndex,
-		endpoint.BatchWindowSeconds,
-		endpoint.BatchSizeInBytes,
-		endpoint.BatchDelimiter,
-		params,
-		diags,
-	)
+	return params
 }
 
-func buildSyslogClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+func buildSyslogParams(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
 	if obj.IsNull() || obj.IsUnknown() {
-		return nil
+		return map[string]any{}
 	}
-	var endpoint endpointSyslogModel
+
+	var endpoint syslogEndpointModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
+		return map[string]any{}
 	}
 
 	params := map[string]any{}
@@ -363,32 +722,22 @@ func buildSyslogClient(ctx context.Context, obj types.Object, diags *diag.Diagno
 	if !endpoint.Port.IsNull() && !endpoint.Port.IsUnknown() {
 		params["port"] = endpoint.Port.ValueInt64()
 	}
-	if !endpoint.Scheme.IsNull() && !endpoint.Scheme.IsUnknown() {
-		params["scheme"] = endpoint.Scheme.ValueString()
+	if !endpoint.Protocol.IsNull() && !endpoint.Protocol.IsUnknown() {
+		params["scheme"] = endpoint.Protocol.ValueString()
 	}
 
-	return buildClientFromEndpoint(
-		ctx,
-		"Syslog",
-		endpoint.Enabled,
-		endpoint.SupportedReports,
-		endpoint.BatchSizeIndex,
-		endpoint.BatchWindowSeconds,
-		endpoint.BatchSizeInBytes,
-		endpoint.BatchDelimiter,
-		params,
-		diags,
-	)
+	return params
 }
 
-func buildLogFileClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+func buildLogFileParams(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
 	if obj.IsNull() || obj.IsUnknown() {
-		return nil
+		return map[string]any{}
 	}
-	var endpoint endpointLogFileModel
+
+	var endpoint logFileEndpointModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
+		return map[string]any{}
 	}
 
 	params := map[string]any{}
@@ -398,126 +747,45 @@ func buildLogFileClient(ctx context.Context, obj types.Object, diags *diag.Diagn
 	if !endpoint.Permissions.IsNull() && !endpoint.Permissions.IsUnknown() {
 		params["permissions"] = endpoint.Permissions.ValueString()
 	}
-	if !endpoint.MaxSizeMB.IsNull() && !endpoint.MaxSizeMB.IsUnknown() {
-		params["maxSizeMB"] = endpoint.MaxSizeMB.ValueInt64()
+	if !endpoint.MaxFileSizeMB.IsNull() && !endpoint.MaxFileSizeMB.IsUnknown() {
+		params["maxSizeMB"] = endpoint.MaxFileSizeMB.ValueInt64()
 	}
 	if !endpoint.Ownership.IsNull() && !endpoint.Ownership.IsUnknown() {
 		params["ownership"] = endpoint.Ownership.ValueString()
 	}
-	if !endpoint.Backups.IsNull() && !endpoint.Backups.IsUnknown() {
-		params["backups"] = endpoint.Backups.ValueInt64()
+	if !endpoint.MaxBackups.IsNull() && !endpoint.MaxBackups.IsUnknown() {
+		params["backups"] = endpoint.MaxBackups.ValueInt64()
 	}
 
-	return buildClientFromEndpoint(
-		ctx,
-		"LogFile",
-		endpoint.Enabled,
-		endpoint.SupportedReports,
-		endpoint.BatchSizeIndex,
-		endpoint.BatchWindowSeconds,
-		endpoint.BatchSizeInBytes,
-		endpoint.BatchDelimiter,
-		params,
-		diags,
-	)
+	return params
 }
 
-func buildJamfCloudClient(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
+func buildJamfProtectCloudParams(ctx context.Context, obj types.Object, diags *diag.Diagnostics) map[string]any {
 	if obj.IsNull() || obj.IsUnknown() {
-		return nil
+		return map[string]any{}
 	}
-	var endpoint endpointJamfCloudModel
+
+	var endpoint jamfProtectCloudEndpointModel
 	diags.Append(obj.As(ctx, &endpoint, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return nil
+		return map[string]any{}
 	}
 
 	params := map[string]any{}
 	if !endpoint.DestinationFilter.IsNull() && !endpoint.DestinationFilter.IsUnknown() {
 		params["destinationFilter"] = endpoint.DestinationFilter.ValueString()
 	}
-	return buildClientFromEndpoint(
-		ctx,
-		"JamfCloud",
-		endpoint.Enabled,
-		endpoint.SupportedReports,
-		endpoint.BatchSizeIndex,
-		endpoint.BatchWindowSeconds,
-		endpoint.BatchSizeInBytes,
-		endpoint.BatchDelimiter,
-		params,
-		diags,
-	)
-}
-
-func buildClientFromEndpoint(
-	ctx context.Context,
-	clientType string,
-	enabled types.Bool,
-	supportedReports types.List,
-	batchSizeIndex types.Int64,
-	batchWindowSeconds types.Int64,
-	batchSizeInBytes types.Int64,
-	batchDelimiter types.String,
-	params map[string]any,
-	diags *diag.Diagnostics,
-) map[string]any {
-	if !boolValueOrTrue(enabled) {
-		return nil
-	}
-
-	client := map[string]any{
-		"type": clientType,
-	}
-	if batch := buildBatchConfig(batchSizeIndex, batchWindowSeconds, batchSizeInBytes, batchDelimiter); len(batch) > 0 {
-		client["batchConfig"] = batch
-	}
-	if !supportedReports.IsNull() && !supportedReports.IsUnknown() {
-		client["supportedReports"] = common.ListToStrings(ctx, supportedReports, diags)
-	}
-	paramsJSON, err := json.Marshal(params)
-	if err != nil {
-		diags.AddError("Error serializing "+clientType+" client params", err.Error())
-		return nil
-	}
-	client["params"] = string(paramsJSON)
-
-	return client
-}
-
-func buildBatchConfig(sizeIndex types.Int64, windowSeconds types.Int64, sizeInBytes types.Int64, delimiter types.String) map[string]any {
-	batch := map[string]any{}
-	if !sizeIndex.IsNull() && !sizeIndex.IsUnknown() {
-		batch["sizeIndex"] = sizeIndex.ValueInt64()
-	}
-	if !windowSeconds.IsNull() && !windowSeconds.IsUnknown() {
-		batch["windowInSeconds"] = windowSeconds.ValueInt64()
-	}
-	if !sizeInBytes.IsNull() && !sizeInBytes.IsUnknown() {
-		batch["sizeInBytes"] = sizeInBytes.ValueInt64()
-	}
-	if !delimiter.IsNull() && !delimiter.IsUnknown() {
-		batch["delimiter"] = delimiter.ValueString()
-	}
-	return batch
-}
-
-func boolValueOrTrue(value types.Bool) bool {
-	if value.IsNull() || value.IsUnknown() {
-		return true
-	}
-	return value.ValueBool()
+	return params
 }
 
 // eventTypeToObjectValue converts an API event type model to a Terraform ObjectValue.
-func eventTypeToObjectValue(et *jamfprotect.AlertEventType, diags *diag.Diagnostics) types.Object {
+func eventTypeToObjectValue(tfName string, et *jamfprotect.AlertEventType, diags *diag.Diagnostics) types.Object {
 	if et == nil {
 		et = &jamfprotect.AlertEventType{Attrs: []string{}, Related: []string{}}
 	}
 
 	attrs := map[string]attr.Value{
-		"attrs":   common.StringsToList(et.Attrs),
-		"related": common.StringsToList(et.Related),
+		"extended_data_attributes": common.StringsToSet(mergeExtendedDataAttributes(tfName, et.Attrs, et.Related, diags)),
 	}
 
 	obj, d := types.ObjectValue(alertEventTypeAttrTypes, attrs)
@@ -574,54 +842,200 @@ func (r *ActionConfigResource) apiToState(_ context.Context, data *ActionConfigR
 		data.Description = types.StringValue("")
 	}
 
-	// Build data_collection object from API response.
+	// Build alert_data_collection object from API response.
 	if api.AlertConfig != nil && api.AlertConfig.Data != nil {
 		dataAttrs := map[string]attr.Value{}
 		for _, m := range eventTypeMapping {
 			apiET := apiEventTypeGetter(api.AlertConfig.Data, m.apiName)
-			dataAttrs[m.tfName] = eventTypeToObjectValue(apiET, diags)
+			dataAttrs[m.tfName] = eventTypeToObjectValue(m.tfName, apiET, diags)
 		}
 		if diags.HasError() {
 			return
 		}
 
-		dataObj, d := types.ObjectValue(dataCollectionAttrTypes, dataAttrs)
+		dataObj, d := types.ObjectValue(alertEventTypesAttrTypes, dataAttrs)
 		diags.Append(d...)
 		if diags.HasError() {
 			return
 		}
 
-		collectionObj, d := types.ObjectValue(dataCollectionWrapperAttrTypes, map[string]attr.Value{
-			"data": dataObj,
+		collectionObj, d := types.ObjectValue(alertDataCollectionAttrTypes, map[string]attr.Value{
+			"event_types": dataObj,
 		})
 		diags.Append(d...)
 		if diags.HasError() {
 			return
 		}
 
-		data.DataCollection = collectionObj
+		data.AlertDataCollect = collectionObj
 	}
 
-	data.EndpointHTTP = types.ObjectNull(endpointHTTPAttrTypes)
-	data.EndpointKafka = types.ObjectNull(endpointKafkaAttrTypes)
-	data.EndpointSyslog = types.ObjectNull(endpointSyslogAttrTypes)
-	data.EndpointLogFile = types.ObjectNull(endpointLogFileAttrTypes)
-	data.EndpointJamfCloud = types.ObjectNull(endpointJamfCloudAttrTypes)
+	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, diags)
+	data.KafkaEndpoints = buildKafkaEndpointsState(api.Clients, diags)
+	data.SyslogEndpoints = buildSyslogEndpointsState(api.Clients, diags)
+	data.LogFileEndpoint = buildLogFileEndpointState(api.Clients, diags)
+	data.JamfCloudEndpoint = buildJamfProtectCloudEndpointState(api.Clients, diags)
+}
 
-	for _, client := range api.Clients {
-		switch client.Type {
-		case "Http":
-			data.EndpointHTTP = apiHTTPToObjectValue(client, diags)
-		case "Kafka":
-			data.EndpointKafka = apiKafkaToObjectValue(client, diags)
-		case "Syslog":
-			data.EndpointSyslog = apiSyslogToObjectValue(client, diags)
-		case "LogFile":
-			data.EndpointLogFile = apiLogFileToObjectValue(client, diags)
-		case "JamfCloud":
-			data.EndpointJamfCloud = apiJamfCloudToObjectValue(client, diags)
+func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.List {
+	items := make([]attr.Value, 0)
+	for _, client := range clients {
+		if client.Type != "Http" {
+			continue
+		}
+		attrs := buildEndpointBlockAttrs(client, apiHTTPToObjectValue(client, diags), httpEndpointBlockAttrTypes, diags)
+		if diags.HasError() {
+			return types.ListNull(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes})
+		}
+		obj, d := types.ObjectValue(httpEndpointBlockAttrTypes, attrs)
+		diags.Append(d...)
+		items = append(items, obj)
+	}
+	if len(items) == 0 {
+		return types.ListNull(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes})
+	}
+	list, d := types.ListValue(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes}, items)
+	diags.Append(d...)
+	return list
+}
+
+func buildKafkaEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.List {
+	items := make([]attr.Value, 0)
+	for _, client := range clients {
+		if client.Type != "Kafka" {
+			continue
+		}
+		attrs := buildEndpointBlockAttrs(client, apiKafkaToObjectValue(client, diags), kafkaEndpointBlockAttrTypes, diags)
+		if diags.HasError() {
+			return types.ListNull(types.ObjectType{AttrTypes: kafkaEndpointBlockAttrTypes})
+		}
+		obj, d := types.ObjectValue(kafkaEndpointBlockAttrTypes, attrs)
+		diags.Append(d...)
+		items = append(items, obj)
+	}
+	if len(items) == 0 {
+		return types.ListNull(types.ObjectType{AttrTypes: kafkaEndpointBlockAttrTypes})
+	}
+	list, d := types.ListValue(types.ObjectType{AttrTypes: kafkaEndpointBlockAttrTypes}, items)
+	diags.Append(d...)
+	return list
+}
+
+func buildSyslogEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.List {
+	items := make([]attr.Value, 0)
+	for _, client := range clients {
+		if client.Type != "Syslog" {
+			continue
+		}
+		attrs := buildEndpointBlockAttrs(client, apiSyslogToObjectValue(client, diags), syslogEndpointBlockAttrTypes, diags)
+		if diags.HasError() {
+			return types.ListNull(types.ObjectType{AttrTypes: syslogEndpointBlockAttrTypes})
+		}
+		obj, d := types.ObjectValue(syslogEndpointBlockAttrTypes, attrs)
+		diags.Append(d...)
+		items = append(items, obj)
+	}
+	if len(items) == 0 {
+		return types.ListNull(types.ObjectType{AttrTypes: syslogEndpointBlockAttrTypes})
+	}
+	list, d := types.ListValue(types.ObjectType{AttrTypes: syslogEndpointBlockAttrTypes}, items)
+	diags.Append(d...)
+	return list
+}
+
+func buildLogFileEndpointState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
+	for _, client := range clients {
+		if client.Type != "LogFile" {
+			continue
+		}
+		attrs := buildEndpointBlockAttrs(client, apiLogFileToObjectValue(client, diags), logFileEndpointBlockAttrTypes, diags)
+		if diags.HasError() {
+			return types.ObjectNull(logFileEndpointBlockAttrTypes)
+		}
+		obj, d := types.ObjectValue(logFileEndpointBlockAttrTypes, attrs)
+		diags.Append(d...)
+		return obj
+	}
+	return types.ObjectNull(logFileEndpointBlockAttrTypes)
+}
+
+func buildJamfProtectCloudEndpointState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
+	for _, client := range clients {
+		if client.Type != "JamfCloud" {
+			continue
+		}
+		attrs := buildEndpointBlockAttrs(client, apiJamfProtectCloudToObjectValue(client, diags), jamfProtectCloudEndpointBlockAttrTypes, diags)
+		if diags.HasError() {
+			return types.ObjectNull(jamfProtectCloudEndpointBlockAttrTypes)
+		}
+		obj, d := types.ObjectValue(jamfProtectCloudEndpointBlockAttrTypes, attrs)
+		diags.Append(d...)
+		return obj
+	}
+	return types.ObjectNull(jamfProtectCloudEndpointBlockAttrTypes)
+}
+
+func buildEndpointBlockAttrs(client jamfprotect.ReportClient, settings types.Object, attrTypes map[string]attr.Type, diags *diag.Diagnostics) map[string]attr.Value {
+	collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+	batchingObj := batchingToObjectValue(client.BatchConfig, diags)
+	attrs := map[string]attr.Value{
+		"collect_alerts": common.StringsToSet(collectAlerts),
+		"collect_logs":   common.StringsToSet(collectLogs),
+		"batching":       batchingObj,
+	}
+	if _, ok := attrTypes["http"]; ok {
+		attrs["http"] = settings
+	}
+	if _, ok := attrTypes["kafka"]; ok {
+		attrs["kafka"] = settings
+	}
+	if _, ok := attrTypes["syslog"]; ok {
+		attrs["syslog"] = settings
+	}
+	if _, ok := attrTypes["log_file"]; ok {
+		attrs["log_file"] = settings
+	}
+	if _, ok := attrTypes["jamf_protect_cloud"]; ok {
+		attrs["jamf_protect_cloud"] = settings
+	}
+	return attrs
+}
+
+func splitSupportedReports(reports []string) ([]string, []string) {
+	alerts := []string{}
+	logs := []string{}
+	for _, report := range reports {
+		switch report {
+		case "AlertHigh":
+			alerts = append(alerts, "high")
+		case "AlertMedium":
+			alerts = append(alerts, "medium")
+		case "AlertLow":
+			alerts = append(alerts, "low")
+		case "AlertInformational":
+			alerts = append(alerts, "informational")
+		case "Telemetry":
+			logs = append(logs, "telemetry")
+		case "UnifiedLogging":
+			logs = append(logs, "unified_logs")
 		}
 	}
+	return alerts, logs
+}
+
+func batchingToObjectValue(batch *jamfprotect.BatchConfig, diags *diag.Diagnostics) types.Object {
+	if batch == nil {
+		return types.ObjectNull(batchingAttrTypes)
+	}
+	attrs := map[string]attr.Value{
+		"events_per_batch":        types.Int64Value(batch.SizeIndex),
+		"batching_window_seconds": types.Int64Value(batch.WindowInSeconds),
+		"event_delimiter":         stringValueOrNullValue(batch.Delimiter),
+		"max_batch_size_bytes":    int64ValueOrNullValue(batch.SizeInBytes),
+	}
+	obj, d := types.ObjectValue(batchingAttrTypes, attrs)
+	diags.Append(d...)
+	return obj
 }
 
 func apiHTTPToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
@@ -642,123 +1056,71 @@ func apiHTTPToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnosti
 	}
 
 	attrs := map[string]attr.Value{
-		"enabled":              types.BoolValue(true),
-		"supported_reports":    common.StringsToList(client.SupportedReports),
-		"batch_size_index":     int64ValueOrNull(client.BatchConfig, "sizeIndex"),
-		"batch_window_seconds": int64ValueOrNull(client.BatchConfig, "windowInSeconds"),
-		"batch_size_in_bytes":  int64ValueOrNull(client.BatchConfig, "sizeInBytes"),
-		"batch_delimiter":      stringValueOrNull(client.BatchConfig, "delimiter"),
-		"url":                  stringValueOrNullValue(client.Params.URL),
-		"method":               stringValueOrNullValue(client.Params.Method),
-		"headers":              headersList,
+		"url":     stringValueOrNullValue(client.Params.URL),
+		"method":  stringValueOrNullValue(client.Params.Method),
+		"headers": headersList,
 	}
 
-	obj, d := types.ObjectValue(endpointHTTPAttrTypes, attrs)
+	obj, d := types.ObjectValue(httpEndpointAttrTypes, attrs)
 	diags.Append(d...)
 	return obj
 }
 
 func apiKafkaToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
-		"enabled":              types.BoolValue(true),
-		"supported_reports":    common.StringsToList(client.SupportedReports),
-		"batch_size_index":     int64ValueOrNull(client.BatchConfig, "sizeIndex"),
-		"batch_window_seconds": int64ValueOrNull(client.BatchConfig, "windowInSeconds"),
-		"batch_size_in_bytes":  types.Int64Null(),
-		"batch_delimiter":      types.StringNull(),
-		"host":                 stringValueOrNullValue(client.Params.Host),
-		"port":                 types.Int64Value(client.Params.Port),
-		"topic":                stringValueOrNullValue(client.Params.Topic),
-		"client_cn":            stringValueOrNullValue(client.Params.ClientCN),
-		"server_cn":            stringValueOrNullValue(client.Params.ServerCN),
+		"host":      stringValueOrNullValue(client.Params.Host),
+		"port":      int64ValueOrNullValue(client.Params.Port),
+		"topic":     stringValueOrNullValue(client.Params.Topic),
+		"client_cn": stringValueOrNullValue(client.Params.ClientCN),
+		"server_cn": stringValueOrNullValue(client.Params.ServerCN),
 	}
 
-	obj, d := types.ObjectValue(endpointKafkaAttrTypes, attrs)
+	obj, d := types.ObjectValue(kafkaEndpointAttrTypes, attrs)
 	diags.Append(d...)
 	return obj
 }
 
 func apiSyslogToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
-		"enabled":              types.BoolValue(true),
-		"supported_reports":    common.StringsToList(client.SupportedReports),
-		"batch_size_index":     int64ValueOrNull(client.BatchConfig, "sizeIndex"),
-		"batch_window_seconds": int64ValueOrNull(client.BatchConfig, "windowInSeconds"),
-		"batch_size_in_bytes":  types.Int64Null(),
-		"batch_delimiter":      types.StringNull(),
-		"host":                 stringValueOrNullValue(client.Params.Host),
-		"port":                 types.Int64Value(client.Params.Port),
-		"scheme":               stringValueOrNullValue(client.Params.Scheme),
+		"host":     stringValueOrNullValue(client.Params.Host),
+		"port":     int64ValueOrNullValue(client.Params.Port),
+		"protocol": stringValueOrNullValue(client.Params.Scheme),
 	}
 
-	obj, d := types.ObjectValue(endpointSyslogAttrTypes, attrs)
+	obj, d := types.ObjectValue(syslogEndpointAttrTypes, attrs)
 	diags.Append(d...)
 	return obj
 }
 
 func apiLogFileToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
-		"enabled":              types.BoolValue(true),
-		"supported_reports":    common.StringsToList(client.SupportedReports),
-		"batch_size_index":     int64ValueOrNull(client.BatchConfig, "sizeIndex"),
-		"batch_window_seconds": int64ValueOrNull(client.BatchConfig, "windowInSeconds"),
-		"batch_size_in_bytes":  types.Int64Null(),
-		"batch_delimiter":      types.StringNull(),
-		"path":                 stringValueOrNullValue(client.Params.Path),
-		"permissions":          stringValueOrNullValue(client.Params.Permissions),
-		"max_size_mb":          types.Int64Value(client.Params.MaxSizeMB),
-		"ownership":            stringValueOrNullValue(client.Params.Ownership),
-		"backups":              types.Int64Value(client.Params.Backups),
+		"path":             stringValueOrNullValue(client.Params.Path),
+		"permissions":      stringValueOrNullValue(client.Params.Permissions),
+		"max_file_size_mb": int64ValueOrNullValue(client.Params.MaxSizeMB),
+		"ownership":        stringValueOrNullValue(client.Params.Ownership),
+		"max_backups":      int64ValueOrNullValue(client.Params.Backups),
 	}
 
-	obj, d := types.ObjectValue(endpointLogFileAttrTypes, attrs)
+	obj, d := types.ObjectValue(logFileEndpointAttrTypes, attrs)
 	diags.Append(d...)
 	return obj
 }
 
-func apiJamfCloudToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
+func apiJamfProtectCloudToObjectValue(client jamfprotect.ReportClient, diags *diag.Diagnostics) types.Object {
 	attrs := map[string]attr.Value{
-		"enabled":              types.BoolValue(true),
-		"supported_reports":    common.StringsToList(client.SupportedReports),
-		"batch_size_index":     int64ValueOrNull(client.BatchConfig, "sizeIndex"),
-		"batch_window_seconds": int64ValueOrNull(client.BatchConfig, "windowInSeconds"),
-		"batch_size_in_bytes":  types.Int64Null(),
-		"batch_delimiter":      types.StringNull(),
-		"destination_filter":   stringValueOrNullValue(client.Params.DestinationFilter),
+		"destination_filter": stringValueOrNullValue(client.Params.DestinationFilter),
 	}
 
-	obj, d := types.ObjectValue(endpointJamfCloudAttrTypes, attrs)
+	obj, d := types.ObjectValue(jamfProtectCloudEndpointAttrTypes, attrs)
 	diags.Append(d...)
 	return obj
 }
 
-func int64ValueOrNull(batch *jamfprotect.BatchConfig, field string) attr.Value {
-	if batch == nil {
+func int64ValueOrNullValue(value int64) attr.Value {
+	if value == 0 {
 		return types.Int64Null()
 	}
-	switch field {
-	case "sizeIndex":
-		return types.Int64Value(batch.SizeIndex)
-	case "windowInSeconds":
-		return types.Int64Value(batch.WindowInSeconds)
-	case "sizeInBytes":
-		return types.Int64Value(batch.SizeInBytes)
-	default:
-		return types.Int64Null()
-	}
-}
-
-func stringValueOrNull(batch *jamfprotect.BatchConfig, field string) attr.Value {
-	if batch == nil {
-		return types.StringNull()
-	}
-	if field == "delimiter" {
-		if batch.Delimiter == "" {
-			return types.StringNull()
-		}
-		return types.StringValue(batch.Delimiter)
-	}
-	return types.StringNull()
+	return types.Int64Value(value)
 }
 
 func stringValueOrNullValue(value string) attr.Value {

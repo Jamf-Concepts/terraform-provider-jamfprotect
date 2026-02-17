@@ -3,12 +3,12 @@
 page_title: "jamfprotect_action_configurations Data Source - jamfprotect"
 subcategory: ""
 description: |-
-  Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the jamfprotect_action_configuration resource to read full details including data_collection and endpoints.
+  Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the jamfprotect_action_configuration resource to read full details including alert_data_collection and endpoint blocks.
 ---
 
 # jamfprotect_action_configurations (Data Source)
 
-Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the `jamfprotect_action_configuration` resource to read full details including `data_collection` and endpoints.
+Retrieves a list of all action configurations in Jamf Protect. Note: only basic fields are returned by the list API; use the `jamfprotect_action_configuration` resource to read full details including `alert_data_collection` and endpoint blocks.
 
 
 

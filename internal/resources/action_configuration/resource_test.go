@@ -56,24 +56,24 @@ resource "jamfprotect_action_configuration" "test" {
   name        = %[1]q
   description = %[2]q
 
-	data_collection = {
-    data = {
-			binary                     = { attrs = [], related = [] }
-			synthetic_click_event      = { attrs = [], related = [] }
-			download_event             = { attrs = [], related = [] }
-			file                       = { attrs = [], related = [] }
-			file_system_event          = { attrs = [], related = [] }
-			group                      = { attrs = [], related = [] }
-			process_event              = { attrs = [], related = [] }
-			process                    = { attrs = [], related = [] }
-			screenshot_event           = { attrs = [], related = [] }
-			usb_event                  = { attrs = [], related = [] }
-			user                       = { attrs = [], related = [] }
-			gatekeeper_event           = { attrs = [], related = [] }
-			keylog_register_event      = { attrs = [], related = [] }
-			malware_removal_tool_event = { attrs = [], related = [] }
-    }
-  }
+	alert_data_collection = {
+		event_types = {
+			binary                     = { extended_data_attributes = [] }
+			synthetic_click_event      = { extended_data_attributes = [] }
+			download_event             = { extended_data_attributes = [] }
+			file                       = { extended_data_attributes = [] }
+			file_system_event          = { extended_data_attributes = [] }
+			group                      = { extended_data_attributes = [] }
+			process_event              = { extended_data_attributes = [] }
+			process                    = { extended_data_attributes = [] }
+			screenshot_event           = { extended_data_attributes = [] }
+			usb_event                  = { extended_data_attributes = [] }
+			user                       = { extended_data_attributes = [] }
+			gatekeeper_event           = { extended_data_attributes = [] }
+			keylog_register_event      = { extended_data_attributes = [] }
+			malware_removal_tool_event = { extended_data_attributes = [] }
+		}
+	}
 }
 `, name, description)
 }

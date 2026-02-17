@@ -271,7 +271,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "data_collection"}
+	requiredAttrs := []string{"name", "alert_data_collection"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -307,22 +307,22 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		t.Error("expected 'description' to be computed")
 	}
 
-	// data_collection should be a SingleNestedAttribute containing data with event types.
-	collectionAttr, ok := resp.Schema.Attributes["data_collection"]
+	// alert_data_collection should be a SingleNestedAttribute containing event_types.
+	collectionAttr, ok := resp.Schema.Attributes["alert_data_collection"]
 	if !ok {
-		t.Fatal("expected attribute 'data_collection' in schema")
+		t.Fatal("expected attribute 'alert_data_collection' in schema")
 	}
 	collectionNested, ok := collectionAttr.(schema.SingleNestedAttribute)
 	if !ok {
-		t.Fatal("expected 'data_collection' to be a SingleNestedAttribute")
+		t.Fatal("expected 'alert_data_collection' to be a SingleNestedAttribute")
 	}
-	dataAttr, ok := collectionNested.Attributes["data"]
+	dataAttr, ok := collectionNested.Attributes["event_types"]
 	if !ok {
-		t.Fatal("expected 'data' attribute inside data_collection")
+		t.Fatal("expected 'event_types' attribute inside alert_data_collection")
 	}
 	dataNested, ok := dataAttr.(schema.SingleNestedAttribute)
 	if !ok {
-		t.Fatal("expected 'data' to be a SingleNestedAttribute")
+		t.Fatal("expected 'event_types' to be a SingleNestedAttribute")
 	}
 
 	eventTypes := []string{
@@ -333,7 +333,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	for _, et := range eventTypes {
 		etAttr, ok := dataNested.Attributes[et]
 		if !ok {
-			t.Errorf("expected event type %q in data_collection.data", et)
+			t.Errorf("expected event type %q in alert_data_collection.event_types", et)
 			continue
 		}
 		etNested, ok := etAttr.(schema.SingleNestedAttribute)
@@ -341,11 +341,8 @@ func TestActionConfigResourceSchema(t *testing.T) {
 			t.Errorf("expected event type %q to be a SingleNestedAttribute", et)
 			continue
 		}
-		if _, ok := etNested.Attributes["attrs"]; !ok {
-			t.Errorf("expected 'attrs' attribute in event type %q", et)
-		}
-		if _, ok := etNested.Attributes["related"]; !ok {
-			t.Errorf("expected 'related' attribute in event type %q", et)
+		if _, ok := etNested.Attributes["extended_data_attributes"]; !ok {
+			t.Errorf("expected 'extended_data_attributes' attribute in event type %q", et)
 		}
 	}
 
