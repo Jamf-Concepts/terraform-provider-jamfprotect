@@ -36,6 +36,70 @@ func testDecodeJSON(t *testing.T, r *http.Request, v any) {
 	}
 }
 
+type loggedRequest struct {
+	method  string
+	url     string
+	headers http.Header
+	body    []byte
+}
+
+type loggedResponse struct {
+	status  int
+	headers http.Header
+	body    []byte
+}
+
+type testLogger struct {
+	mu        sync.Mutex
+	requests  []loggedRequest
+	responses []loggedResponse
+}
+
+func (l *testLogger) LogRequest(_ context.Context, method, url string, headers http.Header, body []byte) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.requests = append(l.requests, loggedRequest{
+		method:  method,
+		url:     url,
+		headers: headers.Clone(),
+		body:    append([]byte(nil), body...),
+	})
+}
+
+func (l *testLogger) LogResponse(_ context.Context, statusCode int, headers http.Header, body []byte) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.responses = append(l.responses, loggedResponse{
+		status:  statusCode,
+		headers: headers.Clone(),
+		body:    append([]byte(nil), body...),
+	})
+}
+
+func (l *testLogger) requestAt(index int) loggedRequest {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.requests[index]
+}
+
+func (l *testLogger) responseAt(index int) loggedResponse {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.responses[index]
+}
+
+func (l *testLogger) requestCount() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return len(l.requests)
+}
+
+func (l *testLogger) responseCount() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return len(l.responses)
+}
+
 func TestNewClient(t *testing.T) {
 	t.Parallel()
 
@@ -266,6 +330,7 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 	tests := []struct {
 		name           string
 		errorMessage   string
+		extensions     map[string]any
 		expectNotFound bool
 	}{
 		{
@@ -284,6 +349,12 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 			expectNotFound: true,
 		},
 		{
+			name:           "extensions not found",
+			errorMessage:   "internal server error",
+			extensions:     map[string]any{"code": "NOT_FOUND"},
+			expectNotFound: false,
+		},
+		{
 			name:           "other error",
 			errorMessage:   "internal server error",
 			expectNotFound: false,
@@ -299,10 +370,12 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 				testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
 			})
 			mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
+				errPayload := map[string]any{"message": tc.errorMessage}
+				if tc.extensions != nil {
+					errPayload["extensions"] = tc.extensions
+				}
 				testEncodeJSON(t, w, map[string]any{
-					"errors": []map[string]any{
-						{"message": tc.errorMessage},
-					},
+					"errors": []map[string]any{errPayload},
 				})
 			})
 			srv := httptest.NewServer(mux)
@@ -331,6 +404,74 @@ func TestClient_Query_ErrNotFound(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestClient_Logger_RedactsTokenRequest(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok-secret", "expires_in": 3600})
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	client := NewClient(srv.URL, "cid", "csecret")
+	logger := &testLogger{}
+	client.SetLogger(logger)
+
+	if _, err := client.AccessToken(context.Background()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if logger.requestCount() == 0 {
+		t.Fatal("expected token request to be logged")
+	}
+	req := logger.requestAt(0)
+	if strings.Contains(string(req.body), "csecret") {
+		t.Fatalf("expected token request body to be redacted")
+	}
+	if !strings.Contains(string(req.body), "[REDACTED]") {
+		t.Fatalf("expected redacted marker in token request body")
+	}
+
+	if logger.responseCount() == 0 {
+		t.Fatal("expected token response to be logged")
+	}
+	resp := logger.responseAt(0)
+	if strings.Contains(string(resp.body), "tok-secret") {
+		t.Fatalf("expected token response body to be redacted")
+	}
+}
+
+func TestClient_Logger_RedactsAuthorizationHeader(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		testEncodeJSON(t, w, map[string]any{"access_token": "tok", "expires_in": 3600})
+	})
+	mux.HandleFunc("/app", func(w http.ResponseWriter, _ *http.Request) {
+		testEncodeJSON(t, w, map[string]any{"data": map[string]any{}})
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	client := NewClient(srv.URL, "cid", "csecret")
+	logger := &testLogger{}
+	client.SetLogger(logger)
+
+	if err := client.DoGraphQL(context.Background(), "/app", "query { x }", nil, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if logger.requestCount() < 2 {
+		t.Fatalf("expected token and graphql requests to be logged")
+	}
+	graphQLReq := logger.requestAt(1)
+	if got := graphQLReq.headers.Get("Authorization"); got != "[REDACTED]" {
+		t.Fatalf("expected Authorization to be redacted, got %q", got)
 	}
 }
 
