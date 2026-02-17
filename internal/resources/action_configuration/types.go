@@ -14,24 +14,24 @@ type ActionConfigResourceModel struct {
 	Hash              types.String   `tfsdk:"hash"`
 	Name              types.String   `tfsdk:"name"`
 	Description       types.String   `tfsdk:"description"`
-	DataCollection    types.Object   `tfsdk:"data_collection"`
-	EndpointHTTP      types.Object   `tfsdk:"endpoint_http"`
-	EndpointKafka     types.Object   `tfsdk:"endpoint_kafka"`
-	EndpointSyslog    types.Object   `tfsdk:"endpoint_syslog"`
-	EndpointLogFile   types.Object   `tfsdk:"endpoint_log_file"`
-	EndpointJamfCloud types.Object   `tfsdk:"endpoint_jamf_cloud"`
+	AlertDataCollect  types.Object   `tfsdk:"alert_data_collection"`
+	HTTPEndpoints     types.List     `tfsdk:"http_endpoints"`
+	KafkaEndpoints    types.List     `tfsdk:"kafka_endpoints"`
+	SyslogEndpoints   types.List     `tfsdk:"syslog_endpoints"`
+	LogFileEndpoint   types.Object   `tfsdk:"log_file_endpoint"`
+	JamfCloudEndpoint types.Object   `tfsdk:"jamf_protect_cloud_endpoint"`
 	Created           types.String   `tfsdk:"created"`
 	Updated           types.String   `tfsdk:"updated"`
 	Timeouts          timeouts.Value `tfsdk:"timeouts"`
 }
 
-// dataCollectionModel maps the top-level data_collection attribute.
-type dataCollectionModel struct {
-	Data types.Object `tfsdk:"data"`
+// alertDataCollectionModel maps the alert_data_collection attribute.
+type alertDataCollectionModel struct {
+	EventTypes types.Object `tfsdk:"event_types"`
 }
 
-// dataCollectionDataModel maps the data_collection.data nested attribute containing all event types.
-type dataCollectionDataModel struct {
+// alertEventTypesModel maps alert_data_collection.event_types containing all event types.
+type alertEventTypesModel struct {
 	Binary                  types.Object `tfsdk:"binary"`
 	SyntheticClickEvent     types.Object `tfsdk:"synthetic_click_event"`
 	DownloadEvent           types.Object `tfsdk:"download_event"`
@@ -48,77 +48,94 @@ type dataCollectionDataModel struct {
 	MalwareRemovalToolEvent types.Object `tfsdk:"malware_removal_tool_event"`
 }
 
-// alertEventTypeModel maps each event type entry with attrs and related.
+// alertEventTypeModel maps each event type entry with extended data attributes.
 type alertEventTypeModel struct {
-	Attrs   types.List `tfsdk:"attrs"`
-	Related types.List `tfsdk:"related"`
+	ExtendedDataAttributes types.Set `tfsdk:"extended_data_attributes"`
 }
 
-// Endpoint models map UI data endpoint blocks.
-type endpointHTTPModel struct {
-	Enabled            types.Bool   `tfsdk:"enabled"`
-	SupportedReports   types.List   `tfsdk:"supported_reports"`
-	BatchSizeIndex     types.Int64  `tfsdk:"batch_size_index"`
-	BatchWindowSeconds types.Int64  `tfsdk:"batch_window_seconds"`
-	BatchSizeInBytes   types.Int64  `tfsdk:"batch_size_in_bytes"`
-	BatchDelimiter     types.String `tfsdk:"batch_delimiter"`
-	URL                types.String `tfsdk:"url"`
-	Method             types.String `tfsdk:"method"`
-	Headers            types.List   `tfsdk:"headers"`
+// httpEndpointBlockModel maps each HTTP endpoint block.
+type httpEndpointBlockModel struct {
+	CollectAlerts types.Set    `tfsdk:"collect_alerts"`
+	CollectLogs   types.Set    `tfsdk:"collect_logs"`
+	Batching      types.Object `tfsdk:"batching"`
+	HTTP          types.Object `tfsdk:"http"`
 }
 
-// endpointKafkaModel maps the Kafka endpoint block with its specific fields.
-type endpointKafkaModel struct {
-	Enabled            types.Bool   `tfsdk:"enabled"`
-	SupportedReports   types.List   `tfsdk:"supported_reports"`
-	BatchSizeIndex     types.Int64  `tfsdk:"batch_size_index"`
-	BatchWindowSeconds types.Int64  `tfsdk:"batch_window_seconds"`
-	BatchSizeInBytes   types.Int64  `tfsdk:"batch_size_in_bytes"`
-	BatchDelimiter     types.String `tfsdk:"batch_delimiter"`
-	Host               types.String `tfsdk:"host"`
-	Port               types.Int64  `tfsdk:"port"`
-	Topic              types.String `tfsdk:"topic"`
-	ClientCN           types.String `tfsdk:"client_cn"`
-	ServerCN           types.String `tfsdk:"server_cn"`
+// kafkaEndpointBlockModel maps each Kafka endpoint block.
+type kafkaEndpointBlockModel struct {
+	CollectAlerts types.Set    `tfsdk:"collect_alerts"`
+	CollectLogs   types.Set    `tfsdk:"collect_logs"`
+	Batching      types.Object `tfsdk:"batching"`
+	Kafka         types.Object `tfsdk:"kafka"`
 }
 
-// endpointSyslogModel maps the Syslog endpoint block with its specific fields.
-type endpointSyslogModel struct {
-	Enabled            types.Bool   `tfsdk:"enabled"`
-	SupportedReports   types.List   `tfsdk:"supported_reports"`
-	BatchSizeIndex     types.Int64  `tfsdk:"batch_size_index"`
-	BatchWindowSeconds types.Int64  `tfsdk:"batch_window_seconds"`
-	BatchSizeInBytes   types.Int64  `tfsdk:"batch_size_in_bytes"`
-	BatchDelimiter     types.String `tfsdk:"batch_delimiter"`
-	Host               types.String `tfsdk:"host"`
-	Port               types.Int64  `tfsdk:"port"`
-	Scheme             types.String `tfsdk:"scheme"`
+// syslogEndpointBlockModel maps each Syslog endpoint block.
+type syslogEndpointBlockModel struct {
+	CollectAlerts types.Set    `tfsdk:"collect_alerts"`
+	CollectLogs   types.Set    `tfsdk:"collect_logs"`
+	Batching      types.Object `tfsdk:"batching"`
+	Syslog        types.Object `tfsdk:"syslog"`
 }
 
-// endpointLogFileModel maps the Log File endpoint block with its specific fields.
-type endpointLogFileModel struct {
-	Enabled            types.Bool   `tfsdk:"enabled"`
-	SupportedReports   types.List   `tfsdk:"supported_reports"`
-	BatchSizeIndex     types.Int64  `tfsdk:"batch_size_index"`
-	BatchWindowSeconds types.Int64  `tfsdk:"batch_window_seconds"`
-	BatchSizeInBytes   types.Int64  `tfsdk:"batch_size_in_bytes"`
-	BatchDelimiter     types.String `tfsdk:"batch_delimiter"`
-	Path               types.String `tfsdk:"path"`
-	Permissions        types.String `tfsdk:"permissions"`
-	MaxSizeMB          types.Int64  `tfsdk:"max_size_mb"`
-	Ownership          types.String `tfsdk:"ownership"`
-	Backups            types.Int64  `tfsdk:"backups"`
+// logFileEndpointBlockModel maps the Log File endpoint block.
+type logFileEndpointBlockModel struct {
+	CollectAlerts types.Set    `tfsdk:"collect_alerts"`
+	CollectLogs   types.Set    `tfsdk:"collect_logs"`
+	Batching      types.Object `tfsdk:"batching"`
+	LogFile       types.Object `tfsdk:"log_file"`
 }
 
-// endpointJamfCloudModel maps the Jamf Cloud endpoint block with its specific fields.
-type endpointJamfCloudModel struct {
-	Enabled            types.Bool   `tfsdk:"enabled"`
-	SupportedReports   types.List   `tfsdk:"supported_reports"`
-	BatchSizeIndex     types.Int64  `tfsdk:"batch_size_index"`
-	BatchWindowSeconds types.Int64  `tfsdk:"batch_window_seconds"`
-	BatchSizeInBytes   types.Int64  `tfsdk:"batch_size_in_bytes"`
-	BatchDelimiter     types.String `tfsdk:"batch_delimiter"`
-	DestinationFilter  types.String `tfsdk:"destination_filter"`
+// jamfProtectCloudEndpointBlockModel maps the Jamf Protect Cloud endpoint block.
+type jamfProtectCloudEndpointBlockModel struct {
+	CollectAlerts    types.Set    `tfsdk:"collect_alerts"`
+	CollectLogs      types.Set    `tfsdk:"collect_logs"`
+	Batching         types.Object `tfsdk:"batching"`
+	JamfProtectCloud types.Object `tfsdk:"jamf_protect_cloud"`
+}
+
+// batchingModel maps batching configuration for a data endpoint.
+type batchingModel struct {
+	EventsPerBatch        types.Int64  `tfsdk:"events_per_batch"`
+	BatchingWindowSeconds types.Int64  `tfsdk:"batching_window_seconds"`
+	EventDelimiter        types.String `tfsdk:"event_delimiter"`
+	MaxBatchSizeBytes     types.Int64  `tfsdk:"max_batch_size_bytes"`
+}
+
+// httpEndpointModel maps HTTP endpoint settings.
+type httpEndpointModel struct {
+	URL     types.String `tfsdk:"url"`
+	Method  types.String `tfsdk:"method"`
+	Headers types.List   `tfsdk:"headers"`
+}
+
+// kafkaEndpointModel maps Kafka endpoint settings.
+type kafkaEndpointModel struct {
+	Host     types.String `tfsdk:"host"`
+	Port     types.Int64  `tfsdk:"port"`
+	Topic    types.String `tfsdk:"topic"`
+	ClientCN types.String `tfsdk:"client_cn"`
+	ServerCN types.String `tfsdk:"server_cn"`
+}
+
+// syslogEndpointModel maps Syslog endpoint settings.
+type syslogEndpointModel struct {
+	Host     types.String `tfsdk:"host"`
+	Port     types.Int64  `tfsdk:"port"`
+	Protocol types.String `tfsdk:"protocol"`
+}
+
+// logFileEndpointModel maps Log File endpoint settings.
+type logFileEndpointModel struct {
+	Path          types.String `tfsdk:"path"`
+	Ownership     types.String `tfsdk:"ownership"`
+	Permissions   types.String `tfsdk:"permissions"`
+	MaxFileSizeMB types.Int64  `tfsdk:"max_file_size_mb"`
+	MaxBackups    types.Int64  `tfsdk:"max_backups"`
+}
+
+// jamfProtectCloudEndpointModel maps Jamf Protect Cloud endpoint settings.
+type jamfProtectCloudEndpointModel struct {
+	DestinationFilter types.String `tfsdk:"destination_filter"`
 }
 
 // endpointHeaderModel maps the nested headers block used in HTTP and Jamf Cloud endpoints.
