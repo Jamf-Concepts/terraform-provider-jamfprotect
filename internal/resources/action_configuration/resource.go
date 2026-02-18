@@ -52,7 +52,7 @@ var (
 		"Binary",
 		"Parent",
 		"Process Group Leader",
-		"name",
+		"Name",
 	}
 	endpointAlertSeverities = []string{"high", "medium", "low", "informational"}
 	endpointLogTypes        = []string{"telemetry", "unified_logs"}
@@ -100,206 +100,116 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "Alert data collection options from the Jamf Protect UI.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
-					"event_types": schema.SingleNestedAttribute{
-						MarkdownDescription: "Extended data attributes by event type.",
+					"binary_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for binary events.",
 						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"binary": schema.SingleNestedAttribute{
-								MarkdownDescription: "Binary metadata enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"synthetic_click_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Synthetic click event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"download_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Download event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"file": schema.SingleNestedAttribute{
-								MarkdownDescription: "File metadata enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"file_system_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "File system event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"group": schema.SingleNestedAttribute{
-								MarkdownDescription: "Group metadata enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"process_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Process event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"process": schema.SingleNestedAttribute{
-								MarkdownDescription: "Process metadata enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"screenshot_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Screenshot event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"usb_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "USB device event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"user": schema.SingleNestedAttribute{
-								MarkdownDescription: "User metadata enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"gatekeeper_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Gatekeeper event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"keylog_register_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Keylogger registration event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
-							"malware_removal_tool_event": schema.SingleNestedAttribute{
-								MarkdownDescription: "Malware Removal Tool event enrichment.",
-								Required:            true,
-								Attributes: map[string]schema.Attribute{
-									"extended_data_attributes": schema.SetAttribute{
-										MarkdownDescription: "Extended data attributes included for this event type.",
-										Required:            true,
-										ElementType:         types.StringType,
-										Validators: []validator.Set{
-											setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-										},
-									},
-								},
-							},
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"synthetic_click_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for synthetic click events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"download_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for download events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"file_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for file events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"file_system_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for file system events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"group_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for group events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"process_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for process events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"process_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for process metadata.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"screenshot_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for screenshot events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"usb_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for USB events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"user_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for user events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"gatekeeper_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for gatekeeper events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"keylog_register_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for keylog register events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+						},
+					},
+					"malware_removal_tool_event_included_data_attributes": schema.SetAttribute{
+						MarkdownDescription: "Included data attributes for malware removal tool events.",
+						Required:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
 						},
 					},
 				},
@@ -325,52 +235,40 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								setvalidator.ValueStringsAre(stringvalidator.OneOf(endpointLogTypes...)),
 							},
 						},
-						"batching": schema.SingleNestedAttribute{
-							MarkdownDescription: "Batching configuration for the endpoint.",
+						"events_per_batch": schema.Int64Attribute{
+							MarkdownDescription: "Maximum number of events per batch.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"events_per_batch": schema.Int64Attribute{
-									MarkdownDescription: "Maximum number of events per batch.",
-									Optional:            true,
-								},
-								"batching_window_seconds": schema.Int64Attribute{
-									MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
-									Optional:            true,
-								},
-								"event_delimiter": schema.StringAttribute{
-									MarkdownDescription: "Delimiter used between batched records.",
-									Optional:            true,
-								},
-								"max_batch_size_bytes": schema.Int64Attribute{
-									MarkdownDescription: "Maximum batch size in bytes.",
-									Optional:            true,
-								},
+						},
+						"batching_window_seconds": schema.Int64Attribute{
+							MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
+							Optional:            true,
+						},
+						"event_delimiter": schema.StringAttribute{
+							MarkdownDescription: "Delimiter used between batched records.",
+							Optional:            true,
+						},
+						"max_batch_size_bytes": schema.Int64Attribute{
+							MarkdownDescription: "Maximum batch size in bytes.",
+							Optional:            true,
+						},
+						"url": schema.StringAttribute{
+							MarkdownDescription: "HTTP destination URL.",
+							Optional:            true,
+						},
+						"method": schema.StringAttribute{
+							MarkdownDescription: "HTTP request method.",
+							Optional:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(httpMethodOptions...),
 							},
 						},
-						"http": schema.SingleNestedAttribute{
-							MarkdownDescription: "HTTP endpoint configuration.",
+						"headers": schema.ListNestedAttribute{
+							MarkdownDescription: "HTTP headers.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"url": schema.StringAttribute{
-									MarkdownDescription: "HTTP destination URL.",
-									Optional:            true,
-								},
-								"method": schema.StringAttribute{
-									MarkdownDescription: "HTTP request method.",
-									Optional:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf(httpMethodOptions...),
-									},
-								},
-								"headers": schema.ListNestedAttribute{
-									MarkdownDescription: "HTTP headers.",
-									Optional:            true,
-									NestedObject: schema.NestedAttributeObject{
-										Attributes: map[string]schema.Attribute{
-											"header": schema.StringAttribute{Optional: true},
-											"value":  schema.StringAttribute{Optional: true},
-										},
-									},
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"header": schema.StringAttribute{Optional: true},
+									"value":  schema.StringAttribute{Optional: true},
 								},
 							},
 						},
@@ -398,53 +296,25 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								setvalidator.ValueStringsAre(stringvalidator.OneOf(endpointLogTypes...)),
 							},
 						},
-						"batching": schema.SingleNestedAttribute{
-							MarkdownDescription: "Batching configuration for the endpoint.",
+						"host": schema.StringAttribute{
+							MarkdownDescription: "Kafka host.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"events_per_batch": schema.Int64Attribute{
-									MarkdownDescription: "Maximum number of events per batch.",
-									Optional:            true,
-								},
-								"batching_window_seconds": schema.Int64Attribute{
-									MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
-									Optional:            true,
-								},
-								"event_delimiter": schema.StringAttribute{
-									MarkdownDescription: "Delimiter used between batched records.",
-									Optional:            true,
-								},
-								"max_batch_size_bytes": schema.Int64Attribute{
-									MarkdownDescription: "Maximum batch size in bytes.",
-									Optional:            true,
-								},
-							},
 						},
-						"kafka": schema.SingleNestedAttribute{
-							MarkdownDescription: "Kafka endpoint configuration.",
+						"port": schema.Int64Attribute{
+							MarkdownDescription: "Kafka port.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"host": schema.StringAttribute{
-									MarkdownDescription: "Kafka host.",
-									Optional:            true,
-								},
-								"port": schema.Int64Attribute{
-									MarkdownDescription: "Kafka port.",
-									Optional:            true,
-								},
-								"topic": schema.StringAttribute{
-									MarkdownDescription: "Kafka topic.",
-									Optional:            true,
-								},
-								"client_cn": schema.StringAttribute{
-									MarkdownDescription: "Kafka client certificate CN.",
-									Optional:            true,
-								},
-								"server_cn": schema.StringAttribute{
-									MarkdownDescription: "Kafka server certificate CN.",
-									Optional:            true,
-								},
-							},
+						},
+						"topic": schema.StringAttribute{
+							MarkdownDescription: "Kafka topic.",
+							Optional:            true,
+						},
+						"client_cn": schema.StringAttribute{
+							MarkdownDescription: "Kafka client certificate CN.",
+							Optional:            true,
+						},
+						"server_cn": schema.StringAttribute{
+							MarkdownDescription: "Kafka server certificate CN.",
+							Optional:            true,
 						},
 					},
 				},
@@ -470,47 +340,19 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 								setvalidator.ValueStringsAre(stringvalidator.OneOf(endpointLogTypes...)),
 							},
 						},
-						"batching": schema.SingleNestedAttribute{
-							MarkdownDescription: "Batching configuration for the endpoint.",
+						"host": schema.StringAttribute{
+							MarkdownDescription: "Syslog host.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"events_per_batch": schema.Int64Attribute{
-									MarkdownDescription: "Maximum number of events per batch.",
-									Optional:            true,
-								},
-								"batching_window_seconds": schema.Int64Attribute{
-									MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
-									Optional:            true,
-								},
-								"event_delimiter": schema.StringAttribute{
-									MarkdownDescription: "Delimiter used between batched records.",
-									Optional:            true,
-								},
-								"max_batch_size_bytes": schema.Int64Attribute{
-									MarkdownDescription: "Maximum batch size in bytes.",
-									Optional:            true,
-								},
-							},
 						},
-						"syslog": schema.SingleNestedAttribute{
-							MarkdownDescription: "Syslog endpoint configuration.",
+						"port": schema.Int64Attribute{
+							MarkdownDescription: "Syslog port.",
 							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								"host": schema.StringAttribute{
-									MarkdownDescription: "Syslog host.",
-									Optional:            true,
-								},
-								"port": schema.Int64Attribute{
-									MarkdownDescription: "Syslog port.",
-									Optional:            true,
-								},
-								"protocol": schema.StringAttribute{
-									MarkdownDescription: "Syslog protocol.",
-									Optional:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf(syslogProtocolOptions...),
-									},
-								},
+						},
+						"protocol": schema.StringAttribute{
+							MarkdownDescription: "Syslog protocol.",
+							Optional:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(syslogProtocolOptions...),
 							},
 						},
 					},
@@ -536,53 +378,25 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							setvalidator.ValueStringsAre(stringvalidator.OneOf(endpointLogTypes...)),
 						},
 					},
-					"batching": schema.SingleNestedAttribute{
-						MarkdownDescription: "Batching configuration for the endpoint.",
+					"path": schema.StringAttribute{
+						MarkdownDescription: "Log file path.",
 						Optional:            true,
-						Attributes: map[string]schema.Attribute{
-							"events_per_batch": schema.Int64Attribute{
-								MarkdownDescription: "Maximum number of events per batch.",
-								Optional:            true,
-							},
-							"batching_window_seconds": schema.Int64Attribute{
-								MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
-								Optional:            true,
-							},
-							"event_delimiter": schema.StringAttribute{
-								MarkdownDescription: "Delimiter used between batched records.",
-								Optional:            true,
-							},
-							"max_batch_size_bytes": schema.Int64Attribute{
-								MarkdownDescription: "Maximum batch size in bytes.",
-								Optional:            true,
-							},
-						},
 					},
-					"log_file": schema.SingleNestedAttribute{
-						MarkdownDescription: "Log file endpoint configuration.",
+					"ownership": schema.StringAttribute{
+						MarkdownDescription: "User and group that own the log file.",
 						Optional:            true,
-						Attributes: map[string]schema.Attribute{
-							"path": schema.StringAttribute{
-								MarkdownDescription: "Log file path.",
-								Optional:            true,
-							},
-							"ownership": schema.StringAttribute{
-								MarkdownDescription: "User and group that own the log file.",
-								Optional:            true,
-							},
-							"permissions": schema.StringAttribute{
-								MarkdownDescription: "Log file permissions.",
-								Optional:            true,
-							},
-							"max_file_size_mb": schema.Int64Attribute{
-								MarkdownDescription: "Maximum file size in MB before rotating.",
-								Optional:            true,
-							},
-							"max_backups": schema.Int64Attribute{
-								MarkdownDescription: "Maximum number of backup files to keep.",
-								Optional:            true,
-							},
-						},
+					},
+					"permissions": schema.StringAttribute{
+						MarkdownDescription: "Log file permissions.",
+						Optional:            true,
+					},
+					"max_file_size_mb": schema.Int64Attribute{
+						MarkdownDescription: "Maximum file size in MB before rotating.",
+						Optional:            true,
+					},
+					"max_backups": schema.Int64Attribute{
+						MarkdownDescription: "Maximum number of backup files to keep.",
+						Optional:            true,
 					},
 				},
 			},
@@ -606,37 +420,9 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							setvalidator.ValueStringsAre(stringvalidator.OneOf(endpointLogTypes...)),
 						},
 					},
-					"batching": schema.SingleNestedAttribute{
-						MarkdownDescription: "Batching configuration for the endpoint.",
+					"destination_filter": schema.StringAttribute{
+						MarkdownDescription: "Destination filter (if configured).",
 						Optional:            true,
-						Attributes: map[string]schema.Attribute{
-							"events_per_batch": schema.Int64Attribute{
-								MarkdownDescription: "Maximum number of events per batch.",
-								Optional:            true,
-							},
-							"batching_window_seconds": schema.Int64Attribute{
-								MarkdownDescription: "Maximum time in seconds between when an event occurs and when it is sent.",
-								Optional:            true,
-							},
-							"event_delimiter": schema.StringAttribute{
-								MarkdownDescription: "Delimiter used between batched records.",
-								Optional:            true,
-							},
-							"max_batch_size_bytes": schema.Int64Attribute{
-								MarkdownDescription: "Maximum batch size in bytes.",
-								Optional:            true,
-							},
-						},
-					},
-					"jamf_protect_cloud": schema.SingleNestedAttribute{
-						MarkdownDescription: "Jamf Protect Cloud endpoint configuration.",
-						Optional:            true,
-						Attributes: map[string]schema.Attribute{
-							"destination_filter": schema.StringAttribute{
-								MarkdownDescription: "Destination filter (if configured).",
-								Optional:            true,
-							},
-						},
 					},
 				},
 			},

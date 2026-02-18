@@ -307,7 +307,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		t.Error("expected 'description' to be computed")
 	}
 
-	// alert_data_collection should be a SingleNestedAttribute containing event_types.
+	// alert_data_collection should be a SingleNestedAttribute containing event types.
 	collectionAttr, ok := resp.Schema.Attributes["alert_data_collection"]
 	if !ok {
 		t.Fatal("expected attribute 'alert_data_collection' in schema")
@@ -316,33 +316,21 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	if !ok {
 		t.Fatal("expected 'alert_data_collection' to be a SingleNestedAttribute")
 	}
-	dataAttr, ok := collectionNested.Attributes["event_types"]
-	if !ok {
-		t.Fatal("expected 'event_types' attribute inside alert_data_collection")
-	}
-	dataNested, ok := dataAttr.(schema.SingleNestedAttribute)
-	if !ok {
-		t.Fatal("expected 'event_types' to be a SingleNestedAttribute")
-	}
-
 	eventTypes := []string{
 		"binary", "synthetic_click_event", "download_event", "file", "file_system_event",
 		"group", "process_event", "process", "screenshot_event", "usb_event",
 		"user", "gatekeeper_event", "keylog_register_event", "malware_removal_tool_event",
 	}
 	for _, et := range eventTypes {
-		etAttr, ok := dataNested.Attributes[et]
+		attrName := et + "_included_data_attributes"
+		etAttr, ok := collectionNested.Attributes[attrName]
 		if !ok {
-			t.Errorf("expected event type %q in alert_data_collection.event_types", et)
+			t.Errorf("expected event type %q in alert_data_collection", attrName)
 			continue
 		}
-		etNested, ok := etAttr.(schema.SingleNestedAttribute)
-		if !ok {
-			t.Errorf("expected event type %q to be a SingleNestedAttribute", et)
+		if _, ok := etAttr.(schema.SetAttribute); !ok {
+			t.Errorf("expected event type %q to be a SetAttribute", attrName)
 			continue
-		}
-		if _, ok := etNested.Attributes["extended_data_attributes"]; !ok {
-			t.Errorf("expected 'extended_data_attributes' attribute in event type %q", et)
 		}
 	}
 
