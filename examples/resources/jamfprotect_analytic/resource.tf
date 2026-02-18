@@ -1,8 +1,8 @@
 resource "jamfprotect_analytic" "example" {
   name                            = "Example Analytic"
   description                     = "Created by Terraform"
-  sensor_type                     = "GPFSEvent"
-  predicate                       = "( $event.type  CONTAINS[d] Thingie )"
+  sensor_type                     = "File System Event"
+  filter                          = "( $event.type  CONTAINS[d] Thingie )"
   add_to_jamf_pro_smart_group     = true
   jamf_pro_smart_group_identifier = "my-group"
   categories                      = ["Evasion"]

@@ -37,12 +37,12 @@ output "analytic_summary" {
 
 Read-Only:
 
-- `actions` (List of String) Legacy actions associated with the analytic.
 - `add_to_jamf_pro_smart_group` (Boolean) Whether the analytic adds devices to a Jamf Pro Smart Group.
-- `categories` (List of String) Categories associated with the analytic.
-- `context_item` (Attributes List) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context_item))
+- `categories` (Set of String) Categories associated with the analytic.
+- `context_item` (Attributes Set) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context_item))
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the analytic.
+- `filter` (String) The filter expression.
 - `id` (String) The unique identifier of the analytic.
 - `jamf` (Boolean) Indicates whether the analytic is Jamf-managed (read-only).
 - `jamf_pro_smart_group_identifier` (String) Identifier for the Jamf Pro extension attribute.
@@ -50,13 +50,12 @@ Read-Only:
 - `level` (Number) The alert level.
 - `long_description` (String) Long-form description for the analytic (read-only).
 - `name` (String) The name of the analytic.
-- `predicate` (String) The predicate expression.
 - `remediation` (String) Remediation guidance associated with the analytic (read-only).
 - `sensor_type` (String) The sensor type for the analytic.
 - `severity` (String) The severity level.
-- `snapshot_files` (List of String) Snapshot file paths to capture.
-- `tags` (List of String) Tags associated with the analytic.
-- `tenant_actions` (Attributes List) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--analytics--tenant_actions))
+- `snapshot_files` (Set of String) Snapshot file paths to capture.
+- `tags` (Set of String) Tags associated with the analytic.
+- `tenant_actions` (Attributes Set) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--analytics--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
 
@@ -65,7 +64,7 @@ Read-Only:
 
 Read-Only:
 
-- `expressions` (List of String) Expressions for the context entry.
+- `expressions` (Set of String) Expressions for the context entry.
 - `name` (String) The context entry name.
 - `type` (String) The context entry type.
 

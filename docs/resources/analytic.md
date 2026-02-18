@@ -16,8 +16,8 @@ Manages a custom analytic in Jamf Protect. Analytics define detection rules that
 resource "jamfprotect_analytic" "example" {
   name                            = "Example Analytic"
   description                     = "Created by Terraform"
-  sensor_type                     = "GPFSEvent"
-  predicate                       = "( $event.type  CONTAINS[d] Thingie )"
+  sensor_type                     = "File System Event"
+  filter                          = "( $event.type  CONTAINS[d] Thingie )"
   add_to_jamf_pro_smart_group     = true
   jamf_pro_smart_group_identifier = "my-group"
   categories                      = ["Evasion"]
@@ -48,20 +48,19 @@ resource "jamfprotect_analytic" "example" {
 
 ### Required
 
-- `categories` (List of String) A list of categories for the analytic.
-- `context_item` (Attributes List) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context_item))
+- `categories` (Set of String) A set of categories for the analytic.
+- `context_item` (Attributes Set) Context enrichment definitions for the analytic. (see [below for nested schema](#nestedatt--context_item))
 - `description` (String) A description of the analytic.
-- `level` (Number) The log level (integer) for the analytic. Valid values are 0-10.
+- `filter` (String) The filter expression for the analytic.
+- `level` (Number) The log level (integer) for the analytic.
 - `name` (String) The name of the analytic.
-- `predicate` (String) The predicate expression for the analytic.
-- `sensor_type` (String) The sensor type for the analytic. Determines which endpoint event stream the analytic monitors.
-- `severity` (String) The severity of the analytic.
-- `snapshot_files` (List of String) A list of snapshot file paths to collect when the analytic triggers.
-- `tags` (List of String) A list of tags for the analytic.
+- `sensor_type` (String) The sensor type for the analytic. Valid options are: `File System Event`, `Download Event`, `Process Event`, `Screenshot Event`, `Keylog Register Event`, `Synthetic Click Event`, `Malware Removal Tool Event`, `USB Event`, `Gatekeeper Event`.
+- `severity` (String) The severity of the analytic. Valid options are: `High`, `Medium`, `Low`, `Informational`.
+- `snapshot_files` (Set of String) A set of snapshot file paths to collect when the analytic triggers.
+- `tags` (Set of String) A set of tags for the analytic.
 
 ### Optional
 
-- `actions` (List of String) A list of legacy action names.
 - `add_to_jamf_pro_smart_group` (Boolean) Whether to add the device to a Jamf Pro Smart Group when this analytic triggers.
 - `jamf_pro_smart_group_identifier` (String) Identifier for the Jamf Pro extension attribute (only used when adding to a Smart Group).
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -74,7 +73,7 @@ resource "jamfprotect_analytic" "example" {
 - `label` (String) Display label for the analytic (read-only).
 - `long_description` (String) Long-form description for the analytic (read-only).
 - `remediation` (String) Remediation guidance associated with the analytic (read-only).
-- `tenant_actions` (Attributes List) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--tenant_actions))
+- `tenant_actions` (Attributes Set) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
 
@@ -83,7 +82,7 @@ resource "jamfprotect_analytic" "example" {
 
 Required:
 
-- `expressions` (List of String) Expressions to evaluate for this context variable.
+- `expressions` (Set of String) Expressions to evaluate for this context variable.
 - `name` (String) The context variable name.
 - `type` (String) The context variable type.
 

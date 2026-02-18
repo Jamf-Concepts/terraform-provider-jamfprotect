@@ -6,7 +6,9 @@ package action_configuration
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
@@ -42,6 +44,17 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing action configuration ID",
+			"CreateActionConfig did not return an ID for the new action configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

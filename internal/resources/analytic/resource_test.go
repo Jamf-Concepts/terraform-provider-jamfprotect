@@ -28,13 +28,13 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test analytic description"),
-					resource.TestCheckResourceAttr(resourceName, "sensor_type", "GPFSEvent"),
+					resource.TestCheckResourceAttr(resourceName, "sensor_type", "File System Event"),
 					resource.TestCheckResourceAttr(resourceName, "severity", "Informational"),
 					resource.TestCheckResourceAttr(resourceName, "level", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.0", "terraform-test"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "terraform-test"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.0", "Testing"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "Testing"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_files.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "false"),
 					resource.TestCheckResourceAttr(resourceName, "context_item.#", "0"),
@@ -59,7 +59,7 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAnalyticResource_withActions(t *testing.T) {
+func TestAccAnalyticResource_withSmartGroup(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-analytic")
 	resourceName := "jamfprotect_analytic.test"
 
@@ -68,15 +68,17 @@ func TestAccAnalyticResource_withActions(t *testing.T) {
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyticResourceConfigWithActions(rName),
+				Config: testAccAnalyticResourceConfigWithSmartGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "true"),
 					resource.TestCheckResourceAttr(resourceName, "jamf_pro_smart_group_identifier", "smartgroup"),
 					resource.TestCheckResourceAttr(resourceName, "context_item.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context_item.0.name", "name"),
-					resource.TestCheckResourceAttr(resourceName, "context_item.0.type", "String"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
+						"name": "name",
+						"type": "String",
+					}),
 				),
 			},
 		},
@@ -87,9 +89,9 @@ func testAccAnalyticResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-	sensor_type  = "GPFSEvent"
+	sensor_type  = "File System Event"
   description = %[2]q
-	predicate   = "( $event.type == Filter )"
+	filter      = "( $event.type == Filter )"
   level       = 0
   severity    = "Informational"
 
@@ -103,13 +105,13 @@ resource "jamfprotect_analytic" "test" {
 `, name, description)
 }
 
-func testAccAnalyticResourceConfigWithActions(name string) string {
+func testAccAnalyticResourceConfigWithSmartGroup(name string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_analytic" "test" {
   name        = %[1]q
-	sensor_type  = "GPFSEvent"
-  description = "Analytic with actions"
-	predicate   = "( $event.type == Filter )"
+	sensor_type  = "File System Event"
+	description = "Analytic with Smart Group"
+	filter      = "( $event.type == Filter )"
   level       = 0
   severity    = "Low"
 

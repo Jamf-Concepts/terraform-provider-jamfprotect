@@ -45,18 +45,17 @@ type AnalyticDataSourceItemModel struct {
 	Description                 types.String `tfsdk:"description"`
 	Label                       types.String `tfsdk:"label"`
 	LongDescription             types.String `tfsdk:"long_description"`
-	Predicate                   types.String `tfsdk:"predicate"`
+	Filter                      types.String `tfsdk:"filter"`
 	Level                       types.Int64  `tfsdk:"level"`
 	Severity                    types.String `tfsdk:"severity"`
-	Tags                        types.List   `tfsdk:"tags"`
-	Categories                  types.List   `tfsdk:"categories"`
-	SnapshotFiles               types.List   `tfsdk:"snapshot_files"`
-	Actions                     types.List   `tfsdk:"actions"`
+	Tags                        types.Set    `tfsdk:"tags"`
+	Categories                  types.Set    `tfsdk:"categories"`
+	SnapshotFiles               types.Set    `tfsdk:"snapshot_files"`
 	AddToJamfProSmartGroup      types.Bool   `tfsdk:"add_to_jamf_pro_smart_group"`
 	JamfProSmartGroupIdentifier types.String `tfsdk:"jamf_pro_smart_group_identifier"`
-	TenantActions               types.List   `tfsdk:"tenant_actions"`
+	TenantActions               types.Set    `tfsdk:"tenant_actions"`
 	TenantSeverity              types.String `tfsdk:"tenant_severity"`
-	ContextItem                 types.List   `tfsdk:"context_item"`
+	ContextItem                 types.Set    `tfsdk:"context_item"`
 	Created                     types.String `tfsdk:"created"`
 	Updated                     types.String `tfsdk:"updated"`
 	Jamf                        types.Bool   `tfsdk:"jamf"`
@@ -108,8 +107,8 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Long-form description for the analytic (read-only).",
 			Computed:            true,
 		},
-		"predicate": schema.StringAttribute{
-			MarkdownDescription: "The predicate expression.",
+		"filter": schema.StringAttribute{
+			MarkdownDescription: "The filter expression.",
 			Computed:            true,
 		},
 		"level": schema.Int64Attribute{
@@ -120,23 +119,18 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The severity level.",
 			Computed:            true,
 		},
-		"tags": schema.ListAttribute{
+		"tags": schema.SetAttribute{
 			MarkdownDescription: "Tags associated with the analytic.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"categories": schema.ListAttribute{
+		"categories": schema.SetAttribute{
 			MarkdownDescription: "Categories associated with the analytic.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"snapshot_files": schema.ListAttribute{
+		"snapshot_files": schema.SetAttribute{
 			MarkdownDescription: "Snapshot file paths to capture.",
-			Computed:            true,
-			ElementType:         types.StringType,
-		},
-		"actions": schema.ListAttribute{
-			MarkdownDescription: "Legacy actions associated with the analytic.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
@@ -148,7 +142,7 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Identifier for the Jamf Pro extension attribute.",
 			Computed:            true,
 		},
-		"tenant_actions": schema.ListNestedAttribute{
+		"tenant_actions": schema.SetNestedAttribute{
 			MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
 			Computed:            true,
 			NestedObject: schema.NestedAttributeObject{
@@ -169,7 +163,7 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Tenant-level severity override (Jamf-managed analytics).",
 			Computed:            true,
 		},
-		"context_item": schema.ListNestedAttribute{
+		"context_item": schema.SetNestedAttribute{
 			MarkdownDescription: "Context entries for the analytic.",
 			Computed:            true,
 			NestedObject: schema.NestedAttributeObject{
@@ -182,7 +176,7 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 						MarkdownDescription: "The context entry type.",
 						Computed:            true,
 					},
-					"expressions": schema.ListAttribute{
+					"expressions": schema.SetAttribute{
 						MarkdownDescription: "Expressions for the context entry.",
 						Computed:            true,
 						ElementType:         types.StringType,
@@ -251,8 +245,8 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 	item := AnalyticDataSourceItemModel{
 		ID:         types.StringValue(api.UUID),
 		Name:       types.StringValue(api.Name),
-		SensorType: types.StringValue(api.InputType),
-		Predicate:  types.StringValue(api.Filter),
+		SensorType: types.StringValue(mapSensorTypeAPIToUI(api.InputType, diags)),
+		Filter:     types.StringValue(normalizeFilterValue(api.Filter)),
 		Level:      types.Int64Value(api.Level),
 		Severity:   types.StringValue(api.Severity),
 		Created:    types.StringValue(api.Created),
@@ -277,15 +271,9 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 		item.LongDescription = types.StringNull()
 	}
 
-	item.Tags = common.StringsToList(api.Tags)
-	item.Categories = common.StringsToList(api.Categories)
-	item.SnapshotFiles = common.StringsToList(api.SnapshotFiles)
-
-	if len(api.Actions) == 0 {
-		item.Actions = types.ListNull(types.StringType)
-	} else {
-		item.Actions = common.StringsToList(api.Actions)
-	}
+	item.Tags = common.StringsToSet(api.Tags)
+	item.Categories = common.StringsToSet(api.Categories)
+	item.SnapshotFiles = common.StringsToSet(api.SnapshotFiles)
 
 	item.AddToJamfProSmartGroup = types.BoolValue(false)
 	item.JamfProSmartGroupIdentifier = types.StringNull()
@@ -308,7 +296,7 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 		break
 	}
 
-	item.TenantActions = apiActionsToList(api.TenantActions, true, diags)
+	item.TenantActions = apiActionsToSet(api.TenantActions, true, diags)
 
 	if api.TenantSeverity != "" {
 		item.TenantSeverity = types.StringValue(api.TenantSeverity)
@@ -317,25 +305,20 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 	}
 
 	// Context.
-	ctxAttrTypes := map[string]attr.Type{
-		"name":        types.StringType,
-		"type":        types.StringType,
-		"expressions": types.ListType{ElemType: types.StringType},
-	}
 	var ctxVals []attr.Value
 	for _, c := range api.Context {
-		ctxVals = append(ctxVals, types.ObjectValueMust(ctxAttrTypes, map[string]attr.Value{
+		ctxVals = append(ctxVals, types.ObjectValueMust(analyticContextAttrTypes, map[string]attr.Value{
 			"name":        types.StringValue(c.Name),
 			"type":        types.StringValue(c.Type),
-			"expressions": common.StringsToList(c.Exprs),
+			"expressions": common.StringsToSet(c.Exprs),
 		}))
 	}
 	if len(ctxVals) == 0 {
-		item.ContextItem = types.ListValueMust(types.ObjectType{AttrTypes: ctxAttrTypes}, []attr.Value{})
+		item.ContextItem = types.SetValueMust(types.ObjectType{AttrTypes: analyticContextAttrTypes}, []attr.Value{})
 	} else {
-		ctxList, d := types.ListValue(types.ObjectType{AttrTypes: ctxAttrTypes}, ctxVals)
+		ctxSet, d := types.SetValue(types.ObjectType{AttrTypes: analyticContextAttrTypes}, ctxVals)
 		diags.Append(d...)
-		item.ContextItem = ctxList
+		item.ContextItem = ctxSet
 	}
 
 	item.Jamf = types.BoolValue(api.Jamf)
