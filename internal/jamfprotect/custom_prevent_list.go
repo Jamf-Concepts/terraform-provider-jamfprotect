@@ -76,7 +76,11 @@ mutation deletePreventList($id: ID!) {
 `
 
 const listCustomPreventListsQuery = `
-query listPreventLists($nextToken: String, $direction: OrderDirection!, $field: PreventListOrderField!) {
+query listPreventLists(
+	$nextToken: String
+	$direction: OrderDirection!
+	$field: PreventListOrderField!
+) {
 	listPreventLists(
 		input: {next: $nextToken, order: {direction: $direction, field: $field}, pageSize: 100}
 	) {
@@ -174,8 +178,8 @@ func (s *Service) ListCustomPreventLists(ctx context.Context) ([]CustomPreventLi
 
 	for {
 		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
+			"direction": "DESC",
+			"field":     "created",
 		}
 		if nextToken != nil {
 			vars["nextToken"] = *nextToken

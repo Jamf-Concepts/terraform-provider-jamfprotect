@@ -17,7 +17,7 @@ resource "jamfprotect_custom_prevent_list" "example" {
   description  = "Managed by Terraform"
   list_data    = ["EXAMPLE"]
   name         = "Example"
-  prevent_type = "TEAMID"
+  prevent_type = "Team ID"
 }
 ```
 
@@ -28,7 +28,7 @@ resource "jamfprotect_custom_prevent_list" "example" {
 
 - `list_data` (List of String) The list of entries (identifiers) in the custom prevent list.
 - `name` (String) The name of the custom prevent list.
-- `prevent_type` (String) The type of custom prevent list.
+- `prevent_type` (String) The type of custom prevent list. Valid options are: `Team ID`, `File Hash`, `Code Directory Hash`, `Signing ID`.
 
 ### Optional
 

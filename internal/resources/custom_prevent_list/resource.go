@@ -11,19 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &CustomPreventListResource{}
 var _ resource.ResourceWithImportState = &CustomPreventListResource{}
+var _ resource.ResourceWithIdentity = &CustomPreventListResource{}
 
 func NewCustomPreventListResource() resource.Resource {
 	return &CustomPreventListResource{}
@@ -55,14 +57,13 @@ func (r *CustomPreventListResource) Schema(ctx context.Context, req resource.Sch
 				MarkdownDescription: "A description of the custom prevent list.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(""),
 			},
 			"prevent_type": schema.StringAttribute{
-				MarkdownDescription: "The type of custom prevent list.",
+				MarkdownDescription: "The type of custom prevent list. Valid options are: " + common.FormatOptions(preventTypeOptions) + ".",
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{
-					stringvalidator.OneOf("TEAMID", "FILEHASH", "CDHASH", "SIGNINGID"),
+					stringvalidator.OneOf(preventTypeOptions...),
 				},
 			},
 			"list_data": schema.ListAttribute{
@@ -104,4 +105,15 @@ func (r *CustomPreventListResource) Configure(ctx context.Context, req resource.
 
 func (r *CustomPreventListResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *CustomPreventListResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the prevent list.",
+			},
+		},
+	}
 }
