@@ -28,11 +28,13 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test exception set description"),
-					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
-						"type":            "Platform Binary",
-						"value":           "com.example.app",
-						"ignore_activity": "Analytics",
+					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Process Event",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"rules.0.rule_type": "Platform Binary",
+						"rules.0.value":     "com.example.app",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated"),
@@ -69,14 +71,14 @@ func TestAccExceptionSetResource_withEsExceptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_security_exception.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_security_exception.*", map[string]string{
-						"type":                "Process Path",
-						"value":               "/usr/bin/test",
-						"ignore_activity":     "TelemetryV2",
-						"ignore_list_type":    "sourceIgnore",
-						"ignore_list_subtype": "parent",
-						"event_type":          "exec",
+					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type":     "Ignore for Telemetry",
+						"sub_type": "Source Parent Process",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"rules.0.rule_type": "Process Path",
+						"rules.0.value":     "/usr/bin/test",
 					}),
 				),
 			},
@@ -97,12 +99,14 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
-						"type":            "App Signing Info",
-						"app_id":          "com.example.app",
-						"team_id":         "ABC123DEF4",
-						"ignore_activity": "Analytics",
+					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Process Event",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"rules.0.rule_type": "App Signing Info",
+						"rules.0.app_id":    "com.example.app",
+						"rules.0.team_id":   "ABC123DEF4",
 					}),
 				),
 			},
@@ -116,11 +120,17 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = %[2]q
 
-	exception {
-		type            = "Platform Binary"
-		value           = "com.example.app"
-		ignore_activity = "Analytics"
-	}
+	exceptions = [
+		{
+			type = "Process Event"
+			rules = [
+				{
+					rule_type = "Platform Binary"
+					value     = "com.example.app"
+				},
+			]
+		},
+	]
 }
 `, name, description)
 }
@@ -131,14 +141,18 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = "Test exception set with ES exceptions"
 
-	endpoint_security_exception {
-		type                = "Process Path"
-		value               = "/usr/bin/test"
-		ignore_activity     = "TelemetryV2"
-		ignore_list_type    = "sourceIgnore"
-		ignore_list_subtype = "parent"
-		event_type          = "exec"
-	}
+	exceptions = [
+		{
+			type     = "Ignore for Telemetry"
+			sub_type = "Source Parent Process"
+			rules = [
+				{
+					rule_type = "Process Path"
+					value     = "/usr/bin/test"
+				},
+			]
+		},
+	]
 }
 `, name)
 }
@@ -149,12 +163,18 @@ resource "jamfprotect_exception_set" "test" {
   name        = %[1]q
   description = "Test exception set with app signing info"
 
-	exception {
-		type            = "App Signing Info"
-		app_id          = "com.example.app"
-		team_id         = "ABC123DEF4"
-		ignore_activity = "Analytics"
-	}
+	exceptions = [
+		{
+			type = "Process Event"
+			rules = [
+				{
+					rule_type = "App Signing Info"
+					app_id    = "com.example.app"
+					team_id   = "ABC123DEF4"
+				},
+			]
+		},
+	]
 }
 `, name)
 }

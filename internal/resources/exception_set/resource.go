@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
@@ -26,6 +25,8 @@ import (
 var _ resource.Resource = &ExceptionSetResource{}
 var _ resource.ResourceWithImportState = &ExceptionSetResource{}
 var _ resource.ResourceWithIdentity = &ExceptionSetResource{}
+var _ resource.ResourceWithValidateConfig = &ExceptionSetResource{}
+var _ resource.ResourceWithModifyPlan = &ExceptionSetResource{}
 
 func NewExceptionSetResource() resource.Resource {
 	return &ExceptionSetResource{}
@@ -71,107 +72,58 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "Whether this is a Jamf-managed exception set.",
 				Computed:            true,
 			},
+			"exceptions": schema.SetNestedAttribute{
+				MarkdownDescription: "Exception entries aligned with UI type, subtype, and rules.",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "The UI exception type. Valid options are: " + common.FormatOptions(exceptionTypeOptions) + ".",
+							Required:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(exceptionTypeOptions...),
+							},
+						},
+						"sub_type": schema.StringAttribute{
+							MarkdownDescription: "The UI subtype associated with the exception type. Required for some types.",
+							Optional:            true,
+						},
+						"rules": schema.ListNestedAttribute{
+							MarkdownDescription: "Rules applied to the exception type and subtype.",
+							Required:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"rule_type": schema.StringAttribute{
+										MarkdownDescription: "The rule type. Valid options are: " + common.FormatOptions(ruleTypeOptions) + ".",
+										Required:            true,
+										Validators: []validator.String{
+											stringvalidator.OneOf(ruleTypeOptions...),
+										},
+									},
+									"value": schema.StringAttribute{
+										MarkdownDescription: "The value for rules that accept a single string.",
+										Optional:            true,
+									},
+									"app_id": schema.StringAttribute{
+										MarkdownDescription: "Application identifier for App Signing Info rules.",
+										Optional:            true,
+									},
+									"team_id": schema.StringAttribute{
+										MarkdownDescription: "Team identifier for App Signing Info rules.",
+										Optional:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Read:   true,
 				Update: true,
 				Delete: true,
 			}),
-		},
-		Blocks: map[string]schema.Block{
-			"exception": schema.SetNestedBlock{
-				MarkdownDescription: "A list of exceptions for analytics.",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of exception. Valid options are: " + common.FormatOptions(exceptionTypeOptions) + ".",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf(exceptionTypeOptions...),
-							},
-						},
-						"value": schema.StringAttribute{
-							MarkdownDescription: "The value to match for this exception. Not used when type is `AppSigningInfo`.",
-							Optional:            true,
-						},
-						"app_id": schema.StringAttribute{
-							MarkdownDescription: "Application identifier for code signature exceptions.",
-							Optional:            true,
-						},
-						"team_id": schema.StringAttribute{
-							MarkdownDescription: "Team identifier for code signature exceptions.",
-							Optional:            true,
-						},
-						"ignore_activity": schema.StringAttribute{
-							MarkdownDescription: "The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("Analytics", "ThreatPrevention", "TelemetryV2", "Telemetry"),
-							},
-						},
-						"analytic_types": schema.SetAttribute{
-							MarkdownDescription: "The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).",
-							Optional:            true,
-							ElementType:         types.StringType,
-						},
-						"analytic_uuid": schema.StringAttribute{
-							MarkdownDescription: "The UUID of a specific analytic this exception applies to. Mutually exclusive with `analytic_types`.",
-							Optional:            true,
-						},
-					},
-				},
-			},
-			"endpoint_security_exception": schema.SetNestedBlock{
-				MarkdownDescription: "A list of Endpoint Security exceptions.",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of endpoint security exception. Valid options are: " + common.FormatOptions(esExceptionTypeOptions) + ".",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf(esExceptionTypeOptions...),
-							},
-						},
-						"value": schema.StringAttribute{
-							MarkdownDescription: "The value to match for this ES exception. Not used when type is `AppSigningInfo`.",
-							Optional:            true,
-						},
-						"app_id": schema.StringAttribute{
-							MarkdownDescription: "Application identifier for code signature exceptions.",
-							Optional:            true,
-						},
-						"team_id": schema.StringAttribute{
-							MarkdownDescription: "Team identifier for code signature exceptions.",
-							Optional:            true,
-						},
-						"ignore_activity": schema.StringAttribute{
-							MarkdownDescription: "The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("Analytics", "ThreatPrevention", "TelemetryV2", "Telemetry"),
-							},
-						},
-						"ignore_list_type": schema.StringAttribute{
-							MarkdownDescription: "The ignore list type. Valid values: `ignore`, `events`, `sourceIgnore`.",
-							Optional:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("ignore", "events", "sourceIgnore"),
-							},
-						},
-						"ignore_list_subtype": schema.StringAttribute{
-							MarkdownDescription: "The ignore list subtype. Valid values: `parent`, `responsible`, or null.",
-							Optional:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("parent", "responsible"),
-							},
-						},
-						"event_type": schema.StringAttribute{
-							MarkdownDescription: "The endpoint security event type (e.g., `exec`, `open`, `create`).",
-							Optional:            true,
-						},
-					},
-				},
-			},
 		},
 	}
 }

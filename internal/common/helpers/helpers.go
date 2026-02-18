@@ -82,12 +82,28 @@ func Int64ValueOrNullValue(value int64) attr.Value {
 	return types.Int64Value(value)
 }
 
+// StringValue returns the string value or empty when null/unknown.
+func StringValue(value types.String) string {
+	if value.IsNull() || value.IsUnknown() {
+		return ""
+	}
+	return value.ValueString()
+}
+
 // StringValueOrNullValue returns a types.StringValue if the value is non-empty, or types.StringNull if the value is empty.
 func StringValueOrNullValue(value string) attr.Value {
 	if value == "" {
 		return types.StringNull()
 	}
 	return types.StringValue(value)
+}
+
+// HasStringValue reports whether a string value is set and non-empty.
+func HasStringValue(value types.String) bool {
+	if value.IsNull() || value.IsUnknown() {
+		return false
+	}
+	return strings.TrimSpace(value.ValueString()) != ""
 }
 
 // FormatOptions formats a list of options as a human-readable string for use in schema descriptions.

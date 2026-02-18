@@ -16,44 +16,46 @@ Manages an exception set in Jamf Protect. Exception sets define exceptions to an
 resource "jamfprotect_exception_set" "example" {
   description = "Managed by Terraform"
   name        = "Example Exception Set"
-  endpoint_security_exception {
-    ignore_activity  = "ThreatPrevention"
-    ignore_list_type = "ignore"
-    type             = "Group"
-    value            = "EXAMPLE"
-  }
-  endpoint_security_exception {
-    ignore_activity     = "ThreatPrevention"
-    ignore_list_subtype = "parent"
-    ignore_list_type    = "ignore"
-    type                = "User"
-    value               = "Example"
-  }
-  endpoint_security_exception {
-    app_id              = "Example"
-    ignore_activity     = "ThreatPrevention"
-    ignore_list_subtype = "responsible"
-    ignore_list_type    = "ignore"
-    team_id             = "EXAMPLE"
-    type                = "App Signing Info"
-  }
-  exception {
-    analytic_types  = ["GPFSEvent"]
-    ignore_activity = "Analytics"
-    type            = "Platform Binary"
-    value           = "com.apple.SafariBookmarksSyncAgent"
-  }
-  exception {
-    ignore_activity = "Telemetry"
-    type            = "User"
-    value           = "_spotlight"
-  }
-  exception {
-    analytic_types  = ["GPProcessEvent"]
-    ignore_activity = "Analytics"
-    type            = "Team ID"
-    value           = "PXPZ95SK77"
-  }
+  exceptions = [
+    {
+      type     = "Override Endpoint Threat Prevention"
+      sub_type = "Process"
+      rules = [
+        {
+          rule_type = "Group"
+          value     = "EXAMPLE"
+        },
+      ]
+    },
+    {
+      type = "File System Event"
+      rules = [
+        {
+          rule_type = "File Path"
+          value     = "/Library/Logs/example.log"
+        },
+      ]
+    },
+    {
+      type     = "Ignore for Telemetry"
+      sub_type = "Exec Process"
+      rules = [
+        {
+          rule_type = "Process Path"
+          value     = "/usr/bin/test"
+        },
+      ]
+    },
+    {
+      type = "Ignore for Telemetry (Deprecated)"
+      rules = [
+        {
+          rule_type = "User"
+          value     = "_spotlight"
+        },
+      ]
+    },
+  ]
 }
 ```
 
@@ -67,8 +69,7 @@ resource "jamfprotect_exception_set" "example" {
 ### Optional
 
 - `description` (String) A description of the exception set.
-- `endpoint_security_exception` (Block Set) A list of Endpoint Security exceptions. (see [below for nested schema](#nestedblock--endpoint_security_exception))
-- `exception` (Block Set) A list of exceptions for analytics. (see [below for nested schema](#nestedblock--exception))
+- `exceptions` (Attributes Set) Exception entries aligned with UI type, subtype, and rules. (see [below for nested schema](#nestedatt--exceptions))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -78,39 +79,31 @@ resource "jamfprotect_exception_set" "example" {
 - `managed` (Boolean) Whether this is a Jamf-managed exception set.
 - `updated` (String) The last-updated timestamp.
 
-<a id="nestedblock--endpoint_security_exception"></a>
-### Nested Schema for `endpoint_security_exception`
+<a id="nestedatt--exceptions"></a>
+### Nested Schema for `exceptions`
 
 Required:
 
-- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
-- `type` (String) The type of endpoint security exception. Valid options are: `App Signing Info`, `Team ID`, `Process Path`, `Platform Binary`, `User`, `Group`.
+- `rules` (Attributes List) Rules applied to the exception type and subtype. (see [below for nested schema](#nestedatt--exceptions--rules))
+- `type` (String) The UI exception type. Valid options are: `Override Endpoint Threat Prevention`, `File System Event`, `Download Event`, `Process Event`, `Screenshot Event`, `Keylog Register Event`, `Synthetic Click Event`, `Ignore for Telemetry`, `Ignore for Telemetry (Deprecated)`, `Ignore for Analytic`.
 
 Optional:
 
-- `app_id` (String) Application identifier for code signature exceptions.
-- `event_type` (String) The endpoint security event type (e.g., `exec`, `open`, `create`).
-- `ignore_list_subtype` (String) The ignore list subtype. Valid values: `parent`, `responsible`, or null.
-- `ignore_list_type` (String) The ignore list type. Valid values: `ignore`, `events`, `sourceIgnore`.
-- `team_id` (String) Team identifier for code signature exceptions.
-- `value` (String) The value to match for this ES exception. Not used when type is `AppSigningInfo`.
+- `sub_type` (String) The UI subtype associated with the exception type. Required for some types.
 
-
-<a id="nestedblock--exception"></a>
-### Nested Schema for `exception`
+<a id="nestedatt--exceptions--rules"></a>
+### Nested Schema for `exceptions.rules`
 
 Required:
 
-- `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
-- `type` (String) The type of exception. Valid options are: `App Signing Info`, `Team ID`, `Process Path`, `Platform Binary`, `User`, `File Path`.
+- `rule_type` (String) The rule type. Valid options are: `App Signing Info`, `Team ID`, `Process Path`, `Platform Binary`, `User`, `Group`, `File Path`.
 
 Optional:
 
-- `analytic_types` (Set of String) The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).
-- `analytic_uuid` (String) The UUID of a specific analytic this exception applies to. Mutually exclusive with `analytic_types`.
-- `app_id` (String) Application identifier for code signature exceptions.
-- `team_id` (String) Team identifier for code signature exceptions.
-- `value` (String) The value to match for this exception. Not used when type is `AppSigningInfo`.
+- `app_id` (String) Application identifier for App Signing Info rules.
+- `team_id` (String) Team identifier for App Signing Info rules.
+- `value` (String) The value for rules that accept a single string.
+
 
 
 <a id="nestedatt--timeouts"></a>

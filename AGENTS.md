@@ -108,7 +108,12 @@ Use resource-agnostic filenames and helper names so the same structure can apply
 - `mappings.go`: lookup tables and name mappings.
 - `input_builders.go`: build API inputs from Terraform model data.
 - `state_builders.go`: map API responses to Terraform state.
+- `helpers.go`: resource-specific helper functions that don't fit elsewhere.
+- `plan_modifiers.go`: schema plan modifiers (if needed).
+- `validators.go`: schema validators (if needed).
 - `list_resource.go`: for list resources implementing `list.ListResource`.
+- `data_source.go`: for data sources implementing `datasource.DataSource`.
+- `resource_test.go`: acceptance tests for the resource.
 
 For list resources, follow the framework list resource pattern. The action configuration list resource is the reference implementation.
 
@@ -143,9 +148,11 @@ Optional split-outs for complex resources:
 3. Register the resource in `provider.go` → `Resources()`.
 4. Create `internal/provider/<resource_name>_resource_test.go` with acceptance tests.
 5. Add schema validation tests in `schema_test.go`.
-6. Update `docs/` and `examples/` with documentation and example `.tf` files.
+6. Update `examples/` with example `.tf` files.
+7. Run `mise run test` to ensure tests pass.
+8. Run `mise run build:generate-docs` to generate documentation from schema descriptions.
 
 ## Documentation & Examples
 
-- Update `docs/` and `examples/` when adding new resources or data sources.
+- Update `examples/` when adding new resources or data sources.
 - Run `mise run build:generate-docs` to regenerate documentation from schema descriptions.

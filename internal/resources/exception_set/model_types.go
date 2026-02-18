@@ -10,36 +10,27 @@ import (
 
 // ExceptionSetResourceModel maps the resource schema data.
 type ExceptionSetResourceModel struct {
-	ID           types.String   `tfsdk:"id"`
-	Name         types.String   `tfsdk:"name"`
-	Description  types.String   `tfsdk:"description"`
-	Exceptions   types.Set      `tfsdk:"exception"`
-	EsExceptions types.Set      `tfsdk:"endpoint_security_exception"`
-	Created      types.String   `tfsdk:"created"`
-	Updated      types.String   `tfsdk:"updated"`
-	Managed      types.Bool     `tfsdk:"managed"`
-	Timeouts     timeouts.Value `tfsdk:"timeouts"`
+	ID          types.String   `tfsdk:"id"`
+	Name        types.String   `tfsdk:"name"`
+	Description types.String   `tfsdk:"description"`
+	Exceptions  types.Set      `tfsdk:"exceptions"`
+	Created     types.String   `tfsdk:"created"`
+	Updated     types.String   `tfsdk:"updated"`
+	Managed     types.Bool     `tfsdk:"managed"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
 
-// exceptionModel maps the exceptions nested attribute.
+// exceptionModel maps exception entries.
 type exceptionModel struct {
-	Type           types.String `tfsdk:"type"`
-	Value          types.String `tfsdk:"value"`
-	AppID          types.String `tfsdk:"app_id"`
-	TeamID         types.String `tfsdk:"team_id"`
-	IgnoreActivity types.String `tfsdk:"ignore_activity"`
-	AnalyticTypes  types.Set    `tfsdk:"analytic_types"`
-	AnalyticUuid   types.String `tfsdk:"analytic_uuid"`
+	Type    types.String `tfsdk:"type"`
+	SubType types.String `tfsdk:"sub_type"`
+	Rules   types.List   `tfsdk:"rules"`
 }
 
-// esExceptionModel maps the endpoint security exceptions nested attribute.
-type esExceptionModel struct {
-	Type              types.String `tfsdk:"type"`
-	Value             types.String `tfsdk:"value"`
-	AppID             types.String `tfsdk:"app_id"`
-	TeamID            types.String `tfsdk:"team_id"`
-	IgnoreActivity    types.String `tfsdk:"ignore_activity"`
-	IgnoreListType    types.String `tfsdk:"ignore_list_type"`
-	IgnoreListSubType types.String `tfsdk:"ignore_list_subtype"`
-	EventType         types.String `tfsdk:"event_type"`
+// exceptionRuleModel maps exception rule entries.
+type exceptionRuleModel struct {
+	RuleType types.String `tfsdk:"rule_type"`
+	Value    types.String `tfsdk:"value"`
+	AppID    types.String `tfsdk:"app_id"`
+	TeamID   types.String `tfsdk:"team_id"`
 }
