@@ -115,18 +115,18 @@ resource "jamfprotect_action_configuration" "example" {
 
 Required:
 
-- `binary_included_data_attributes` (Set of String) Included data attributes for binary events.
-- `download_event_included_data_attributes` (Set of String) Included data attributes for download events.
-- `file_included_data_attributes` (Set of String) Included data attributes for file events.
-- `file_system_event_included_data_attributes` (Set of String) Included data attributes for file system events.
-- `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events.
-- `group_included_data_attributes` (Set of String) Included data attributes for group events.
-- `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events.
-- `process_event_included_data_attributes` (Set of String) Included data attributes for process events.
-- `process_included_data_attributes` (Set of String) Included data attributes for process metadata.
-- `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events.
-- `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events.
-- `user_included_data_attributes` (Set of String) Included data attributes for user events.
+- `binary_included_data_attributes` (Set of String) Included data attributes for binary events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `download_event_included_data_attributes` (Set of String) Included data attributes for download events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `file_included_data_attributes` (Set of String) Included data attributes for file events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `file_system_event_included_data_attributes` (Set of String) Included data attributes for file system events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `group_included_data_attributes` (Set of String) Included data attributes for group events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `process_event_included_data_attributes` (Set of String) Included data attributes for process events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `process_included_data_attributes` (Set of String) Included data attributes for process metadata. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `user_included_data_attributes` (Set of String) Included data attributes for user events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
 
 
 <a id="nestedatt--http_endpoints"></a>
@@ -135,13 +135,13 @@ Required:
 Optional:
 
 - `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
-- `collect_alerts` (Set of String) Alert severities collected by this endpoint.
-- `collect_logs` (Set of String) Log types collected by this endpoint.
+- `collect_alerts` (Set of String) Alert severities collected by this endpoint. Valid options are: `high`, `medium`, `low`, `informational`.
+- `collect_logs` (Set of String) Log types collected by this endpoint. Valid options are: `telemetry`, `unified_logs`.
 - `event_delimiter` (String) Delimiter used between batched records.
 - `events_per_batch` (Number) Maximum number of events per batch.
 - `headers` (Attributes List) HTTP headers. (see [below for nested schema](#nestedatt--http_endpoints--headers))
 - `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-- `method` (String) HTTP request method.
+- `method` (String) HTTP request method. Valid options are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
 - `url` (String) HTTP destination URL.
 
 <a id="nestedatt--http_endpoints--headers"></a>
@@ -159,8 +159,8 @@ Optional:
 
 Optional:
 
-- `collect_alerts` (Set of String) Alert severities collected by this endpoint.
-- `collect_logs` (Set of String) Log types collected by this endpoint.
+- `collect_alerts` (Set of String) Alert severities collected by this endpoint. Valid options are: `high`, `medium`, `low`, `informational`.
+- `collect_logs` (Set of String) Log types collected by this endpoint. Valid options are: `telemetry`, `unified_logs`.
 - `destination_filter` (String) Destination filter (if configured).
 
 
@@ -170,8 +170,8 @@ Optional:
 Optional:
 
 - `client_cn` (String) Kafka client certificate CN.
-- `collect_alerts` (Set of String) Alert severities collected by this endpoint.
-- `collect_logs` (Set of String) Log types collected by this endpoint.
+- `collect_alerts` (Set of String) Alert severities collected by this endpoint. Valid options are: `high`, `medium`, `low`, `informational`.
+- `collect_logs` (Set of String) Log types collected by this endpoint. Valid options are: `telemetry`, `unified_logs`.
 - `host` (String) Kafka host.
 - `port` (Number) Kafka port.
 - `server_cn` (String) Kafka server certificate CN.
@@ -183,8 +183,8 @@ Optional:
 
 Optional:
 
-- `collect_alerts` (Set of String) Alert severities collected by this endpoint.
-- `collect_logs` (Set of String) Log types collected by this endpoint.
+- `collect_alerts` (Set of String) Alert severities collected by this endpoint. Valid options are: `high`, `medium`, `low`, `informational`.
+- `collect_logs` (Set of String) Log types collected by this endpoint. Valid options are: `telemetry`, `unified_logs`.
 - `max_backups` (Number) Maximum number of backup files to keep.
 - `max_file_size_mb` (Number) Maximum file size in MB before rotating.
 - `ownership` (String) User and group that own the log file.
@@ -197,11 +197,11 @@ Optional:
 
 Optional:
 
-- `collect_alerts` (Set of String) Alert severities collected by this endpoint.
-- `collect_logs` (Set of String) Log types collected by this endpoint.
+- `collect_alerts` (Set of String) Alert severities collected by this endpoint. Valid options are: `high`, `medium`, `low`, `informational`.
+- `collect_logs` (Set of String) Log types collected by this endpoint. Valid options are: `telemetry`, `unified_logs`.
 - `host` (String) Syslog host.
 - `port` (Number) Syslog port.
-- `protocol` (String) Syslog protocol.
+- `protocol` (String) Syslog protocol. Valid options are: `tls`, `tcp`, `udp`.
 
 
 <a id="nestedatt--timeouts"></a>
