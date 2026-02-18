@@ -56,9 +56,9 @@ func testAccAnalyticSetResourceConfig(name, description string) string {
 # First create an analytic to reference
 resource "jamfprotect_analytic" "test" {
   name        = "%[1]s-analytic"
-	sensor_type = "GPFSEvent"
+	sensor_type = "File System Event"
   description = "Test analytic for set"
-	predicate   = "( $event.type == Filter )"
+	filter      = "( $event.type == Filter )"
   level       = 0
   severity    = "Informational"
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -22,6 +23,7 @@ import (
 
 var _ resource.Resource = &AnalyticSetResource{}
 var _ resource.ResourceWithImportState = &AnalyticSetResource{}
+var _ resource.ResourceWithIdentity = &AnalyticSetResource{}
 var _ resource.ResourceWithModifyPlan = &AnalyticSetResource{}
 
 func NewAnalyticSetResource() resource.Resource {
@@ -99,4 +101,15 @@ func (r *AnalyticSetResource) Configure(ctx context.Context, req resource.Config
 
 func (r *AnalyticSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *AnalyticSetResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the analytic set.",
+			},
+		},
+	}
 }

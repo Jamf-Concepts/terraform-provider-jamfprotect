@@ -3,7 +3,9 @@ package analytic_set
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
@@ -43,7 +45,18 @@ func (r *AnalyticSetResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing analytic set ID",
+			"CreateAnalyticSet did not return a UUID for the new analytic set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -108,7 +121,18 @@ func (r *AnalyticSetResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	r.apiToState(ctx, &data, *result, &resp.Diagnostics)
+	r.applyState(ctx, &data, *result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing analytic set ID",
+			"GetAnalyticSet did not return a UUID for the analytic set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -158,7 +182,18 @@ func (r *AnalyticSetResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing analytic set ID",
+			"UpdateAnalyticSet did not return a UUID for the analytic set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
