@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -96,4 +97,16 @@ func FormatOptions(values []string) string {
 		quoted = append(quoted, fmt.Sprintf("`%s`", value))
 	}
 	return strings.Join(quoted, ", ")
+}
+
+// EmptyTimeoutsValue returns a correctly typed null timeouts value for resource state.
+func EmptyTimeoutsValue() timeouts.Value {
+	return timeouts.Value{
+		Object: types.ObjectNull(map[string]attr.Type{
+			"create": types.StringType,
+			"read":   types.StringType,
+			"update": types.StringType,
+			"delete": types.StringType,
+		}),
+	}
 }

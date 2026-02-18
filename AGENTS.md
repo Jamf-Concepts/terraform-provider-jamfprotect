@@ -100,6 +100,9 @@ Use resource-agnostic filenames and helper names so the same structure can apply
 - `mappings.go`: lookup tables and name mappings.
 - `input_builders.go`: build API inputs from Terraform model data.
 - `state_builders.go`: map API responses to Terraform state.
+- `list_resource.go`: for list resources implementing `list.ListResource`.
+
+For list resources, follow the framework list resource pattern. The action configuration list resource is the reference implementation.
 
 Optional split-outs for complex resources:
 

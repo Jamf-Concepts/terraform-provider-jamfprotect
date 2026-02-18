@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,6 +28,7 @@ import (
 )
 
 var _ provider.Provider = &JamfProtectProvider{}
+var _ provider.ProviderWithListResources = &JamfProtectProvider{}
 
 // JamfProtectProvider defines the provider implementation.
 type JamfProtectProvider struct {
@@ -124,6 +126,7 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
+	resp.ListResourceData = client
 }
 
 func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.Resource {
@@ -151,6 +154,12 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
 		removable_storage_control_set.NewRemovableStorageControlSetsDataSource,
+	}
+}
+
+func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.ListResource {
+	return []func() list.ListResource{
+		action_configuration.NewActionConfigListResource,
 	}
 }
 
