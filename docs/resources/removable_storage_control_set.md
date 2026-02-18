@@ -14,19 +14,19 @@ Manages a removable storage control set in Jamf Protect. Removable storage contr
 
 ```terraform
 resource "jamfprotect_removable_storage_control_set" "example" {
-  default_local_notification_message = "This removable storage device is not allowed.."
-  default_permission                 = "Prevented"
+  default_local_notification_message = "This removable storage device is not allowed."
+  default_permission                 = "Prevent"
   description                        = "Managed by Terraform"
   name                               = "Example"
   timeouts                           = null
   override_encrypted_devices {
     local_notification_message = "This removable storage device is limited to read-only."
-    permission                 = "ReadOnly"
+    permission                 = "Read Only"
   }
   override_product_id {
     apply_to                   = "All"
     local_notification_message = "This removable storage device is limited to read-only."
-    permission                 = "ReadOnly"
+    permission                 = "Read Only"
     product_id = [
       {
         product_id = "0x1434"
@@ -37,13 +37,13 @@ resource "jamfprotect_removable_storage_control_set" "example" {
   override_serial_number {
     apply_to                   = "All"
     local_notification_message = "This removable storage device is limited to read-only."
-    permission                 = "ReadOnly"
+    permission                 = "Read Only"
     serial_numbers             = ["EXAMPLE"]
   }
   override_vendor_id {
     apply_to                   = "All"
     local_notification_message = "This removable storage device is limited to read-only."
-    permission                 = "ReadOnly"
+    permission                 = "Read Only"
     vendor_ids                 = ["0x1921", "0x1434"]
   }
 }
@@ -54,17 +54,17 @@ resource "jamfprotect_removable_storage_control_set" "example" {
 
 ### Required
 
-- `default_permission` (String) The default permission for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
+- `default_permission` (String) The default permission for removable storage devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
 - `name` (String) The name of the removable storage control set.
 
 ### Optional
 
 - `default_local_notification_message` (String) The default local notification message displayed to users when a removable storage device action is triggered.
 - `description` (String) A description of the removable storage control set.
-- `override_encrypted_devices` (Block List) Overrides applied to encrypted devices. (see [below for nested schema](#nestedblock--override_encrypted_devices))
-- `override_product_id` (Block List) Overrides applied to product IDs. (see [below for nested schema](#nestedblock--override_product_id))
-- `override_serial_number` (Block List) Overrides applied to serial numbers. (see [below for nested schema](#nestedblock--override_serial_number))
-- `override_vendor_id` (Block List) Overrides applied to vendor IDs. (see [below for nested schema](#nestedblock--override_vendor_id))
+- `override_encrypted_devices` (Attributes List) Overrides applied to encrypted devices. (see [below for nested schema](#nestedatt--override_encrypted_devices))
+- `override_product_id` (Attributes List) Overrides applied to product IDs. (see [below for nested schema](#nestedatt--override_product_id))
+- `override_serial_number` (Attributes List) Overrides applied to serial numbers. (see [below for nested schema](#nestedatt--override_serial_number))
+- `override_vendor_id` (Attributes List) Overrides applied to vendor IDs. (see [below for nested schema](#nestedatt--override_vendor_id))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -73,25 +73,25 @@ resource "jamfprotect_removable_storage_control_set" "example" {
 - `id` (String) The unique identifier of the removable storage control set.
 - `updated` (String) The last update timestamp.
 
-<a id="nestedblock--override_encrypted_devices"></a>
+<a id="nestedatt--override_encrypted_devices"></a>
 ### Nested Schema for `override_encrypted_devices`
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
+- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
 
 Optional:
 
 - `local_notification_message` (String) The local notification message displayed to users when this override is triggered.
 
 
-<a id="nestedblock--override_product_id"></a>
+<a id="nestedatt--override_product_id"></a>
 ### Nested Schema for `override_product_id`
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
-- `product_id` (Attributes List) Vendor and product IDs that this override applies to. (see [below for nested schema](#nestedatt--override_product_id--product_id))
+- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `product_id` (Attributes List) Vendor and product IDs that this override applies to. IDs must match the format `0x0000`. (see [below for nested schema](#nestedatt--override_product_id--product_id))
 
 Optional:
 
@@ -108,12 +108,12 @@ Required:
 
 
 
-<a id="nestedblock--override_serial_number"></a>
+<a id="nestedatt--override_serial_number"></a>
 ### Nested Schema for `override_serial_number`
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
+- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
 - `serial_numbers` (List of String) A list of serial numbers that this override applies to.
 
 Optional:
@@ -122,13 +122,13 @@ Optional:
 - `local_notification_message` (String) The local notification message displayed to users when this override is triggered.
 
 
-<a id="nestedblock--override_vendor_id"></a>
+<a id="nestedatt--override_vendor_id"></a>
 ### Nested Schema for `override_vendor_id`
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.
-- `vendor_ids` (List of String) A list of vendor IDs that this override applies to.
+- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `vendor_ids` (List of String) A list of vendor IDs that this override applies to. IDs must match the format `0x0000`.
 
 Optional:
 

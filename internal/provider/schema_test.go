@@ -574,16 +574,16 @@ func TestRemovableStorageControlSetResourceSchema(t *testing.T) {
 		t.Error("expected 'default_local_notification_message' to be computed")
 	}
 
-	// override blocks should exist.
-	for _, block := range []string{
+	// override attributes should exist.
+	for _, attr := range []string{
 		"override_encrypted_devices",
 		"override_vendor_id",
 		"override_product_id",
 		"override_serial_number",
 	} {
-		_, ok := resp.Schema.Blocks[block]
+		_, ok := resp.Schema.Attributes[attr]
 		if !ok {
-			t.Errorf("expected block %q in RemovableStorage control set schema", block)
+			t.Errorf("expected attribute %q in RemovableStorage control set schema", attr)
 			continue
 		}
 	}
@@ -979,9 +979,12 @@ func TestRemovableStorageControlSetsDataSourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	_, ok := resp.Schema.Blocks["removable_storage_control_sets"]
+	attr, ok := resp.Schema.Attributes["removable_storage_control_sets"]
 	if !ok {
-		t.Fatal("expected block 'removable_storage_control_sets' in data source schema")
+		t.Fatal("expected attribute 'removable_storage_control_sets' in data source schema")
+	}
+	if !attr.IsComputed() {
+		t.Error("expected 'removable_storage_control_sets' to be computed")
 	}
 }
 

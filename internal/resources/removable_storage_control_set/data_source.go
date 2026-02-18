@@ -20,6 +20,7 @@ import (
 
 var _ datasource.DataSource = &RemovableStorageControlSetsDataSource{}
 
+// NewRemovableStorageControlSetsDataSource returns a new removable storage control sets data source.
 func NewRemovableStorageControlSetsDataSource() datasource.DataSource {
 	return &RemovableStorageControlSetsDataSource{}
 }
@@ -89,13 +90,15 @@ func (d *RemovableStorageControlSetsDataSource) Metadata(ctx context.Context, re
 	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_sets"
 }
 
+// Schema defines the removable storage control sets data source schema.
 func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of all removable storage control sets in Jamf Protect.",
-		Blocks: map[string]schema.Block{
-			"removable_storage_control_sets": schema.ListNestedBlock{
+		Attributes: map[string]schema.Attribute{
+			"removable_storage_control_sets": schema.ListNestedAttribute{
 				MarkdownDescription: "The list of removable storage control sets.",
-				NestedObject: schema.NestedBlockObject{
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							MarkdownDescription: "The unique identifier of the removable storage control set.",
@@ -125,11 +128,10 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 							MarkdownDescription: "The last-updated timestamp.",
 							Computed:            true,
 						},
-					},
-					Blocks: map[string]schema.Block{
-						"override_encrypted_devices": schema.ListNestedBlock{
+						"override_encrypted_devices": schema.ListNestedAttribute{
 							MarkdownDescription: "Overrides applied to encrypted devices.",
-							NestedObject: schema.NestedBlockObject{
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"permission": schema.StringAttribute{
 										MarkdownDescription: "The permission for matching devices.",
@@ -142,9 +144,10 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 								},
 							},
 						},
-						"override_vendor_id": schema.ListNestedBlock{
+						"override_vendor_id": schema.ListNestedAttribute{
 							MarkdownDescription: "Overrides applied to vendor IDs.",
-							NestedObject: schema.NestedBlockObject{
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"permission": schema.StringAttribute{
 										MarkdownDescription: "The permission for matching devices.",
@@ -166,9 +169,10 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 								},
 							},
 						},
-						"override_product_id": schema.ListNestedBlock{
+						"override_product_id": schema.ListNestedAttribute{
 							MarkdownDescription: "Overrides applied to product IDs.",
-							NestedObject: schema.NestedBlockObject{
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"permission": schema.StringAttribute{
 										MarkdownDescription: "The permission for matching devices.",
@@ -201,9 +205,10 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 								},
 							},
 						},
-						"override_serial_number": schema.ListNestedBlock{
+						"override_serial_number": schema.ListNestedAttribute{
 							MarkdownDescription: "Overrides applied to serial numbers.",
-							NestedObject: schema.NestedBlockObject{
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"permission": schema.StringAttribute{
 										MarkdownDescription: "The permission for matching devices.",
@@ -232,6 +237,7 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 	}
 }
 
+// Configure prepares the removable storage control set service client.
 func (d *RemovableStorageControlSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -245,6 +251,7 @@ func (d *RemovableStorageControlSetsDataSource) Configure(ctx context.Context, r
 	d.service = jamfprotect.NewService(client)
 }
 
+// Read retrieves removable storage control sets from the API.
 func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data RemovableStorageControlSetsDataSourceModel
 
@@ -259,23 +266,13 @@ func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req da
 	items := make([]RemovableStorageControlSetDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
 		item := RemovableStorageControlSetDataSourceItemModel{
-			ID:                types.StringValue(api.ID),
-			Name:              types.StringValue(api.Name),
-			DefaultPermission: types.StringValue(api.DefaultMountAction),
-			Created:           types.StringValue(api.Created),
-			Updated:           types.StringValue(api.Updated),
-		}
-
-		if api.Description != "" {
-			item.Description = types.StringValue(api.Description)
-		} else {
-			item.Description = types.StringNull()
-		}
-
-		if api.DefaultMessageAction != "" {
-			item.DefaultLocalNotificationMessage = types.StringValue(api.DefaultMessageAction)
-		} else {
-			item.DefaultLocalNotificationMessage = types.StringNull()
+			ID:                              types.StringValue(api.ID),
+			Name:                            types.StringValue(api.Name),
+			DefaultPermission:               types.StringValue(permissionFromAPI(api.DefaultMountAction)),
+			Description:                     types.StringValue(api.Description),
+			DefaultLocalNotificationMessage: types.StringValue(api.DefaultMessageAction),
+			Created:                         types.StringValue(api.Created),
+			Updated:                         types.StringValue(api.Updated),
 		}
 
 		encryptedOverrides := make([]RemovableStorageEncryptedOverrideDataModel, 0)
@@ -294,22 +291,24 @@ func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req da
 				applyTo = types.StringValue(apiRule.ApplyTo)
 			}
 
+			permission := types.StringValue(permissionFromAPI(apiRule.MountAction))
+
 			switch ruleType {
 			case "Encryption":
 				encryptedOverrides = append(encryptedOverrides, RemovableStorageEncryptedOverrideDataModel{
-					Permission:               types.StringValue(apiRule.MountAction),
+					Permission:               permission,
 					LocalNotificationMessage: localMessage,
 				})
 			case "Vendor":
 				vendorOverrides = append(vendorOverrides, RemovableStorageVendorOverrideDataModel{
-					Permission:               types.StringValue(apiRule.MountAction),
+					Permission:               permission,
 					LocalNotificationMessage: localMessage,
 					ApplyTo:                  applyTo,
 					VendorIDs:                common.StringsToList(apiRule.Vendors),
 				})
 			case "Serial":
 				serialOverrides = append(serialOverrides, RemovableStorageSerialOverrideDataModel{
-					Permission:               types.StringValue(apiRule.MountAction),
+					Permission:               permission,
 					LocalNotificationMessage: localMessage,
 					ApplyTo:                  applyTo,
 					SerialNumbers:            common.StringsToList(apiRule.Serials),
@@ -323,7 +322,7 @@ func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req da
 					})
 				}
 				productOverrides = append(productOverrides, RemovableStorageProductOverrideDataModel{
-					Permission:               types.StringValue(apiRule.MountAction),
+					Permission:               permission,
 					LocalNotificationMessage: localMessage,
 					ApplyTo:                  applyTo,
 					ProductIDs:               products,
