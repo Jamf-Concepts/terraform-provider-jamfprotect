@@ -83,12 +83,12 @@ resource "jamfprotect_plan" "test" {
 	name                  = %[1]q
 	description           = %[2]q
 	action_configuration  = jamfprotect_action_configuration.test.id
-	communications_protocol = "mqtt"
+	communications_protocol = "MQTT:443"
 	reporting_interval    = 1440
 	report_architecture   = true
 	report_os_version     = true
 
-	endpoint_threat_prevention = "BlockAndReport"
+	endpoint_threat_prevention = "Block and report"
 }
 `, name, description)
 }

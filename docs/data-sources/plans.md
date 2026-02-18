@@ -35,18 +35,18 @@ output "plan_names" {
 Read-Only:
 
 - `action_configuration` (String) The ID of the action configuration associated with this plan.
-- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values: `Block and report`, `Report only`, `Disable`.
 - `analytic_sets` (Set of String) Analytic set UUIDs included in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether auto-updates are enabled for endpoints using this plan.
-- `communications_protocol` (String) The communications protocol used by the plan.
+- `communications_protocol` (String) The communications protocol used by the plan. Values: `MQTT:443`, `WebSocket/MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Whether compliance baseline reporting is enabled.
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the plan.
-- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Values: `Block and report`, `Report only`, `Disable`.
 - `exception_sets` (List of String) A list of exception set IDs associated with this plan.
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
-- `log_level` (String) The log level for the plan.
+- `log_level` (String) The log level for the plan. Values: `Error`, `Warning`, `Info`, `Debug`, `Verbose`.
 - `name` (String) The name of the plan.
 - `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 - `report_architecture` (Boolean) Whether device architecture reporting is enabled.
@@ -57,6 +57,6 @@ Read-Only:
 - `report_os_version` (Boolean) Whether OS version reporting is enabled.
 - `report_serial_number` (Boolean) Whether serial number reporting is enabled.
 - `reporting_interval` (Number) The reporting interval in minutes.
-- `tamper_prevention` (String) Tamper Prevention setting for the plan.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Values: `Block and report`, `Disable`.
 - `telemetry` (String) The ID of the telemetry configuration.
 - `updated` (String) The last-updated timestamp.

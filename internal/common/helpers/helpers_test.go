@@ -194,3 +194,46 @@ func TestIsNotFoundError(t *testing.T) {
 		})
 	}
 }
+
+// TestIsKnownString ensures the helper flags known values correctly.
+func TestIsKnownString(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		value    types.String
+		expected bool
+	}{
+		{
+			name:     "value",
+			value:    types.StringValue("hello"),
+			expected: true,
+		},
+		{
+			name:     "empty string",
+			value:    types.StringValue(""),
+			expected: true,
+		},
+		{
+			name:     "null",
+			value:    types.StringNull(),
+			expected: false,
+		},
+		{
+			name:     "unknown",
+			value:    types.StringUnknown(),
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := IsKnownString(tc.value)
+			if result != tc.expected {
+				t.Errorf("IsKnownString(%v) = %v, want %v", tc.value, result, tc.expected)
+			}
+		})
+	}
+}

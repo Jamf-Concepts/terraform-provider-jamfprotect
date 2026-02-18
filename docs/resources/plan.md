@@ -13,56 +13,30 @@ Manages a plan in Jamf Protect. Plans define the security configuration deployed
 ## Example Usage
 
 ```terraform
-# First create an action configuration for the plan to reference.
-resource "jamfprotect_action_config" "default" {
-  name        = "Default Action Config"
-  description = "Default alert data enrichment settings."
-
-  alert_config = {
-    data = {
-      binary                = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
-      click_event           = { attrs = [], related = [] }
-      download_event        = { attrs = ["sourceUrl"], related = ["file", "process"] }
-      file                  = { attrs = ["sha256hex", "path"], related = [] }
-      fs_event              = { attrs = ["path"], related = ["process", "file"] }
-      group                 = { attrs = [], related = [] }
-      proc_event            = { attrs = ["ppid", "uid"], related = ["process"] }
-      process               = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
-      screenshot_event      = { attrs = [], related = [] }
-      usb_event             = { attrs = [], related = [] }
-      user                  = { attrs = ["name", "uid"], related = [] }
-      gk_event              = { attrs = [], related = [] }
-      keylog_register_event = { attrs = [], related = [] }
-      mrt_event             = { attrs = [], related = [] }
-    }
-  }
-}
-
-# Create a plan that uses the action configuration.
-resource "jamfprotect_plan" "endpoint_security" {
-  name                 = "Endpoint Security Plan"
-  description          = "Standard endpoint security plan with threat prevention."
-  action_configuration = jamfprotect_action_config.default.id
-  auto_update          = true
-
-  communications_protocol = "mqtt"
-
-  reporting_interval   = 1440
-  report_architecture  = true
-  report_hostname      = true
-  report_serial_number = true
-
-  endpoint_threat_prevention = "BlockAndReport"
-  advanced_threat_controls   = "ReportOnly"
-  tamper_prevention          = "BlockAndReport"
-
-  # Optional: Configure custom timeouts (defaults to 30s for all operations)
-  # timeouts {
-  #   create = "60s"
-  #   read   = "30s"
-  #   update = "60s"
-  #   delete = "30s"
-  # }
+resource "jamfprotect_plan" "example" {
+  action_configuration          = "1"
+  advanced_threat_controls      = "Block and report"
+  analytic_sets                 = ["7b88be75-78e3-4682-bbd8-4e16b2209105"]
+  auto_update                   = true
+  communications_protocol       = "MQTT:443"
+  compliance_baseline_reporting = true
+  description                   = "Managed by Terraform"
+  endpoint_threat_prevention    = "Block and report"
+  exception_sets                = ["4c8552c0-8347-43fb-b74b-eda602d02e15"]
+  log_level                     = "Error"
+  name                          = "Example Plan"
+  removable_storage_control_set = "166"
+  report_architecture           = true
+  report_hostname               = true
+  report_kernel_version         = true
+  report_memory_size            = true
+  report_model_name             = true
+  report_os_version             = true
+  report_serial_number          = true
+  reporting_interval            = 1440
+  tamper_prevention             = "Block and report"
+  telemetry                     = "37"
+  timeouts                      = null
 }
 ```
 
@@ -77,15 +51,15 @@ resource "jamfprotect_plan" "endpoint_security" {
 
 ### Optional
 
-- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `Block and report` -> `Prevent`, `Report only` -> `Report`, `Disable` -> omit.
 - `analytic_sets` (Set of String) Analytic set UUIDs to include in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
-- `communications_protocol` (String) The communications protocol to use. Defaults to `mqtt`.
+- `communications_protocol` (String) The communications protocol to use. Defaults to `MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
 - `description` (String) A description of the plan.
-- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `Block and report`. Values map to signatures feed modes: `Block and report` -> `blocking`, `Report only` -> `reportOnly`, `Disable` -> `disabled`.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
-- `log_level` (String) The log level for the plan. Defaults to `ERROR`.
+- `log_level` (String) The log level for the plan. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.
 - `report_hostname` (Boolean) Report the device hostname.
@@ -94,7 +68,7 @@ resource "jamfprotect_plan" "endpoint_security" {
 - `report_model_name` (Boolean) Report the device model name.
 - `report_os_version` (Boolean) Report the OS version details.
 - `report_serial_number` (Boolean) Report the device serial number.
-- `tamper_prevention` (String) Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `BlockAndReport` -> `Prevent`, `Disable` -> omit.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `Block and report` -> `Prevent`, `Disable` -> omit.
 - `telemetry` (String) The ID of the telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 

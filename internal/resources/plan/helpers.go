@@ -7,16 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-)
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+)
 
 const (
 	advancedThreatControlsName = "Advanced Threat Controls"
@@ -24,252 +19,12 @@ const (
 	commsFQDNPlaceholder       = "placeholder - will be updated by resolver on create"
 )
 
-// buildVariables converts the Terraform model into a plan input.
-func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, commsFQDN string, diags *diag.Diagnostics) *jamfprotect.PlanInput {
-	input := &jamfprotect.PlanInput{
-		Name:          data.Name.ValueString(),
-		ActionConfigs: data.ActionConfiguration.ValueString(),
-		AutoUpdate:    data.AutoUpdate.ValueBool(),
-	}
-
-	if !data.Description.IsNull() {
-		input.Description = data.Description.ValueString()
-	} else {
-		input.Description = ""
-	}
-
-	if !data.LogLevel.IsNull() {
-		logLevel := data.LogLevel.ValueString()
-		input.LogLevel = &logLevel
-	}
-
-	if data.Telemetry.IsNull() {
-		input.TelemetryV2Null = true
-	} else if !data.Telemetry.IsUnknown() {
-		telemetry := data.Telemetry.ValueString()
-		input.TelemetryV2 = &telemetry
-	}
-
-	if !data.USBControlSet.IsNull() {
-		usbControlSet := data.USBControlSet.ValueString()
-		input.USBControlSet = &usbControlSet
-	}
-
-	// Exception sets.
-	if !data.ExceptionSets.IsNull() {
-		input.ExceptionSets = common.ListToStrings(ctx, data.ExceptionSets, diags)
-	}
-
-	// Analytic sets (Report type only).
-	var analyticSets []jamfprotect.PlanAnalyticSetInput
-	if !data.AnalyticSets.IsNull() {
-		uuids := common.SetToStrings(ctx, data.AnalyticSets, diags)
-		for _, uuid := range uuids {
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: "Report",
-				UUID: uuid,
-			})
-		}
-	}
-
-	managedSetUUIDs := map[string]string{}
-	shouldResolveManagedSets := len(analyticSets) > 0 || isKnownString(data.AdvancedThreatControls) || isKnownString(data.TamperPrevention)
-	if shouldResolveManagedSets {
-		managedSetUUIDs = r.resolveManagedAnalyticSetUUIDs(ctx, diags)
-		if diags.HasError() {
-			return nil
-		}
-		analyticSets = filterManagedAnalyticSets(analyticSets, managedSetUUIDs, diags)
-		if diags.HasError() {
-			return nil
-		}
-	}
-
-	if isKnownString(data.AdvancedThreatControls) {
-		advancedValue := data.AdvancedThreatControls.ValueString()
-		if advancedValue != "Disable" {
-			uuid := managedSetUUIDs[advancedThreatControlsName]
-			if uuid == "" {
-				diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", advancedThreatControlsName))
-				return nil
-			}
-			setType, ok := advancedThreatControlsToType(advancedValue)
-			if !ok {
-				diags.AddError("Invalid advanced threat controls value", "advanced_threat_controls must be one of: BlockAndReport, ReportOnly, Disable.")
-				return nil
-			}
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: setType,
-				UUID: uuid,
-			})
-		}
-	}
-
-	if isKnownString(data.TamperPrevention) {
-		tamperValue := data.TamperPrevention.ValueString()
-		if tamperValue != "Disable" {
-			uuid := managedSetUUIDs[tamperPreventionName]
-			if uuid == "" {
-				diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", tamperPreventionName))
-				return nil
-			}
-			setType, ok := tamperPreventionToType(tamperValue)
-			if !ok {
-				diags.AddError("Invalid tamper prevention value", "tamper_prevention must be one of: BlockAndReport, Disable.")
-				return nil
-			}
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: setType,
-				UUID: uuid,
-			})
-		}
-	}
-
-	if analyticSets != nil {
-		input.AnalyticSets = analyticSets
-	}
-
-	// Comms config (required).
-	protocol := "mqtt"
-	if isKnownString(data.CommunicationsProtocol) {
-		protocol = data.CommunicationsProtocol.ValueString()
-	}
-	input.CommsConfig = jamfprotect.PlanCommsConfigInput{
-		FQDN:     commsFQDN,
-		Protocol: protocol,
-	}
-
-	// Info sync (required).
-	if data.ReportingInterval.IsNull() {
-		diags.AddError("Missing reporting interval", "reporting_interval must be set.")
-		return nil
-	}
-	input.InfoSync = jamfprotect.PlanInfoSyncInput{
-		Attrs:                buildInfoSyncAttrs(data),
-		InsightsSyncInterval: data.ReportingInterval.ValueInt64() * 60,
-	}
-
-	// Endpoint threat prevention setting (required).
-	if data.EndpointThreatPrevention.IsNull() {
-		input.SignaturesFeedConfig = jamfprotect.PlanSignaturesFeedConfigInput{
-			Mode: "blocking",
-		}
-	} else {
-		mode, ok := endpointThreatPreventionToMode(data.EndpointThreatPrevention.ValueString())
-		if !ok {
-			diags.AddError(
-				"Invalid endpoint threat prevention value",
-				"endpoint_threat_prevention must be one of: BlockAndReport, Report, Disable.",
-			)
-			return nil
-		}
-		input.SignaturesFeedConfig = jamfprotect.PlanSignaturesFeedConfigInput{
-			Mode: mode,
-		}
-	}
-
-	return input
-}
-
-// apiToState maps the API response into the Terraform state model.
-func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, api jamfprotect.Plan, diags *diag.Diagnostics) {
-	data.ID = types.StringValue(api.ID)
-	data.Hash = types.StringValue(api.Hash)
-	data.Name = types.StringValue(api.Name)
-	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
-	data.AutoUpdate = types.BoolValue(api.AutoUpdate)
-
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringNull()
-	}
-
-	if api.LogLevel != "" {
-		data.LogLevel = types.StringValue(api.LogLevel)
-	} else {
-		data.LogLevel = types.StringNull()
-	}
-
-	// Action configs — the API returns an object with id+name; we store just the ID.
-	if api.ActionConfigs != nil {
-		data.ActionConfiguration = types.StringValue(api.ActionConfigs.ID)
-	} else {
-		data.ActionConfiguration = types.StringNull()
-	}
-
-	// Exception sets — extract UUIDs.
-	if len(api.ExceptionSets) > 0 {
-		uuids := make([]string, len(api.ExceptionSets))
-		for i, es := range api.ExceptionSets {
-			uuids[i] = es.UUID
-		}
-		data.ExceptionSets = common.StringsToList(uuids)
-	} else {
-		data.ExceptionSets = common.StringsToList([]string{})
-	}
-
-	// Telemetry reference.
-	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
-		data.Telemetry = types.StringValue(api.TelemetryV2.ID)
-	} else {
-		data.Telemetry = types.StringNull()
-	}
-
-	// USB control set.
-	if api.USBControlSet != nil && api.USBControlSet.ID != "" {
-		data.USBControlSet = types.StringValue(api.USBControlSet.ID)
-	} else {
-		data.USBControlSet = types.StringNull()
-	}
-
-	// Analytic sets (exclude managed ones with dedicated attributes).
-	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
-	if len(filteredAnalyticSets) > 0 {
-		uuids := make([]string, len(filteredAnalyticSets))
-		for i, as := range filteredAnalyticSets {
-			uuids[i] = as.AnalyticSet.UUID
-		}
-		data.AnalyticSets = common.StringsToSet(uuids)
-	} else {
-		data.AnalyticSets = common.StringsToSet([]string{})
-	}
-
-	// Communications protocol.
-	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
-		data.CommunicationsProtocol = types.StringValue(api.CommsConfig.Protocol)
-	} else {
-		data.CommunicationsProtocol = types.StringNull()
-	}
-
-	// Info sync reporting flags.
-	setReportingFlags(data, api.InfoSync)
-
-	// Endpoint threat prevention setting.
-	if api.SignaturesFeedConfig != nil {
-		if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
-			data.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
-		} else {
-			diags.AddError(
-				"Unsupported signatures feed mode",
-				"signaturesFeedConfig.mode was not recognized.",
-			)
-			data.EndpointThreatPrevention = types.StringNull()
-		}
-	} else {
-		data.EndpointThreatPrevention = types.StringNull()
-	}
-
-	data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
-	data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
-}
-
+// endpointThreatPreventionToMode maps UI endpoint threat prevention values to API modes.
 func endpointThreatPreventionToMode(value string) (string, bool) {
 	switch value {
-	case "BlockAndReport":
+	case "Block and report":
 		return "blocking", true
-	case "Report":
+	case "Report only":
 		return "reportOnly", true
 	case "Disable":
 		return "disabled", true
@@ -278,12 +33,13 @@ func endpointThreatPreventionToMode(value string) (string, bool) {
 	}
 }
 
+// modeToEndpointThreatPrevention maps API modes to UI endpoint threat prevention values.
 func modeToEndpointThreatPrevention(mode string) (string, bool) {
 	switch mode {
 	case "blocking":
-		return "BlockAndReport", true
+		return "Block and report", true
 	case "reportOnly", "monitoring":
-		return "Report", true
+		return "Report only", true
 	case "disabled", "off":
 		return "Disable", true
 	default:
@@ -291,77 +47,7 @@ func modeToEndpointThreatPrevention(mode string) (string, bool) {
 	}
 }
 
-func isKnownString(value types.String) bool {
-	return !value.IsNull() && !value.IsUnknown()
-}
-
-func buildInfoSyncAttrs(data PlanResourceModel) []string {
-	attrs := make([]string, 0, 10)
-	if data.ReportArchitecture.ValueBool() {
-		attrs = append(attrs, "arch")
-	}
-	if data.ReportHostname.ValueBool() {
-		attrs = append(attrs, "hostName")
-	}
-	if data.ReportKernelVersion.ValueBool() {
-		attrs = append(attrs, "kernelVersion")
-	}
-	if data.ReportMemorySize.ValueBool() {
-		attrs = append(attrs, "memorySize")
-	}
-	if data.ReportModelName.ValueBool() {
-		attrs = append(attrs, "modelName")
-	}
-	if data.ReportSerialNumber.ValueBool() {
-		attrs = append(attrs, "serial")
-	}
-	if data.ComplianceBaseline.ValueBool() {
-		attrs = append(attrs, "insights")
-	}
-	if data.ReportOSVersion.ValueBool() {
-		attrs = append(attrs, "osMajor", "osMinor", "osPatch", "osString")
-	}
-	return attrs
-}
-
-func setReportingFlags(data *PlanResourceModel, infoSync *jamfprotect.PlanInfoSync) {
-	if infoSync == nil {
-		data.ReportingInterval = types.Int64Null()
-		data.ReportArchitecture = types.BoolValue(false)
-		data.ReportHostname = types.BoolValue(false)
-		data.ReportKernelVersion = types.BoolValue(false)
-		data.ReportMemorySize = types.BoolValue(false)
-		data.ReportModelName = types.BoolValue(false)
-		data.ReportSerialNumber = types.BoolValue(false)
-		data.ComplianceBaseline = types.BoolValue(false)
-		data.ReportOSVersion = types.BoolValue(false)
-		return
-	}
-
-	data.ReportingInterval = types.Int64Value(infoSync.InsightsSyncInterval / 60)
-
-	attrSet := map[string]struct{}{}
-	for _, attr := range infoSync.Attrs {
-		attrSet[attr] = struct{}{}
-	}
-
-	data.ReportArchitecture = types.BoolValue(hasAttr(attrSet, "arch"))
-	data.ReportHostname = types.BoolValue(hasAttr(attrSet, "hostName"))
-	data.ReportKernelVersion = types.BoolValue(hasAttr(attrSet, "kernelVersion"))
-	data.ReportMemorySize = types.BoolValue(hasAttr(attrSet, "memorySize"))
-	data.ReportModelName = types.BoolValue(hasAttr(attrSet, "modelName"))
-	data.ReportSerialNumber = types.BoolValue(hasAttr(attrSet, "serial"))
-	data.ComplianceBaseline = types.BoolValue(hasAttr(attrSet, "insights"))
-	data.ReportOSVersion = types.BoolValue(
-		hasAttr(attrSet, "osMajor") || hasAttr(attrSet, "osMinor") || hasAttr(attrSet, "osPatch") || hasAttr(attrSet, "osString"),
-	)
-}
-
-func hasAttr(attrs map[string]struct{}, key string) bool {
-	_, ok := attrs[key]
-	return ok
-}
-
+// resolveManagedAnalyticSetUUIDs loads managed analytic set UUIDs by name.
 func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags *diag.Diagnostics) map[string]string {
 	sets, err := r.service.ListAnalyticSets(ctx)
 	if err != nil {
@@ -392,6 +78,7 @@ func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags
 	return uuids
 }
 
+// filterManagedAnalyticSets removes managed analytic sets from the plan input.
 func filterManagedAnalyticSets(sets []jamfprotect.PlanAnalyticSetInput, managedUUIDs map[string]string, diags *diag.Diagnostics) []jamfprotect.PlanAnalyticSetInput {
 	if len(sets) == 0 {
 		return sets
@@ -418,11 +105,12 @@ func filterManagedAnalyticSets(sets []jamfprotect.PlanAnalyticSetInput, managedU
 	return filtered
 }
 
+// advancedThreatControlsToType maps UI advanced threat controls values to analytic set types.
 func advancedThreatControlsToType(value string) (string, bool) {
 	switch value {
-	case "BlockAndReport":
+	case "Block and report":
 		return "Prevent", true
-	case "ReportOnly":
+	case "Report only":
 		return "Report", true
 	case "Disable":
 		return "", true
@@ -431,9 +119,10 @@ func advancedThreatControlsToType(value string) (string, bool) {
 	}
 }
 
+// tamperPreventionToType maps UI tamper prevention values to analytic set types.
 func tamperPreventionToType(value string) (string, bool) {
 	switch value {
-	case "BlockAndReport":
+	case "Block and report":
 		return "Prevent", true
 	case "Disable":
 		return "", true
@@ -442,6 +131,7 @@ func tamperPreventionToType(value string) (string, bool) {
 	}
 }
 
+// resolveManagedAnalyticSetState maps managed analytic sets to UI values.
 func resolveManagedAnalyticSetState(sets []jamfprotect.PlanAnalyticSet, name string, allowReport bool, diags *diag.Diagnostics) types.String {
 	for _, set := range sets {
 		if set.AnalyticSet.Name != name {
@@ -449,10 +139,10 @@ func resolveManagedAnalyticSetState(sets []jamfprotect.PlanAnalyticSet, name str
 		}
 		switch set.Type {
 		case "Prevent":
-			return types.StringValue("BlockAndReport")
+			return types.StringValue("Block and report")
 		case "Report":
 			if allowReport {
-				return types.StringValue("ReportOnly")
+				return types.StringValue("Report only")
 			}
 			if diags != nil {
 				diags.AddError("Unsupported analytic set type", fmt.Sprintf("%s must be Prevent, but was Report.", name))
@@ -469,6 +159,7 @@ func resolveManagedAnalyticSetState(sets []jamfprotect.PlanAnalyticSet, name str
 	return types.StringValue("Disable")
 }
 
+// filterManagedAnalyticSetEntries drops managed sets from the API list.
 func filterManagedAnalyticSetEntries(sets []jamfprotect.PlanAnalyticSet) []jamfprotect.PlanAnalyticSet {
 	if len(sets) == 0 {
 		return nil

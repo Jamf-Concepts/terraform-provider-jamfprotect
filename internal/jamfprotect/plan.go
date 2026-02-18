@@ -330,7 +330,7 @@ func (s *Service) ListPlans(ctx context.Context) ([]Plan, error) {
 	for {
 		vars := map[string]any{
 			"direction": "ASC",
-			"field":     "CREATED",
+			"field":     "created",
 		}
 		if nextToken != nil {
 			vars["nextToken"] = *nextToken

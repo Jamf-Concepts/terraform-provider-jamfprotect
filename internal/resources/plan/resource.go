@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,7 +26,9 @@ import (
 
 var _ resource.Resource = &PlanResource{}
 var _ resource.ResourceWithImportState = &PlanResource{}
+var _ resource.ResourceWithIdentity = &PlanResource{}
 
+// NewPlanResource returns a new plan resource.
 func NewPlanResource() resource.Resource {
 	return &PlanResource{}
 }
@@ -39,6 +42,7 @@ func (r *PlanResource) Metadata(ctx context.Context, req resource.MetadataReques
 	resp.TypeName = req.ProviderTypeName + "_plan"
 }
 
+// Schema defines the plan schema.
 func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a plan in Jamf Protect. Plans define the security configuration deployed to endpoints, including analytic sets, action configurations, telemetry settings, and more.",
@@ -60,15 +64,14 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A description of the plan.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(""),
 			},
 			"log_level": schema.StringAttribute{
-				MarkdownDescription: "The log level for the plan. Defaults to `ERROR`.",
+				MarkdownDescription: "The log level for the plan. Defaults to `Error`.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString("ERROR"),
+				Default:             stringdefault.StaticString("Error"),
 				Validators: []validator.String{
-					stringvalidator.OneOf("DISABLED", "ERROR", "WARNING", "INFO", "DEBUG"),
+					stringvalidator.OneOf(logLevelUIOptions...),
 				},
 			},
 			"auto_update": schema.BoolAttribute{
@@ -100,12 +103,12 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType:         types.StringType,
 			},
 			"communications_protocol": schema.StringAttribute{
-				MarkdownDescription: "The communications protocol to use. Defaults to `mqtt`.",
+				MarkdownDescription: "The communications protocol to use. Defaults to `MQTT:443`.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString("mqtt"),
+				Default:             stringdefault.StaticString("MQTT:443"),
 				Validators: []validator.String{
-					stringvalidator.OneOf("mqtt", "wss/mqtt"),
+					stringvalidator.OneOf(communicationsProtocolUIOptions...),
 				},
 			},
 			"reporting_interval": schema.Int64Attribute{
@@ -161,30 +164,30 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
-				MarkdownDescription: "Endpoint threat prevention setting for the plan. Defaults to `BlockAndReport`. Values map to signatures feed modes: `BlockAndReport` -> `blocking`, `Report` -> `reportOnly`, `Disable` -> `disabled`.",
+				MarkdownDescription: "Endpoint threat prevention setting for the plan. Defaults to `Block and report`. Values map to signatures feed modes: `Block and report` -> `blocking`, `Report only` -> `reportOnly`, `Disable` -> `disabled`.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString("BlockAndReport"),
+				Default:             stringdefault.StaticString("Block and report"),
 				Validators: []validator.String{
-					stringvalidator.OneOf("BlockAndReport", "Report", "Disable"),
+					stringvalidator.OneOf(endpointThreatPreventionUIOptions...),
 				},
 			},
 			"advanced_threat_controls": schema.StringAttribute{
-				MarkdownDescription: "Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `BlockAndReport` -> `Prevent`, `ReportOnly` -> `Report`, `Disable` -> omit.",
+				MarkdownDescription: "Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `Block and report` -> `Prevent`, `Report only` -> `Report`, `Disable` -> omit.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				Validators: []validator.String{
-					stringvalidator.OneOf("BlockAndReport", "ReportOnly", "Disable"),
+					stringvalidator.OneOf(advancedThreatControlsUIOptions...),
 				},
 			},
 			"tamper_prevention": schema.StringAttribute{
-				MarkdownDescription: "Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `BlockAndReport` -> `Prevent`, `Disable` -> omit.",
+				MarkdownDescription: "Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `Block and report` -> `Prevent`, `Disable` -> omit.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				Validators: []validator.String{
-					stringvalidator.OneOf("BlockAndReport", "Disable"),
+					stringvalidator.OneOf(tamperPreventionUIOptions...),
 				},
 			},
 			"created": schema.StringAttribute{
@@ -206,6 +209,19 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
+// IdentitySchema defines the identity attributes for plans.
+func (r *PlanResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the plan.",
+			},
+		},
+	}
+}
+
+// Configure prepares the plan service client.
 func (r *PlanResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -223,6 +239,7 @@ func (r *PlanResource) Configure(ctx context.Context, req resource.ConfigureRequ
 // CRUD
 // ---------------------------------------------------------------------------
 
+// ImportState supports importing plans by ID.
 func (r *PlanResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
