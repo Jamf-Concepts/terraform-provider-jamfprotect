@@ -178,7 +178,7 @@ func (s *Service) ListUnifiedLoggingFilters(ctx context.Context) ([]UnifiedLoggi
 	for {
 		vars := map[string]any{
 			"direction": "ASC",
-			"field":     "NAME",
+			"field":     "name",
 			"filter":    map[string]any{},
 		}
 		if nextToken != nil {

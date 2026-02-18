@@ -1164,13 +1164,13 @@ func TestService_UnifiedLoggingFilter(t *testing.T) {
 				t.Fatalf("expected /graphql, got %s", path)
 			}
 			if callCount == 1 {
-				assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME", "filter": map[string]any{}}, req.Variables)
+				assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "name", "filter": map[string]any{}}, req.Variables)
 				return map[string]any{"data": map[string]any{"listUnifiedLoggingFilters": map[string]any{
 					"items":    []map[string]any{{"uuid": "ulf-1"}},
 					"pageInfo": map[string]any{"next": "next", "total": 2},
 				}}}
 			}
-			assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME", "filter": map[string]any{}, "nextToken": "next"}, req.Variables)
+			assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "name", "filter": map[string]any{}, "nextToken": "next"}, req.Variables)
 			return map[string]any{"data": map[string]any{"listUnifiedLoggingFilters": map[string]any{
 				"items":    []map[string]any{{"uuid": "ulf-2"}},
 				"pageInfo": map[string]any{"next": nil, "total": 2},
