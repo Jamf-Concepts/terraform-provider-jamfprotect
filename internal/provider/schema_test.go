@@ -696,11 +696,8 @@ func TestExceptionSetResourceSchema(t *testing.T) {
 		t.Error("expected attribute 'timeouts' in exception set schema")
 	}
 
-	if _, ok := resp.Schema.Blocks["exception"]; !ok {
-		t.Error("expected block 'exception' in exception set schema")
-	}
-	if _, ok := resp.Schema.Blocks["endpoint_security_exception"]; !ok {
-		t.Error("expected block 'endpoint_security_exception' in exception set schema")
+	if _, ok := resp.Schema.Attributes["exceptions"]; !ok {
+		t.Error("expected attribute 'exceptions' in exception set schema")
 	}
 }
 
