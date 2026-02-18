@@ -11,19 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &ExceptionSetResource{}
 var _ resource.ResourceWithImportState = &ExceptionSetResource{}
+var _ resource.ResourceWithIdentity = &ExceptionSetResource{}
 
 func NewExceptionSetResource() resource.Resource {
 	return &ExceptionSetResource{}
@@ -55,7 +57,6 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "A description of the exception set.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(""),
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
@@ -83,10 +84,10 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of exception. Valid values: `User`, `AppSigningInfo`, `TeamId`, `Executable`, `PlatformBinary`, `Path`.",
+							MarkdownDescription: "The type of exception. Valid options are: " + common.FormatOptions(exceptionTypeOptions) + ".",
 							Required:            true,
 							Validators: []validator.String{
-								stringvalidator.OneOf("User", "AppSigningInfo", "TeamId", "Executable", "PlatformBinary", "Path"),
+								stringvalidator.OneOf(exceptionTypeOptions...),
 							},
 						},
 						"value": schema.StringAttribute{
@@ -108,7 +109,7 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 								stringvalidator.OneOf("Analytics", "ThreatPrevention", "TelemetryV2", "Telemetry"),
 							},
 						},
-						"analytic_types": schema.ListAttribute{
+						"analytic_types": schema.SetAttribute{
 							MarkdownDescription: "The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).",
 							Optional:            true,
 							ElementType:         types.StringType,
@@ -125,10 +126,10 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							MarkdownDescription: "The type of ES exception. Valid values: `Groups`, `User`, `PlatformBinary`, `Executable`, `TeamId`, `AppSigningInfo`.",
+							MarkdownDescription: "The type of endpoint security exception. Valid options are: " + common.FormatOptions(esExceptionTypeOptions) + ".",
 							Required:            true,
 							Validators: []validator.String{
-								stringvalidator.OneOf("Groups", "User", "PlatformBinary", "Executable", "TeamId", "AppSigningInfo"),
+								stringvalidator.OneOf(esExceptionTypeOptions...),
 							},
 						},
 						"value": schema.StringAttribute{
@@ -190,4 +191,16 @@ func (r *ExceptionSetResource) Configure(ctx context.Context, req resource.Confi
 
 func (r *ExceptionSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// IdentitySchema defines the identity attributes for exception set resources.
+func (r *ExceptionSetResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the exception set.",
+			},
+		},
+	}
 }

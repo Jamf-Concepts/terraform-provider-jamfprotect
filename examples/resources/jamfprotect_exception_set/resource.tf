@@ -4,7 +4,7 @@ resource "jamfprotect_exception_set" "example" {
   endpoint_security_exception {
     ignore_activity  = "ThreatPrevention"
     ignore_list_type = "ignore"
-    type             = "Groups"
+    type             = "Group"
     value            = "EXAMPLE"
   }
   endpoint_security_exception {
@@ -20,12 +20,12 @@ resource "jamfprotect_exception_set" "example" {
     ignore_list_subtype = "responsible"
     ignore_list_type    = "ignore"
     team_id             = "EXAMPLE"
-    type                = "AppSigningInfo"
+    type                = "App Signing Info"
   }
   exception {
     analytic_types  = ["GPFSEvent"]
     ignore_activity = "Analytics"
-    type            = "PlatformBinary"
+    type            = "Platform Binary"
     value           = "com.apple.SafariBookmarksSyncAgent"
   }
   exception {
@@ -36,7 +36,7 @@ resource "jamfprotect_exception_set" "example" {
   exception {
     analytic_types  = ["GPProcessEvent"]
     ignore_activity = "Analytics"
-    type            = "TeamId"
+    type            = "Team ID"
     value           = "PXPZ95SK77"
   }
 }
