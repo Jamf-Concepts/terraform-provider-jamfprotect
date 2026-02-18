@@ -28,11 +28,11 @@ type exceptionModel struct {
 	AppID          types.String `tfsdk:"app_id"`
 	TeamID         types.String `tfsdk:"team_id"`
 	IgnoreActivity types.String `tfsdk:"ignore_activity"`
-	AnalyticTypes  types.List   `tfsdk:"analytic_types"`
+	AnalyticTypes  types.Set    `tfsdk:"analytic_types"`
 	AnalyticUuid   types.String `tfsdk:"analytic_uuid"`
 }
 
-// esExceptionModel maps the es_exceptions nested attribute.
+// esExceptionModel maps the endpoint security exceptions nested attribute.
 type esExceptionModel struct {
 	Type              types.String `tfsdk:"type"`
 	Value             types.String `tfsdk:"value"`

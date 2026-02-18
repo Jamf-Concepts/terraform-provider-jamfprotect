@@ -30,7 +30,7 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test exception set description"),
 					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
-						"type":            "PlatformBinary",
+						"type":            "Platform Binary",
 						"value":           "com.example.app",
 						"ignore_activity": "Analytics",
 					}),
@@ -71,7 +71,7 @@ func TestAccExceptionSetResource_withEsExceptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_security_exception.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_security_exception.*", map[string]string{
-						"type":                "Executable",
+						"type":                "Process Path",
 						"value":               "/usr/bin/test",
 						"ignore_activity":     "TelemetryV2",
 						"ignore_list_type":    "sourceIgnore",
@@ -99,7 +99,7 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "exception.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exception.*", map[string]string{
-						"type":            "AppSigningInfo",
+						"type":            "App Signing Info",
 						"app_id":          "com.example.app",
 						"team_id":         "ABC123DEF4",
 						"ignore_activity": "Analytics",
@@ -117,7 +117,7 @@ resource "jamfprotect_exception_set" "test" {
   description = %[2]q
 
 	exception {
-		type            = "PlatformBinary"
+		type            = "Platform Binary"
 		value           = "com.example.app"
 		ignore_activity = "Analytics"
 	}
@@ -132,7 +132,7 @@ resource "jamfprotect_exception_set" "test" {
   description = "Test exception set with ES exceptions"
 
 	endpoint_security_exception {
-		type                = "Executable"
+		type                = "Process Path"
 		value               = "/usr/bin/test"
 		ignore_activity     = "TelemetryV2"
 		ignore_list_type    = "sourceIgnore"
@@ -150,7 +150,7 @@ resource "jamfprotect_exception_set" "test" {
   description = "Test exception set with app signing info"
 
 	exception {
-		type            = "AppSigningInfo"
+		type            = "App Signing Info"
 		app_id          = "com.example.app"
 		team_id         = "ABC123DEF4"
 		ignore_activity = "Analytics"

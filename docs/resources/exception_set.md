@@ -19,7 +19,7 @@ resource "jamfprotect_exception_set" "example" {
   endpoint_security_exception {
     ignore_activity  = "ThreatPrevention"
     ignore_list_type = "ignore"
-    type             = "Groups"
+    type             = "Group"
     value            = "EXAMPLE"
   }
   endpoint_security_exception {
@@ -35,12 +35,12 @@ resource "jamfprotect_exception_set" "example" {
     ignore_list_subtype = "responsible"
     ignore_list_type    = "ignore"
     team_id             = "EXAMPLE"
-    type                = "AppSigningInfo"
+    type                = "App Signing Info"
   }
   exception {
     analytic_types  = ["GPFSEvent"]
     ignore_activity = "Analytics"
-    type            = "PlatformBinary"
+    type            = "Platform Binary"
     value           = "com.apple.SafariBookmarksSyncAgent"
   }
   exception {
@@ -51,7 +51,7 @@ resource "jamfprotect_exception_set" "example" {
   exception {
     analytic_types  = ["GPProcessEvent"]
     ignore_activity = "Analytics"
-    type            = "TeamId"
+    type            = "Team ID"
     value           = "PXPZ95SK77"
   }
 }
@@ -84,7 +84,7 @@ resource "jamfprotect_exception_set" "example" {
 Required:
 
 - `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
-- `type` (String) The type of ES exception. Valid values: `Groups`, `User`, `PlatformBinary`, `Executable`, `TeamId`, `AppSigningInfo`.
+- `type` (String) The type of endpoint security exception. Valid options are: `App Signing Info`, `Team ID`, `Process Path`, `Platform Binary`, `User`, `Group`.
 
 Optional:
 
@@ -102,11 +102,11 @@ Optional:
 Required:
 
 - `ignore_activity` (String) The activity type to ignore. Valid values: `Analytics`, `ThreatPrevention`, `TelemetryV2`, `Telemetry`.
-- `type` (String) The type of exception. Valid values: `User`, `AppSigningInfo`, `TeamId`, `Executable`, `PlatformBinary`, `Path`.
+- `type` (String) The type of exception. Valid options are: `App Signing Info`, `Team ID`, `Process Path`, `Platform Binary`, `User`, `File Path`.
 
 Optional:
 
-- `analytic_types` (List of String) The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).
+- `analytic_types` (Set of String) The types of analytics this exception applies to (e.g., `GPFSEvent`, `GPProcessEvent`).
 - `analytic_uuid` (String) The UUID of a specific analytic this exception applies to. Mutually exclusive with `analytic_types`.
 - `app_id` (String) Application identifier for code signature exceptions.
 - `team_id` (String) Team identifier for code signature exceptions.

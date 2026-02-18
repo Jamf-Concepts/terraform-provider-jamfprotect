@@ -3,7 +3,9 @@ package exception_set
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
@@ -16,7 +18,12 @@ func (r *ExceptionSetResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	createTimeout, diags := data.Timeouts.Create(ctx, constants.DefaultCreateTimeout)
+	timeoutsValue := data.Timeouts
+	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
+		timeoutsValue = common.EmptyTimeoutsValue()
+	}
+
+	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -38,7 +45,19 @@ func (r *ExceptionSetResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing exception set ID",
+			"CreateExceptionSet did not return a UUID for the new exception set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -49,12 +68,32 @@ func (r *ExceptionSetResource) Create(ctx context.Context, req resource.CreateRe
 
 func (r *ExceptionSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data ExceptionSetResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if req.State.Raw.IsNull() {
+		if req.Identity == nil {
+			resp.Diagnostics.AddError(
+				"Missing exception set identity",
+				"The resource has no prior state and no identity data to refresh from.",
+			)
+			return
+		}
+		resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("id"), &data.ID)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Timeouts = common.EmptyTimeoutsValue()
+	} else {
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	readTimeout, diags := data.Timeouts.Read(ctx, constants.DefaultReadTimeout)
+	timeoutsValue := data.Timeouts
+	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
+		timeoutsValue = common.EmptyTimeoutsValue()
+	}
+
+	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -76,7 +115,19 @@ func (r *ExceptionSetResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	r.apiToState(ctx, &data, *result, &resp.Diagnostics)
+	r.applyState(ctx, &data, *result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing exception set ID",
+			"GetExceptionSet did not return a UUID for the exception set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -91,6 +142,11 @@ func (r *ExceptionSetResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	timeoutsValue := data.Timeouts
+	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
+		timeoutsValue = common.EmptyTimeoutsValue()
+	}
+
 	// UUID comes from state, not plan.
 	var state ExceptionSetResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -99,7 +155,7 @@ func (r *ExceptionSetResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	data.ID = state.ID
 
-	updateTimeout, diags := data.Timeouts.Update(ctx, constants.DefaultUpdateTimeout)
+	updateTimeout, diags := timeoutsValue.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,7 +177,19 @@ func (r *ExceptionSetResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing exception set ID",
+			"UpdateExceptionSet did not return a UUID for the exception set.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -136,7 +204,12 @@ func (r *ExceptionSetResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, constants.DefaultDeleteTimeout)
+	timeoutsValue := data.Timeouts
+	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
+		timeoutsValue = common.EmptyTimeoutsValue()
+	}
+
+	deleteTimeout, diags := timeoutsValue.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
