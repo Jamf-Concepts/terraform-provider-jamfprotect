@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -101,7 +103,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"binary_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for binary events.",
+						MarkdownDescription: "Included data attributes for binary events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -109,7 +111,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"synthetic_click_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for synthetic click events.",
+						MarkdownDescription: "Included data attributes for synthetic click events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -117,7 +119,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"download_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for download events.",
+						MarkdownDescription: "Included data attributes for download events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -125,7 +127,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"file_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for file events.",
+						MarkdownDescription: "Included data attributes for file events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -133,7 +135,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"file_system_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for file system events.",
+						MarkdownDescription: "Included data attributes for file system events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -141,7 +143,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"group_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for group events.",
+						MarkdownDescription: "Included data attributes for group events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -149,7 +151,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"process_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for process events.",
+						MarkdownDescription: "Included data attributes for process events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -157,7 +159,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"process_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for process metadata.",
+						MarkdownDescription: "Included data attributes for process metadata. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -165,7 +167,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"screenshot_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for screenshot events.",
+						MarkdownDescription: "Included data attributes for screenshot events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -173,7 +175,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"user_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for user events.",
+						MarkdownDescription: "Included data attributes for user events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -181,7 +183,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"gatekeeper_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for gatekeeper events.",
+						MarkdownDescription: "Included data attributes for gatekeeper events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -189,7 +191,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"keylog_register_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for keylog register events.",
+						MarkdownDescription: "Included data attributes for keylog register events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -204,7 +206,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"collect_alerts": schema.SetAttribute{
-							MarkdownDescription: "Alert severities collected by this endpoint.",
+							MarkdownDescription: "Alert severities collected by this endpoint. Valid options are: " + common.FormatOptions(endpointAlertSeverities) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -212,7 +214,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							},
 						},
 						"collect_logs": schema.SetAttribute{
-							MarkdownDescription: "Log types collected by this endpoint.",
+							MarkdownDescription: "Log types collected by this endpoint. Valid options are: " + common.FormatOptions(endpointLogTypes) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -240,7 +242,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							Optional:            true,
 						},
 						"method": schema.StringAttribute{
-							MarkdownDescription: "HTTP request method.",
+							MarkdownDescription: "HTTP request method. Valid options are: " + common.FormatOptions(httpMethodOptions) + ".",
 							Optional:            true,
 							Validators: []validator.String{
 								stringvalidator.OneOf(httpMethodOptions...),
@@ -265,7 +267,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"collect_alerts": schema.SetAttribute{
-							MarkdownDescription: "Alert severities collected by this endpoint.",
+							MarkdownDescription: "Alert severities collected by this endpoint. Valid options are: " + common.FormatOptions(endpointAlertSeverities) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -273,7 +275,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							},
 						},
 						"collect_logs": schema.SetAttribute{
-							MarkdownDescription: "Log types collected by this endpoint.",
+							MarkdownDescription: "Log types collected by this endpoint. Valid options are: " + common.FormatOptions(endpointLogTypes) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -287,6 +289,9 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						"port": schema.Int64Attribute{
 							MarkdownDescription: "Kafka port.",
 							Optional:            true,
+							Validators: []validator.Int64{
+								int64validator.Between(0, 65535),
+							},
 						},
 						"topic": schema.StringAttribute{
 							MarkdownDescription: "Kafka topic.",
@@ -309,7 +314,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"collect_alerts": schema.SetAttribute{
-							MarkdownDescription: "Alert severities collected by this endpoint.",
+							MarkdownDescription: "Alert severities collected by this endpoint. Valid options are: " + common.FormatOptions(endpointAlertSeverities) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -317,7 +322,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							},
 						},
 						"collect_logs": schema.SetAttribute{
-							MarkdownDescription: "Log types collected by this endpoint.",
+							MarkdownDescription: "Log types collected by this endpoint. Valid options are: " + common.FormatOptions(endpointLogTypes) + ".",
 							Optional:            true,
 							ElementType:         types.StringType,
 							Validators: []validator.Set{
@@ -331,9 +336,12 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						"port": schema.Int64Attribute{
 							MarkdownDescription: "Syslog port.",
 							Optional:            true,
+							Validators: []validator.Int64{
+								int64validator.Between(0, 65535),
+							},
 						},
 						"protocol": schema.StringAttribute{
-							MarkdownDescription: "Syslog protocol.",
+							MarkdownDescription: "Syslog protocol. Valid options are: " + common.FormatOptions(syslogProtocolOptions) + ".",
 							Optional:            true,
 							Validators: []validator.String{
 								stringvalidator.OneOf(syslogProtocolOptions...),
@@ -347,7 +355,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional:            true,
 				Attributes: map[string]schema.Attribute{
 					"collect_alerts": schema.SetAttribute{
-						MarkdownDescription: "Alert severities collected by this endpoint.",
+						MarkdownDescription: "Alert severities collected by this endpoint. Valid options are: " + common.FormatOptions(endpointAlertSeverities) + ".",
 						Optional:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -355,7 +363,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"collect_logs": schema.SetAttribute{
-						MarkdownDescription: "Log types collected by this endpoint.",
+						MarkdownDescription: "Log types collected by this endpoint. Valid options are: " + common.FormatOptions(endpointLogTypes) + ".",
 						Optional:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -389,7 +397,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional:            true,
 				Attributes: map[string]schema.Attribute{
 					"collect_alerts": schema.SetAttribute{
-						MarkdownDescription: "Alert severities collected by this endpoint.",
+						MarkdownDescription: "Alert severities collected by this endpoint. Valid options are: " + common.FormatOptions(endpointAlertSeverities) + ".",
 						Optional:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
@@ -397,7 +405,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					"collect_logs": schema.SetAttribute{
-						MarkdownDescription: "Log types collected by this endpoint.",
+						MarkdownDescription: "Log types collected by this endpoint. Valid options are: " + common.FormatOptions(endpointLogTypes) + ".",
 						Optional:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{

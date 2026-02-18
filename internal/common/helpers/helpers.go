@@ -6,6 +6,8 @@ package common
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -13,6 +15,12 @@ import (
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
+
+// PageInfo represents the pagination metadata returned by list queries.
+type PageInfo struct {
+	Next  *string `json:"next"`
+	Total int     `json:"total"`
+}
 
 // ListToStrings converts a types.List of strings into a Go []string.
 func ListToStrings(ctx context.Context, list types.List, diags *diag.Diagnostics) []string {
@@ -65,8 +73,27 @@ func IsNotFoundError(err error) bool {
 	return errors.Is(err, client.ErrNotFound)
 }
 
-// PageInfo represents the pagination metadata returned by list queries.
-type PageInfo struct {
-	Next  *string `json:"next"`
-	Total int     `json:"total"`
+// Int64ValueOrNullValue returns a types.Int64Value if the value is non-zero, or types.Int64Null if the value is zero.
+func Int64ValueOrNullValue(value int64) attr.Value {
+	if value == 0 {
+		return types.Int64Null()
+	}
+	return types.Int64Value(value)
+}
+
+// StringValueOrNullValue returns a types.StringValue if the value is non-empty, or types.StringNull if the value is empty.
+func StringValueOrNullValue(value string) attr.Value {
+	if value == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(value)
+}
+
+// FormatOptions formats a list of options as a human-readable string for use in schema descriptions.
+func FormatOptions(values []string) string {
+	quoted := make([]string, 0, len(values))
+	for _, value := range values {
+		quoted = append(quoted, fmt.Sprintf("`%s`", value))
+	}
+	return strings.Join(quoted, ", ")
 }

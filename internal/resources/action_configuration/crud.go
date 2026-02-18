@@ -41,7 +41,7 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -78,7 +78,7 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	r.apiToState(ctx, &data, *result, &resp.Diagnostics)
+	r.applyState(ctx, &data, *result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -121,7 +121,7 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	r.apiToState(ctx, &data, result, &resp.Diagnostics)
+	r.applyState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

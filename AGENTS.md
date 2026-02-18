@@ -56,7 +56,7 @@ internal/
   jamfprotect/                   # Service layer built on the transport client
   provider/                      # Provider wiring + schema validation tests
   resources/                     # Per-resource packages (resource + data source)
-    action_configuration/        # crud.go, data_source.go, helpers.go, resource.go, types.go
+    action_configuration/        # crud.go, data_source.go, input_builders.go, mappings.go, model_types.go, resource.go, schema_types.go, state_builders.go
     analytic/                     # crud.go, data_source.go, helpers.go, resource.go, types.go
     analytic_set/                # crud.go, data_source.go, helpers.go, resource.go, types.go
     custom_prevent_list/         # crud.go, data_source.go, helpers.go, resource.go, types.go
@@ -88,6 +88,23 @@ examples/
 
 - Look for opportunities to create reusable packages (helper/utility functions) instead of duplicating logic in resource packages.
 - Keep packages split by concern with focused files (crud, helpers, resource, types, data source).
+
+### Resource Package File Conventions
+
+Use resource-agnostic filenames and helper names so the same structure can apply to all resources:
+
+- `resource.go`: schema and boilerplate.
+- `crud.go`: Create/Read/Update/Delete and import.
+- `model_types.go`: Terraform model structs only.
+- `schema_types.go`: attr type maps used to build ObjectValue/ListValue state.
+- `mappings.go`: lookup tables and name mappings.
+- `input_builders.go`: build API inputs from Terraform model data.
+- `state_builders.go`: map API responses to Terraform state.
+
+Optional split-outs for complex resources:
+
+- `endpoints_builders.go` and `endpoints_state.go` when endpoint logic dominates.
+- `nested_builders.go` and `nested_state.go` for large nested payloads.
 
 ## Schema Guidelines
 
