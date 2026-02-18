@@ -172,14 +172,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
 						},
 					},
-					"usb_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for USB events.",
-						Required:            true,
-						ElementType:         types.StringType,
-						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-						},
-					},
 					"user_included_data_attributes": schema.SetAttribute{
 						MarkdownDescription: "Included data attributes for user events.",
 						Required:            true,
@@ -198,14 +190,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 					},
 					"keylog_register_event_included_data_attributes": schema.SetAttribute{
 						MarkdownDescription: "Included data attributes for keylog register events.",
-						Required:            true,
-						ElementType:         types.StringType,
-						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
-						},
-					},
-					"malware_removal_tool_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for malware removal tool events.",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{

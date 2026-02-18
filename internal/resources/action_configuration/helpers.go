@@ -23,20 +23,18 @@ import (
 
 // alertDataCollectionAttrTypes defines the attribute types for alert_data_collection.
 var alertDataCollectionAttrTypes = map[string]attr.Type{
-	"binary_included_data_attributes":                     types.SetType{ElemType: types.StringType},
-	"synthetic_click_event_included_data_attributes":      types.SetType{ElemType: types.StringType},
-	"download_event_included_data_attributes":             types.SetType{ElemType: types.StringType},
-	"file_included_data_attributes":                       types.SetType{ElemType: types.StringType},
-	"file_system_event_included_data_attributes":          types.SetType{ElemType: types.StringType},
-	"group_included_data_attributes":                      types.SetType{ElemType: types.StringType},
-	"process_event_included_data_attributes":              types.SetType{ElemType: types.StringType},
-	"process_included_data_attributes":                    types.SetType{ElemType: types.StringType},
-	"screenshot_event_included_data_attributes":           types.SetType{ElemType: types.StringType},
-	"usb_event_included_data_attributes":                  types.SetType{ElemType: types.StringType},
-	"user_included_data_attributes":                       types.SetType{ElemType: types.StringType},
-	"gatekeeper_event_included_data_attributes":           types.SetType{ElemType: types.StringType},
-	"keylog_register_event_included_data_attributes":      types.SetType{ElemType: types.StringType},
-	"malware_removal_tool_event_included_data_attributes": types.SetType{ElemType: types.StringType},
+	"binary_included_data_attributes":                types.SetType{ElemType: types.StringType},
+	"synthetic_click_event_included_data_attributes": types.SetType{ElemType: types.StringType},
+	"download_event_included_data_attributes":        types.SetType{ElemType: types.StringType},
+	"file_included_data_attributes":                  types.SetType{ElemType: types.StringType},
+	"file_system_event_included_data_attributes":     types.SetType{ElemType: types.StringType},
+	"group_included_data_attributes":                 types.SetType{ElemType: types.StringType},
+	"process_event_included_data_attributes":         types.SetType{ElemType: types.StringType},
+	"process_included_data_attributes":               types.SetType{ElemType: types.StringType},
+	"screenshot_event_included_data_attributes":      types.SetType{ElemType: types.StringType},
+	"user_included_data_attributes":                  types.SetType{ElemType: types.StringType},
+	"gatekeeper_event_included_data_attributes":      types.SetType{ElemType: types.StringType},
+	"keylog_register_event_included_data_attributes": types.SetType{ElemType: types.StringType},
 }
 
 // eventTypeMapping maps snake_case Terraform attribute names to camelCase API field names.
@@ -53,10 +51,29 @@ var eventTypeMapping = []struct {
 	{"process_event", "procEvent"},
 	{"process", "process"},
 	{"screenshot_event", "screenshotEvent"},
-	{"usb_event", "usbEvent"},
 	{"user", "user"},
 	{"gatekeeper_event", "gkEvent"},
 	{"keylog_register_event", "keylogRegisterEvent"},
+}
+
+// apiEventTypeMapping includes event types required by the API, even if the schema omits them.
+var apiEventTypeMapping = []struct {
+	tfName  string
+	apiName string
+}{
+	{"binary", "binary"},
+	{"synthetic_click_event", "clickEvent"},
+	{"download_event", "downloadEvent"},
+	{"file", "file"},
+	{"file_system_event", "fsEvent"},
+	{"group", "group"},
+	{"process_event", "procEvent"},
+	{"process", "process"},
+	{"screenshot_event", "screenshotEvent"},
+	{"user", "user"},
+	{"gatekeeper_event", "gkEvent"},
+	{"keylog_register_event", "keylogRegisterEvent"},
+	{"usb_event", "usbEvent"},
 	{"malware_removal_tool_event", "mrtEvent"},
 }
 
@@ -191,16 +208,14 @@ func extractEventTypeAttributes(tfName string, dataModel alertDataCollectionMode
 		return dataModel.ProcessIncludedDataAttributes
 	case "screenshot_event":
 		return dataModel.ScreenshotEventIncludedDataAttributes
-	case "usb_event":
-		return dataModel.UsbEventIncludedDataAttributes
 	case "user":
 		return dataModel.UserIncludedDataAttributes
 	case "gatekeeper_event":
 		return dataModel.GatekeeperEventIncludedDataAttributes
 	case "keylog_register_event":
 		return dataModel.KeylogRegisterEventIncludedDataAttributes
-	case "malware_removal_tool_event":
-		return dataModel.MalwareRemovalToolEventIncludedDataAttributes
+	case "usb_event", "malware_removal_tool_event":
+		return common.StringsToSet(nil)
 	default:
 		return types.SetNull(types.StringType)
 	}
@@ -350,7 +365,7 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 	}
 
 	apiData := map[string]any{}
-	for _, m := range eventTypeMapping {
+	for _, m := range apiEventTypeMapping {
 		attributes := extractEventTypeAttributes(m.tfName, collection)
 		attrs, related := splitExtendedDataAttributes(common.SetToStrings(ctx, attributes, diags), diags)
 		if diags.HasError() {
@@ -704,16 +719,12 @@ func apiEventTypeGetter(apiData *jamfprotect.AlertData, apiName string) *jamfpro
 		return apiData.Process
 	case "screenshotEvent":
 		return apiData.ScreenshotEvent
-	case "usbEvent":
-		return apiData.UsbEvent
 	case "user":
 		return apiData.User
 	case "gkEvent":
 		return apiData.GkEvent
 	case "keylogRegisterEvent":
 		return apiData.KeylogRegisterEvent
-	case "mrtEvent":
-		return apiData.MrtEvent
 	default:
 		return nil
 	}

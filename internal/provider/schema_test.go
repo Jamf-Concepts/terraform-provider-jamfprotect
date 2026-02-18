@@ -318,8 +318,8 @@ func TestActionConfigResourceSchema(t *testing.T) {
 	}
 	eventTypes := []string{
 		"binary", "synthetic_click_event", "download_event", "file", "file_system_event",
-		"group", "process_event", "process", "screenshot_event", "usb_event",
-		"user", "gatekeeper_event", "keylog_register_event", "malware_removal_tool_event",
+		"group", "process_event", "process", "screenshot_event",
+		"user", "gatekeeper_event", "keylog_register_event",
 	}
 	for _, et := range eventTypes {
 		attrName := et + "_included_data_attributes"

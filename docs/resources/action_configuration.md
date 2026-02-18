@@ -14,23 +14,21 @@ Manages an action configuration in Jamf Protect. Action configurations define th
 
 ```terraform
 resource "jamfprotect_action_configuration" "example" {
-  name        = "Example Action Configuration 222"
+  name        = "Example Action Configuration"
   description = "This is an example action configuration created by Terraform."
   alert_data_collection = {
-    binary_included_data_attributes                     = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
-    download_event_included_data_attributes             = ["File"]
-    file_included_data_attributes                       = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
-    file_system_event_included_data_attributes          = ["File", "Process", "User", "Group"]
-    gatekeeper_event_included_data_attributes           = ["Blocked Process", "Blocked Binary"]
-    group_included_data_attributes                      = ["Name"]
-    keylog_register_event_included_data_attributes      = ["Source Process", "Destination Process"]
-    malware_removal_tool_event_included_data_attributes = []
-    process_included_data_attributes                    = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
-    process_event_included_data_attributes              = ["Process"]
-    screenshot_event_included_data_attributes           = ["File"]
-    synthetic_click_event_included_data_attributes      = ["Process", "User", "Group"]
-    usb_event_included_data_attributes                  = []
-    user_included_data_attributes                       = ["Name"]
+    binary_included_data_attributes                = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
+    download_event_included_data_attributes        = ["File"]
+    file_included_data_attributes                  = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
+    file_system_event_included_data_attributes     = ["File", "Process", "User", "Group"]
+    gatekeeper_event_included_data_attributes      = ["Blocked Process", "Blocked Binary"]
+    group_included_data_attributes                 = ["Name"]
+    keylog_register_event_included_data_attributes = ["Source Process", "Destination Process"]
+    process_included_data_attributes               = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
+    process_event_included_data_attributes         = ["Process"]
+    screenshot_event_included_data_attributes      = ["File"]
+    synthetic_click_event_included_data_attributes = ["Process", "User", "Group"]
+    user_included_data_attributes                  = ["Name"]
   }
   http_endpoints = [
     {
@@ -124,12 +122,10 @@ Required:
 - `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events.
 - `group_included_data_attributes` (Set of String) Included data attributes for group events.
 - `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events.
-- `malware_removal_tool_event_included_data_attributes` (Set of String) Included data attributes for malware removal tool events.
 - `process_event_included_data_attributes` (Set of String) Included data attributes for process events.
 - `process_included_data_attributes` (Set of String) Included data attributes for process metadata.
 - `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events.
 - `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events.
-- `usb_event_included_data_attributes` (Set of String) Included data attributes for USB events.
 - `user_included_data_attributes` (Set of String) Included data attributes for user events.
 
 
