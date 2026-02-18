@@ -25,14 +25,14 @@ func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
 resource "jamfprotect_removable_storage_control_set" "test" {
   name                 = "tf-acc-test-removablestorage"
   description          = "Acceptance test removable storage control set"
-  default_permission = "ReadOnly"
+	default_permission = "Read Only"
   default_local_notification_message = "This removable storage device is limited to read-only."
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("jamfprotect_removable_storage_control_set.test", "id"),
 					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "ReadOnly"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "Read Only"),
 				),
 			},
 			// Import.
@@ -47,13 +47,13 @@ resource "jamfprotect_removable_storage_control_set" "test" {
 resource "jamfprotect_removable_storage_control_set" "test" {
   name                 = "tf-acc-test-removablestorage-updated"
   description          = "Updated removable storage control set"
-  default_permission = "Prevented"
+	default_permission = "Prevent"
   default_local_notification_message = "Removable storage devices are not allowed."
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage-updated"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "Prevented"),
+					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "Prevent"),
 				),
 			},
 		},

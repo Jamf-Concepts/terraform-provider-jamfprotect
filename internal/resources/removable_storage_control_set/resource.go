@@ -6,11 +6,14 @@ package removable_storage_control_set
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -24,7 +27,9 @@ import (
 
 var _ resource.Resource = &RemovableStorageControlSetResource{}
 var _ resource.ResourceWithImportState = &RemovableStorageControlSetResource{}
+var _ resource.ResourceWithIdentity = &RemovableStorageControlSetResource{}
 
+// NewRemovableStorageControlSetResource returns a new removable storage control set resource.
 func NewRemovableStorageControlSetResource() resource.Resource {
 	return &RemovableStorageControlSetResource{}
 }
@@ -38,8 +43,11 @@ func (r *RemovableStorageControlSetResource) Metadata(ctx context.Context, req r
 	resp.TypeName = req.ProviderTypeName + "_removable_storage_control_set"
 }
 
+// Schema defines the removable storage control set schema.
 func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	permissionValidator := stringvalidator.OneOf("ReadOnly", "ReadWrite", "Prevented")
+	permissionValidator := stringvalidator.OneOf(permissionUIOptions...)
+	vendorIDPattern := regexp.MustCompile("^0x[0-9A-Fa-f]{4}$")
+	vendorIDValidator := stringvalidator.RegexMatches(vendorIDPattern, "must be in the form 0x0000")
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a removable storage control set in Jamf Protect. Removable storage control sets define policies for removable storage device access, including default permissions and device-specific overrides for encrypted devices, vendors, serial numbers, and product IDs.",
@@ -60,7 +68,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Default:             stringdefault.StaticString(""),
 			},
 			"default_permission": schema.StringAttribute{
-				MarkdownDescription: "The default permission for removable storage devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+				MarkdownDescription: "The default permission for removable storage devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
 				Required:            true,
 				Validators:          []validator.String{permissionValidator},
 			},
@@ -84,14 +92,13 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Update: true,
 				Delete: true,
 			}),
-		},
-		Blocks: map[string]schema.Block{
-			"override_encrypted_devices": schema.ListNestedBlock{
+			"override_encrypted_devices": schema.ListNestedAttribute{
 				MarkdownDescription: "Overrides applied to encrypted devices.",
-				NestedObject: schema.NestedBlockObject{
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -103,12 +110,13 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 					},
 				},
 			},
-			"override_vendor_id": schema.ListNestedBlock{
+			"override_vendor_id": schema.ListNestedAttribute{
 				MarkdownDescription: "Overrides applied to vendor IDs.",
-				NestedObject: schema.NestedBlockObject{
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -123,19 +131,23 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 							Computed:            true,
 						},
 						"vendor_ids": schema.ListAttribute{
-							MarkdownDescription: "A list of vendor IDs that this override applies to.",
+							MarkdownDescription: "A list of vendor IDs that this override applies to. IDs must match the format `0x0000`.",
 							Required:            true,
 							ElementType:         types.StringType,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(vendorIDValidator),
+							},
 						},
 					},
 				},
 			},
-			"override_product_id": schema.ListNestedBlock{
+			"override_product_id": schema.ListNestedAttribute{
 				MarkdownDescription: "Overrides applied to product IDs.",
-				NestedObject: schema.NestedBlockObject{
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -150,17 +162,19 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 							Computed:            true,
 						},
 						"product_id": schema.ListNestedAttribute{
-							MarkdownDescription: "Vendor and product IDs that this override applies to.",
+							MarkdownDescription: "Vendor and product IDs that this override applies to. IDs must match the format `0x0000`.",
 							Required:            true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"vendor_id": schema.StringAttribute{
 										MarkdownDescription: "The vendor ID.",
 										Required:            true,
+										Validators:          []validator.String{vendorIDValidator},
 									},
 									"product_id": schema.StringAttribute{
 										MarkdownDescription: "The product ID.",
 										Required:            true,
+										Validators:          []validator.String{vendorIDValidator},
 									},
 								},
 							},
@@ -168,12 +182,13 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 					},
 				},
 			},
-			"override_serial_number": schema.ListNestedBlock{
+			"override_serial_number": schema.ListNestedAttribute{
 				MarkdownDescription: "Overrides applied to serial numbers.",
-				NestedObject: schema.NestedBlockObject{
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `ReadOnly`, `ReadWrite`, `Prevented`.",
+							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -199,6 +214,19 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 	}
 }
 
+// IdentitySchema defines the identity attributes for removable storage control sets.
+func (r *RemovableStorageControlSetResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the removable storage control set.",
+			},
+		},
+	}
+}
+
+// Configure prepares the removable storage control set service client.
 func (r *RemovableStorageControlSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -212,6 +240,7 @@ func (r *RemovableStorageControlSetResource) Configure(ctx context.Context, req 
 	r.service = jamfprotect.NewService(client)
 }
 
+// ImportState supports importing removable storage control sets by ID.
 func (r *RemovableStorageControlSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

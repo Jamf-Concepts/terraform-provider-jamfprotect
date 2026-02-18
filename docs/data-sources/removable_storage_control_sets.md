@@ -30,9 +30,9 @@ output "removable_storage_control_set_summary" {
 
 ### Read-Only
 
-- `removable_storage_control_sets` (Block List) The list of removable storage control sets. (see [below for nested schema](#nestedblock--removable_storage_control_sets))
+- `removable_storage_control_sets` (Attributes List) The list of removable storage control sets. (see [below for nested schema](#nestedatt--removable_storage_control_sets))
 
-<a id="nestedblock--removable_storage_control_sets"></a>
+<a id="nestedatt--removable_storage_control_sets"></a>
 ### Nested Schema for `removable_storage_control_sets`
 
 Read-Only:
@@ -43,13 +43,13 @@ Read-Only:
 - `description` (String) A description of the removable storage control set.
 - `id` (String) The unique identifier of the removable storage control set.
 - `name` (String) The name of the removable storage control set.
-- `override_encrypted_devices` (Block List) Overrides applied to encrypted devices. (see [below for nested schema](#nestedblock--removable_storage_control_sets--override_encrypted_devices))
-- `override_product_id` (Block List) Overrides applied to product IDs. (see [below for nested schema](#nestedblock--removable_storage_control_sets--override_product_id))
-- `override_serial_number` (Block List) Overrides applied to serial numbers. (see [below for nested schema](#nestedblock--removable_storage_control_sets--override_serial_number))
-- `override_vendor_id` (Block List) Overrides applied to vendor IDs. (see [below for nested schema](#nestedblock--removable_storage_control_sets--override_vendor_id))
+- `override_encrypted_devices` (Attributes List) Overrides applied to encrypted devices. (see [below for nested schema](#nestedatt--removable_storage_control_sets--override_encrypted_devices))
+- `override_product_id` (Attributes List) Overrides applied to product IDs. (see [below for nested schema](#nestedatt--removable_storage_control_sets--override_product_id))
+- `override_serial_number` (Attributes List) Overrides applied to serial numbers. (see [below for nested schema](#nestedatt--removable_storage_control_sets--override_serial_number))
+- `override_vendor_id` (Attributes List) Overrides applied to vendor IDs. (see [below for nested schema](#nestedatt--removable_storage_control_sets--override_vendor_id))
 - `updated` (String) The last-updated timestamp.
 
-<a id="nestedblock--removable_storage_control_sets--override_encrypted_devices"></a>
+<a id="nestedatt--removable_storage_control_sets--override_encrypted_devices"></a>
 ### Nested Schema for `removable_storage_control_sets.override_encrypted_devices`
 
 Read-Only:
@@ -58,7 +58,7 @@ Read-Only:
 - `permission` (String) The permission for matching devices.
 
 
-<a id="nestedblock--removable_storage_control_sets--override_product_id"></a>
+<a id="nestedatt--removable_storage_control_sets--override_product_id"></a>
 ### Nested Schema for `removable_storage_control_sets.override_product_id`
 
 Read-Only:
@@ -78,7 +78,7 @@ Read-Only:
 
 
 
-<a id="nestedblock--removable_storage_control_sets--override_serial_number"></a>
+<a id="nestedatt--removable_storage_control_sets--override_serial_number"></a>
 ### Nested Schema for `removable_storage_control_sets.override_serial_number`
 
 Read-Only:
@@ -89,7 +89,7 @@ Read-Only:
 - `serial_numbers` (List of String) Serial numbers this override applies to.
 
 
-<a id="nestedblock--removable_storage_control_sets--override_vendor_id"></a>
+<a id="nestedatt--removable_storage_control_sets--override_vendor_id"></a>
 ### Nested Schema for `removable_storage_control_sets.override_vendor_id`
 
 Read-Only:
