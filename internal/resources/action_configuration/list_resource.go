@@ -1,0 +1,167 @@
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package action_configuration
+
+import (
+	"context"
+	"fmt"
+	"slices"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+)
+
+var _ list.ListResource = &ActionConfigListResource{}
+var _ list.ListResourceWithConfigure = &ActionConfigListResource{}
+var _ list.ListResourceWithValidateConfig = &ActionConfigListResource{}
+
+func NewActionConfigListResource() list.ListResource {
+	return &ActionConfigListResource{}
+}
+
+// ActionConfigListResource lists action configurations in Jamf Protect.
+type ActionConfigListResource struct {
+	service *jamfprotect.Service
+}
+
+type listConfigModel struct {
+	NamePrefix types.String `tfsdk:"name_prefix"`
+}
+
+func (r *ActionConfigListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_action_configuration"
+}
+
+func (r *ActionConfigListResource) ListResourceConfigSchema(ctx context.Context, req list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
+	resp.Schema = listschema.Schema{
+		MarkdownDescription: "Lists Action Configurations in Jamf Protect.",
+		Attributes: map[string]listschema.Attribute{
+			"name_prefix": listschema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Optional name prefix filter applied to listed Action Configurations.",
+			},
+		},
+	}
+}
+
+func (r *ActionConfigListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	client, ok := req.ProviderData.(*client.Client)
+	if !ok {
+		resp.Diagnostics.AddError("Unexpected List Resource Configure Type",
+			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
+		return
+	}
+	r.service = jamfprotect.NewService(client)
+}
+
+func (r *ActionConfigListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
+	var config listConfigModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.NamePrefix.IsNull() && !config.NamePrefix.IsUnknown() && strings.TrimSpace(config.NamePrefix.ValueString()) == "" {
+		resp.Diagnostics.AddError(
+			"Invalid name_prefix",
+			"name_prefix must not be empty when set.",
+		)
+	}
+}
+
+func (r *ActionConfigListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
+	if r.service == nil {
+		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				"Missing Jamf Protect client",
+				"The provider client was not configured for list resources.",
+			),
+		})
+		return
+	}
+
+	var config listConfigModel
+	configDiags := req.Config.Get(ctx, &config)
+	if configDiags.HasError() {
+		resp.Results = list.ListResultsStreamDiagnostics(configDiags)
+		return
+	}
+
+	items, err := r.service.ListActionConfigs(ctx)
+	if err != nil {
+		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
+			diag.NewErrorDiagnostic("Error listing action configs", err.Error()),
+		})
+		return
+	}
+
+	prefix := ""
+	if !config.NamePrefix.IsNull() && !config.NamePrefix.IsUnknown() {
+		prefix = config.NamePrefix.ValueString()
+	}
+
+	results := make([]list.ListResult, 0, len(items))
+	for _, item := range items {
+		if prefix != "" && !strings.HasPrefix(item.Name, prefix) {
+			continue
+		}
+		if req.Limit > 0 && int64(len(results)) >= req.Limit {
+			break
+		}
+
+		result := req.NewListResult(ctx)
+		result.DisplayName = item.Name
+		result.Diagnostics.Append(result.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(item.ID))...)
+		if result.Diagnostics.HasError() {
+			results = append(results, result)
+			continue
+		}
+
+		if req.IncludeResource {
+			api, err := r.service.GetActionConfig(ctx, item.ID)
+			if err != nil {
+				result.Diagnostics.AddError("Error reading action config", err.Error())
+				results = append(results, result)
+				continue
+			}
+			if api == nil {
+				result.Diagnostics.AddError(
+					"Action config missing",
+					"The list response referenced an action configuration that no longer exists.",
+				)
+				results = append(results, result)
+				continue
+			}
+
+			var data ActionConfigResourceModel
+			stateBuilder := ActionConfigResource{}
+			stateBuilder.applyState(ctx, &data, *api, &result.Diagnostics)
+			if result.Diagnostics.HasError() {
+				results = append(results, result)
+				continue
+			}
+			data.Timeouts = common.EmptyTimeoutsValue()
+			result.Diagnostics.Append(result.Resource.Set(ctx, &data)...)
+			results = append(results, result)
+			continue
+		}
+
+		result.Resource = nil
+		results = append(results, result)
+	}
+
+	resp.Results = slices.Values(results)
+}
