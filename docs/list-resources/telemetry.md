@@ -13,7 +13,7 @@ Lists telemetry v2 configurations in Jamf Protect.
 ## Example Usage
 
 ```terraform
-list "jamfprotect_exception_set" "example" {
+list "jamfprotect_telemetry" "example" {
   provider = jamfprotect
 }
 ```
