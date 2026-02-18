@@ -202,13 +202,13 @@ func TestService_ActionConfig(t *testing.T) {
 				t.Fatalf("expected /app, got %s", path)
 			}
 			if callCount == 1 {
-				assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME"}, req.Variables)
+				assertVariablesEqual(t, map[string]any{"direction": "DESC", "field": "created"}, req.Variables)
 				return map[string]any{"data": map[string]any{"listActionConfigs": map[string]any{
 					"items":    []map[string]any{{"id": "ac-1"}},
 					"pageInfo": map[string]any{"next": "next", "total": 2},
 				}}}
 			}
-			assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME", "nextToken": "next"}, req.Variables)
+			assertVariablesEqual(t, map[string]any{"direction": "DESC", "field": "created", "nextToken": "next"}, req.Variables)
 			return map[string]any{"data": map[string]any{"listActionConfigs": map[string]any{
 				"items":    []map[string]any{{"id": "ac-2"}},
 				"pageInfo": map[string]any{"next": nil, "total": 2},

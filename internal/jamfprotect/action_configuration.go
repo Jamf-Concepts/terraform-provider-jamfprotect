@@ -291,8 +291,8 @@ func (s *Service) ListActionConfigs(ctx context.Context) ([]ActionConfigListItem
 
 	for {
 		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "NAME",
+			"direction": "DESC",
+			"field":     "created",
 		}
 		if nextToken != nil {
 			vars["nextToken"] = *nextToken
