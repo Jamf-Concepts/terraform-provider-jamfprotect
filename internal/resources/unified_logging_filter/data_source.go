@@ -20,6 +20,7 @@ import (
 
 var _ datasource.DataSource = &UnifiedLoggingFiltersDataSource{}
 
+// NewUnifiedLoggingFiltersDataSource returns a new unified logging filter data source.
 func NewUnifiedLoggingFiltersDataSource() datasource.DataSource {
 	return &UnifiedLoggingFiltersDataSource{}
 }
@@ -46,10 +47,12 @@ type UnifiedLoggingFilterDataSourceItemModel struct {
 	Updated     types.String `tfsdk:"updated"`
 }
 
+// Metadata returns the unified logging filter data source type name.
 func (d *UnifiedLoggingFiltersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_unified_logging_filters"
 }
 
+// Schema defines the unified logging filters data source schema.
 func (d *UnifiedLoggingFiltersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of all unified logging filters in Jamf Protect.",
@@ -99,6 +102,7 @@ func (d *UnifiedLoggingFiltersDataSource) Schema(ctx context.Context, req dataso
 	}
 }
 
+// Configure prepares the unified logging filter service client.
 func (d *UnifiedLoggingFiltersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -112,6 +116,7 @@ func (d *UnifiedLoggingFiltersDataSource) Configure(ctx context.Context, req dat
 	d.service = jamfprotect.NewService(client)
 }
 
+// Read retrieves unified logging filters from the API.
 func (d *UnifiedLoggingFiltersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data UnifiedLoggingFiltersDataSourceModel
 

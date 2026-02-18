@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,7 +24,9 @@ import (
 
 var _ resource.Resource = &UnifiedLoggingFilterResource{}
 var _ resource.ResourceWithImportState = &UnifiedLoggingFilterResource{}
+var _ resource.ResourceWithIdentity = &UnifiedLoggingFilterResource{}
 
+// NewUnifiedLoggingFilterResource returns a new unified logging filter resource.
 func NewUnifiedLoggingFilterResource() resource.Resource {
 	return &UnifiedLoggingFilterResource{}
 }
@@ -33,10 +36,12 @@ type UnifiedLoggingFilterResource struct {
 	service *jamfprotect.Service
 }
 
+// Metadata returns the unified logging filter resource type name.
 func (r *UnifiedLoggingFilterResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_unified_logging_filter"
 }
 
+// Schema defines the unified logging filter schema.
 func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a unified logging filter in Jamf Protect. Unified logging filters capture macOS unified log entries that match a given predicate.",
@@ -90,6 +95,19 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 	}
 }
 
+// IdentitySchema defines the identity attributes for unified logging filters.
+func (r *UnifiedLoggingFilterResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the unified logging filter.",
+			},
+		},
+	}
+}
+
+// Configure prepares the unified logging filter service client.
 func (r *UnifiedLoggingFilterResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -103,6 +121,7 @@ func (r *UnifiedLoggingFilterResource) Configure(ctx context.Context, req resour
 	r.service = jamfprotect.NewService(client)
 }
 
+// ImportState supports importing unified logging filters by ID.
 func (r *UnifiedLoggingFilterResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -1,0 +1,29 @@
+// Copyright (c) James Smith 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package unified_logging_filter
+
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+)
+
+// buildInput builds the API input from the resource model.
+func (r *UnifiedLoggingFilterResource) buildInput(ctx context.Context, data UnifiedLoggingFilterResourceModel, diags *diag.Diagnostics) *jamfprotect.UnifiedLoggingFilterInput {
+	input := &jamfprotect.UnifiedLoggingFilterInput{
+		Name:    data.Name.ValueString(),
+		Filter:  data.Filter.ValueString(),
+		Enabled: data.Enabled.ValueBool(),
+		Tags:    common.SetToStrings(ctx, data.Tags, diags),
+	}
+	if !data.Description.IsNull() {
+		input.Description = data.Description.ValueString()
+	} else {
+		input.Description = ""
+	}
+	return input
+}
