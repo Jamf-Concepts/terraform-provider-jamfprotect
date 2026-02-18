@@ -57,7 +57,7 @@ var severityOptions = []string{
 	"Informational",
 }
 
-// mapSensorTypeUIToAPI maps a user-friendly sensor type name to the corresponding API value. If the provided value is not valid,
+// mapSensorTypeUIToAPI maps a user-friendly sensor type name to the corresponding API value. If the provided value is not recognized, it adds an error to the diagnostics and returns an empty string.
 func mapSensorTypeUIToAPI(value string, diags *diag.Diagnostics) string {
 	if apiValue, ok := sensorTypeUIToAPI[value]; ok {
 		return apiValue
@@ -69,7 +69,7 @@ func mapSensorTypeUIToAPI(value string, diags *diag.Diagnostics) string {
 	return ""
 }
 
-// mapSensorTypeAPIToUI maps an API sensor type value to a user-friendly name for display in Terraform. If the provided value is not recognized,
+// mapSensorTypeAPIToUI maps an API sensor type value to a user-friendly name for display in Terraform. If the provided value is not recognized, it adds an error to the diagnostics and returns the original value.
 func mapSensorTypeAPIToUI(value string, diags *diag.Diagnostics) string {
 	if uiValue, ok := sensorTypeAPIToUI[value]; ok {
 		return uiValue
