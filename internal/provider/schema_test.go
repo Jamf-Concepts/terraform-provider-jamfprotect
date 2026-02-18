@@ -67,7 +67,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
 	}
 
-	requiredAttrs := []string{"name", "sensor_type", "predicate", "level", "severity", "tags", "categories", "snapshot_files", "context_item"}
+	requiredAttrs := []string{"name", "sensor_type", "filter", "level", "severity", "tags", "categories", "snapshot_files", "context_item"}
 	for _, attr := range requiredAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {

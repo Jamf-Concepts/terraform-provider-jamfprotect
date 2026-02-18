@@ -57,7 +57,7 @@ internal/
   provider/                      # Provider wiring + schema validation tests
   resources/                     # Per-resource packages (resource + data source)
     action_configuration/        # crud.go, data_source.go, input_builders.go, mappings.go, model_types.go, resource.go, schema_types.go, state_builders.go
-    analytic/                     # crud.go, data_source.go, helpers.go, resource.go, types.go
+    analytic/                     # crud.go, data_source.go, input_builders.go, mappings.go, model_types.go, resource.go, schema_types.go, state_builders.go
     analytic_set/                # crud.go, data_source.go, helpers.go, resource.go, types.go
     custom_prevent_list/         # crud.go, data_source.go, helpers.go, resource.go, types.go
     exception_set/               # crud.go, data_source.go, helpers.go, resource.go, types.go

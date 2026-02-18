@@ -8,10 +8,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,11 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &AnalyticResource{}
 var _ resource.ResourceWithImportState = &AnalyticResource{}
+var _ resource.ResourceWithIdentity = &AnalyticResource{}
 
 func NewAnalyticResource() resource.Resource {
 	return &AnalyticResource{}
@@ -53,21 +55,11 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:            true,
 			},
 			"sensor_type": schema.StringAttribute{
-				MarkdownDescription: "The sensor type for the analytic. Determines which endpoint event stream the analytic monitors.",
+				MarkdownDescription: "The sensor type for the analytic. Valid options are: " + common.FormatOptions(sensorTypeOptions) + ".",
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{
-					stringvalidator.OneOf(
-						"GPFSEvent",
-						"GPDownloadEvent",
-						"GPProcessEvent",
-						"GPScreenshotEvent",
-						"GPKeylogRegisterEvent",
-						"GPClickEvent",
-						"GPMRTEvent",
-						"GPUSBEvent",
-						"GPGatekeeperEvent",
-					),
+					stringvalidator.OneOf(sensorTypeOptions...),
 				},
 			},
 			"description": schema.StringAttribute{
@@ -82,42 +74,34 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Long-form description for the analytic (read-only).",
 				Computed:            true,
 			},
-			"predicate": schema.StringAttribute{
-				MarkdownDescription: "The predicate expression for the analytic.",
+			"filter": schema.StringAttribute{
+				MarkdownDescription: "The filter expression for the analytic.",
 				Required:            true,
 			},
 			"level": schema.Int64Attribute{
-				MarkdownDescription: "The log level (integer) for the analytic. Valid values are 0-10.",
+				MarkdownDescription: "The log level (integer) for the analytic.",
 				Required:            true,
-				Validators: []validator.Int64{
-					int64validator.Between(0, 10),
-				},
 			},
 			"severity": schema.StringAttribute{
-				MarkdownDescription: "The severity of the analytic.",
+				MarkdownDescription: "The severity of the analytic. Valid options are: " + common.FormatOptions(severityOptions) + ".",
 				Required:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("High", "Medium", "Low", "Informational"),
+					stringvalidator.OneOf(severityOptions...),
 				},
 			},
-			"tags": schema.ListAttribute{
-				MarkdownDescription: "A list of tags for the analytic.",
+			"tags": schema.SetAttribute{
+				MarkdownDescription: "A set of tags for the analytic.",
 				Required:            true,
 				ElementType:         types.StringType,
 			},
-			"categories": schema.ListAttribute{
-				MarkdownDescription: "A list of categories for the analytic.",
+			"categories": schema.SetAttribute{
+				MarkdownDescription: "A set of categories for the analytic.",
 				Required:            true,
 				ElementType:         types.StringType,
 			},
-			"snapshot_files": schema.ListAttribute{
-				MarkdownDescription: "A list of snapshot file paths to collect when the analytic triggers.",
+			"snapshot_files": schema.SetAttribute{
+				MarkdownDescription: "A set of snapshot file paths to collect when the analytic triggers.",
 				Required:            true,
-				ElementType:         types.StringType,
-			},
-			"actions": schema.ListAttribute{
-				MarkdownDescription: "A list of legacy action names.",
-				Optional:            true,
 				ElementType:         types.StringType,
 			},
 			"add_to_jamf_pro_smart_group": schema.BoolAttribute{
@@ -130,7 +114,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Identifier for the Jamf Pro extension attribute (only used when adding to a Smart Group).",
 				Optional:            true,
 			},
-			"context_item": schema.ListNestedAttribute{
+			"context_item": schema.SetNestedAttribute{
 				MarkdownDescription: "Context enrichment definitions for the analytic.",
 				Required:            true,
 				NestedObject: schema.NestedAttributeObject{
@@ -143,7 +127,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 							MarkdownDescription: "The context variable type.",
 							Required:            true,
 						},
-						"expressions": schema.ListAttribute{
+						"expressions": schema.SetAttribute{
 							MarkdownDescription: "Expressions to evaluate for this context variable.",
 							Required:            true,
 							ElementType:         types.StringType,
@@ -160,7 +144,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "The last-updated timestamp.",
 				Computed:            true,
 			},
-			"tenant_actions": schema.ListNestedAttribute{
+			"tenant_actions": schema.SetNestedAttribute{
 				MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
@@ -214,4 +198,15 @@ func (r *AnalyticResource) Configure(ctx context.Context, req resource.Configure
 
 func (r *AnalyticResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *AnalyticResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the analytic.",
+			},
+		},
+	}
 }

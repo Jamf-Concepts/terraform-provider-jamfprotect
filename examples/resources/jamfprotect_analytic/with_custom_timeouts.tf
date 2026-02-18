@@ -7,8 +7,8 @@ resource "jamfprotect_analytic" "with_timeouts" {
   name        = "High-Volume Monitoring Analytic"
   description = "Analytics with many snapshot files may take longer to process"
 
-  sensor_type = "GPFSEvent"
-  predicate   = "( $event.type CONTAINS[c] 'sensitive' )"
+  sensor_type = "File System Event"
+  filter      = "( $event.type CONTAINS[c] 'sensitive' )"
 
   categories = ["DataExfiltration"]
   severity   = "High"
