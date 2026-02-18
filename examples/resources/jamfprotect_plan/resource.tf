@@ -1,51 +1,25 @@
-# First create an action configuration for the plan to reference.
-resource "jamfprotect_action_config" "default" {
-  name        = "Default Action Config"
-  description = "Default alert data enrichment settings."
-
-  alert_config = {
-    data = {
-      binary                = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
-      click_event           = { attrs = [], related = [] }
-      download_event        = { attrs = ["sourceUrl"], related = ["file", "process"] }
-      file                  = { attrs = ["sha256hex", "path"], related = [] }
-      fs_event              = { attrs = ["path"], related = ["process", "file"] }
-      group                 = { attrs = [], related = [] }
-      proc_event            = { attrs = ["ppid", "uid"], related = ["process"] }
-      process               = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
-      screenshot_event      = { attrs = [], related = [] }
-      usb_event             = { attrs = [], related = [] }
-      user                  = { attrs = ["name", "uid"], related = [] }
-      gk_event              = { attrs = [], related = [] }
-      keylog_register_event = { attrs = [], related = [] }
-      mrt_event             = { attrs = [], related = [] }
-    }
-  }
-}
-
-# Create a plan that uses the action configuration.
-resource "jamfprotect_plan" "endpoint_security" {
-  name                 = "Endpoint Security Plan"
-  description          = "Standard endpoint security plan with threat prevention."
-  action_configuration = jamfprotect_action_config.default.id
-  auto_update          = true
-
-  communications_protocol = "mqtt"
-
-  reporting_interval   = 1440
-  report_architecture  = true
-  report_hostname      = true
-  report_serial_number = true
-
-  endpoint_threat_prevention = "BlockAndReport"
-  advanced_threat_controls   = "ReportOnly"
-  tamper_prevention          = "BlockAndReport"
-
-  # Optional: Configure custom timeouts (defaults to 30s for all operations)
-  # timeouts {
-  #   create = "60s"
-  #   read   = "30s"
-  #   update = "60s"
-  #   delete = "30s"
-  # }
+resource "jamfprotect_plan" "example" {
+  action_configuration          = "1"
+  advanced_threat_controls      = "Block and report"
+  analytic_sets                 = ["7b88be75-78e3-4682-bbd8-4e16b2209105"]
+  auto_update                   = true
+  communications_protocol       = "MQTT:443"
+  compliance_baseline_reporting = true
+  description                   = "Managed by Terraform"
+  endpoint_threat_prevention    = "Block and report"
+  exception_sets                = ["4c8552c0-8347-43fb-b74b-eda602d02e15"]
+  log_level                     = "Error"
+  name                          = "Example Plan"
+  removable_storage_control_set = "166"
+  report_architecture           = true
+  report_hostname               = true
+  report_kernel_version         = true
+  report_memory_size            = true
+  report_model_name             = true
+  report_os_version             = true
+  report_serial_number          = true
+  reporting_interval            = 1440
+  tamper_prevention             = "Block and report"
+  telemetry                     = "37"
+  timeouts                      = null
 }

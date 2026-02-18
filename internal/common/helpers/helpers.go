@@ -126,3 +126,8 @@ func EmptyTimeoutsValue() timeouts.Value {
 		}),
 	}
 }
+
+// IsKnownString reports whether a value is set and known.
+func IsKnownString(value types.String) bool {
+	return !value.IsNull() && !value.IsUnknown()
+}
