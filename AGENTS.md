@@ -88,6 +88,14 @@ examples/
 
 - Look for opportunities to create reusable packages (helper/utility functions) instead of duplicating logic in resource packages.
 - Keep packages split by concern with focused files (crud, helpers, resource, types, data source).
+- Always look for existing helper functions that can be reused before adding new code.
+
+## Code Style Guidelines
+
+- Follow Go conventions and idiomatic patterns.
+- Favor clear and descriptive naming for variables, functions, and types.
+- Always ensure functions, variable sets and types have a short comment describing their purpose.
+- Do not add comments inside type definitions or function bodies.
 
 ### Resource Package File Conventions
 

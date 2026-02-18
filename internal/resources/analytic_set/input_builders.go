@@ -11,12 +11,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 // buildInput converts the Terraform model into the service input.
 func (r *AnalyticSetResource) buildInput(ctx context.Context, data AnalyticSetResourceModel, diags *diag.Diagnostics) *jamfprotect.AnalyticSetInput {
@@ -31,32 +26,9 @@ func (r *AnalyticSetResource) buildInput(ctx context.Context, data AnalyticSetRe
 		input.Description = ""
 	}
 
-	// Analytics is required.
 	input.Analytics = common.SetToStrings(ctx, data.Analytics, diags)
 
 	return input
-}
-
-// apiToState maps the API response into the Terraform state model.
-func (r *AnalyticSetResource) apiToState(_ context.Context, data *AnalyticSetResourceModel, api jamfprotect.AnalyticSet, _ *diag.Diagnostics) {
-	data.ID = types.StringValue(api.UUID)
-	data.Name = types.StringValue(api.Name)
-	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
-	data.Managed = types.BoolValue(api.Managed)
-
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
-
-	// Analytics - convert from array of objects to just UUIDs
-	var analyticUUIDs []string
-	for _, a := range api.Analytics {
-		analyticUUIDs = append(analyticUUIDs, a.UUID)
-	}
-	data.Analytics = common.StringsToSet(analyticUUIDs)
 }
 
 // validateAnalyticsExist ensures every analytic UUID exists in Jamf Protect.
