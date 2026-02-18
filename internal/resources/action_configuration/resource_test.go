@@ -57,22 +57,20 @@ resource "jamfprotect_action_configuration" "test" {
   description = %[2]q
 
 	alert_data_collection = {
-		event_types = {
-			binary                     = { extended_data_attributes = [] }
-			synthetic_click_event      = { extended_data_attributes = [] }
-			download_event             = { extended_data_attributes = [] }
-			file                       = { extended_data_attributes = [] }
-			file_system_event          = { extended_data_attributes = [] }
-			group                      = { extended_data_attributes = [] }
-			process_event              = { extended_data_attributes = [] }
-			process                    = { extended_data_attributes = [] }
-			screenshot_event           = { extended_data_attributes = [] }
-			usb_event                  = { extended_data_attributes = [] }
-			user                       = { extended_data_attributes = [] }
-			gatekeeper_event           = { extended_data_attributes = [] }
-			keylog_register_event      = { extended_data_attributes = [] }
-			malware_removal_tool_event = { extended_data_attributes = [] }
-		}
+		binary_included_data_attributes                     = []
+		synthetic_click_event_included_data_attributes      = []
+		download_event_included_data_attributes             = []
+		file_included_data_attributes                       = []
+		file_system_event_included_data_attributes          = []
+		group_included_data_attributes                      = []
+		process_event_included_data_attributes              = []
+		process_included_data_attributes                    = []
+		screenshot_event_included_data_attributes           = []
+		usb_event_included_data_attributes                  = []
+		user_included_data_attributes                       = []
+		gatekeeper_event_included_data_attributes           = []
+		keylog_register_event_included_data_attributes      = []
+		malware_removal_tool_event_included_data_attributes = []
 	}
 }
 `, name, description)

@@ -17,130 +17,72 @@ resource "jamfprotect_action_configuration" "example" {
   name        = "Example Action Configuration 222"
   description = "This is an example action configuration created by Terraform."
   alert_data_collection = {
-    event_types = {
-      binary = {
-        extended_data_attributes = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
-      }
-      download_event = {
-        extended_data_attributes = ["File"]
-      }
-      file = {
-        extended_data_attributes = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
-      }
-      file_system_event = {
-        extended_data_attributes = ["File", "Process", "User", "Group"]
-      }
-      gatekeeper_event = {
-        extended_data_attributes = ["Blocked Process", "Blocked Binary"]
-      }
-      group = {
-        extended_data_attributes = ["name"]
-      }
-      keylog_register_event = {
-        extended_data_attributes = ["Source Process", "Destination Process"]
-      }
-      malware_removal_tool_event = {
-        extended_data_attributes = []
-      }
-      process = {
-        extended_data_attributes = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
-      }
-      process_event = {
-        extended_data_attributes = ["Process"]
-      }
-      screenshot_event = {
-        extended_data_attributes = ["File"]
-      }
-      synthetic_click_event = {
-        extended_data_attributes = ["Process", "User", "Group"]
-      }
-      usb_event = {
-        extended_data_attributes = []
-      }
-      user = {
-        extended_data_attributes = ["name"]
-      }
-    }
+    binary_included_data_attributes                     = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
+    download_event_included_data_attributes             = ["File"]
+    file_included_data_attributes                       = ["Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"]
+    file_system_event_included_data_attributes          = ["File", "Process", "User", "Group"]
+    gatekeeper_event_included_data_attributes           = ["Blocked Process", "Blocked Binary"]
+    group_included_data_attributes                      = ["Name"]
+    keylog_register_event_included_data_attributes      = ["Source Process", "Destination Process"]
+    malware_removal_tool_event_included_data_attributes = []
+    process_included_data_attributes                    = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
+    process_event_included_data_attributes              = ["Process"]
+    screenshot_event_included_data_attributes           = ["File"]
+    synthetic_click_event_included_data_attributes      = ["Process", "User", "Group"]
+    usb_event_included_data_attributes                  = []
+    user_included_data_attributes                       = ["Name"]
   }
   http_endpoints = [
     {
-      collect_alerts = ["medium"]
-      collect_logs   = []
-      batching = {
-        events_per_batch        = 2
-        batching_window_seconds = 1
-        event_delimiter         = "\n"
-        max_batch_size_bytes    = 1100
-      }
-      http = {
-        url    = "https://example.com"
-        method = "POST"
-        headers = [
-          {
-            header = "Content-Type"
-            value  = "application/json"
-          },
-        ]
-      }
+      collect_alerts          = ["medium"]
+      collect_logs            = []
+      events_per_batch        = 2
+      batching_window_seconds = 1
+      event_delimiter         = "\n"
+      max_batch_size_bytes    = 1100
+      url                     = "https://example.com"
+      method                  = "POST"
+      headers = [
+        {
+          header = "Content-Type"
+          value  = "application/json"
+        },
+      ]
     },
   ]
   kafka_endpoints = [
     {
       collect_alerts = []
       collect_logs   = ["telemetry"]
-      batching = {
-        events_per_batch        = 1
-        batching_window_seconds = 0
-      }
-      kafka = {
-        host      = "example.com"
-        port      = 9093
-        topic     = "EXAMPLE"
-        client_cn = "EXAMPLE_CLIENT"
-        server_cn = "EXAMPLE_SERVER"
-      }
+      host           = "example.com"
+      port           = 9093
+      topic          = "EXAMPLE"
+      client_cn      = "EXAMPLE_CLIENT"
+      server_cn      = "EXAMPLE_SERVER"
     },
   ]
   syslog_endpoints = [
     {
       collect_alerts = ["high"]
       collect_logs   = []
-      batching = {
-        events_per_batch        = 1
-        batching_window_seconds = 0
-      }
-      syslog = {
-        host     = "example.com"
-        port     = 6514
-        protocol = "tls"
-      }
+      host           = "example.com"
+      port           = 6514
+      protocol       = "tls"
     },
   ]
   log_file_endpoint = {
-    collect_alerts = ["high", "medium", "low", "informational"]
-    collect_logs   = ["telemetry", "unified_logs"]
-    batching = {
-      events_per_batch        = 1
-      batching_window_seconds = 0
-    }
-    log_file = {
-      path             = "/var/log/JamfProtect.log"
-      ownership        = "root:wheel"
-      permissions      = "0640"
-      max_file_size_mb = 50
-      max_backups      = 10
-    }
+    collect_alerts   = ["high", "medium", "low", "informational"]
+    collect_logs     = ["telemetry", "unified_logs"]
+    path             = "/var/log/JamfProtect.log"
+    ownership        = "root:wheel"
+    permissions      = "0640"
+    max_file_size_mb = 50
+    max_backups      = 10
   }
   jamf_protect_cloud_endpoint = {
-    collect_alerts = ["informational", "low", "medium", "high"]
-    collect_logs   = ["telemetry", "unified_logs"]
-    batching = {
-      events_per_batch        = 1
-      batching_window_seconds = 0
-    }
-    jamf_protect_cloud = {
-      destination_filter = null
-    }
+    collect_alerts     = ["informational", "low", "medium", "high"]
+    collect_logs       = ["telemetry", "unified_logs"]
+    destination_filter = null
   }
 }
 ```
@@ -175,140 +117,20 @@ resource "jamfprotect_action_configuration" "example" {
 
 Required:
 
-- `event_types` (Attributes) Extended data attributes by event type. (see [below for nested schema](#nestedatt--alert_data_collection--event_types))
-
-<a id="nestedatt--alert_data_collection--event_types"></a>
-### Nested Schema for `alert_data_collection.event_types`
-
-Required:
-
-- `binary` (Attributes) Binary metadata enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--binary))
-- `download_event` (Attributes) Download event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--download_event))
-- `file` (Attributes) File metadata enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--file))
-- `file_system_event` (Attributes) File system event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--file_system_event))
-- `gatekeeper_event` (Attributes) Gatekeeper event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--gatekeeper_event))
-- `group` (Attributes) Group metadata enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--group))
-- `keylog_register_event` (Attributes) Keylogger registration event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--keylog_register_event))
-- `malware_removal_tool_event` (Attributes) Malware Removal Tool event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--malware_removal_tool_event))
-- `process` (Attributes) Process metadata enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--process))
-- `process_event` (Attributes) Process event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--process_event))
-- `screenshot_event` (Attributes) Screenshot event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--screenshot_event))
-- `synthetic_click_event` (Attributes) Synthetic click event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--synthetic_click_event))
-- `usb_event` (Attributes) USB device event enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--usb_event))
-- `user` (Attributes) User metadata enrichment. (see [below for nested schema](#nestedatt--alert_data_collection--event_types--user))
-
-<a id="nestedatt--alert_data_collection--event_types--binary"></a>
-### Nested Schema for `alert_data_collection.event_types.binary`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--download_event"></a>
-### Nested Schema for `alert_data_collection.event_types.download_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--file"></a>
-### Nested Schema for `alert_data_collection.event_types.file`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--file_system_event"></a>
-### Nested Schema for `alert_data_collection.event_types.file_system_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--gatekeeper_event"></a>
-### Nested Schema for `alert_data_collection.event_types.gatekeeper_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--group"></a>
-### Nested Schema for `alert_data_collection.event_types.group`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--keylog_register_event"></a>
-### Nested Schema for `alert_data_collection.event_types.keylog_register_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--malware_removal_tool_event"></a>
-### Nested Schema for `alert_data_collection.event_types.malware_removal_tool_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--process"></a>
-### Nested Schema for `alert_data_collection.event_types.process`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--process_event"></a>
-### Nested Schema for `alert_data_collection.event_types.process_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--screenshot_event"></a>
-### Nested Schema for `alert_data_collection.event_types.screenshot_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--synthetic_click_event"></a>
-### Nested Schema for `alert_data_collection.event_types.synthetic_click_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--usb_event"></a>
-### Nested Schema for `alert_data_collection.event_types.usb_event`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
-<a id="nestedatt--alert_data_collection--event_types--user"></a>
-### Nested Schema for `alert_data_collection.event_types.user`
-
-Required:
-
-- `extended_data_attributes` (Set of String) Extended data attributes included for this event type.
-
-
+- `binary_included_data_attributes` (Set of String) Included data attributes for binary events.
+- `download_event_included_data_attributes` (Set of String) Included data attributes for download events.
+- `file_included_data_attributes` (Set of String) Included data attributes for file events.
+- `file_system_event_included_data_attributes` (Set of String) Included data attributes for file system events.
+- `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events.
+- `group_included_data_attributes` (Set of String) Included data attributes for group events.
+- `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events.
+- `malware_removal_tool_event_included_data_attributes` (Set of String) Included data attributes for malware removal tool events.
+- `process_event_included_data_attributes` (Set of String) Included data attributes for process events.
+- `process_included_data_attributes` (Set of String) Included data attributes for process metadata.
+- `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events.
+- `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events.
+- `usb_event_included_data_attributes` (Set of String) Included data attributes for USB events.
+- `user_included_data_attributes` (Set of String) Included data attributes for user events.
 
 
 <a id="nestedatt--http_endpoints"></a>
@@ -316,33 +138,18 @@ Required:
 
 Optional:
 
-- `batching` (Attributes) Batching configuration for the endpoint. (see [below for nested schema](#nestedatt--http_endpoints--batching))
+- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
 - `collect_alerts` (Set of String) Alert severities collected by this endpoint.
 - `collect_logs` (Set of String) Log types collected by this endpoint.
-- `http` (Attributes) HTTP endpoint configuration. (see [below for nested schema](#nestedatt--http_endpoints--http))
-
-<a id="nestedatt--http_endpoints--batching"></a>
-### Nested Schema for `http_endpoints.batching`
-
-Optional:
-
-- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
 - `event_delimiter` (String) Delimiter used between batched records.
 - `events_per_batch` (Number) Maximum number of events per batch.
+- `headers` (Attributes List) HTTP headers. (see [below for nested schema](#nestedatt--http_endpoints--headers))
 - `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-
-
-<a id="nestedatt--http_endpoints--http"></a>
-### Nested Schema for `http_endpoints.http`
-
-Optional:
-
-- `headers` (Attributes List) HTTP headers. (see [below for nested schema](#nestedatt--http_endpoints--http--headers))
 - `method` (String) HTTP request method.
 - `url` (String) HTTP destination URL.
 
-<a id="nestedatt--http_endpoints--http--headers"></a>
-### Nested Schema for `http_endpoints.http.headers`
+<a id="nestedatt--http_endpoints--headers"></a>
+### Nested Schema for `http_endpoints.headers`
 
 Optional:
 
@@ -351,35 +158,14 @@ Optional:
 
 
 
-
 <a id="nestedatt--jamf_protect_cloud_endpoint"></a>
 ### Nested Schema for `jamf_protect_cloud_endpoint`
 
 Optional:
 
-- `batching` (Attributes) Batching configuration for the endpoint. (see [below for nested schema](#nestedatt--jamf_protect_cloud_endpoint--batching))
 - `collect_alerts` (Set of String) Alert severities collected by this endpoint.
 - `collect_logs` (Set of String) Log types collected by this endpoint.
-- `jamf_protect_cloud` (Attributes) Jamf Protect Cloud endpoint configuration. (see [below for nested schema](#nestedatt--jamf_protect_cloud_endpoint--jamf_protect_cloud))
-
-<a id="nestedatt--jamf_protect_cloud_endpoint--batching"></a>
-### Nested Schema for `jamf_protect_cloud_endpoint.batching`
-
-Optional:
-
-- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
-- `event_delimiter` (String) Delimiter used between batched records.
-- `events_per_batch` (Number) Maximum number of events per batch.
-- `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-
-
-<a id="nestedatt--jamf_protect_cloud_endpoint--jamf_protect_cloud"></a>
-### Nested Schema for `jamf_protect_cloud_endpoint.jamf_protect_cloud`
-
-Optional:
-
 - `destination_filter` (String) Destination filter (if configured).
-
 
 
 <a id="nestedatt--kafka_endpoints"></a>
@@ -387,33 +173,13 @@ Optional:
 
 Optional:
 
-- `batching` (Attributes) Batching configuration for the endpoint. (see [below for nested schema](#nestedatt--kafka_endpoints--batching))
+- `client_cn` (String) Kafka client certificate CN.
 - `collect_alerts` (Set of String) Alert severities collected by this endpoint.
 - `collect_logs` (Set of String) Log types collected by this endpoint.
-- `kafka` (Attributes) Kafka endpoint configuration. (see [below for nested schema](#nestedatt--kafka_endpoints--kafka))
-
-<a id="nestedatt--kafka_endpoints--batching"></a>
-### Nested Schema for `kafka_endpoints.batching`
-
-Optional:
-
-- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
-- `event_delimiter` (String) Delimiter used between batched records.
-- `events_per_batch` (Number) Maximum number of events per batch.
-- `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-
-
-<a id="nestedatt--kafka_endpoints--kafka"></a>
-### Nested Schema for `kafka_endpoints.kafka`
-
-Optional:
-
-- `client_cn` (String) Kafka client certificate CN.
 - `host` (String) Kafka host.
 - `port` (Number) Kafka port.
 - `server_cn` (String) Kafka server certificate CN.
 - `topic` (String) Kafka topic.
-
 
 
 <a id="nestedatt--log_file_endpoint"></a>
@@ -421,27 +187,8 @@ Optional:
 
 Optional:
 
-- `batching` (Attributes) Batching configuration for the endpoint. (see [below for nested schema](#nestedatt--log_file_endpoint--batching))
 - `collect_alerts` (Set of String) Alert severities collected by this endpoint.
 - `collect_logs` (Set of String) Log types collected by this endpoint.
-- `log_file` (Attributes) Log file endpoint configuration. (see [below for nested schema](#nestedatt--log_file_endpoint--log_file))
-
-<a id="nestedatt--log_file_endpoint--batching"></a>
-### Nested Schema for `log_file_endpoint.batching`
-
-Optional:
-
-- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
-- `event_delimiter` (String) Delimiter used between batched records.
-- `events_per_batch` (Number) Maximum number of events per batch.
-- `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-
-
-<a id="nestedatt--log_file_endpoint--log_file"></a>
-### Nested Schema for `log_file_endpoint.log_file`
-
-Optional:
-
 - `max_backups` (Number) Maximum number of backup files to keep.
 - `max_file_size_mb` (Number) Maximum file size in MB before rotating.
 - `ownership` (String) User and group that own the log file.
@@ -449,37 +196,16 @@ Optional:
 - `permissions` (String) Log file permissions.
 
 
-
 <a id="nestedatt--syslog_endpoints"></a>
 ### Nested Schema for `syslog_endpoints`
 
 Optional:
 
-- `batching` (Attributes) Batching configuration for the endpoint. (see [below for nested schema](#nestedatt--syslog_endpoints--batching))
 - `collect_alerts` (Set of String) Alert severities collected by this endpoint.
 - `collect_logs` (Set of String) Log types collected by this endpoint.
-- `syslog` (Attributes) Syslog endpoint configuration. (see [below for nested schema](#nestedatt--syslog_endpoints--syslog))
-
-<a id="nestedatt--syslog_endpoints--batching"></a>
-### Nested Schema for `syslog_endpoints.batching`
-
-Optional:
-
-- `batching_window_seconds` (Number) Maximum time in seconds between when an event occurs and when it is sent.
-- `event_delimiter` (String) Delimiter used between batched records.
-- `events_per_batch` (Number) Maximum number of events per batch.
-- `max_batch_size_bytes` (Number) Maximum batch size in bytes.
-
-
-<a id="nestedatt--syslog_endpoints--syslog"></a>
-### Nested Schema for `syslog_endpoints.syslog`
-
-Optional:
-
 - `host` (String) Syslog host.
 - `port` (Number) Syslog port.
 - `protocol` (String) Syslog protocol.
-
 
 
 <a id="nestedatt--timeouts"></a>
