@@ -27,20 +27,18 @@ type ActionConfigResourceModel struct {
 
 // alertDataCollectionModel maps the alert_data_collection attribute.
 type alertDataCollectionModel struct {
-	BinaryIncludedDataAttributes                  types.Set `tfsdk:"binary_included_data_attributes"`
-	SyntheticClickEventIncludedDataAttributes     types.Set `tfsdk:"synthetic_click_event_included_data_attributes"`
-	DownloadEventIncludedDataAttributes           types.Set `tfsdk:"download_event_included_data_attributes"`
-	FileIncludedDataAttributes                    types.Set `tfsdk:"file_included_data_attributes"`
-	FileSystemEventIncludedDataAttributes         types.Set `tfsdk:"file_system_event_included_data_attributes"`
-	GroupIncludedDataAttributes                   types.Set `tfsdk:"group_included_data_attributes"`
-	ProcessEventIncludedDataAttributes            types.Set `tfsdk:"process_event_included_data_attributes"`
-	ProcessIncludedDataAttributes                 types.Set `tfsdk:"process_included_data_attributes"`
-	ScreenshotEventIncludedDataAttributes         types.Set `tfsdk:"screenshot_event_included_data_attributes"`
-	UsbEventIncludedDataAttributes                types.Set `tfsdk:"usb_event_included_data_attributes"`
-	UserIncludedDataAttributes                    types.Set `tfsdk:"user_included_data_attributes"`
-	GatekeeperEventIncludedDataAttributes         types.Set `tfsdk:"gatekeeper_event_included_data_attributes"`
-	KeylogRegisterEventIncludedDataAttributes     types.Set `tfsdk:"keylog_register_event_included_data_attributes"`
-	MalwareRemovalToolEventIncludedDataAttributes types.Set `tfsdk:"malware_removal_tool_event_included_data_attributes"`
+	BinaryIncludedDataAttributes              types.Set `tfsdk:"binary_included_data_attributes"`
+	SyntheticClickEventIncludedDataAttributes types.Set `tfsdk:"synthetic_click_event_included_data_attributes"`
+	DownloadEventIncludedDataAttributes       types.Set `tfsdk:"download_event_included_data_attributes"`
+	FileIncludedDataAttributes                types.Set `tfsdk:"file_included_data_attributes"`
+	FileSystemEventIncludedDataAttributes     types.Set `tfsdk:"file_system_event_included_data_attributes"`
+	GroupIncludedDataAttributes               types.Set `tfsdk:"group_included_data_attributes"`
+	ProcessEventIncludedDataAttributes        types.Set `tfsdk:"process_event_included_data_attributes"`
+	ProcessIncludedDataAttributes             types.Set `tfsdk:"process_included_data_attributes"`
+	ScreenshotEventIncludedDataAttributes     types.Set `tfsdk:"screenshot_event_included_data_attributes"`
+	UserIncludedDataAttributes                types.Set `tfsdk:"user_included_data_attributes"`
+	GatekeeperEventIncludedDataAttributes     types.Set `tfsdk:"gatekeeper_event_included_data_attributes"`
+	KeylogRegisterEventIncludedDataAttributes types.Set `tfsdk:"keylog_register_event_included_data_attributes"`
 }
 
 // httpEndpointBlockModel maps each HTTP endpoint block.

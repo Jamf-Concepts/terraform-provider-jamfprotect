@@ -66,11 +66,9 @@ resource "jamfprotect_action_configuration" "test" {
 		process_event_included_data_attributes              = []
 		process_included_data_attributes                    = []
 		screenshot_event_included_data_attributes           = []
-		usb_event_included_data_attributes                  = []
 		user_included_data_attributes                       = []
 		gatekeeper_event_included_data_attributes           = []
 		keylog_register_event_included_data_attributes      = []
-		malware_removal_tool_event_included_data_attributes = []
 	}
 }
 `, name, description)
