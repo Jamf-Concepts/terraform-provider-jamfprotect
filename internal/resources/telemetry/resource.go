@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -23,7 +23,9 @@ import (
 
 var _ resource.Resource = &TelemetryV2Resource{}
 var _ resource.ResourceWithImportState = &TelemetryV2Resource{}
+var _ resource.ResourceWithIdentity = &TelemetryV2Resource{}
 
+// NewTelemetryV2Resource returns a new telemetry v2 resource.
 func NewTelemetryV2Resource() resource.Resource {
 	return &TelemetryV2Resource{}
 }
@@ -33,10 +35,12 @@ type TelemetryV2Resource struct {
 	service *jamfprotect.Service
 }
 
+// Metadata returns the telemetry v2 resource type name.
 func (r *TelemetryV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_telemetry"
 }
 
+// Schema defines the telemetry v2 schema.
 func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a telemetry v2 configuration in Jamf Protect. Telemetry configurations define which endpoint security events, log files, and performance metrics are collected from managed endpoints.",
@@ -54,10 +58,9 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "A description of the telemetry v2 configuration.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(""),
 			},
-			"log_file_path": schema.ListAttribute{
-				MarkdownDescription: "A list of log file paths to collect from endpoints.",
+			"log_file_path": schema.SetAttribute{
+				MarkdownDescription: "A set of log file paths to collect from endpoints.",
 				Required:            true,
 				ElementType:         types.StringType,
 			},
@@ -140,6 +143,19 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
+// IdentitySchema defines the telemetry v2 identity schema.
+func (r *TelemetryV2Resource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"id": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "The unique identifier of the telemetry v2 configuration.",
+			},
+		},
+	}
+}
+
+// Configure prepares the telemetry service client.
 func (r *TelemetryV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -153,6 +169,7 @@ func (r *TelemetryV2Resource) Configure(ctx context.Context, req resource.Config
 	r.service = jamfprotect.NewService(client)
 }
 
+// ImportState supports importing telemetry configurations by ID.
 func (r *TelemetryV2Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

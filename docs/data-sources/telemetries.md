@@ -3,12 +3,12 @@
 page_title: "jamfprotect_telemetries Data Source - jamfprotect"
 subcategory: ""
 description: |-
-  Retrieves a list of all v2 telemetry configurations in Jamf Protect.
+  Retrieves a list of all telemetry configurations in Jamf Protect.
 ---
 
 # jamfprotect_telemetries (Data Source)
 
-Retrieves a list of all v2 telemetry configurations in Jamf Protect.
+Retrieves a list of all telemetry configurations in Jamf Protect.
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ output "telemetry_v2_names" {
 
 ### Read-Only
 
-- `telemetries` (Attributes List) The list of v2 telemetry configurations. (see [below for nested schema](#nestedatt--telemetries))
+- `telemetries` (Attributes List) The list of telemetry configurations. (see [below for nested schema](#nestedatt--telemetries))
 
 <a id="nestedatt--telemetries"></a>
 ### Nested Schema for `telemetries`
@@ -43,7 +43,7 @@ Read-Only:
 - `log_access_and_authentication` (Boolean) Collect access and authentication events.
 - `log_apple_security` (Boolean) Collect Apple security events.
 - `log_applications_and_processes` (Boolean) Collect application and process events.
-- `log_file_path` (List of String) Log file paths to collect.
+- `log_file_path` (Set of String) Log file paths to collect.
 - `log_hardware_and_software` (Boolean) Collect hardware and software events.
 - `log_persistence` (Boolean) Collect persistence-related events.
 - `log_system` (Boolean) Collect system events.

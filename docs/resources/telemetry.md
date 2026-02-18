@@ -35,7 +35,7 @@ resource "jamfprotect_telemetry" "example" {
 
 ### Required
 
-- `log_file_path` (List of String) A list of log file paths to collect from endpoints.
+- `log_file_path` (Set of String) A set of log file paths to collect from endpoints.
 - `name` (String) The name of the telemetry v2 configuration.
 
 ### Optional
