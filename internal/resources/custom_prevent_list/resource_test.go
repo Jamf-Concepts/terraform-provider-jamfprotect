@@ -23,11 +23,11 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "TEAMID", "Test prevent list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Test prevent list"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "prevent_type", "TEAMID"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_type", "Team ID"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test prevent list"),
 					resource.TestCheckResourceAttr(resourceName, "list_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "list_data.0", "ABC123DEF4"),
@@ -62,10 +62,10 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "FILEHASH", "File hash list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "File Hash", "File hash list"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "prevent_type", "FILEHASH"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_type", "File Hash"),
 				),
 			},
 		},

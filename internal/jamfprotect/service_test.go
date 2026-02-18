@@ -754,14 +754,19 @@ func TestService_CustomPreventList(t *testing.T) {
 			if path != "/graphql" {
 				t.Fatalf("expected /graphql, got %s", path)
 			}
+			baseVars := map[string]any{
+				"direction": "DESC",
+				"field":     "created",
+			}
 			if callCount == 1 {
-				assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME"}, req.Variables)
+				assertVariablesEqual(t, baseVars, req.Variables)
 				return map[string]any{"data": map[string]any{"listPreventLists": map[string]any{
 					"items":    []map[string]any{{"id": "pl-1"}},
 					"pageInfo": map[string]any{"next": "next", "total": 2},
 				}}}
 			}
-			assertVariablesEqual(t, map[string]any{"direction": "ASC", "field": "NAME", "nextToken": "next"}, req.Variables)
+			baseVars["nextToken"] = "next"
+			assertVariablesEqual(t, baseVars, req.Variables)
 			return map[string]any{"data": map[string]any{"listPreventLists": map[string]any{
 				"items":    []map[string]any{{"id": "pl-2"}},
 				"pageInfo": map[string]any{"next": nil, "total": 2},

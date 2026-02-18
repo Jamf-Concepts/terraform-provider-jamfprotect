@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -120,18 +118,9 @@ func (d *CustomPreventListsDataSource) Read(ctx context.Context, req datasource.
 
 	items := make([]CustomPreventListDataSourceItemModel, 0, len(allItems))
 	for _, api := range allItems {
-		item := CustomPreventListDataSourceItemModel{
-			ID:          types.StringValue(api.ID),
-			Name:        types.StringValue(api.Name),
-			PreventType: types.StringValue(api.Type),
-			EntryCount:  types.Int64Value(api.Count),
-			ListData:    common.StringsToList(api.List),
-			Created:     types.StringValue(api.Created),
-		}
-		if api.Description != "" {
-			item.Description = types.StringValue(api.Description)
-		} else {
-			item.Description = types.StringNull()
+		item := customPreventListAPIToDataSourceItem(api, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 		items = append(items, item)
 	}
