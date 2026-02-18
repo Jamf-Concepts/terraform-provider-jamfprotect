@@ -42,44 +42,31 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
   - `introspect_jamfprotect_schema.py` — introspects `/graphql` for type discovery.
   - `describe_jamfprotect_graphql.py` — describes types from introspection output.
   - `mutation.py` — run arbitrary mutations against `/app`.
-- Captured queries and mutations from browser DevTools live in `queries_and_mutations/` (operations covering ActionConfigs, Analytic, AnalyticSets, ExceptionSets, Plan, PreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
+- Captured queries and mutations from browser DevTools live in `graphql_api/` (operations covering ActionConfigurations, Analytic, AnalyticSets, ExceptionSets, Plan, CustomPreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
 
 ## Project Structure
 
 ```
 main.go                          # Provider entry point (registry.terraform.io/smithjw/jamfprotect)
 internal/
-  graphql/
-    client.go                    # Thread-safe GraphQL client with token caching & sentinel errors
-    client_test.go               # Unit tests (httptest-based)
-  provider/
-    provider.go                  # JamfProtectProvider (url, client_id, client_secret)
-    provider_test.go             # Provider acceptance test helpers
-    helpers.go                   # listToStrings / stringsToList utilities
-    helpers_test.go              # Helper unit tests
-    schema_test.go               # Schema validation unit tests
-    action_config_resource.go    # jamfprotect_action_config (CRUD + import)
-    analytic_resource.go         # jamfprotect_analytic (CRUD + import)
-    analytic_set_resource.go     # jamfprotect_analytic_set (CRUD + import)
-    exception_set_resource.go    # jamfprotect_exception_set (CRUD + import)
-    plan_resource.go             # jamfprotect_plan (CRUD + import)
-    prevent_list_resource.go     # jamfprotect_custom_prevent_list (CRUD + import)
-    telemetry_v2_resource.go     # jamfprotect_telemetry_v2 (CRUD + import)
-    unified_logging_filter_resource.go    # jamfprotect_unified_logging_filter (CRUD + import)
-    removable_storage_control_set_resource.go  # jamfprotect_removable_storage_control_set (CRUD + import)
-    *_types.go                   # Type definitions for each resource
-    *_helpers.go                 # GraphQL queries and helper functions for each resource
-    *_resource_test.go           # Acceptance tests for each resource
-    plans_data_source.go         # jamfprotect_plans data source
-    analytics_data_source.go     # jamfprotect_analytics data source
-    analytic_sets_data_source.go # jamfprotect_analytic_sets data source
-    exception_sets_data_source.go # jamfprotect_exception_sets data source
-    action_configs_data_source.go        # jamfprotect_action_configs data source
-    prevent_lists_data_source.go         # jamfprotect_custom_prevent_lists data source
-    telemetries_v2_data_source.go        # jamfprotect_telemetries_v2 data source
-    unified_logging_filters_data_source.go  # jamfprotect_unified_logging_filters data source
-    removable_storage_control_sets_data_source.go      # jamfprotect_removable_storage_control_sets data source
-queries_and_mutations/           # Captured GraphQL operations (reference material)
+  client/                        # GraphQL transport client + auth + logging + sentinel errors
+  common/
+    constants/                   # Shared constants (timeouts, etc.)
+    helpers/                     # Shared helper utilities
+  jamfprotect/                   # Service layer built on the transport client
+  provider/                      # Provider wiring + schema validation tests
+  resources/                     # Per-resource packages (resource + data source)
+    action_configuration/        # crud.go, data_source.go, helpers.go, resource.go, types.go
+    analytic/                     # crud.go, data_source.go, helpers.go, resource.go, types.go
+    analytic_set/                # crud.go, data_source.go, helpers.go, resource.go, types.go
+    custom_prevent_list/         # crud.go, data_source.go, helpers.go, resource.go, types.go
+    exception_set/               # crud.go, data_source.go, helpers.go, resource.go, types.go
+    plan/                         # crud.go, data_source.go, helpers.go, resource.go, types.go
+    removable_storage_control_set/ # crud.go, data_source.go, helpers.go, resource.go, types.go
+    telemetry/                   # crud.go, data_source.go, helpers.go, resource.go, types.go
+    unified_logging_filter/      # crud.go, data_source.go, helpers.go, resource.go, types.go
+  testutil/                      # Acceptance test helpers
+graphql_api/                     # Captured GraphQL operations (reference material)
 tools/
   scripts/                       # Python helper scripts for API discovery
 docs/                            # Generated provider documentation (resources + data sources)
@@ -91,10 +78,22 @@ examples/
 ## Provider Development
 
 - Terraform Plugin Framework code lives in `internal/`.
-- The GraphQL client (`internal/graphql/client.go`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
+- The GraphQL client (`internal/client`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
+- Resource implementations are grouped by package in `internal/resources/<resource>` with files split by concern (crud, helpers, resource, types, data source).
 - Run formatting and linting before committing: `mise run fmt` and `mise run lint`.
 - Generate docs with `mise run build:generate-docs`.
 - Run tests with `mise run test`; acceptance tests with `mise run testacc` (requires real tenant).
+
+## Code Organization Guidelines
+
+- Look for opportunities to create reusable packages (helper/utility functions) instead of duplicating logic in resource packages.
+- Keep packages split by concern with focused files (crud, helpers, resource, types, data source).
+
+## Schema Guidelines
+
+- Schemas should be inline and as flat as possible.
+- Favor sets instead of lists unless sorting is absolutely necessary.
+- Favor nested attributes (set/single) instead of blocks wherever possible.
 
 ## Environment Variables
 
