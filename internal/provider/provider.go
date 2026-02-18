@@ -164,6 +164,7 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 		analytic_set.NewAnalyticSetListResource,
 		custom_prevent_list.NewCustomPreventListListResource,
 		exception_set.NewExceptionSetListResource,
+		telemetry.NewTelemetryV2ListResource,
 	}
 }
 

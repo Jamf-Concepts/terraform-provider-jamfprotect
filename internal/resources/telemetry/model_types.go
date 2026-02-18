@@ -13,7 +13,7 @@ type TelemetryV2ResourceModel struct {
 	ID                  types.String   `tfsdk:"id"`
 	Name                types.String   `tfsdk:"name"`
 	Description         types.String   `tfsdk:"description"`
-	LogFilePath         types.List     `tfsdk:"log_file_path"`
+	LogFilePath         types.Set      `tfsdk:"log_file_path"`
 	DiagnosticReports   types.Bool     `tfsdk:"collect_diagnostic_and_crash_reports"`
 	PerformanceMetrics  types.Bool     `tfsdk:"collect_performance_metrics"`
 	FileHashes          types.Bool     `tfsdk:"file_hashes"`

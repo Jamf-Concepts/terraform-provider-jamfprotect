@@ -20,6 +20,7 @@ import (
 
 var _ datasource.DataSource = &TelemetriesV2DataSource{}
 
+// NewTelemetriesV2DataSource returns a new telemetries data source.
 func NewTelemetriesV2DataSource() datasource.DataSource {
 	return &TelemetriesV2DataSource{}
 }
@@ -39,7 +40,7 @@ type TelemetryV2DataSourceItemModel struct {
 	ID                  types.String `tfsdk:"id"`
 	Name                types.String `tfsdk:"name"`
 	Description         types.String `tfsdk:"description"`
-	LogFilePath         types.List   `tfsdk:"log_file_path"`
+	LogFilePath         types.Set    `tfsdk:"log_file_path"`
 	DiagnosticReports   types.Bool   `tfsdk:"collect_diagnostic_and_crash_reports"`
 	PerformanceMetrics  types.Bool   `tfsdk:"collect_performance_metrics"`
 	FileHashes          types.Bool   `tfsdk:"file_hashes"`
@@ -54,16 +55,18 @@ type TelemetryV2DataSourceItemModel struct {
 	Updated             types.String `tfsdk:"updated"`
 }
 
+// Metadata returns the telemetries data source type name.
 func (d *TelemetriesV2DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_telemetries"
 }
 
+// Schema defines the telemetries data source schema.
 func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves a list of all v2 telemetry configurations in Jamf Protect.",
+		MarkdownDescription: "Retrieves a list of all telemetry configurations in Jamf Protect.",
 		Attributes: map[string]schema.Attribute{
 			"telemetries": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of v2 telemetry configurations.",
+				MarkdownDescription: "The list of telemetry configurations.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -79,7 +82,7 @@ func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.Sch
 							MarkdownDescription: "A description of the telemetry configuration.",
 							Computed:            true,
 						},
-						"log_file_path": schema.ListAttribute{
+						"log_file_path": schema.SetAttribute{
 							MarkdownDescription: "Log file paths to collect.",
 							Computed:            true,
 							ElementType:         types.StringType,
@@ -139,6 +142,7 @@ func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.Sch
 	}
 }
 
+// Configure prepares the telemetries service client.
 func (d *TelemetriesV2DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -152,6 +156,7 @@ func (d *TelemetriesV2DataSource) Configure(ctx context.Context, req datasource.
 	d.service = jamfprotect.NewService(client)
 }
 
+// Read retrieves the telemetry configuration list.
 func (d *TelemetriesV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data TelemetriesV2DataSourceModel
 
@@ -174,7 +179,7 @@ func (d *TelemetriesV2DataSource) Read(ctx context.Context, req datasource.ReadR
 			FileHashes:          types.BoolValue(api.FileHashing),
 			Created:             types.StringValue(api.Created),
 			Updated:             types.StringValue(api.Updated),
-			LogFilePath:         common.StringsToList(api.LogFiles),
+			LogFilePath:         common.StringsToSet(api.LogFiles),
 			LogAppsProcesses:    types.BoolValue(flags.LogAppsProcesses),
 			LogAccessAuth:       types.BoolValue(flags.LogAccessAuth),
 			LogUsersGroups:      types.BoolValue(flags.LogUsersGroups),
