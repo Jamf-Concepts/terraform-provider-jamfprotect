@@ -17,6 +17,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/change_management"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_forwarding"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_retention"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
@@ -1119,6 +1120,58 @@ func TestDataRetentionResourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_data_retention" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_data_retention", resp.TypeName)
+	}
+}
+
+func TestDataForwardingResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := data_forwarding.NewDataForwardingResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"amazon_s3", "microsoft_sentinel"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in data forwarding schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in data forwarding schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in data forwarding schema")
+	}
+}
+
+func TestDataForwardingResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := data_forwarding.NewDataForwardingResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_data_forwarding" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_data_forwarding", resp.TypeName)
 	}
 }
 
