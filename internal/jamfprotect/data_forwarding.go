@@ -194,15 +194,15 @@ type DataStreamInput struct {
 
 // ForwardSentinelV2Input captures Sentinel v2 forwarding updates.
 type ForwardSentinelV2Input struct {
-  Enabled           bool            `json:"enabled"`
-  AzureTenantID     string          `json:"azureTenantId"`
-  AzureClientID     string          `json:"azureClientId"`
-  AzureClientSecret *string         `json:"azureClientSecret,omitempty"`
-  Endpoint          string          `json:"endpoint"`
-  Alerts            DataStreamInput `json:"alerts"`
-  ULogs             DataStreamInput `json:"ulogs"`
-  Telemetries       DataStreamInput `json:"telemetries"`
-  TelemetriesV2     DataStreamInput `json:"telemetriesV2"`
+	Enabled           bool            `json:"enabled"`
+	AzureTenantID     string          `json:"azureTenantId"`
+	AzureClientID     string          `json:"azureClientId"`
+	AzureClientSecret *string         `json:"azureClientSecret,omitempty"`
+	Endpoint          string          `json:"endpoint"`
+	Alerts            DataStreamInput `json:"alerts"`
+	ULogs             DataStreamInput `json:"ulogs"`
+	Telemetries       DataStreamInput `json:"telemetries"`
+	TelemetriesV2     DataStreamInput `json:"telemetriesV2"`
 }
 
 // DataForwardingInput captures updates for forwarding settings.
@@ -214,19 +214,19 @@ type DataForwardingInput struct {
 
 // DataForwardingResult represents organization forwarding settings with UUID.
 type DataForwardingResult struct {
-  UUID    string                `json:"uuid"`
-  Forward DataForwardingSettings `json:"forward"`
+	UUID    string                 `json:"uuid"`
+	Forward DataForwardingSettings `json:"forward"`
 }
 
 // GetDataForwarding retrieves organization forwarding settings.
 func (s *Service) GetDataForwarding(ctx context.Context) (DataForwardingResult, error) {
 	var result struct {
-    GetOrganization DataForwardingResult `json:"getOrganization"`
+		GetOrganization DataForwardingResult `json:"getOrganization"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataForwardingGetQuery, nil, &result); err != nil {
-    return DataForwardingResult{}, err
+		return DataForwardingResult{}, err
 	}
-  return result.GetOrganization, nil
+	return result.GetOrganization, nil
 }
 
 // UpdateDataForwarding updates organization forwarding settings.
@@ -237,10 +237,10 @@ func (s *Service) UpdateDataForwarding(ctx context.Context, input DataForwarding
 		"sentinelV2": input.SentinelV2,
 	}
 	var result struct {
-    UpdateOrganizationForward DataForwardingResult `json:"updateOrganizationForward"`
+		UpdateOrganizationForward DataForwardingResult `json:"updateOrganizationForward"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataForwardingUpdateMutation, vars, &result); err != nil {
-    return DataForwardingResult{}, err
+		return DataForwardingResult{}, err
 	}
-  return result.UpdateOrganizationForward, nil
+	return result.UpdateOrganizationForward, nil
 }
