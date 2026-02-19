@@ -54,11 +54,18 @@ func (r *ChangeManagementResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing change management ID",
+			"UpdateOrganizationConfigFreeze did not return an ID for the change management resource.",
+		)
+		return
+	}
 	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Trace(ctx, "updated change management", map[string]any{"id": data.ID.ValueString()})
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -108,6 +115,18 @@ func (r *ChangeManagementResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing change management ID",
+			"GetConfigFreeze did not return an ID for the change management resource.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -157,6 +176,18 @@ func (r *ChangeManagementResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing change management ID",
+			"UpdateOrganizationConfigFreeze did not return an ID for the change management resource.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
