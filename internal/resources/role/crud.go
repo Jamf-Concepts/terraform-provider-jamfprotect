@@ -120,6 +120,18 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing role ID",
+			"GetRole did not return an ID for the role.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -166,6 +178,18 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing role ID",
+			"UpdateRole did not return an ID for the role.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 

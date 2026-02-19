@@ -95,6 +95,18 @@ func (r *GroupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing group ID",
+			"GetGroup did not return an ID for the group.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -136,6 +148,18 @@ func (r *GroupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing group ID",
+			"UpdateGroup did not return an ID for the group.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
