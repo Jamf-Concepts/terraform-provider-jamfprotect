@@ -22,6 +22,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/change_management"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_retention"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
@@ -141,6 +142,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		analytic_set.NewAnalyticSetResource,
 		api_client.NewApiClientResource,
 		change_management.NewChangeManagementResource,
+		data_retention.NewDataRetentionResource,
 		exception_set.NewExceptionSetResource,
 		group.NewGroupResource,
 		plan.NewPlanResource,

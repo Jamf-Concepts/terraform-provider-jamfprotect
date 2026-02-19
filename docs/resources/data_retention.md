@@ -1,22 +1,22 @@
 ---
-page_title: "jamfprotect_role Resource - jamfprotect"
+page_title: "jamfprotect_data_retention Resource - jamfprotect"
 subcategory: ""
 description: |-
-  Manages a role in Jamf Protect.
+  Manages data retention settings in Jamf Protect. Updates are limited to once every 24 hours.
 ---
 
-# jamfprotect_role (Resource)
+# jamfprotect_data_retention (Resource)
 
-Manages a role in Jamf Protect.
+Manages data retention settings in Jamf Protect. Updates are limited to once every 24 hours.
 
 ## Example Usage
 
 ```terraform
-# Create a role with read and write access to analytics.
-resource "jamfprotect_role" "basic" {
-  name              = "tf-basic-role"
-  read_permissions  = ["Analytics"]
-  write_permissions = ["Analytics"]
+# Manage Jamf Protect data retention settings.
+resource "jamfprotect_data_retention" "long_term" {
+  informational_alert_days            = 365
+  low_medium_high_severity_alert_days = 365
+  archived_data_days                  = 365
 }
 ```
 
@@ -27,18 +27,17 @@ resource "jamfprotect_role" "basic" {
 
 ### Required
 
-- `name` (String) The name of the role.
-- `read_permissions` (Set of String) Read permissions for the role. Use `all` for full read access. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Retention`, `Downloads`, `Exception Sets`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`, `Account Information`, `Audit Logs`, `Endpoint Threat Prevention`.
+- `archived_data_days` (Number) Retention days for archived data. Allowed values: 30, 60, 90, 180, 365.
+- `informational_alert_days` (Number) Retention days for informational alert data. Allowed values: 30, 60, 90, 180, 365.
+- `low_medium_high_severity_alert_days` (Number) Retention days for low/medium/high severity alerts. Allowed values: 30, 60, 90, 180, 365.
 
 ### Optional
 
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
-- `write_permissions` (Set of String) Write permissions for the role. Write permissions must also be present in read permissions. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Retention`, `Downloads`, `Exception Sets`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`.
 
 ### Read-Only
 
-- `created` (String) The creation timestamp.
-- `id` (String) The unique identifier of the role.
+- `id` (String) The singleton identifier for data retention.
 - `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
@@ -56,7 +55,7 @@ Optional:
 ### Using terraform import command
 
 ```shell
-terraform import jamfprotect_role.endpoint_security "<role-id>"
+terraform import jamfprotect_data_retention.imported "<data-retention-id>"
 ```
 
 ### Using import blocks (Terraform 1.5+)
@@ -65,14 +64,14 @@ terraform import jamfprotect_role.endpoint_security "<role-id>"
 
 ```terraform
 # Terraform 1.5+ Import Example
-# Import an existing Jamf Protect role using the import block.
+# Import an existing Jamf Protect data retention settings using the import block.
 
 import {
-  to = jamfprotect_role.imported
+  to = jamfprotect_data_retention.imported
   id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 
-resource "jamfprotect_role" "imported" {
+resource "jamfprotect_data_retention" "imported" {
   # Configuration will be populated during import
   # After import, run 'terraform plan' to see the current state
 }
