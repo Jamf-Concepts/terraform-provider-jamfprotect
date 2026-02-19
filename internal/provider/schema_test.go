@@ -20,6 +20,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/role"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/user"
@@ -911,6 +912,58 @@ func TestGroupResourceMetadata(t *testing.T) {
 	}
 }
 
+func TestRoleResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := role.NewRoleResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "read_permissions"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in role schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in role schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in role schema")
+	}
+}
+
+func TestRoleResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := role.NewRoleResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_role" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_role", resp.TypeName)
+	}
+}
+
 func TestApiClientResourceSchema(t *testing.T) {
 	t.Parallel()
 
@@ -1060,6 +1113,38 @@ func TestGroupsDataSourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_groups" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_groups", resp.TypeName)
+	}
+}
+
+func TestRolesDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := role.NewRolesDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	rolesAttr, ok := resp.Schema.Attributes["roles"]
+	if !ok {
+		t.Fatal("expected attribute 'roles' in data source schema")
+	}
+	if !rolesAttr.IsComputed() {
+		t.Error("expected 'roles' to be computed")
+	}
+}
+
+func TestRolesDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := role.NewRolesDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_roles" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_roles", resp.TypeName)
 	}
 }
 
@@ -1401,7 +1486,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 13 {
-		t.Errorf("expected 13 data sources, got %d", len(dataSources))
+	if len(dataSources) != 14 {
+		t.Errorf("expected 14 data sources, got %d", len(dataSources))
 	}
 }
