@@ -46,13 +46,7 @@ func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceMo
 			Prefix:    common.StringValue(s3.Prefix),
 			Role:      common.StringValue(s3.IAMRole),
 		},
-		Sentinel: jamfprotect.ForwardSentinelInput{
-			Enabled:    currentSentinel.Enabled,
-			CustomerID: currentSentinel.CustomerID,
-			SharedKey:  currentSentinel.SharedKey,
-			LogType:    currentSentinel.LogType,
-			Domain:     currentSentinel.Domain,
-		},
+		Sentinel: jamfprotect.ForwardSentinelInput(currentSentinel),
 		SentinelV2: jamfprotect.ForwardSentinelV2Input{
 			Enabled:       microsoftSentinel.Enabled.ValueBool(),
 			AzureTenantID: common.StringValue(microsoftSentinel.DirectoryID),
