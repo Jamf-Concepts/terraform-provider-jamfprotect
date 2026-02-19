@@ -5,6 +5,7 @@ package role
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -217,10 +218,5 @@ func rolePermissionListToLabels(values []string) []string {
 
 // rolePermissionHasAll reports whether the permission list includes all access.
 func rolePermissionHasAll(values []string) bool {
-	for _, value := range values {
-		if value == "all" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(values, "all")
 }
