@@ -6,7 +6,6 @@ package role
 import (
 	"fmt"
 	"slices"
-	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -188,7 +187,7 @@ func rolePermissionListToAPI(values []string, diags *diag.Diagnostics, fieldName
 		apiValues = append(apiValues, apiValue)
 	}
 
-	sort.Strings(apiValues)
+	slices.Sort(apiValues)
 	return apiValues
 }
 
@@ -212,7 +211,7 @@ func rolePermissionListToLabels(values []string) []string {
 		labels = append(labels, label)
 	}
 
-	sort.Strings(labels)
+	slices.Sort(labels)
 	return labels
 }
 

@@ -4,6 +4,7 @@
 package exception_set
 
 import (
+	"cmp"
 	"slices"
 	"strings"
 
@@ -17,15 +18,7 @@ func sortRuleModels(rules []exceptionRuleModel) []exceptionRuleModel {
 	result := make([]exceptionRuleModel, len(rules))
 	copy(result, rules)
 	slices.SortFunc(result, func(left, right exceptionRuleModel) int {
-		leftKey := ruleModelSortKey(left)
-		rightKey := ruleModelSortKey(right)
-		if leftKey < rightKey {
-			return -1
-		}
-		if leftKey > rightKey {
-			return 1
-		}
-		return 0
+		return cmp.Compare(ruleModelSortKey(left), ruleModelSortKey(right))
 	})
 	return result
 }

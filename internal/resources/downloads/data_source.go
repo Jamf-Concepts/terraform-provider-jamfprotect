@@ -6,7 +6,7 @@ package downloads
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -153,8 +153,13 @@ func buildPackageURL(baseURL, packageName, installerUUID string) string {
 	if baseURL == "" || installerUUID == "" {
 		return ""
 	}
-	trimmed := strings.TrimRight(baseURL, "/")
-	return fmt.Sprintf("%s/%s?%s", trimmed, packageName, installerUUID)
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return ""
+	}
+	u = u.JoinPath(packageName)
+	u.RawQuery = installerUUID
+	return u.String()
 }
 
 // buildInstallerPackageObject maps the installer package into a Terraform object.

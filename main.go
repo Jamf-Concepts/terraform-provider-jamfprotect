@@ -6,7 +6,8 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/provider"
@@ -30,6 +31,7 @@ func main() {
 	err := providerserver.Serve(context.Background(), provider.New(version), opts)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error("failed to serve provider", "error", err)
+		os.Exit(1)
 	}
 }

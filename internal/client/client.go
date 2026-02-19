@@ -14,10 +14,15 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
 	"golang.org/x/sync/singleflight"
 )
+
+// oauthConfig holds the credentials needed for token requests.
+type oauthConfig struct {
+	ClientID     string
+	ClientSecret string
+	TokenURL     string
+}
 
 // Client communicates with the Jamf Protect GraphQL API.
 type Client struct {
@@ -25,9 +30,9 @@ type Client struct {
 	userAgent   string
 	httpClient  *http.Client
 	logger      Logger
-	oauthConfig clientcredentials.Config
+	oauthConfig oauthConfig
 	mu          sync.Mutex
-	token       *oauth2.Token
+	token       *Token
 	tokenGroup  singleflight.Group
 }
 
@@ -46,7 +51,7 @@ func NewClientWithVersion(baseURL, clientID, clientSecret, version string, opts 
 		baseURL:    strings.TrimRight(baseURL, "/"),
 		userAgent:  userAgent,
 		httpClient: httpClient,
-		oauthConfig: clientcredentials.Config{
+		oauthConfig: oauthConfig{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
 			TokenURL:     strings.TrimRight(baseURL, "/") + "/token",
