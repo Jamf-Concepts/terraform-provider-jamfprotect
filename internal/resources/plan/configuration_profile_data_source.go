@@ -55,35 +55,35 @@ func (d *PlanConfigurationProfileDataSource) Schema(ctx context.Context, req dat
 			},
 			"sign_profile": schema.BoolAttribute{
 				MarkdownDescription: "Whether to sign the configuration profile payload.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_pppc_payload": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the PPPC payload.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_system_extension_payload": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the System Extension payload.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_login_background_items_payload": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the Login & Background Items payload.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_websocket_authorizer_key": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the Websocket Authorizer Key.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_root_ca_certificate": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the Root CA certificate.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_csr_certificate": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the CSR certificate.",
-				Optional:            true,
+				Required:            true,
 			},
 			"include_bootstrap_token": schema.BoolAttribute{
 				MarkdownDescription: "Whether to include the Bootstrap Token payload.",
-				Optional:            true,
+				Required:            true,
 			},
 			"profile": schema.StringAttribute{
 				MarkdownDescription: "The configuration profile payload (base64-encoded).",
@@ -120,14 +120,14 @@ func (d *PlanConfigurationProfileDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	signProfile := boolValueOrDefault(data.SignProfile, true)
-	includePPPC := boolValueOrDefault(data.IncludePPPCPayload, true)
-	includeSystemExtension := boolValueOrDefault(data.IncludeSystemExtensionPayload, true)
-	includeLoginBackgroundItems := boolValueOrDefault(data.IncludeLoginBackgroundItems, true)
-	includeWebsocketAuthorizerKey := boolValueOrDefault(data.IncludeWebsocketAuthorizerKey, true)
-	includeRootCACertificate := boolValueOrDefault(data.IncludeRootCACertificate, true)
-	includeCSRCertificate := boolValueOrDefault(data.IncludeCSRCertificate, true)
-	includeBootstrapToken := boolValueOrDefault(data.IncludeBootstrapToken, true)
+	signProfile := (data.SignProfile).ValueBool()
+	includePPPC := (data.IncludePPPCPayload).ValueBool()
+	includeSystemExtension := (data.IncludeSystemExtensionPayload).ValueBool()
+	includeLoginBackgroundItems := (data.IncludeLoginBackgroundItems).ValueBool()
+	includeWebsocketAuthorizerKey := (data.IncludeWebsocketAuthorizerKey).ValueBool()
+	includeRootCACertificate := (data.IncludeRootCACertificate).ValueBool()
+	includeCSRCertificate := (data.IncludeCSRCertificate).ValueBool()
+	includeBootstrapToken := (data.IncludeBootstrapToken).ValueBool()
 
 	input := jamfprotect.PlanConfigProfileOptionsInput{
 		TokenOptions: jamfprotect.PlanConfigProfileTokenOptionsInput{
@@ -161,12 +161,4 @@ func (d *PlanConfigurationProfileDataSource) Read(ctx context.Context, req datas
 	data.Profile = types.StringValue(profile)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-// boolValueOrDefault resolves a Terraform bool with a fallback value.
-func boolValueOrDefault(value types.Bool, defaultValue bool) bool {
-	if value.IsNull() || value.IsUnknown() {
-		return defaultValue
-	}
-	return value.ValueBool()
 }
