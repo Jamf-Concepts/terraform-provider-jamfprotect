@@ -20,6 +20,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/user"
 )
 
 func TestProviderSchema(t *testing.T) {
@@ -804,6 +805,58 @@ func TestTelemetryV2ResourceMetadata(t *testing.T) {
 	}
 }
 
+func TestUserResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := user.NewUserResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"email"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in user schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in user schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in user schema")
+	}
+}
+
+func TestUserResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := user.NewUserResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_user" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_user", resp.TypeName)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Data source schema tests
 // ---------------------------------------------------------------------------
@@ -837,6 +890,38 @@ func TestPlansDataSourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_plans" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_plans", resp.TypeName)
+	}
+}
+
+func TestUsersDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := user.NewUsersDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	usersAttr, ok := resp.Schema.Attributes["users"]
+	if !ok {
+		t.Fatal("expected attribute 'users' in data source schema")
+	}
+	if !usersAttr.IsComputed() {
+		t.Error("expected 'users' to be computed")
+	}
+}
+
+func TestUsersDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := user.NewUsersDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_users" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_users", resp.TypeName)
 	}
 }
 
@@ -1146,7 +1231,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 10 {
-		t.Errorf("expected 10 data sources, got %d", len(dataSources))
+	if len(dataSources) != 11 {
+		t.Errorf("expected 11 data sources, got %d", len(dataSources))
 	}
 }
