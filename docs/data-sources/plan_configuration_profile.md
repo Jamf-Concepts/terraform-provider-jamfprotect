@@ -46,9 +46,6 @@ resource "local_file" "plan_configuration_profile" {
 ### Required
 
 - `id` (String) The unique identifier of the plan.
-
-### Optional
-
 - `include_bootstrap_token` (Boolean) Whether to include the Bootstrap Token payload.
 - `include_csr_certificate` (Boolean) Whether to include the CSR certificate.
 - `include_login_background_items_payload` (Boolean) Whether to include the Login & Background Items payload.
