@@ -14,6 +14,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
@@ -857,6 +858,58 @@ func TestUserResourceMetadata(t *testing.T) {
 	}
 }
 
+func TestApiClientResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := api_client.NewApiClientResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in api client schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "password"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in api client schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in api client schema")
+	}
+}
+
+func TestApiClientResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := api_client.NewApiClientResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_api_client" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_api_client", resp.TypeName)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Data source schema tests
 // ---------------------------------------------------------------------------
@@ -922,6 +975,38 @@ func TestUsersDataSourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_users" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_users", resp.TypeName)
+	}
+}
+
+func TestApiClientsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := api_client.NewApiClientsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	clientsAttr, ok := resp.Schema.Attributes["api_clients"]
+	if !ok {
+		t.Fatal("expected attribute 'api_clients' in data source schema")
+	}
+	if !clientsAttr.IsComputed() {
+		t.Error("expected 'api_clients' to be computed")
+	}
+}
+
+func TestApiClientsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := api_client.NewApiClientsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_api_clients" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_api_clients", resp.TypeName)
 	}
 }
 
@@ -1231,7 +1316,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 11 {
-		t.Errorf("expected 11 data sources, got %d", len(dataSources))
+	if len(dataSources) != 12 {
+		t.Errorf("expected 12 data sources, got %d", len(dataSources))
 	}
 }
