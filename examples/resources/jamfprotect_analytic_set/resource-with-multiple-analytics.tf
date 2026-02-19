@@ -31,7 +31,7 @@ resource "jamfprotect_analytic" "suspicious_downloads" {
   name           = "Suspicious Download Detection"
   description    = "Monitors for downloads from untrusted sources"
   sensor_type    = "Download Event"
-  filter         = "( $event.sourceUrl CONTAINS[c] '.ru' )"
+  filter         = "( $event.sourceUrl CONTAINS[c] '.untrusted' )"
   categories     = ["InitialAccess"]
   severity       = "Medium"
   level          = 6
