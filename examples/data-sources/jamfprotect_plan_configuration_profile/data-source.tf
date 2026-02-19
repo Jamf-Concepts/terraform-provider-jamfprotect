@@ -12,7 +12,8 @@ data "jamfprotect_plan_configuration_profile" "example_unsigned" {
 }
 
 output "plan_configuration_profile" {
-  value = base64decode(data.jamfprotect_plan_configuration_profile.example_unsigned.profile)
+  value     = base64decode(data.jamfprotect_plan_configuration_profile.example_unsigned.profile)
+  sensitive = true
 }
 
 resource "local_file" "plan_configuration_profile" {
