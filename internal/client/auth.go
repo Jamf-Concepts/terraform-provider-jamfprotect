@@ -11,11 +11,21 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"golang.org/x/oauth2"
 )
 
 const tokenExpirySkew = 60 * time.Second
+
+// Token holds an access token and its metadata.
+type Token struct {
+	AccessToken string
+	TokenType   string
+	Expiry      time.Time
+}
+
+// Valid reports whether the token is present and not expired.
+func (t *Token) Valid() bool {
+	return t != nil && t.AccessToken != "" && t.Expiry.After(time.Now())
+}
 
 // tokenRequest is the payload sent to the /token endpoint.
 type tokenRequest struct {
@@ -32,7 +42,7 @@ type tokenResponse struct {
 
 // AccessToken ensures a valid token is available and returns it.
 // Tokens returned by Jamf Protect do not include a "Bearer" prefix.
-func (c *Client) AccessToken(ctx context.Context) (*oauth2.Token, error) {
+func (c *Client) AccessToken(ctx context.Context) (*Token, error) {
 	token, err := c.authenticate(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrAuthentication, err)
@@ -41,7 +51,7 @@ func (c *Client) AccessToken(ctx context.Context) (*oauth2.Token, error) {
 }
 
 // authenticate obtains (or refreshes) an access token. Thread-safe.
-func (c *Client) authenticate(ctx context.Context) (*oauth2.Token, error) {
+func (c *Client) authenticate(ctx context.Context) (*Token, error) {
 	if token := c.currentToken(); token != nil {
 		return token, nil
 	}
@@ -62,7 +72,7 @@ func (c *Client) authenticate(ctx context.Context) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	token, ok := value.(*oauth2.Token)
+	token, ok := value.(*Token)
 	if !ok {
 		return nil, fmt.Errorf("unexpected token type %T", value)
 	}
@@ -70,7 +80,7 @@ func (c *Client) authenticate(ctx context.Context) (*oauth2.Token, error) {
 }
 
 // currentToken returns the current token if it's valid, or nil if it's missing or expired. Thread-safe.
-func (c *Client) currentToken() *oauth2.Token {
+func (c *Client) currentToken() *Token {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.token != nil && c.token.Valid() {
@@ -80,7 +90,7 @@ func (c *Client) currentToken() *oauth2.Token {
 }
 
 // fetchToken performs the actual HTTP request to obtain a new access token using the client credentials flow.
-func (c *Client) fetchToken(ctx context.Context) (*oauth2.Token, error) {
+func (c *Client) fetchToken(ctx context.Context) (*Token, error) {
 	body, err := json.Marshal(tokenRequest{
 		ClientID: c.oauthConfig.ClientID,
 		Password: c.oauthConfig.ClientSecret,
@@ -135,7 +145,7 @@ func (c *Client) fetchToken(ctx context.Context) (*oauth2.Token, error) {
 	if time.Duration(tokenResp.ExpiresIn)*time.Second > tokenExpirySkew {
 		expiry = expiry.Add(-tokenExpirySkew)
 	}
-	return &oauth2.Token{
+	return &Token{
 		AccessToken: tokenResp.AccessToken,
 		TokenType:   tokenResp.TokenType,
 		Expiry:      expiry,

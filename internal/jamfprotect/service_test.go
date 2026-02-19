@@ -4,11 +4,11 @@
 package jamfprotect
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
@@ -74,29 +74,30 @@ func assertVariablesEqual(t *testing.T, expected map[string]any, actual map[stri
 	if expected == nil || actual == nil {
 		t.Fatalf("expected variables %v, got %v", expected, actual)
 	}
-	expNormalized := normalizeVariables(t, expected)
-	actNormalized := normalizeVariables(t, actual)
-	if !reflect.DeepEqual(expNormalized, actNormalized) {
-		expJSON, _ := json.Marshal(expNormalized)
-		actJSON, _ := json.Marshal(actNormalized)
+	expJSON := normalizeJSON(t, expected)
+	actJSON := normalizeJSON(t, actual)
+	if !bytes.Equal(expJSON, actJSON) {
 		t.Fatalf("variables mismatch\nexpected: %s\nactual:   %s", expJSON, actJSON)
 	}
 }
 
-func normalizeVariables(t *testing.T, vars map[string]any) any {
+// normalizeJSON marshals v, then unmarshals into any and re-marshals so that
+// map key order is consistent regardless of the original type (struct vs map).
+func normalizeJSON(t *testing.T, v any) []byte {
 	t.Helper()
-	if vars == nil {
-		return nil
-	}
-	data, err := json.Marshal(vars)
+	data, err := json.Marshal(v)
 	if err != nil {
-		t.Fatalf("failed to marshal vars: %v", err)
+		t.Fatalf("failed to marshal: %v", err)
 	}
-	var normalized any
-	if err := json.Unmarshal(data, &normalized); err != nil {
-		t.Fatalf("failed to unmarshal vars: %v", err)
+	var norm any
+	if err := json.Unmarshal(data, &norm); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
 	}
-	return normalized
+	out, err := json.Marshal(norm)
+	if err != nil {
+		t.Fatalf("failed to re-marshal: %v", err)
+	}
+	return out
 }
 
 func TestService_ActionConfig(t *testing.T) {
