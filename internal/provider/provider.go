@@ -22,6 +22,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
@@ -138,6 +139,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		analytic_set.NewAnalyticSetResource,
 		api_client.NewApiClientResource,
 		exception_set.NewExceptionSetResource,
+		group.NewGroupResource,
 		plan.NewPlanResource,
 		user.NewUserResource,
 		custom_prevent_list.NewCustomPreventListResource,
@@ -154,6 +156,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		analytic_set.NewAnalyticSetsDataSource,
 		api_client.NewApiClientsDataSource,
 		exception_set.NewExceptionSetsDataSource,
+		group.NewGroupsDataSource,
 		plan.NewPlansDataSource,
 		plan.NewPlanConfigurationProfileDataSource,
 		user.NewUsersDataSource,
@@ -172,6 +175,7 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 		api_client.NewApiClientListResource,
 		custom_prevent_list.NewCustomPreventListListResource,
 		exception_set.NewExceptionSetListResource,
+		group.NewGroupListResource,
 		plan.NewPlanListResource,
 		user.NewUserListResource,
 		telemetry.NewTelemetryV2ListResource,
