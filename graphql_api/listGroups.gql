@@ -1,0 +1,35 @@
+query listGroups($pageSize: Int, $nextToken: String, $direction: OrderDirection!, $field: GroupOrderField!, $RBAC_Connection: Boolean!, $RBAC_Role: Boolean!) {
+  listGroups(
+    input: {next: $nextToken, pageSize: $pageSize, order: {direction: $direction, field: $field}}
+  ) {
+    items {
+      ...GroupFields
+      __typename
+    }
+    pageInfo {
+      next
+      total
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment GroupFields on Group {
+  id
+  name
+  connection @include(if: $RBAC_Connection) {
+    id
+    name
+    __typename
+  }
+  assignedRoles @include(if: $RBAC_Role) {
+    id
+    name
+    __typename
+  }
+  accessGroup
+  created
+  updated
+  __typename
+}

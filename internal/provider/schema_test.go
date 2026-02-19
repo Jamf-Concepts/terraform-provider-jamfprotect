@@ -17,6 +17,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
@@ -858,6 +859,58 @@ func TestUserResourceMetadata(t *testing.T) {
 	}
 }
 
+func TestGroupResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := group.NewGroupResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in group schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created", "updated"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in group schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in group schema")
+	}
+}
+
+func TestGroupResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := group.NewGroupResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_group" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_group", resp.TypeName)
+	}
+}
+
 func TestApiClientResourceSchema(t *testing.T) {
 	t.Parallel()
 
@@ -975,6 +1028,38 @@ func TestUsersDataSourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_users" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_users", resp.TypeName)
+	}
+}
+
+func TestGroupsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := group.NewGroupsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	groupsAttr, ok := resp.Schema.Attributes["groups"]
+	if !ok {
+		t.Fatal("expected attribute 'groups' in data source schema")
+	}
+	if !groupsAttr.IsComputed() {
+		t.Error("expected 'groups' to be computed")
+	}
+}
+
+func TestGroupsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := group.NewGroupsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_groups" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_groups", resp.TypeName)
 	}
 }
 
@@ -1316,7 +1401,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 12 {
-		t.Errorf("expected 12 data sources, got %d", len(dataSources))
+	if len(dataSources) != 13 {
+		t.Errorf("expected 13 data sources, got %d", len(dataSources))
 	}
 }

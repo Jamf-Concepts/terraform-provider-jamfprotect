@@ -1,0 +1,25 @@
+query getGroup($id: ID!, $RBAC_Connection: Boolean!, $RBAC_Role: Boolean!) {
+  getGroup(id: $id) {
+    ...GroupFields
+    __typename
+  }
+}
+
+fragment GroupFields on Group {
+  id
+  name
+  connection @include(if: $RBAC_Connection) {
+    id
+    name
+    __typename
+  }
+  assignedRoles @include(if: $RBAC_Role) {
+    id
+    name
+    __typename
+  }
+  accessGroup
+  created
+  updated
+  __typename
+}
