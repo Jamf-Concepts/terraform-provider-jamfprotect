@@ -25,6 +25,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/role"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/user"
@@ -141,6 +142,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		exception_set.NewExceptionSetResource,
 		group.NewGroupResource,
 		plan.NewPlanResource,
+		role.NewRoleResource,
 		user.NewUserResource,
 		custom_prevent_list.NewCustomPreventListResource,
 		telemetry.NewTelemetryV2Resource,
@@ -159,6 +161,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		group.NewGroupsDataSource,
 		plan.NewPlansDataSource,
 		plan.NewPlanConfigurationProfileDataSource,
+		role.NewRolesDataSource,
 		user.NewUsersDataSource,
 		custom_prevent_list.NewCustomPreventListsDataSource,
 		telemetry.NewTelemetriesV2DataSource,
@@ -177,6 +180,7 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 		exception_set.NewExceptionSetListResource,
 		group.NewGroupListResource,
 		plan.NewPlanListResource,
+		role.NewRoleListResource,
 		user.NewUserListResource,
 		telemetry.NewTelemetryV2ListResource,
 		unified_logging_filter.NewUnifiedLoggingFilterListResource,
