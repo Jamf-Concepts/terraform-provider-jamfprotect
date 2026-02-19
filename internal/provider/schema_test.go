@@ -840,6 +840,46 @@ func TestPlansDataSourceMetadata(t *testing.T) {
 	}
 }
 
+func TestPlanConfigurationProfileDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := plan.NewPlanConfigurationProfileDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	idAttr, ok := resp.Schema.Attributes["id"]
+	if !ok {
+		t.Fatal("expected attribute 'id' in data source schema")
+	}
+	if !idAttr.IsRequired() {
+		t.Error("expected 'id' to be required")
+	}
+
+	profileAttr, ok := resp.Schema.Attributes["profile"]
+	if !ok {
+		t.Fatal("expected attribute 'profile' in data source schema")
+	}
+	if !profileAttr.IsComputed() {
+		t.Error("expected 'profile' to be computed")
+	}
+}
+
+func TestPlanConfigurationProfileDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := plan.NewPlanConfigurationProfileDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_plan_configuration_profile" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_plan_configuration_profile", resp.TypeName)
+	}
+}
+
 func TestAnalyticsDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
@@ -1106,7 +1146,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 9 {
-		t.Errorf("expected 9 data sources, got %d", len(dataSources))
+	if len(dataSources) != 10 {
+		t.Errorf("expected 10 data sources, got %d", len(dataSources))
 	}
 }
