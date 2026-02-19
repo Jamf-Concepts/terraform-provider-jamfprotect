@@ -94,7 +94,7 @@ examples/
 
 - Follow Go conventions and idiomatic patterns.
 - Favor clear and descriptive naming for variables, functions, and types.
-- Always ensure functions, variable sets and types have a short comment describing their purpose.
+- Always ensure constants, functions, variable sets and types have a short comment describing their purpose.
 - Do not add comments inside type definitions or function bodies.
 
 ### Resource Package File Conventions
