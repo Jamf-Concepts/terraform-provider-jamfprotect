@@ -150,6 +150,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		analytic_set.NewAnalyticSetsDataSource,
 		exception_set.NewExceptionSetsDataSource,
 		plan.NewPlansDataSource,
+		plan.NewPlanConfigurationProfileDataSource,
 		custom_prevent_list.NewCustomPreventListsDataSource,
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,

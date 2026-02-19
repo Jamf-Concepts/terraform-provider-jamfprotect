@@ -167,6 +167,12 @@ query listPlans($nextToken: String, $direction: OrderDirection!, $field: PlanOrd
 }
 ` + planFields
 
+const getPlansConfigProfileQuery = `
+query getPlansConfigProfile($id: ID!, $input: ProfileOptionsInput) {
+	getPlansConfigProfile(id: $id, input: $input)
+}
+`
+
 // PlanAnalyticSetInput is a plan analytic set input entry.
 type PlanAnalyticSetInput struct {
 	Type string
@@ -188,6 +194,25 @@ type PlanInfoSyncInput struct {
 // PlanSignaturesFeedConfigInput captures signatures feed configuration.
 type PlanSignaturesFeedConfigInput struct {
 	Mode string
+}
+
+// PlanConfigProfileTokenOptionsInput captures token options for plan profiles.
+type PlanConfigProfileTokenOptionsInput struct {
+	XPC              bool
+	KeychainClientID bool
+}
+
+// PlanConfigProfileOptionsInput captures config profile options for a plan.
+type PlanConfigProfileOptionsInput struct {
+	TokenOptions      PlanConfigProfileTokenOptionsInput
+	Sign              bool
+	PPPC              bool
+	Token             bool
+	CA                bool
+	CSR               bool
+	Websocket         bool
+	SystemExtension   bool
+	ServiceManagement bool
 }
 
 // PlanInput is the create/update input for a plan.
@@ -359,6 +384,21 @@ func (s *Service) ListPlans(ctx context.Context) ([]Plan, error) {
 	return allItems, nil
 }
 
+// GetPlansConfigProfile retrieves the config profile payload for a plan.
+func (s *Service) GetPlansConfigProfile(ctx context.Context, id string, input *PlanConfigProfileOptionsInput) (string, error) {
+	vars := map[string]any{"id": id}
+	if input != nil {
+		vars["input"] = buildPlanConfigProfileInput(*input)
+	}
+	var result struct {
+		GetPlansConfigProfile string `json:"getPlansConfigProfile"`
+	}
+	if err := s.client.DoGraphQL(ctx, "/app", getPlansConfigProfileQuery, vars, &result); err != nil {
+		return "", err
+	}
+	return result.GetPlansConfigProfile, nil
+}
+
 func buildPlanVariables(input PlanInput) map[string]any {
 	vars := map[string]any{
 		"name":          input.Name,
@@ -412,4 +452,22 @@ func buildPlanVariables(input PlanInput) map[string]any {
 	}
 
 	return vars
+}
+
+// buildPlanConfigProfileInput builds the config profile input payload.
+func buildPlanConfigProfileInput(input PlanConfigProfileOptionsInput) map[string]any {
+	return map[string]any{
+		"tokenOptions": map[string]any{
+			"xpc":                input.TokenOptions.XPC,
+			"keychain_client_id": input.TokenOptions.KeychainClientID,
+		},
+		"sign":              input.Sign,
+		"pppc":              input.PPPC,
+		"token":             input.Token,
+		"ca":                input.CA,
+		"csr":               input.CSR,
+		"websocket":         input.Websocket,
+		"systemExtension":   input.SystemExtension,
+		"serviceManagement": input.ServiceManagement,
+	}
 }
