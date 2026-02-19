@@ -95,6 +95,18 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing action configuration ID",
+			"GetActionConfig did not return an ID for the action configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -138,6 +150,18 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing action configuration ID",
+			"UpdateActionConfig did not return an ID for the action configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 

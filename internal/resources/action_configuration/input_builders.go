@@ -212,11 +212,8 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 	if diags.HasError() {
 		return nil
 	}
-	if len(clients) > 0 {
-		input.Clients = clients
-	} else {
-		input.Clients = nil
-	}
+	// Always set Clients to an array (even if empty) - API expects array, not null
+	input.Clients = clients
 
 	return input
 }
