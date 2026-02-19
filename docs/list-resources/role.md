@@ -14,8 +14,7 @@ Lists roles in Jamf Protect.
 
 ```terraform
 list "jamfprotect_role" "example" {
-  provider    = "jamfprotect"
-  name_prefix = "tf-"
+  provider = jamfprotect
 }
 ```
 
