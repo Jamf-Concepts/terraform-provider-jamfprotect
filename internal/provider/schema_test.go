@@ -19,6 +19,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_forwarding"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_retention"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/downloads"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
@@ -1475,6 +1476,46 @@ func TestCustomPreventListsDataSourceMetadata(t *testing.T) {
 	}
 }
 
+func TestDownloadsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := downloads.NewDownloadsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	attr, ok := resp.Schema.Attributes["installer_package"]
+	if !ok {
+		t.Fatal("expected attribute 'installer_package' in data source schema")
+	}
+	if !attr.IsComputed() {
+		t.Error("expected 'installer_package' to be computed")
+	}
+
+	profileAttr, ok := resp.Schema.Attributes["non_removable_system_extension_profile"]
+	if !ok {
+		t.Fatal("expected attribute 'non_removable_system_extension_profile' in data source schema")
+	}
+	if !profileAttr.IsComputed() {
+		t.Error("expected 'non_removable_system_extension_profile' to be computed")
+	}
+}
+
+func TestDownloadsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := downloads.NewDownloadsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_downloads" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_downloads", resp.TypeName)
+	}
+}
+
 func TestUnifiedLoggingFiltersDataSourceSchema(t *testing.T) {
 	t.Parallel()
 
@@ -1645,7 +1686,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 14 {
-		t.Errorf("expected 14 data sources, got %d", len(dataSources))
+	if len(dataSources) != 15 {
+		t.Errorf("expected 15 data sources, got %d", len(dataSources))
 	}
 }

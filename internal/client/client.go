@@ -63,6 +63,11 @@ func (c *Client) SetLogger(logger Logger) {
 	c.logger = logger
 }
 
+// BaseURL returns the base URL configured for the client.
+func (c *Client) BaseURL() string {
+	return c.baseURL
+}
+
 // DoGraphQL executes a raw GraphQL query/mutation against a custom endpoint path.
 // Use "/app" for the main API and "/graphql" for the limited schema endpoint.
 func (c *Client) DoGraphQL(ctx context.Context, path, query string, variables map[string]any, target any) error {
