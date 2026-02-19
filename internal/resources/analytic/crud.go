@@ -93,6 +93,17 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing analytic ID",
+			"GetAnalytic did not return a UUID for the analytic.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -135,6 +146,17 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing analytic ID",
+			"UpdateAnalytic did not return a UUID for the analytic.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), types.StringValue(data.ID.ValueString()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
