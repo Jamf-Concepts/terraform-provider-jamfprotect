@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+import (
+	"maps"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // RBAC variable constants shared across service methods.
 var (
@@ -40,18 +44,10 @@ var (
 
 // mergeVars returns a new map combining base variables with additional maps.
 func mergeVars(base map[string]any, extras ...map[string]any) map[string]any {
-	size := len(base)
+	result := make(map[string]any, len(base))
+	maps.Copy(result, base)
 	for _, extra := range extras {
-		size += len(extra)
-	}
-	result := make(map[string]any, size)
-	for k, v := range base {
-		result[k] = v
-	}
-	for _, extra := range extras {
-		for k, v := range extra {
-			result[k] = v
-		}
+		maps.Copy(result, extra)
 	}
 	return result
 }
