@@ -1,6 +1,3 @@
-// Copyright (c) James Smith 2025
-// SPDX-License-Identifier: MPL-2.0
-
 package provider
 
 import (
@@ -1686,7 +1683,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 15 {
-		t.Errorf("expected 15 data sources, got %d", len(dataSources))
+	if len(dataSources) != 17 {
+		t.Errorf("expected 17 data sources, got %d", len(dataSources))
 	}
 }

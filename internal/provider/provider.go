@@ -1,6 +1,3 @@
-// Copyright (c) James Smith 2025
-// SPDX-License-Identifier: MPL-2.0
-
 package provider
 
 import (
@@ -21,6 +18,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/change_management"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/computer"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_forwarding"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_retention"
@@ -164,6 +162,8 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		analytic.NewAnalyticsDataSource,
 		analytic_set.NewAnalyticSetsDataSource,
 		api_client.NewApiClientsDataSource,
+		computer.NewComputerDataSource,
+		computer.NewComputersDataSource,
 		exception_set.NewExceptionSetsDataSource,
 		group.NewGroupsDataSource,
 		plan.NewPlansDataSource,
