@@ -31,3 +31,4 @@ META.d/
 local_testing/
 .issues/
 .worktrees/
+tmp/

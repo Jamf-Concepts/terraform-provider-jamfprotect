@@ -49,8 +49,3 @@ type ComputerPlanModel struct {
 type ComputersDataSourceModel struct {
 	Computers []ComputerModel `tfsdk:"computers"`
 }
-
-// listConfigModel maps the list resource configuration schema.
-type listConfigModel struct {
-	HostNamePrefix types.String `tfsdk:"host_name_prefix"`
-}
