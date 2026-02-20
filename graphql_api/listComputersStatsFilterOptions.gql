@@ -1,0 +1,22 @@
+query listComputersStatsFilterOptions($useSignatures: Boolean!) {
+  tags: listComputersStats(input: {field: tags}) {
+    value
+    __typename
+  }
+  version: listComputersStats(input: {field: version}) {
+    value
+    __typename
+  }
+  macosVersion: listComputersStats(input: {field: macosVersion}) {
+    value
+    __typename
+  }
+  modelName: listComputersStats(input: {field: modelName}) {
+    value
+    __typename
+  }
+  threatVersion: listComputersStats(input: {field: signaturesVersion}) {
+    value @include(if: $useSignatures)
+    __typename
+  }
+}
