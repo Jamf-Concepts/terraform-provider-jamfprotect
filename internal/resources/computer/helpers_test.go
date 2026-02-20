@@ -1,6 +1,7 @@
 package computer
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -116,7 +117,7 @@ func TestBuildComputerModel_AllFields(t *testing.T) {
 		t.Error("Tags should not be null")
 	}
 	var modelTags []string
-	model.Tags.ElementsAs(nil, &modelTags, false)
+	model.Tags.ElementsAs(context.Background(), &modelTags, false)
 	if len(modelTags) != 2 {
 		t.Errorf("Tags length = %v, want 2", len(modelTags))
 	}
