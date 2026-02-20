@@ -22,10 +22,7 @@ func (r *DataForwardingResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -87,10 +84,7 @@ func (r *DataForwardingResource) Read(ctx context.Context, req resource.ReadRequ
 		}
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -132,10 +126,7 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 	}
 	data.ID = state.ID
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	updateTimeout, diags := timeoutsValue.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)

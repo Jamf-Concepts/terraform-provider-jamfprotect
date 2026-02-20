@@ -22,10 +22,7 @@ func (r *ApiClientResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -90,10 +87,7 @@ func (r *ApiClientResource) Read(ctx context.Context, req resource.ReadRequest, 
 		}
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -151,10 +145,7 @@ func (r *ApiClientResource) Update(ctx context.Context, req resource.UpdateReque
 	data.ID = state.ID
 	data.Password = state.Password
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	updateTimeout, diags := timeoutsValue.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -202,10 +193,7 @@ func (r *ApiClientResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	deleteTimeout, diags := timeoutsValue.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)

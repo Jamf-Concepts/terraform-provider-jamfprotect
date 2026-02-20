@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // apiClientFields defines the GraphQL fragment for API client fields.
 const apiClientFields = `
@@ -138,39 +142,10 @@ func (s *Service) DeleteApiClient(ctx context.Context, clientID string) error {
 
 // ListApiClients retrieves all API clients.
 func (s *Service) ListApiClients(ctx context.Context) ([]ApiClient, error) {
-	allItems := make([]ApiClient, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "DESC",
-			"field":     "created",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListApiClients struct {
-				Items    []ApiClient `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listApiClients"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listApiClientsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListApiClients.Items...)
-		if result.ListApiClients.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListApiClients.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[ApiClient](ctx, s.client, "/app", listApiClientsQuery, map[string]any{
+		"direction": "DESC",
+		"field":     "created",
+	}, "listApiClients")
 }
 
 // buildApiClientVariables builds the GraphQL variables for creating/updating an API client.

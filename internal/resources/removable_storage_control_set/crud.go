@@ -19,10 +19,7 @@ func (r *RemovableStorageControlSetResource) Create(ctx context.Context, req res
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -86,10 +83,7 @@ func (r *RemovableStorageControlSetResource) Read(ctx context.Context, req resou
 		}
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -144,10 +138,7 @@ func (r *RemovableStorageControlSetResource) Update(ctx context.Context, req res
 	}
 	data.ID = state.ID
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	updateTimeout, diags := timeoutsValue.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -196,10 +187,7 @@ func (r *RemovableStorageControlSetResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	deleteTimeout, diags := timeoutsValue.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)

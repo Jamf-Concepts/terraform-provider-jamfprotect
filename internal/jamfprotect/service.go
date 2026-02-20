@@ -14,3 +14,8 @@ type Service struct {
 func NewService(c *client.Client) *Service {
 	return &Service{client: c}
 }
+
+// BaseURL returns the base URL configured for the underlying client.
+func (s *Service) BaseURL() string {
+	return s.client.BaseURL()
+}

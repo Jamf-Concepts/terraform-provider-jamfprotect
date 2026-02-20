@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // roleFields defines the GraphQL fragment for role fields.
 const roleFields = `
@@ -144,40 +148,11 @@ func (s *Service) DeleteRole(ctx context.Context, id string) error {
 
 // ListRoles retrieves all roles.
 func (s *Service) ListRoles(ctx context.Context) ([]Role, error) {
-	allItems := make([]Role, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"pageSize":  100,
-			"direction": "ASC",
-			"field":     "name",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListRoles struct {
-				Items    []Role `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listRoles"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listRolesQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListRoles.Items...)
-		if result.ListRoles.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListRoles.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[Role](ctx, s.client, "/app", listRolesQuery, map[string]any{
+		"pageSize":  100,
+		"direction": "ASC",
+		"field":     "name",
+	}, "listRoles")
 }
 
 // buildRoleVariables builds the GraphQL variables for creating/updating a role.

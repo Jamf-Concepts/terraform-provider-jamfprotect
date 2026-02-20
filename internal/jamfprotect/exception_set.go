@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // exceptionSetFields defines the GraphQL fragment for exception set fields.
 const exceptionSetFields = `
@@ -278,34 +282,5 @@ func (s *Service) DeleteExceptionSet(ctx context.Context, uuid string) error {
 
 // ListExceptionSets retrieves all exception sets.
 func (s *Service) ListExceptionSets(ctx context.Context) ([]ExceptionSetListItem, error) {
-	var allItems []ExceptionSetListItem
-	var nextToken *string
-
-	for {
-		vars := map[string]any{}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListExceptionSets struct {
-				Items    []ExceptionSetListItem `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listExceptionSets"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listExceptionSetsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListExceptionSets.Items...)
-		if result.ListExceptionSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListExceptionSets.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[ExceptionSetListItem](ctx, s.client, "/app", listExceptionSetsQuery, map[string]any{}, "listExceptionSets")
 }

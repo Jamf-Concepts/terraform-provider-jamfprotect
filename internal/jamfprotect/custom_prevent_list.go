@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 const customPreventListFields = `
 fragment CustomPreventListFields on PreventList {
@@ -173,37 +177,8 @@ func (s *Service) DeleteCustomPreventList(ctx context.Context, id string) error 
 
 // ListCustomPreventLists retrieves all custom prevent lists.
 func (s *Service) ListCustomPreventLists(ctx context.Context) ([]CustomPreventList, error) {
-	allItems := make([]CustomPreventList, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "DESC",
-			"field":     "created",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListCustomPreventLists struct {
-				Items    []CustomPreventList `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listPreventLists"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/graphql", listCustomPreventListsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListCustomPreventLists.Items...)
-		if result.ListCustomPreventLists.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListCustomPreventLists.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[CustomPreventList](ctx, s.client, "/graphql", listCustomPreventListsQuery, map[string]any{
+		"direction": "DESC",
+		"field":     "created",
+	}, "listPreventLists")
 }

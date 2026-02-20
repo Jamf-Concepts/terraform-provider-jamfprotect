@@ -5,7 +5,6 @@ package analytic_set
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
@@ -32,10 +30,6 @@ func NewAnalyticSetListResource() list.ListResource {
 // AnalyticSetListResource lists analytic sets in Jamf Protect.
 type AnalyticSetListResource struct {
 	service *jamfprotect.Service
-}
-
-type listConfigModel struct {
-	NamePrefix types.String `tfsdk:"name_prefix"`
 }
 
 func (r *AnalyticSetListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -55,31 +49,17 @@ func (r *AnalyticSetListResource) ListResourceConfigSchema(ctx context.Context, 
 }
 
 func (r *AnalyticSetListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected List Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *AnalyticSetListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
-	var config listConfigModel
+	var config common.ListConfigModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !config.NamePrefix.IsNull() && !config.NamePrefix.IsUnknown() && strings.TrimSpace(config.NamePrefix.ValueString()) == "" {
-		resp.Diagnostics.AddError(
-			"Invalid name_prefix",
-			"name_prefix must not be empty when set.",
-		)
-	}
+	common.ValidateNamePrefix(config, &resp.Diagnostics)
 }
 
 func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
@@ -93,7 +73,7 @@ func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest
 		return
 	}
 
-	var config listConfigModel
+	var config common.ListConfigModel
 	configDiags := req.Config.Get(ctx, &config)
 	if configDiags.HasError() {
 		resp.Results = list.ListResultsStreamDiagnostics(configDiags)

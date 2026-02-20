@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // groupFields defines the GraphQL fragment for group fields.
 const groupFields = `
@@ -162,42 +166,13 @@ func (s *Service) DeleteGroup(ctx context.Context, id string) error {
 
 // ListGroups retrieves all groups.
 func (s *Service) ListGroups(ctx context.Context) ([]Group, error) {
-	allItems := make([]Group, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"pageSize":        100,
-			"direction":       "ASC",
-			"field":           "name",
-			"RBAC_Connection": true,
-			"RBAC_Role":       true,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListGroups struct {
-				Items    []Group `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listGroups"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listGroupsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListGroups.Items...)
-		if result.ListGroups.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListGroups.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[Group](ctx, s.client, "/app", listGroupsQuery, map[string]any{
+		"pageSize":        100,
+		"direction":       "ASC",
+		"field":           "name",
+		"RBAC_Connection": true,
+		"RBAC_Role":       true,
+	}, "listGroups")
 }
 
 // buildGroupVariables builds the GraphQL variables for creating/updating a group from the GroupInput.

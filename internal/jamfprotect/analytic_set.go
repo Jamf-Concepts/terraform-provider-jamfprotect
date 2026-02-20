@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // analyticSetFields defines the GraphQL fragment for analytic set fields.
 const analyticSetFields = `
@@ -221,37 +225,8 @@ func (s *Service) DeleteAnalyticSet(ctx context.Context, uuid string) error {
 
 // ListAnalyticSets retrieves all analytic sets.
 func (s *Service) ListAnalyticSets(ctx context.Context) ([]AnalyticSet, error) {
-	var allItems []AnalyticSet
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"RBAC_Plan":        true,
-			"excludeAnalytics": false,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListAnalyticSets struct {
-				Items    []AnalyticSet `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listAnalyticSets"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listAnalyticSetsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListAnalyticSets.Items...)
-		if result.ListAnalyticSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListAnalyticSets.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[AnalyticSet](ctx, s.client, "/app", listAnalyticSetsQuery, map[string]any{
+		"RBAC_Plan":        true,
+		"excludeAnalytics": false,
+	}, "listAnalyticSets")
 }

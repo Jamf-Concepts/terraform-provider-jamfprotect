@@ -127,6 +127,16 @@ func EmptyTimeoutsValue() timeouts.Value {
 	}
 }
 
+// ResolveTimeouts returns the given timeouts value if it is known, or a
+// correctly typed null object if it is null or unknown. This normalizes the
+// different timeout handling patterns across resources.
+func ResolveTimeouts(t timeouts.Value) timeouts.Value {
+	if t.IsNull() || t.IsUnknown() {
+		return EmptyTimeoutsValue()
+	}
+	return t
+}
+
 // IsKnownString reports whether a value is set and known.
 func IsKnownString(value types.String) bool {
 	return !value.IsNull() && !value.IsUnknown()
