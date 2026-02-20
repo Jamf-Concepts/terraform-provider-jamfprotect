@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // userFields defines the GraphQL fragment for user fields.
 const userFields = `
@@ -196,44 +200,15 @@ func (s *Service) DeleteUser(ctx context.Context, id string) error {
 
 // ListUsers retrieves all users.
 func (s *Service) ListUsers(ctx context.Context) ([]User, error) {
-	allItems := make([]User, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"pageSize":            100,
-			"direction":           "ASC",
-			"field":               "email",
-			"hasLimitedAppAccess": false,
-			"RBAC_Connection":     true,
-			"RBAC_Role":           true,
-			"RBAC_Group":          true,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListUsers struct {
-				Items    []User `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listUsers"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listUsersQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListUsers.Items...)
-		if result.ListUsers.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListUsers.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[User](ctx, s.client, "/app", listUsersQuery, map[string]any{
+		"pageSize":            100,
+		"direction":           "ASC",
+		"field":               "email",
+		"hasLimitedAppAccess": false,
+		"RBAC_Connection":     true,
+		"RBAC_Role":           true,
+		"RBAC_Group":          true,
+	}, "listUsers")
 }
 
 // buildUserVariables builds the GraphQL variables for creating/updating a user from the UserInput.

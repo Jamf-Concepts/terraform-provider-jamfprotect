@@ -19,10 +19,7 @@ func (r *UnifiedLoggingFilterResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -86,10 +83,7 @@ func (r *UnifiedLoggingFilterResource) Read(ctx context.Context, req resource.Re
 		}
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -144,10 +138,7 @@ func (r *UnifiedLoggingFilterResource) Update(ctx context.Context, req resource.
 	}
 	data.ID = state.ID
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	updateTimeout, diags := timeoutsValue.Update(ctx, constants.DefaultUpdateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -184,10 +175,7 @@ func (r *UnifiedLoggingFilterResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	deleteTimeout, diags := timeoutsValue.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)

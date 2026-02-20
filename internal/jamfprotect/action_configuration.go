@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // actionConfigFields defines the GraphQL fragment for action configuration fields.
 const actionConfigFields = `
@@ -286,37 +290,8 @@ func (s *Service) DeleteActionConfig(ctx context.Context, id string) error {
 
 // ListActionConfigs retrieves all action configurations.
 func (s *Service) ListActionConfigs(ctx context.Context) ([]ActionConfigListItem, error) {
-	var allItems []ActionConfigListItem
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "DESC",
-			"field":     "created",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListActionConfigs struct {
-				Items    []ActionConfigListItem `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listActionConfigs"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listActionConfigsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListActionConfigs.Items...)
-		if result.ListActionConfigs.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListActionConfigs.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[ActionConfigListItem](ctx, s.client, "/app", listActionConfigsQuery, map[string]any{
+		"direction": "DESC",
+		"field":     "created",
+	}, "listActionConfigs")
 }

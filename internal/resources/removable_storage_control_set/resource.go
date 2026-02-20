@@ -5,7 +5,6 @@ package removable_storage_control_set
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -228,16 +226,7 @@ func (r *RemovableStorageControlSetResource) IdentitySchema(ctx context.Context,
 
 // Configure prepares the removable storage control set service client.
 func (r *RemovableStorageControlSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing removable storage control sets by ID.

@@ -798,14 +798,8 @@ func TestService_TelemetryV2(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		expected := map[string]any{
-			"name":               input.Name,
-			"description":        input.Description,
-			"logFiles":           input.LogFiles,
-			"logFileCollection":  input.LogFileCollection,
-			"performanceMetrics": input.PerformanceMetrics,
-			"events":             input.Events,
-			"fileHashing":        input.FileHashing,
-			"RBAC_Plan":          true,
+			"input":     input,
+			"RBAC_Plan": true,
 		}
 		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
 			if path != "/app" {
@@ -847,15 +841,9 @@ func TestService_TelemetryV2(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		expected := map[string]any{
-			"id":                 "tv2-3",
-			"name":               input.Name,
-			"description":        input.Description,
-			"logFiles":           input.LogFiles,
-			"logFileCollection":  input.LogFileCollection,
-			"performanceMetrics": input.PerformanceMetrics,
-			"events":             input.Events,
-			"fileHashing":        input.FileHashing,
-			"RBAC_Plan":          true,
+			"id":        "tv2-3",
+			"input":     input,
+			"RBAC_Plan": true,
 		}
 		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
 			if path != "/app" {

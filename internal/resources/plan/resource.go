@@ -5,7 +5,6 @@ package plan
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -223,16 +221,7 @@ func (r *PlanResource) IdentitySchema(ctx context.Context, req resource.Identity
 
 // Configure prepares the plan service client.
 func (r *PlanResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 // ---------------------------------------------------------------------------

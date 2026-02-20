@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // unifiedLoggingFilterFields defines the GraphQL fragment for unified logging filter fields.
 const unifiedLoggingFilterFields = `
@@ -172,38 +176,9 @@ func (s *Service) DeleteUnifiedLoggingFilter(ctx context.Context, uuid string) e
 
 // ListUnifiedLoggingFilters retrieves all unified logging filters.
 func (s *Service) ListUnifiedLoggingFilters(ctx context.Context) ([]UnifiedLoggingFilter, error) {
-	var allItems []UnifiedLoggingFilter
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "name",
-			"filter":    map[string]any{},
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListUnifiedLoggingFilters struct {
-				Items    []UnifiedLoggingFilter `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listUnifiedLoggingFilters"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/graphql", listUnifiedLoggingFiltersQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListUnifiedLoggingFilters.Items...)
-		if result.ListUnifiedLoggingFilters.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListUnifiedLoggingFilters.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[UnifiedLoggingFilter](ctx, s.client, "/graphql", listUnifiedLoggingFiltersQuery, map[string]any{
+		"direction": "ASC",
+		"field":     "name",
+		"filter":    map[string]any{},
+	}, "listUnifiedLoggingFilters")
 }

@@ -5,7 +5,6 @@ package change_management
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -64,16 +62,7 @@ func (r *ChangeManagementResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *ChangeManagementResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing change management by ID.

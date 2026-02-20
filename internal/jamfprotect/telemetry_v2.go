@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 // telemetryV2Fields defines the GraphQL fragment for telemetry v2 fields.
 const telemetryV2Fields = `
@@ -27,19 +31,8 @@ fragment TelemetryV2Fields on TelemetryV2 {
 
 // createTelemetryV2Mutation defines the GraphQL mutation for creating telemetry v2.
 const createTelemetryV2Mutation = `
-mutation createTelemetryV2(
-	$name: String!,
-	$description: String,
-	$logFiles: [String!]!,
-	$logFileCollection: Boolean!,
-	$performanceMetrics: Boolean!,
-	$events: [ES_EVENTS_ENUM]!,
-	$fileHashing: Boolean!,
-	$RBAC_Plan: Boolean!
-) {
-	createTelemetryV2(
-		input: {name: $name, description: $description, logFiles: $logFiles, logFileCollection: $logFileCollection, performanceMetrics: $performanceMetrics, events: $events, fileHashing: $fileHashing}
-	) {
+mutation createTelemetryV2($input: TelemetryInputV2!, $RBAC_Plan: Boolean!) {
+	createTelemetryV2(input: $input) {
 		...TelemetryV2Fields
 	}
 }
@@ -58,21 +51,8 @@ const getTelemetryV2Query = `
 
 // updateTelemetryV2Mutation defines the GraphQL mutation for updating telemetry v2.
 const updateTelemetryV2Mutation = `
-mutation updateTelemetryV2(
-	$id: ID!,
-	$name: String!,
-	$description: String,
-	$logFiles: [String!]!,
-	$logFileCollection: Boolean!,
-	$performanceMetrics: Boolean!,
-	$events: [ES_EVENTS_ENUM]!,
-	$fileHashing: Boolean!,
-	$RBAC_Plan: Boolean!
-) {
-	updateTelemetryV2(
-		id: $id
-		input: {name: $name, description: $description, logFiles: $logFiles, logFileCollection: $logFileCollection, performanceMetrics: $performanceMetrics, events: $events, fileHashing: $fileHashing}
-	) {
+mutation updateTelemetryV2($id: ID!, $input: TelemetryInputV2!, $RBAC_Plan: Boolean!) {
+	updateTelemetryV2(id: $id, input: $input) {
 		...TelemetryV2Fields
 	}
 }
@@ -108,13 +88,13 @@ query listTelemetriesV2($nextToken: String, $direction: OrderDirection!, $field:
 
 // TelemetryV2Input is the create/update input for telemetry v2.
 type TelemetryV2Input struct {
-	Name               string
-	Description        string
-	LogFiles           []string
-	LogFileCollection  bool
-	PerformanceMetrics bool
-	Events             []string
-	FileHashing        bool
+	Name               string   `json:"name"`
+	Description        string   `json:"description"`
+	LogFiles           []string `json:"logFiles"`
+	LogFileCollection  bool     `json:"logFileCollection"`
+	PerformanceMetrics bool     `json:"performanceMetrics"`
+	Events             []string `json:"events"`
+	FileHashing        bool     `json:"fileHashing"`
 }
 
 // TelemetryV2Plan represents a plan entry on telemetry v2.
@@ -141,14 +121,8 @@ type TelemetryV2 struct {
 // CreateTelemetryV2 creates a new telemetry v2 configuration.
 func (s *Service) CreateTelemetryV2(ctx context.Context, input TelemetryV2Input) (TelemetryV2, error) {
 	vars := map[string]any{
-		"name":               input.Name,
-		"description":        input.Description,
-		"logFiles":           input.LogFiles,
-		"logFileCollection":  input.LogFileCollection,
-		"performanceMetrics": input.PerformanceMetrics,
-		"events":             input.Events,
-		"fileHashing":        input.FileHashing,
-		"RBAC_Plan":          true,
+		"input":     input,
+		"RBAC_Plan": true,
 	}
 	var result struct {
 		CreateTelemetryV2 TelemetryV2 `json:"createTelemetryV2"`
@@ -177,15 +151,9 @@ func (s *Service) GetTelemetryV2(ctx context.Context, id string) (*TelemetryV2, 
 // UpdateTelemetryV2 updates telemetry v2 by ID.
 func (s *Service) UpdateTelemetryV2(ctx context.Context, id string, input TelemetryV2Input) (TelemetryV2, error) {
 	vars := map[string]any{
-		"id":                 id,
-		"name":               input.Name,
-		"description":        input.Description,
-		"logFiles":           input.LogFiles,
-		"logFileCollection":  input.LogFileCollection,
-		"performanceMetrics": input.PerformanceMetrics,
-		"events":             input.Events,
-		"fileHashing":        input.FileHashing,
-		"RBAC_Plan":          true,
+		"id":        id,
+		"input":     input,
+		"RBAC_Plan": true,
 	}
 	var result struct {
 		UpdateTelemetryV2 TelemetryV2 `json:"updateTelemetryV2"`
@@ -204,38 +172,9 @@ func (s *Service) DeleteTelemetryV2(ctx context.Context, id string) error {
 
 // ListTelemetriesV2 retrieves all telemetry v2 configurations.
 func (s *Service) ListTelemetriesV2(ctx context.Context) ([]TelemetryV2, error) {
-	var allItems []TelemetryV2
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "DESC",
-			"field":     "created",
-			"RBAC_Plan": true,
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListTelemetriesV2 struct {
-				Items    []TelemetryV2 `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listTelemetriesV2"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listTelemetriesV2Query, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListTelemetriesV2.Items...)
-		if result.ListTelemetriesV2.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListTelemetriesV2.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[TelemetryV2](ctx, s.client, "/app", listTelemetriesV2Query, map[string]any{
+		"direction": "DESC",
+		"field":     "created",
+		"RBAC_Plan": true,
+	}, "listTelemetriesV2")
 }

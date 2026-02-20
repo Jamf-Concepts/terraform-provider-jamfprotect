@@ -5,7 +5,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
@@ -111,16 +109,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 }
 
 func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *UserResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {

@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 const planFields = `
 fragment PlanFields on Plan {
@@ -349,39 +353,10 @@ func (s *Service) DeletePlan(ctx context.Context, id string) error {
 
 // ListPlans retrieves all plans.
 func (s *Service) ListPlans(ctx context.Context) ([]Plan, error) {
-	allItems := make([]Plan, 0)
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "created",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListPlans struct {
-				Items    []Plan `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listPlans"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listPlansQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListPlans.Items...)
-		if result.ListPlans.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListPlans.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[Plan](ctx, s.client, "/app", listPlansQuery, map[string]any{
+		"direction": "ASC",
+		"field":     "created",
+	}, "listPlans")
 }
 
 // GetPlansConfigProfile retrieves the config profile payload for a plan.

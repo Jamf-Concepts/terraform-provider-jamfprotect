@@ -5,7 +5,6 @@ package exception_set
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
@@ -129,16 +127,7 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *ExceptionSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *ExceptionSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

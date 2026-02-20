@@ -21,10 +21,7 @@ func (r *CustomPreventListResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	createTimeout, diags := timeoutsValue.Create(ctx, constants.DefaultCreateTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -90,10 +87,7 @@ func (r *CustomPreventListResource) Read(ctx context.Context, req resource.ReadR
 		}
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	readTimeout, diags := timeoutsValue.Read(ctx, constants.DefaultReadTimeout)
 	resp.Diagnostics.Append(diags...)
@@ -143,10 +137,7 @@ func (r *CustomPreventListResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	var state CustomPreventListResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -202,10 +193,7 @@ func (r *CustomPreventListResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	timeoutsValue := data.Timeouts
-	if timeoutsValue.IsNull() || timeoutsValue.IsUnknown() {
-		timeoutsValue = common.EmptyTimeoutsValue()
-	}
+	timeoutsValue := common.ResolveTimeouts(data.Timeouts)
 
 	deleteTimeout, diags := timeoutsValue.Delete(ctx, constants.DefaultDeleteTimeout)
 	resp.Diagnostics.Append(diags...)

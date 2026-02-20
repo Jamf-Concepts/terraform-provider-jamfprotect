@@ -5,9 +5,7 @@ package role
 
 import (
 	"context"
-	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
@@ -16,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
@@ -36,9 +33,6 @@ type RoleListResource struct {
 }
 
 // listConfigModel maps list configuration for role list resources.
-type listConfigModel struct {
-	NamePrefix types.String `tfsdk:"name_prefix"`
-}
 
 func (r *RoleListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_role"
@@ -57,31 +51,17 @@ func (r *RoleListResource) ListResourceConfigSchema(ctx context.Context, req lis
 }
 
 func (r *RoleListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected List Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData))
-		return
-	}
-	r.service = jamfprotect.NewService(client)
+	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *RoleListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
-	var config listConfigModel
+	var config common.ListConfigModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !config.NamePrefix.IsNull() && !config.NamePrefix.IsUnknown() && strings.TrimSpace(config.NamePrefix.ValueString()) == "" {
-		resp.Diagnostics.AddError(
-			"Invalid name_prefix",
-			"name_prefix must not be empty when set.",
-		)
-	}
+	common.ValidateNamePrefix(config, &resp.Diagnostics)
 }
 
 func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
@@ -95,7 +75,7 @@ func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp 
 		return
 	}
 
-	var config listConfigModel
+	var config common.ListConfigModel
 	configDiags := req.Config.Get(ctx, &config)
 	if configDiags.HasError() {
 		resp.Results = list.ListResultsStreamDiagnostics(configDiags)
@@ -110,14 +90,9 @@ func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp 
 		return
 	}
 
-	prefix := ""
-	if !config.NamePrefix.IsNull() && !config.NamePrefix.IsUnknown() {
-		prefix = config.NamePrefix.ValueString()
-	}
-
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
-		if prefix != "" && !strings.HasPrefix(item.Name, prefix) {
+		if !common.MatchesNamePrefix(config, item.Name) {
 			continue
 		}
 		if req.Limit > 0 && int64(len(results)) >= req.Limit {

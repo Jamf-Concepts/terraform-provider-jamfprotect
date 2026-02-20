@@ -3,7 +3,11 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+)
 
 const removableStorageControlSetFields = `
 fragment USBControlSetFields on USBControlSet {
@@ -242,37 +246,8 @@ func (s *Service) DeleteRemovableStorageControlSet(ctx context.Context, id strin
 
 // ListRemovableStorageControlSets returns all removable storage control sets.
 func (s *Service) ListRemovableStorageControlSets(ctx context.Context) ([]RemovableStorageControlSet, error) {
-	var allItems []RemovableStorageControlSet
-	var nextToken *string
-
-	for {
-		vars := map[string]any{
-			"direction": "ASC",
-			"field":     "created",
-		}
-		if nextToken != nil {
-			vars["nextToken"] = *nextToken
-		}
-
-		var result struct {
-			ListRemovableStorageControlSets struct {
-				Items    []RemovableStorageControlSet `json:"items"`
-				PageInfo struct {
-					Next  *string `json:"next"`
-					Total int     `json:"total"`
-				} `json:"pageInfo"`
-			} `json:"listUSBControlSets"`
-		}
-		if err := s.client.DoGraphQL(ctx, "/app", listRemovableStorageControlSetsQuery, vars, &result); err != nil {
-			return nil, err
-		}
-
-		allItems = append(allItems, result.ListRemovableStorageControlSets.Items...)
-		if result.ListRemovableStorageControlSets.PageInfo.Next == nil {
-			break
-		}
-		nextToken = result.ListRemovableStorageControlSets.PageInfo.Next
-	}
-
-	return allItems, nil
+	return client.ListAll[RemovableStorageControlSet](ctx, s.client, "/app", listRemovableStorageControlSetsQuery, map[string]any{
+		"direction": "ASC",
+		"field":     "created",
+	}, "listUSBControlSets")
 }
