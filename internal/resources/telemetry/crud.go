@@ -50,6 +50,18 @@ func (r *TelemetryV2Resource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing telemetry v2 ID",
+			"CreateTelemetryV2 did not return an ID for the telemetry v2 configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), data.ID)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Trace(ctx, "created telemetry v2 configuration", map[string]any{"id": data.ID.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -109,6 +121,18 @@ func (r *TelemetryV2Resource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing telemetry v2 ID",
+			"GetTelemetryV2 did not return an ID for the telemetry v2 configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), data.ID)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -159,6 +183,18 @@ func (r *TelemetryV2Resource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 	data.Timeouts = timeoutsValue
+	if data.ID.IsNull() || data.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing telemetry v2 ID",
+			"UpdateTelemetryV2 did not return an ID for the telemetry v2 configuration.",
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), data.ID)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 

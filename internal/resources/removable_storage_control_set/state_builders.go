@@ -77,8 +77,16 @@ func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data 
 		}
 	}
 
-	data.OverrideEncryptedDevices = encryptedOverrides
-	data.OverrideVendorID = vendorOverrides
-	data.OverrideSerialNumber = serialOverrides
-	data.OverrideProductID = productOverrides
+	if len(encryptedOverrides) > 0 || data.OverrideEncryptedDevices != nil {
+		data.OverrideEncryptedDevices = encryptedOverrides
+	}
+	if len(vendorOverrides) > 0 || data.OverrideVendorID != nil {
+		data.OverrideVendorID = vendorOverrides
+	}
+	if len(serialOverrides) > 0 || data.OverrideSerialNumber != nil {
+		data.OverrideSerialNumber = serialOverrides
+	}
+	if len(productOverrides) > 0 || data.OverrideProductID != nil {
+		data.OverrideProductID = productOverrides
+	}
 }

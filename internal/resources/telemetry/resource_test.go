@@ -4,14 +4,19 @@
 package telemetry_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
 
 func TestAccTelemetryV2Resource_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-telemetry")
+	resourceName := "jamfprotect_telemetry.test"
+
 	if testing.Short() {
 		t.Skip("skipping acceptance test")
 	}
@@ -21,49 +26,59 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read.
 			{
-				Config: `
-resource "jamfprotect_telemetry" "test" {
-  name               = "tf-acc-test-telemetry"
-  description        = "Acceptance test telemetry v2"
-	log_file_path       = []
-	collect_diagnostic_and_crash_reports = false
-	collect_performance_metrics = false
-	file_hashes         = false
-	log_access_and_authentication = true
-}
-`,
+				Config: testAccTelemetryV2ResourceConfig(rName, "Acceptance test telemetry v2", false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("jamfprotect_telemetry.test", "id"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "name", "tf-acc-test-telemetry"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "log_access_and_authentication", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Acceptance test telemetry v2"),
+					resource.TestCheckResourceAttr(resourceName, "log_access_and_authentication", "true"),
 				),
 			},
 			// Import.
 			{
-				ResourceName:      "jamfprotect_telemetry.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// Update.
 			{
-				Config: `
-resource "jamfprotect_telemetry" "test" {
-  name                = "tf-acc-test-telemetry-updated"
-  description         = "Updated telemetry v2"
-	log_file_path        = ["/var/log/system.log"]
-	collect_diagnostic_and_crash_reports = true
-	collect_performance_metrics = true
-	file_hashes          = true
-	log_access_and_authentication = true
-	log_hardware_and_software     = true
-}
-`,
+				Config: testAccTelemetryV2ResourceConfig(rName, "Updated telemetry v2", true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "name", "tf-acc-test-telemetry-updated"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "collect_diagnostic_and_crash_reports", "true"),
-					resource.TestCheckResourceAttr("jamfprotect_telemetry.test", "log_hardware_and_software", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated telemetry v2"),
+					resource.TestCheckResourceAttr(resourceName, "collect_diagnostic_and_crash_reports", "true"),
+					resource.TestCheckResourceAttr(resourceName, "log_hardware_and_software", "true"),
 				),
 			},
 		},
 	})
+}
+
+func testAccTelemetryV2ResourceConfig(name, description string, diagnostics, performance, hardware bool) string {
+	logFilePath := "[]"
+	fileHashes := "false"
+
+	if diagnostics {
+		logFilePath = `["/var/log/system.log"]`
+		fileHashes = "true"
+	}
+
+	config := fmt.Sprintf(`
+resource "jamfprotect_telemetry" "test" {
+  name               = %[1]q
+  description        = %[2]q
+	log_file_path       = %[5]s
+	collect_diagnostic_and_crash_reports = %[3]t
+	collect_performance_metrics = %[4]t
+	file_hashes         = %[6]s
+	log_access_and_authentication = true
+`, name, description, diagnostics, performance, logFilePath, fileHashes)
+
+	if hardware {
+		config += `	log_hardware_and_software = true
+`
+	}
+
+	config += "}\n"
+	return config
 }
