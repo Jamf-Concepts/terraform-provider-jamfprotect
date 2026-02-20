@@ -1,0 +1,18 @@
+query listRiskiestComputers {
+  getRiskiestComputers: listRiskiestComputers {
+    items {
+      computer {
+        uuid
+        hostName
+        __typename
+      }
+      alertCounts {
+        severity
+        count
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}

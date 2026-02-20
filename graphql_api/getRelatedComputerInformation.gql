@@ -1,0 +1,14 @@
+query getRelatedComputerInformation($RBAC_ThreatPreventionVersion: Boolean!, $RBAC_Download: Boolean!) {
+  listThreatPreventionVersions @include(if: $RBAC_ThreatPreventionVersion) {
+    id
+    created
+    __typename
+  }
+  getOrganizationDownloads @include(if: $RBAC_Download) {
+    vanillaPackage {
+      version
+      __typename
+    }
+    __typename
+  }
+}
