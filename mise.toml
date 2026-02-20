@@ -62,13 +62,13 @@ run = "golangci-lint run"
 # ── Test tasks ───────────────────────────────────────────────────────────────
 
 [tasks.test]
-description = "Run unit tests"
-run = "go test -v -cover -timeout=120s -parallel=10 ./..."
+description = "Run unit tests only (no API calls)"
+run = "go test -count=1 -v -cover -timeout=120s -parallel=10 ./..."
 
 [tasks.testacc]
-description = "Run acceptance tests (requires Jamf Protect credentials via fnox)"
-run = "go test -v -cover -timeout 120m ./..."
+description = "Run acceptance tests sequentially (recommended - avoids rate limits)"
 env = { TF_ACC = "1" }
+run = "go test -count=1 -p 1 -v ./internal/resources/... -timeout 120m"
 
 # ── Composite tasks ─────────────────────────────────────────────────────────
 

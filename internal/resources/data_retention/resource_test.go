@@ -4,6 +4,7 @@
 package data_retention_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,12 +14,22 @@ import (
 
 // TestAccDataRetentionResource_basic validates update and import behavior.
 //
-// IMPORTANT: This test may fail with "Data retention settings can only be updated once every 24 hours"
-// if the test tenant has recently modified retention settings. This is a Jamf Protect API business rule,
-// not a provider bug. To resolve:
-//   - Wait 24 hours before re-running, OR
-//   - Use a fresh test tenant that hasn't had retention settings modified recently
+// IMPORTANT: This test is SKIPPED by default due to the API's 24-hour rate limit on updates.
+// Data retention settings can only be modified once every 24 hours per tenant.
+//
+// To run this test, set the environment variable:
+//
+//	TF_ACC_DATA_RETENTION_TEST=1
+//
+// The test will fail if the tenant's data retention was updated within the last 24 hours.
+// This is expected API behavior, not a provider bug.
 func TestAccDataRetentionResource_basic(t *testing.T) {
+	// Skip by default unless explicitly enabled
+	if os.Getenv("TF_ACC_DATA_RETENTION_TEST") != "1" {
+		t.Skip("Skipping data_retention test due to 24-hour API rate limit. " +
+			"Set TF_ACC_DATA_RETENTION_TEST=1 to run (may fail if recently updated).")
+	}
+
 	resourceName := "jamfprotect_data_retention.test"
 
 	resource.Test(t, resource.TestCase{
