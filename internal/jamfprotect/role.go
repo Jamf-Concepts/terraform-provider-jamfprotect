@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -110,7 +111,7 @@ func (s *Service) CreateRole(ctx context.Context, input RoleInput) (Role, error)
 		CreateRole Role `json:"createRole"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createRoleMutation, vars, &result); err != nil {
-		return Role{}, err
+		return Role{}, fmt.Errorf("CreateRole: %w", err)
 	}
 	return result.CreateRole, nil
 }
@@ -122,7 +123,7 @@ func (s *Service) GetRole(ctx context.Context, id string) (*Role, error) {
 		GetRole *Role `json:"getRole"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getRoleQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRole(%s): %w", id, err)
 	}
 	return result.GetRole, nil
 }
@@ -135,7 +136,7 @@ func (s *Service) UpdateRole(ctx context.Context, id string, input RoleInput) (R
 		UpdateRole Role `json:"updateRole"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateRoleMutation, vars, &result); err != nil {
-		return Role{}, err
+		return Role{}, fmt.Errorf("UpdateRole(%s): %w", id, err)
 	}
 	return result.UpdateRole, nil
 }
@@ -143,16 +144,23 @@ func (s *Service) UpdateRole(ctx context.Context, id string, input RoleInput) (R
 // DeleteRole deletes a role by ID.
 func (s *Service) DeleteRole(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteRoleMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteRoleMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteRole(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListRoles retrieves all roles.
 func (s *Service) ListRoles(ctx context.Context) ([]Role, error) {
-	return client.ListAll[Role](ctx, s.client, "/app", listRolesQuery, map[string]any{
+	roles, err := client.ListAll[Role](ctx, s.client, "/app", listRolesQuery, map[string]any{
 		"pageSize":  100,
 		"direction": "ASC",
 		"field":     "name",
 	}, "listRoles")
+	if err != nil {
+		return nil, fmt.Errorf("ListRoles: %w", err)
+	}
+	return roles, nil
 }
 
 // buildRoleVariables builds the GraphQL variables for creating/updating a role.

@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -124,23 +125,21 @@ func (s *Service) CreateGroup(ctx context.Context, input GroupInput) (Group, err
 		CreateGroup Group `json:"createGroup"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createGroupMutation, vars, &result); err != nil {
-		return Group{}, err
+		return Group{}, fmt.Errorf("CreateGroup: %w", err)
 	}
 	return result.CreateGroup, nil
 }
 
 // GetGroup retrieves a group by ID.
 func (s *Service) GetGroup(ctx context.Context, id string) (*Group, error) {
-	vars := map[string]any{
-		"id":              id,
-		"RBAC_Connection": true,
-		"RBAC_Role":       true,
-	}
+	vars := mergeVars(map[string]any{
+		"id": id,
+	}, rbacGroup)
 	var result struct {
 		GetGroup *Group `json:"getGroup"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getGroupQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetGroup(%s): %w", id, err)
 	}
 	return result.GetGroup, nil
 }
@@ -153,7 +152,7 @@ func (s *Service) UpdateGroup(ctx context.Context, id string, input GroupInput) 
 		UpdateGroup Group `json:"updateGroup"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateGroupMutation, vars, &result); err != nil {
-		return Group{}, err
+		return Group{}, fmt.Errorf("UpdateGroup(%s): %w", id, err)
 	}
 	return result.UpdateGroup, nil
 }
@@ -161,30 +160,33 @@ func (s *Service) UpdateGroup(ctx context.Context, id string, input GroupInput) 
 // DeleteGroup deletes a group by ID.
 func (s *Service) DeleteGroup(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteGroupMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteGroupMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteGroup(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListGroups retrieves all groups.
 func (s *Service) ListGroups(ctx context.Context) ([]Group, error) {
-	return client.ListAll[Group](ctx, s.client, "/app", listGroupsQuery, map[string]any{
-		"pageSize":        100,
-		"direction":       "ASC",
-		"field":           "name",
-		"RBAC_Connection": true,
-		"RBAC_Role":       true,
-	}, "listGroups")
+	groups, err := client.ListAll[Group](ctx, s.client, "/app", listGroupsQuery, mergeVars(map[string]any{
+		"pageSize":  100,
+		"direction": "ASC",
+		"field":     "name",
+	}, rbacGroup), "listGroups")
+	if err != nil {
+		return nil, fmt.Errorf("ListGroups: %w", err)
+	}
+	return groups, nil
 }
 
 // buildGroupVariables builds the GraphQL variables for creating/updating a group from the GroupInput.
 func buildGroupVariables(input GroupInput) map[string]any {
-	vars := map[string]any{
-		"name":            input.Name,
-		"roleIds":         input.RoleIDs,
-		"accessGroup":     input.AccessGroup,
-		"RBAC_Connection": true,
-		"RBAC_Role":       true,
-		"connectionId":    nil,
-	}
+	vars := mergeVars(map[string]any{
+		"name":         input.Name,
+		"roleIds":      input.RoleIDs,
+		"accessGroup":  input.AccessGroup,
+		"connectionId": nil,
+	}, rbacGroup)
 
 	if input.ConnectionID != nil {
 		vars["connectionId"] = *input.ConnectionID

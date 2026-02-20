@@ -1,6 +1,9 @@
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // computerFields defines the GraphQL fragment for computer fields.
 const computerFields = `
@@ -152,21 +155,18 @@ type GetComputerResponse struct {
 
 // ListComputers retrieves all computers from Jamf Protect.
 func (s *Service) ListComputers(ctx context.Context) ([]Computer, error) {
-	variables := map[string]interface{}{
-		"isList":                       true,
-		"RBAC_Insight":                 true,
-		"RBAC_Plan":                    true,
-		"RBAC_ThreatPreventionVersion": true,
-		"nextToken":                    nil,
-		"pageSize":                     100,
-		"direction":                    "ASC",
-		"field":                        []interface{}{"hostName"},
-		"filter":                       nil,
-	}
+	variables := mergeVars(map[string]any{
+		"isList":    true,
+		"nextToken": nil,
+		"pageSize":  100,
+		"direction": "ASC",
+		"field":     []any{"hostName"},
+		"filter":    nil,
+	}, rbacComputer)
 
 	var resp ListComputersResponse
 	if err := s.client.DoGraphQL(ctx, "/app", listComputersQuery, variables, &resp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListComputers: %w", err)
 	}
 
 	return resp.ListComputers.Items, nil
@@ -174,17 +174,14 @@ func (s *Service) ListComputers(ctx context.Context) ([]Computer, error) {
 
 // GetComputer retrieves a single computer by UUID from Jamf Protect.
 func (s *Service) GetComputer(ctx context.Context, uuid string) (*Computer, error) {
-	variables := map[string]interface{}{
-		"uuid":                         uuid,
-		"isList":                       false,
-		"RBAC_ThreatPreventionVersion": true,
-		"RBAC_Plan":                    true,
-		"RBAC_Insight":                 true,
-	}
+	variables := mergeVars(map[string]any{
+		"uuid":   uuid,
+		"isList": false,
+	}, rbacComputer)
 
 	var resp GetComputerResponse
 	if err := s.client.DoGraphQL(ctx, "/app", getComputerQuery, variables, &resp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetComputer(%s): %w", uuid, err)
 	}
 
 	return resp.GetComputer, nil

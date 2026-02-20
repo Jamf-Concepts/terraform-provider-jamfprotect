@@ -3,7 +3,10 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // changeManagementUpdateMutation defines the GraphQL mutation for config freeze updates.
 const changeManagementUpdateMutation = `
@@ -40,7 +43,7 @@ func (s *Service) UpdateOrganizationConfigFreeze(ctx context.Context, configFree
 		UpdateOrganizationConfigFreeze ChangeManagementConfig `json:"updateOrganizationConfigFreeze"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", changeManagementUpdateMutation, vars, &result); err != nil {
-		return ChangeManagementConfig{}, err
+		return ChangeManagementConfig{}, fmt.Errorf("UpdateOrganizationConfigFreeze: %w", err)
 	}
 	return result.UpdateOrganizationConfigFreeze, nil
 }
@@ -49,7 +52,7 @@ func (s *Service) UpdateOrganizationConfigFreeze(ctx context.Context, configFree
 func (s *Service) GetConfigFreeze(ctx context.Context) (ChangeManagementConfig, error) {
 	var result ChangeManagementConfigResult
 	if err := s.client.DoGraphQL(ctx, "/app", changeManagementGetQuery, nil, &result); err != nil {
-		return ChangeManagementConfig{}, err
+		return ChangeManagementConfig{}, fmt.Errorf("GetConfigFreeze: %w", err)
 	}
 	return result.GetAppInitializationData, nil
 }

@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -132,7 +133,7 @@ func (s *Service) CreateUnifiedLoggingFilter(ctx context.Context, input UnifiedL
 		CreateUnifiedLoggingFilter UnifiedLoggingFilter `json:"createUnifiedLoggingFilter"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", createUnifiedLoggingFilterMutation, vars, &result); err != nil {
-		return UnifiedLoggingFilter{}, err
+		return UnifiedLoggingFilter{}, fmt.Errorf("CreateUnifiedLoggingFilter: %w", err)
 	}
 	return result.CreateUnifiedLoggingFilter, nil
 }
@@ -144,7 +145,7 @@ func (s *Service) GetUnifiedLoggingFilter(ctx context.Context, uuid string) (*Un
 		GetUnifiedLoggingFilter *UnifiedLoggingFilter `json:"getUnifiedLoggingFilter"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", getUnifiedLoggingFilterQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUnifiedLoggingFilter(%s): %w", uuid, err)
 	}
 	return result.GetUnifiedLoggingFilter, nil
 }
@@ -163,7 +164,7 @@ func (s *Service) UpdateUnifiedLoggingFilter(ctx context.Context, uuid string, i
 		UpdateUnifiedLoggingFilter UnifiedLoggingFilter `json:"updateUnifiedLoggingFilter"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", updateUnifiedLoggingFilterMutation, vars, &result); err != nil {
-		return UnifiedLoggingFilter{}, err
+		return UnifiedLoggingFilter{}, fmt.Errorf("UpdateUnifiedLoggingFilter(%s): %w", uuid, err)
 	}
 	return result.UpdateUnifiedLoggingFilter, nil
 }
@@ -171,14 +172,21 @@ func (s *Service) UpdateUnifiedLoggingFilter(ctx context.Context, uuid string, i
 // DeleteUnifiedLoggingFilter deletes a unified logging filter by UUID.
 func (s *Service) DeleteUnifiedLoggingFilter(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, "/graphql", deleteUnifiedLoggingFilterMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/graphql", deleteUnifiedLoggingFilterMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteUnifiedLoggingFilter(%s): %w", uuid, err)
+	}
+	return nil
 }
 
 // ListUnifiedLoggingFilters retrieves all unified logging filters.
 func (s *Service) ListUnifiedLoggingFilters(ctx context.Context) ([]UnifiedLoggingFilter, error) {
-	return client.ListAll[UnifiedLoggingFilter](ctx, s.client, "/graphql", listUnifiedLoggingFiltersQuery, map[string]any{
+	items, err := client.ListAll[UnifiedLoggingFilter](ctx, s.client, "/graphql", listUnifiedLoggingFiltersQuery, map[string]any{
 		"direction": "ASC",
 		"field":     "name",
 		"filter":    map[string]any{},
 	}, "listUnifiedLoggingFilters")
+	if err != nil {
+		return nil, fmt.Errorf("ListUnifiedLoggingFilters: %w", err)
+	}
+	return items, nil
 }

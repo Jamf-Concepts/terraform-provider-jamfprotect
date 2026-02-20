@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -202,7 +203,7 @@ func (s *Service) CreateRemovableStorageControlSet(ctx context.Context, input Re
 		CreateRemovableStorageControlSet RemovableStorageControlSet `json:"createUSBControlSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createRemovableStorageControlSetMutation, vars, &result); err != nil {
-		return RemovableStorageControlSet{}, err
+		return RemovableStorageControlSet{}, fmt.Errorf("CreateRemovableStorageControlSet: %w", err)
 	}
 	return result.CreateRemovableStorageControlSet, nil
 }
@@ -214,7 +215,7 @@ func (s *Service) GetRemovableStorageControlSet(ctx context.Context, id string) 
 		GetRemovableStorageControlSet *RemovableStorageControlSet `json:"getUSBControlSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getRemovableStorageControlSetQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRemovableStorageControlSet(%s): %w", id, err)
 	}
 	return result.GetRemovableStorageControlSet, nil
 }
@@ -233,7 +234,7 @@ func (s *Service) UpdateRemovableStorageControlSet(ctx context.Context, id strin
 		UpdateRemovableStorageControlSet RemovableStorageControlSet `json:"updateUSBControlSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateRemovableStorageControlSetMutation, vars, &result); err != nil {
-		return RemovableStorageControlSet{}, err
+		return RemovableStorageControlSet{}, fmt.Errorf("UpdateRemovableStorageControlSet(%s): %w", id, err)
 	}
 	return result.UpdateRemovableStorageControlSet, nil
 }
@@ -241,13 +242,20 @@ func (s *Service) UpdateRemovableStorageControlSet(ctx context.Context, id strin
 // DeleteRemovableStorageControlSet deletes a removable storage control set by ID.
 func (s *Service) DeleteRemovableStorageControlSet(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteRemovableStorageControlSetMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteRemovableStorageControlSetMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteRemovableStorageControlSet(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListRemovableStorageControlSets returns all removable storage control sets.
 func (s *Service) ListRemovableStorageControlSets(ctx context.Context) ([]RemovableStorageControlSet, error) {
-	return client.ListAll[RemovableStorageControlSet](ctx, s.client, "/app", listRemovableStorageControlSetsQuery, map[string]any{
+	items, err := client.ListAll[RemovableStorageControlSet](ctx, s.client, "/app", listRemovableStorageControlSetsQuery, map[string]any{
 		"direction": "ASC",
 		"field":     "created",
 	}, "listUSBControlSets")
+	if err != nil {
+		return nil, fmt.Errorf("ListRemovableStorageControlSets: %w", err)
+	}
+	return items, nil
 }

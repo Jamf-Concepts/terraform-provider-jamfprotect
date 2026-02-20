@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -156,25 +157,22 @@ func (s *Service) CreateUser(ctx context.Context, input UserInput) (User, error)
 		CreateUser User `json:"createUser"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createUserMutation, vars, &result); err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("CreateUser: %w", err)
 	}
 	return result.CreateUser, nil
 }
 
 // GetUser retrieves a user by ID.
 func (s *Service) GetUser(ctx context.Context, id string) (*User, error) {
-	vars := map[string]any{
+	vars := mergeVars(map[string]any{
 		"id":                  id,
 		"hasLimitedAppAccess": false,
-		"RBAC_Connection":     true,
-		"RBAC_Role":           true,
-		"RBAC_Group":          true,
-	}
+	}, rbacUser)
 	var result struct {
 		GetUser *User `json:"getUser"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getUserQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUser(%s): %w", id, err)
 	}
 	return result.GetUser, nil
 }
@@ -187,7 +185,7 @@ func (s *Service) UpdateUser(ctx context.Context, id string, input UserInput) (U
 		UpdateUser User `json:"updateUser"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateUserMutation, vars, &result); err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("UpdateUser(%s): %w", id, err)
 	}
 	return result.UpdateUser, nil
 }
@@ -195,35 +193,36 @@ func (s *Service) UpdateUser(ctx context.Context, id string, input UserInput) (U
 // DeleteUser deletes a user by ID.
 func (s *Service) DeleteUser(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteUserMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteUserMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteUser(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListUsers retrieves all users.
 func (s *Service) ListUsers(ctx context.Context) ([]User, error) {
-	return client.ListAll[User](ctx, s.client, "/app", listUsersQuery, map[string]any{
+	users, err := client.ListAll[User](ctx, s.client, "/app", listUsersQuery, mergeVars(map[string]any{
 		"pageSize":            100,
 		"direction":           "ASC",
 		"field":               "email",
 		"hasLimitedAppAccess": false,
-		"RBAC_Connection":     true,
-		"RBAC_Role":           true,
-		"RBAC_Group":          true,
-	}, "listUsers")
+	}, rbacUser), "listUsers")
+	if err != nil {
+		return nil, fmt.Errorf("ListUsers: %w", err)
+	}
+	return users, nil
 }
 
 // buildUserVariables builds the GraphQL variables for creating/updating a user from the UserInput.
 func buildUserVariables(input UserInput) map[string]any {
-	vars := map[string]any{
+	vars := mergeVars(map[string]any{
 		"roleIds":               input.RoleIDs,
 		"groupIds":              input.GroupIDs,
 		"receiveEmailAlert":     input.ReceiveEmailAlert,
 		"emailAlertMinSeverity": input.EmailAlertMinSeverity,
 		"hasLimitedAppAccess":   false,
-		"RBAC_Connection":       true,
-		"RBAC_Role":             true,
-		"RBAC_Group":            true,
 		"connectionId":          nil,
-	}
+	}, rbacUser)
 
 	if input.Email != "" {
 		vars["email"] = input.Email

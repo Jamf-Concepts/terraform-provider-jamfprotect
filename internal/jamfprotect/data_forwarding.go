@@ -3,7 +3,10 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // dataForwardingGetQuery defines the GraphQL query for data forwarding settings.
 const dataForwardingGetQuery = `
@@ -224,7 +227,7 @@ func (s *Service) GetDataForwarding(ctx context.Context) (DataForwardingResult, 
 		GetOrganization DataForwardingResult `json:"getOrganization"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataForwardingGetQuery, nil, &result); err != nil {
-		return DataForwardingResult{}, err
+		return DataForwardingResult{}, fmt.Errorf("GetDataForwarding: %w", err)
 	}
 	return result.GetOrganization, nil
 }
@@ -240,7 +243,7 @@ func (s *Service) UpdateDataForwarding(ctx context.Context, input DataForwarding
 		UpdateOrganizationForward DataForwardingResult `json:"updateOrganizationForward"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataForwardingUpdateMutation, vars, &result); err != nil {
-		return DataForwardingResult{}, err
+		return DataForwardingResult{}, fmt.Errorf("UpdateDataForwarding: %w", err)
 	}
 	return result.UpdateOrganizationForward, nil
 }

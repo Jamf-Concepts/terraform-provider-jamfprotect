@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -164,55 +165,52 @@ type AnalyticSetPlan struct {
 
 // CreateAnalyticSet creates a new analytic set.
 func (s *Service) CreateAnalyticSet(ctx context.Context, input AnalyticSetInput) (AnalyticSet, error) {
-	vars := map[string]any{
+	vars := mergeVars(map[string]any{
 		"name":             input.Name,
 		"description":      input.Description,
 		"types":            input.Types,
 		"analytics":        input.Analytics,
-		"RBAC_Plan":        true,
 		"excludeAnalytics": false,
-	}
+	}, rbacPlan)
 	var result struct {
 		CreateAnalyticSet AnalyticSet `json:"createAnalyticSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createAnalyticSetMutation, vars, &result); err != nil {
-		return AnalyticSet{}, err
+		return AnalyticSet{}, fmt.Errorf("CreateAnalyticSet: %w", err)
 	}
 	return result.CreateAnalyticSet, nil
 }
 
 // GetAnalyticSet retrieves an analytic set by UUID.
 func (s *Service) GetAnalyticSet(ctx context.Context, uuid string) (*AnalyticSet, error) {
-	vars := map[string]any{
+	vars := mergeVars(map[string]any{
 		"uuid":             uuid,
-		"RBAC_Plan":        true,
 		"excludeAnalytics": false,
-	}
+	}, rbacPlan)
 	var result struct {
 		GetAnalyticSet *AnalyticSet `json:"getAnalyticSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getAnalyticSetQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAnalyticSet(%s): %w", uuid, err)
 	}
 	return result.GetAnalyticSet, nil
 }
 
 // UpdateAnalyticSet updates an existing analytic set.
 func (s *Service) UpdateAnalyticSet(ctx context.Context, uuid string, input AnalyticSetInput) (AnalyticSet, error) {
-	vars := map[string]any{
+	vars := mergeVars(map[string]any{
 		"uuid":             uuid,
 		"name":             input.Name,
 		"description":      input.Description,
 		"types":            input.Types,
 		"analytics":        input.Analytics,
-		"RBAC_Plan":        true,
 		"excludeAnalytics": false,
-	}
+	}, rbacPlan)
 	var result struct {
 		UpdateAnalyticSet AnalyticSet `json:"updateAnalyticSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", updateAnalyticSetMutation, vars, &result); err != nil {
-		return AnalyticSet{}, err
+		return AnalyticSet{}, fmt.Errorf("UpdateAnalyticSet(%s): %w", uuid, err)
 	}
 	return result.UpdateAnalyticSet, nil
 }
@@ -220,13 +218,19 @@ func (s *Service) UpdateAnalyticSet(ctx context.Context, uuid string, input Anal
 // DeleteAnalyticSet deletes an analytic set by UUID.
 func (s *Service) DeleteAnalyticSet(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, "/app", deleteAnalyticSetMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteAnalyticSetMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteAnalyticSet(%s): %w", uuid, err)
+	}
+	return nil
 }
 
 // ListAnalyticSets retrieves all analytic sets.
 func (s *Service) ListAnalyticSets(ctx context.Context) ([]AnalyticSet, error) {
-	return client.ListAll[AnalyticSet](ctx, s.client, "/app", listAnalyticSetsQuery, map[string]any{
-		"RBAC_Plan":        true,
+	items, err := client.ListAll[AnalyticSet](ctx, s.client, "/app", listAnalyticSetsQuery, mergeVars(map[string]any{
 		"excludeAnalytics": false,
-	}, "listAnalyticSets")
+	}, rbacPlan), "listAnalyticSets")
+	if err != nil {
+		return nil, fmt.Errorf("ListAnalyticSets: %w", err)
+	}
+	return items, nil
 }

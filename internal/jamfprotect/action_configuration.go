@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -247,7 +248,7 @@ func (s *Service) CreateActionConfig(ctx context.Context, input ActionConfigInpu
 		CreateActionConfigs ActionConfig `json:"createActionConfigs"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createActionConfigMutation, vars, &result); err != nil {
-		return ActionConfig{}, err
+		return ActionConfig{}, fmt.Errorf("CreateActionConfig: %w", err)
 	}
 	return result.CreateActionConfigs, nil
 }
@@ -259,7 +260,7 @@ func (s *Service) GetActionConfig(ctx context.Context, id string) (*ActionConfig
 		GetActionConfigs *ActionConfig `json:"getActionConfigs"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getActionConfigQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetActionConfig(%s): %w", id, err)
 	}
 	return result.GetActionConfigs, nil
 }
@@ -277,7 +278,7 @@ func (s *Service) UpdateActionConfig(ctx context.Context, id string, input Actio
 		UpdateActionConfigs ActionConfig `json:"updateActionConfigs"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateActionConfigMutation, vars, &result); err != nil {
-		return ActionConfig{}, err
+		return ActionConfig{}, fmt.Errorf("UpdateActionConfig(%s): %w", id, err)
 	}
 	return result.UpdateActionConfigs, nil
 }
@@ -285,13 +286,20 @@ func (s *Service) UpdateActionConfig(ctx context.Context, id string, input Actio
 // DeleteActionConfig deletes an action configuration by ID.
 func (s *Service) DeleteActionConfig(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteActionConfigMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteActionConfigMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteActionConfig(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListActionConfigs retrieves all action configurations.
 func (s *Service) ListActionConfigs(ctx context.Context) ([]ActionConfigListItem, error) {
-	return client.ListAll[ActionConfigListItem](ctx, s.client, "/app", listActionConfigsQuery, map[string]any{
+	items, err := client.ListAll[ActionConfigListItem](ctx, s.client, "/app", listActionConfigsQuery, map[string]any{
 		"direction": "DESC",
 		"field":     "created",
 	}, "listActionConfigs")
+	if err != nil {
+		return nil, fmt.Errorf("ListActionConfigs: %w", err)
+	}
+	return items, nil
 }

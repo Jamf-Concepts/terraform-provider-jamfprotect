@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -315,7 +316,7 @@ func (s *Service) CreatePlan(ctx context.Context, input PlanInput) (Plan, error)
 		CreatePlan Plan `json:"createPlan"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createPlanMutation, vars, &result); err != nil {
-		return Plan{}, err
+		return Plan{}, fmt.Errorf("CreatePlan: %w", err)
 	}
 	return result.CreatePlan, nil
 }
@@ -327,7 +328,7 @@ func (s *Service) GetPlan(ctx context.Context, id string) (*Plan, error) {
 		GetPlan *Plan `json:"getPlan"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getPlanQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetPlan(%s): %w", id, err)
 	}
 	return result.GetPlan, nil
 }
@@ -340,7 +341,7 @@ func (s *Service) UpdatePlan(ctx context.Context, id string, input PlanInput) (P
 		UpdatePlan Plan `json:"updatePlan"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updatePlanMutation, vars, &result); err != nil {
-		return Plan{}, err
+		return Plan{}, fmt.Errorf("UpdatePlan(%s): %w", id, err)
 	}
 	return result.UpdatePlan, nil
 }
@@ -348,15 +349,22 @@ func (s *Service) UpdatePlan(ctx context.Context, id string, input PlanInput) (P
 // DeletePlan deletes a plan by ID.
 func (s *Service) DeletePlan(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deletePlanMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deletePlanMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeletePlan(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListPlans retrieves all plans.
 func (s *Service) ListPlans(ctx context.Context) ([]Plan, error) {
-	return client.ListAll[Plan](ctx, s.client, "/app", listPlansQuery, map[string]any{
+	plans, err := client.ListAll[Plan](ctx, s.client, "/app", listPlansQuery, map[string]any{
 		"direction": "ASC",
 		"field":     "created",
 	}, "listPlans")
+	if err != nil {
+		return nil, fmt.Errorf("ListPlans: %w", err)
+	}
+	return plans, nil
 }
 
 // GetPlansConfigProfile retrieves the config profile payload for a plan.
@@ -369,7 +377,7 @@ func (s *Service) GetPlansConfigProfile(ctx context.Context, id string, input *P
 		GetPlansConfigProfile string `json:"getPlansConfigProfile"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getPlansConfigProfileQuery, vars, &result); err != nil {
-		return "", err
+		return "", fmt.Errorf("GetPlansConfigProfile(%s): %w", id, err)
 	}
 	return result.GetPlansConfigProfile, nil
 }

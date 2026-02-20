@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -120,46 +121,43 @@ type TelemetryV2 struct {
 
 // CreateTelemetryV2 creates a new telemetry v2 configuration.
 func (s *Service) CreateTelemetryV2(ctx context.Context, input TelemetryV2Input) (TelemetryV2, error) {
-	vars := map[string]any{
-		"input":     input,
-		"RBAC_Plan": true,
-	}
+	vars := mergeVars(map[string]any{
+		"input": input,
+	}, rbacPlan)
 	var result struct {
 		CreateTelemetryV2 TelemetryV2 `json:"createTelemetryV2"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createTelemetryV2Mutation, vars, &result); err != nil {
-		return TelemetryV2{}, err
+		return TelemetryV2{}, fmt.Errorf("CreateTelemetryV2: %w", err)
 	}
 	return result.CreateTelemetryV2, nil
 }
 
 // GetTelemetryV2 retrieves telemetry v2 by ID.
 func (s *Service) GetTelemetryV2(ctx context.Context, id string) (*TelemetryV2, error) {
-	vars := map[string]any{
-		"id":        id,
-		"RBAC_Plan": true,
-	}
+	vars := mergeVars(map[string]any{
+		"id": id,
+	}, rbacPlan)
 	var result struct {
 		GetTelemetryV2 *TelemetryV2 `json:"getTelemetryV2"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getTelemetryV2Query, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetTelemetryV2(%s): %w", id, err)
 	}
 	return result.GetTelemetryV2, nil
 }
 
 // UpdateTelemetryV2 updates telemetry v2 by ID.
 func (s *Service) UpdateTelemetryV2(ctx context.Context, id string, input TelemetryV2Input) (TelemetryV2, error) {
-	vars := map[string]any{
-		"id":        id,
-		"input":     input,
-		"RBAC_Plan": true,
-	}
+	vars := mergeVars(map[string]any{
+		"id":    id,
+		"input": input,
+	}, rbacPlan)
 	var result struct {
 		UpdateTelemetryV2 TelemetryV2 `json:"updateTelemetryV2"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateTelemetryV2Mutation, vars, &result); err != nil {
-		return TelemetryV2{}, err
+		return TelemetryV2{}, fmt.Errorf("UpdateTelemetryV2(%s): %w", id, err)
 	}
 	return result.UpdateTelemetryV2, nil
 }
@@ -167,14 +165,20 @@ func (s *Service) UpdateTelemetryV2(ctx context.Context, id string, input Teleme
 // DeleteTelemetryV2 deletes telemetry v2 by ID.
 func (s *Service) DeleteTelemetryV2(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/app", deleteTelemetryV2Mutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteTelemetryV2Mutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteTelemetryV2(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListTelemetriesV2 retrieves all telemetry v2 configurations.
 func (s *Service) ListTelemetriesV2(ctx context.Context) ([]TelemetryV2, error) {
-	return client.ListAll[TelemetryV2](ctx, s.client, "/app", listTelemetriesV2Query, map[string]any{
+	items, err := client.ListAll[TelemetryV2](ctx, s.client, "/app", listTelemetriesV2Query, mergeVars(map[string]any{
 		"direction": "DESC",
 		"field":     "created",
-		"RBAC_Plan": true,
-	}, "listTelemetriesV2")
+	}, rbacPlan), "listTelemetriesV2")
+	if err != nil {
+		return nil, fmt.Errorf("ListTelemetriesV2: %w", err)
+	}
+	return items, nil
 }
