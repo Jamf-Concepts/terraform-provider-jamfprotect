@@ -12,6 +12,12 @@ import (
 )
 
 // TestAccDataRetentionResource_basic validates update and import behavior.
+//
+// IMPORTANT: This test may fail with "Data retention settings can only be updated once every 24 hours"
+// if the test tenant has recently modified retention settings. This is a Jamf Protect API business rule,
+// not a provider bug. To resolve:
+//   - Wait 24 hours before re-running, OR
+//   - Use a fresh test tenant that hasn't had retention settings modified recently
 func TestAccDataRetentionResource_basic(t *testing.T) {
 	resourceName := "jamfprotect_data_retention.test"
 

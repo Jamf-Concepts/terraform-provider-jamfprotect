@@ -44,7 +44,7 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 			},
 			// Update and Read testing.
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "TEAMID", "Updated description"),
+				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
 				),

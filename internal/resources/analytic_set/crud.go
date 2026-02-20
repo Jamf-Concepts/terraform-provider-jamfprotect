@@ -84,6 +84,13 @@ func (r *AnalyticSetResource) ModifyPlan(ctx context.Context, req resource.Modif
 		return
 	}
 
+	// Check if all elements in the set are known - if not, we can't validate yet
+	for _, elem := range plan.Analytics.Elements() {
+		if elem.IsUnknown() {
+			return
+		}
+	}
+
 	analytics := common.SetToStrings(ctx, plan.Analytics, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return

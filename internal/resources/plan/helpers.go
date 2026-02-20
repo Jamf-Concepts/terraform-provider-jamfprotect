@@ -175,3 +175,20 @@ func filterManagedAnalyticSetEntries(sets []jamfprotect.PlanAnalyticSet) []jamfp
 
 	return filtered
 }
+
+// filterManagedExceptionSetEntries drops managed exception sets from the API list.
+func filterManagedExceptionSetEntries(sets []jamfprotect.PlanExceptionSet) []jamfprotect.PlanExceptionSet {
+	if len(sets) == 0 {
+		return nil
+	}
+
+	filtered := make([]jamfprotect.PlanExceptionSet, 0, len(sets))
+	for _, set := range sets {
+		if set.Managed {
+			continue
+		}
+		filtered = append(filtered, set)
+	}
+
+	return filtered
+}
