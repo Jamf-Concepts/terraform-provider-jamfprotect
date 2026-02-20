@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -104,7 +105,7 @@ func (s *Service) CreateApiClient(ctx context.Context, input ApiClientInput) (Ap
 		CreateApiClient ApiClient `json:"createApiClient"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createApiClientMutation, vars, &result); err != nil {
-		return ApiClient{}, err
+		return ApiClient{}, fmt.Errorf("CreateApiClient: %w", err)
 	}
 	return result.CreateApiClient, nil
 }
@@ -116,7 +117,7 @@ func (s *Service) GetApiClient(ctx context.Context, clientID string) (*ApiClient
 		GetApiClient *ApiClient `json:"getApiClient"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getApiClientQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetApiClient(%s): %w", clientID, err)
 	}
 	return result.GetApiClient, nil
 }
@@ -129,7 +130,7 @@ func (s *Service) UpdateApiClient(ctx context.Context, clientID string, input Ap
 		UpdateApiClient ApiClient `json:"updateApiClient"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateApiClientMutation, vars, &result); err != nil {
-		return ApiClient{}, err
+		return ApiClient{}, fmt.Errorf("UpdateApiClient(%s): %w", clientID, err)
 	}
 	return result.UpdateApiClient, nil
 }
@@ -137,15 +138,22 @@ func (s *Service) UpdateApiClient(ctx context.Context, clientID string, input Ap
 // DeleteApiClient deletes an API client by ID.
 func (s *Service) DeleteApiClient(ctx context.Context, clientID string) error {
 	vars := map[string]any{"clientId": clientID}
-	return s.client.DoGraphQL(ctx, "/app", deleteApiClientMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteApiClientMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteApiClient(%s): %w", clientID, err)
+	}
+	return nil
 }
 
 // ListApiClients retrieves all API clients.
 func (s *Service) ListApiClients(ctx context.Context) ([]ApiClient, error) {
-	return client.ListAll[ApiClient](ctx, s.client, "/app", listApiClientsQuery, map[string]any{
+	clients, err := client.ListAll[ApiClient](ctx, s.client, "/app", listApiClientsQuery, map[string]any{
 		"direction": "DESC",
 		"field":     "created",
 	}, "listApiClients")
+	if err != nil {
+		return nil, fmt.Errorf("ListApiClients: %w", err)
+	}
+	return clients, nil
 }
 
 // buildApiClientVariables builds the GraphQL variables for creating/updating an API client.

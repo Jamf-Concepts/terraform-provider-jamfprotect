@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -44,13 +45,19 @@ func NewClient(baseURL, clientID, clientSecret string) *Client {
 // NewClientWithVersion creates a new Jamf Protect GraphQL client with a custom version string.
 func NewClientWithVersion(baseURL, clientID, clientSecret, version string, opts ...Option) *Client {
 	userAgent := fmt.Sprintf("terraform-provider-jamfprotect/%s", version)
-	httpClient := &http.Client{
-		Timeout: 60 * time.Second,
-	}
+
+	rc := retryablehttp.NewClient()
+	rc.RetryMax = 3
+	rc.RetryWaitMin = 1 * time.Second
+	rc.RetryWaitMax = 30 * time.Second
+	rc.Logger = nil
+	rc.CheckRetry = retryablehttp.ErrorPropagatedRetryPolicy
+	rc.HTTPClient.Timeout = 60 * time.Second
+
 	c := &Client{
 		baseURL:    strings.TrimRight(baseURL, "/"),
 		userAgent:  userAgent,
-		httpClient: httpClient,
+		httpClient: rc.StandardClient(),
 		oauthConfig: oauthConfig{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,

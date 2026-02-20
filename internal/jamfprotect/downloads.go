@@ -3,7 +3,10 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // organizationDownloadsQuery defines the GraphQL query for organization downloads.
 const organizationDownloadsQuery = `
@@ -43,7 +46,7 @@ func (s *Service) GetOrganizationDownloads(ctx context.Context) (OrganizationDow
 		Downloads OrganizationDownloads `json:"downloads"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", organizationDownloadsQuery, nil, &result); err != nil {
-		return OrganizationDownloads{}, err
+		return OrganizationDownloads{}, fmt.Errorf("GetOrganizationDownloads: %w", err)
 	}
 	return result.Downloads, nil
 }

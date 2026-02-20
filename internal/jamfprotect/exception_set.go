@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -221,55 +222,52 @@ type ExceptionSetListItem struct {
 
 // CreateExceptionSet creates a new exception set.
 func (s *Service) CreateExceptionSet(ctx context.Context, input ExceptionSetInput) (ExceptionSet, error) {
-	vars := map[string]any{
-		"name":          input.Name,
-		"description":   input.Description,
-		"exceptions":    input.Exceptions,
-		"esExceptions":  input.EsExceptions,
-		"minimal":       false,
-		"RBAC_Analytic": true,
-	}
+	vars := mergeVars(map[string]any{
+		"name":         input.Name,
+		"description":  input.Description,
+		"exceptions":   input.Exceptions,
+		"esExceptions": input.EsExceptions,
+		"minimal":      false,
+	}, rbacAnalytic)
 	var result struct {
 		CreateExceptionSet ExceptionSet `json:"createExceptionSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createExceptionSetMutation, vars, &result); err != nil {
-		return ExceptionSet{}, err
+		return ExceptionSet{}, fmt.Errorf("CreateExceptionSet: %w", err)
 	}
 	return result.CreateExceptionSet, nil
 }
 
 // GetExceptionSet retrieves an exception set by UUID.
 func (s *Service) GetExceptionSet(ctx context.Context, uuid string) (*ExceptionSet, error) {
-	vars := map[string]any{
-		"uuid":          uuid,
-		"minimal":       false,
-		"RBAC_Analytic": true,
-	}
+	vars := mergeVars(map[string]any{
+		"uuid":    uuid,
+		"minimal": false,
+	}, rbacAnalytic)
 	var result struct {
 		GetExceptionSet *ExceptionSet `json:"getExceptionSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", getExceptionSetQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetExceptionSet(%s): %w", uuid, err)
 	}
 	return result.GetExceptionSet, nil
 }
 
 // UpdateExceptionSet updates an existing exception set.
 func (s *Service) UpdateExceptionSet(ctx context.Context, uuid string, input ExceptionSetInput) (ExceptionSet, error) {
-	vars := map[string]any{
-		"uuid":          uuid,
-		"name":          input.Name,
-		"description":   input.Description,
-		"exceptions":    input.Exceptions,
-		"esExceptions":  input.EsExceptions,
-		"minimal":       false,
-		"RBAC_Analytic": true,
-	}
+	vars := mergeVars(map[string]any{
+		"uuid":         uuid,
+		"name":         input.Name,
+		"description":  input.Description,
+		"exceptions":   input.Exceptions,
+		"esExceptions": input.EsExceptions,
+		"minimal":      false,
+	}, rbacAnalytic)
 	var result struct {
 		UpdateExceptionSet ExceptionSet `json:"updateExceptionSet"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateExceptionSetMutation, vars, &result); err != nil {
-		return ExceptionSet{}, err
+		return ExceptionSet{}, fmt.Errorf("UpdateExceptionSet(%s): %w", uuid, err)
 	}
 	return result.UpdateExceptionSet, nil
 }
@@ -277,10 +275,17 @@ func (s *Service) UpdateExceptionSet(ctx context.Context, uuid string, input Exc
 // DeleteExceptionSet deletes an exception set by UUID.
 func (s *Service) DeleteExceptionSet(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, "/app", deleteExceptionSetMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteExceptionSetMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteExceptionSet(%s): %w", uuid, err)
+	}
+	return nil
 }
 
 // ListExceptionSets retrieves all exception sets.
 func (s *Service) ListExceptionSets(ctx context.Context) ([]ExceptionSetListItem, error) {
-	return client.ListAll[ExceptionSetListItem](ctx, s.client, "/app", listExceptionSetsQuery, map[string]any{}, "listExceptionSets")
+	items, err := client.ListAll[ExceptionSetListItem](ctx, s.client, "/app", listExceptionSetsQuery, map[string]any{}, "listExceptionSets")
+	if err != nil {
+		return nil, fmt.Errorf("ListExceptionSets: %w", err)
+	}
+	return items, nil
 }

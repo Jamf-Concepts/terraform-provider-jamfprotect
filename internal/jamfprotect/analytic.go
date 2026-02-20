@@ -3,7 +3,10 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // analyticFields defines the GraphQL fragment for analytic fields.
 const analyticFields = `
@@ -233,7 +236,7 @@ func (s *Service) CreateAnalytic(ctx context.Context, input AnalyticInput) (Anal
 		CreateAnalytic Analytic `json:"createAnalytic"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", createAnalyticMutation, vars, &result); err != nil {
-		return Analytic{}, err
+		return Analytic{}, fmt.Errorf("CreateAnalytic: %w", err)
 	}
 	return result.CreateAnalytic, nil
 }
@@ -245,7 +248,7 @@ func (s *Service) GetAnalytic(ctx context.Context, uuid string) (*Analytic, erro
 		GetAnalytic *Analytic `json:"getAnalytic"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", getAnalyticQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAnalytic(%s): %w", uuid, err)
 	}
 	return result.GetAnalytic, nil
 }
@@ -271,7 +274,7 @@ func (s *Service) UpdateAnalytic(ctx context.Context, uuid string, input Analyti
 		UpdateAnalytic Analytic `json:"updateAnalytic"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", updateAnalyticMutation, vars, &result); err != nil {
-		return Analytic{}, err
+		return Analytic{}, fmt.Errorf("UpdateAnalytic(%s): %w", uuid, err)
 	}
 	return result.UpdateAnalytic, nil
 }
@@ -279,7 +282,10 @@ func (s *Service) UpdateAnalytic(ctx context.Context, uuid string, input Analyti
 // DeleteAnalytic deletes an analytic by UUID.
 func (s *Service) DeleteAnalytic(ctx context.Context, uuid string) error {
 	vars := map[string]any{"uuid": uuid}
-	return s.client.DoGraphQL(ctx, "/app", deleteAnalyticMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/app", deleteAnalyticMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteAnalytic(%s): %w", uuid, err)
+	}
+	return nil
 }
 
 // ListAnalytics retrieves all analytics.
@@ -290,7 +296,7 @@ func (s *Service) ListAnalytics(ctx context.Context) ([]Analytic, error) {
 		} `json:"listAnalytics"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", listAnalyticsQuery, nil, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListAnalytics: %w", err)
 	}
 	return result.ListAnalytics.Items, nil
 }

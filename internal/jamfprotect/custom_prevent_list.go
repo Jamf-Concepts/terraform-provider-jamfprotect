@@ -5,6 +5,7 @@ package jamfprotect
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 )
@@ -133,7 +134,7 @@ func (s *Service) CreateCustomPreventList(ctx context.Context, input CustomPreve
 		CreateCustomPreventList CustomPreventList `json:"createPreventList"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", createCustomPreventListMutation, vars, &result); err != nil {
-		return CustomPreventList{}, err
+		return CustomPreventList{}, fmt.Errorf("CreateCustomPreventList: %w", err)
 	}
 	return result.CreateCustomPreventList, nil
 }
@@ -145,7 +146,7 @@ func (s *Service) GetCustomPreventList(ctx context.Context, id string) (*CustomP
 		GetCustomPreventList *CustomPreventList `json:"getPreventList"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", getCustomPreventListQuery, vars, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetCustomPreventList(%s): %w", id, err)
 	}
 	return result.GetCustomPreventList, nil
 }
@@ -164,7 +165,7 @@ func (s *Service) UpdateCustomPreventList(ctx context.Context, id string, input 
 		UpdateCustomPreventList CustomPreventList `json:"updatePreventList"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/graphql", updateCustomPreventListMutation, vars, &result); err != nil {
-		return CustomPreventList{}, err
+		return CustomPreventList{}, fmt.Errorf("UpdateCustomPreventList(%s): %w", id, err)
 	}
 	return result.UpdateCustomPreventList, nil
 }
@@ -172,13 +173,20 @@ func (s *Service) UpdateCustomPreventList(ctx context.Context, id string, input 
 // DeleteCustomPreventList deletes a custom prevent list by ID.
 func (s *Service) DeleteCustomPreventList(ctx context.Context, id string) error {
 	vars := map[string]any{"id": id}
-	return s.client.DoGraphQL(ctx, "/graphql", deleteCustomPreventListMutation, vars, nil)
+	if err := s.client.DoGraphQL(ctx, "/graphql", deleteCustomPreventListMutation, vars, nil); err != nil {
+		return fmt.Errorf("DeleteCustomPreventList(%s): %w", id, err)
+	}
+	return nil
 }
 
 // ListCustomPreventLists retrieves all custom prevent lists.
 func (s *Service) ListCustomPreventLists(ctx context.Context) ([]CustomPreventList, error) {
-	return client.ListAll[CustomPreventList](ctx, s.client, "/graphql", listCustomPreventListsQuery, map[string]any{
+	items, err := client.ListAll[CustomPreventList](ctx, s.client, "/graphql", listCustomPreventListsQuery, map[string]any{
 		"direction": "DESC",
 		"field":     "created",
 	}, "listPreventLists")
+	if err != nil {
+		return nil, fmt.Errorf("ListCustomPreventLists: %w", err)
+	}
+	return items, nil
 }

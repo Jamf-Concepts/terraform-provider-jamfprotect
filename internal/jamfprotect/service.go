@@ -5,6 +5,57 @@ package jamfprotect
 
 import "github.com/smithjw/terraform-provider-jamfprotect/internal/client"
 
+// RBAC variable constants shared across service methods.
+var (
+	// rbacUser contains the RBAC flags used by user queries.
+	rbacUser = map[string]any{
+		"RBAC_Connection": true,
+		"RBAC_Role":       true,
+		"RBAC_Group":      true,
+	}
+
+	// rbacGroup contains the RBAC flags used by group queries.
+	rbacGroup = map[string]any{
+		"RBAC_Connection": true,
+		"RBAC_Role":       true,
+	}
+
+	// rbacComputer contains the RBAC flags used by computer queries.
+	rbacComputer = map[string]any{
+		"RBAC_ThreatPreventionVersion": true,
+		"RBAC_Plan":                    true,
+		"RBAC_Insight":                 true,
+	}
+
+	// rbacPlan contains the RBAC flags used by plan/telemetry/analytic-set queries.
+	rbacPlan = map[string]any{
+		"RBAC_Plan": true,
+	}
+
+	// rbacAnalytic contains the RBAC flags used by exception-set queries.
+	rbacAnalytic = map[string]any{
+		"RBAC_Analytic": true,
+	}
+)
+
+// mergeVars returns a new map combining base variables with additional maps.
+func mergeVars(base map[string]any, extras ...map[string]any) map[string]any {
+	size := len(base)
+	for _, extra := range extras {
+		size += len(extra)
+	}
+	result := make(map[string]any, size)
+	for k, v := range base {
+		result[k] = v
+	}
+	for _, extra := range extras {
+		for k, v := range extra {
+			result[k] = v
+		}
+	}
+	return result
+}
+
 // Service provides Jamf Protect operations built on top of the transport client.
 type Service struct {
 	client *client.Client

@@ -3,7 +3,10 @@
 
 package jamfprotect
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // dataRetentionGetQuery defines the GraphQL query for organization retention settings.
 const dataRetentionGetQuery = `
@@ -99,7 +102,7 @@ func (s *Service) GetDataRetention(ctx context.Context) (DataRetentionSettings, 
 		} `json:"getOrganization"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataRetentionGetQuery, nil, &result); err != nil {
-		return DataRetentionSettings{}, err
+		return DataRetentionSettings{}, fmt.Errorf("GetDataRetention: %w", err)
 	}
 	return result.GetOrganization.Retention, nil
 }
@@ -117,7 +120,7 @@ func (s *Service) UpdateDataRetention(ctx context.Context, input DataRetentionIn
 		} `json:"updateOrganizationRetention"`
 	}
 	if err := s.client.DoGraphQL(ctx, "/app", dataRetentionUpdateMutation, vars, &result); err != nil {
-		return DataRetentionSettings{}, err
+		return DataRetentionSettings{}, fmt.Errorf("UpdateDataRetention: %w", err)
 	}
 	return result.UpdateOrganizationRetention.Retention, nil
 }
