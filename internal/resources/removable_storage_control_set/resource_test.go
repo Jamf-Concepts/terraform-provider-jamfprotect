@@ -4,14 +4,19 @@
 package removable_storage_control_set_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
 
 func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-usb")
+	resourceName := "jamfprotect_removable_storage_control_set.test"
+
 	if testing.Short() {
 		t.Skip("skipping acceptance test")
 	}
@@ -21,41 +26,40 @@ func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read.
 			{
-				Config: `
-resource "jamfprotect_removable_storage_control_set" "test" {
-  name                 = "tf-acc-test-removablestorage"
-  description          = "Acceptance test removable storage control set"
-	default_permission = "Read Only"
-  default_local_notification_message = "This removable storage device is limited to read-only."
-}
-`,
+				Config: testAccRemovableStorageControlSetResourceConfig(rName, "Acceptance test removable storage control set", "Read Only", "This removable storage device is limited to read-only."),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("jamfprotect_removable_storage_control_set.test", "id"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "Read Only"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Acceptance test removable storage control set"),
+					resource.TestCheckResourceAttr(resourceName, "default_permission", "Read Only"),
 				),
 			},
 			// Import.
 			{
-				ResourceName:      "jamfprotect_removable_storage_control_set.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// Update.
 			{
-				Config: `
-resource "jamfprotect_removable_storage_control_set" "test" {
-  name                 = "tf-acc-test-removablestorage-updated"
-  description          = "Updated removable storage control set"
-	default_permission = "Prevent"
-  default_local_notification_message = "Removable storage devices are not allowed."
-}
-`,
+				Config: testAccRemovableStorageControlSetResourceConfig(rName, "Updated removable storage control set", "Prevent", "Removable storage devices are not allowed."),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "name", "tf-acc-test-removablestorage-updated"),
-					resource.TestCheckResourceAttr("jamfprotect_removable_storage_control_set.test", "default_permission", "Prevent"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated removable storage control set"),
+					resource.TestCheckResourceAttr(resourceName, "default_permission", "Prevent"),
 				),
 			},
 		},
 	})
+}
+
+func testAccRemovableStorageControlSetResourceConfig(name, description, permission, message string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_removable_storage_control_set" "test" {
+  name                 = %[1]q
+  description          = %[2]q
+	default_permission = %[3]q
+  default_local_notification_message = %[4]q
+}
+`, name, description, permission, message)
 }
