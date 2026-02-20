@@ -60,13 +60,8 @@ func TestEventsFromFlags_Individual(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := eventsFromFlags(tt.flags)
-			if len(got) != len(tt.expected) {
-				t.Fatalf("expected %d events, got %d: %v", len(tt.expected), len(got), got)
-			}
-			for i, event := range tt.expected {
-				if got[i] != event {
-					t.Errorf("event[%d]: expected %q, got %q", i, event, got[i])
-				}
+			if !slices.Equal(got, tt.expected) {
+				t.Errorf("expected %v, got %v", tt.expected, got)
 			}
 		})
 	}
