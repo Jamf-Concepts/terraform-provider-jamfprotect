@@ -4,14 +4,33 @@
 package group_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccGroupCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_group" {
+			continue
+		}
+		result, err := svc.GetGroup(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("group %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 // TestAccGroupResource_basic validates create, read, update, and import behavior.
 func TestAccGroupResource_basic(t *testing.T) {
@@ -21,6 +40,7 @@ func TestAccGroupResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccGroupCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupResourceConfig(rName),
@@ -38,7 +58,10 @@ func TestAccGroupResource_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupResourceConfig(rName),
+				Config: testAccGroupResourceConfig(rName + "-updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
+				),
 			},
 		},
 	})

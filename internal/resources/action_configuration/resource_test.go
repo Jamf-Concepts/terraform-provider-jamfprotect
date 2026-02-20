@@ -4,14 +4,33 @@
 package action_configuration_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccActionConfigCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_action_configuration" {
+			continue
+		}
+		result, err := svc.GetActionConfig(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("action configuration %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func TestAccActionConfigResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-ac")
@@ -20,6 +39,7 @@ func TestAccActionConfigResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccActionConfigCheckDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{

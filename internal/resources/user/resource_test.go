@@ -4,14 +4,33 @@
 package user_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccUserCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_user" {
+			continue
+		}
+		result, err := svc.GetUser(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("user %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 // TestAccUserResource_basic validates create, read, update, and import behavior.
 func TestAccUserResource_basic(t *testing.T) {
@@ -22,6 +41,7 @@ func TestAccUserResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccUserCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserResourceConfig(email, "1", true, "Medium"),

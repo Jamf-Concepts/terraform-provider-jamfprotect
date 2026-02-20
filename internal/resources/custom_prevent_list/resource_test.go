@@ -4,14 +4,33 @@
 package custom_prevent_list_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccCustomPreventListCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_custom_prevent_list" {
+			continue
+		}
+		result, err := svc.GetCustomPreventList(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("custom prevent list %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func TestAccCustomPreventListResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-pl")
@@ -20,6 +39,7 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccCustomPreventListCheckDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
@@ -60,6 +80,7 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccCustomPreventListCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPreventListResourceConfig(rName, "File Hash", "File hash list"),
