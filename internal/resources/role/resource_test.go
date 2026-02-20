@@ -4,15 +4,34 @@
 package role_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccRoleCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_role" {
+			continue
+		}
+		result, err := svc.GetRole(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("role %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 // TestAccRoleResource_basic validates create, read, update, and import behavior.
 func TestAccRoleResource_basic(t *testing.T) {
@@ -22,6 +41,7 @@ func TestAccRoleResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccRoleCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleResourceConfig(rName, []string{"Analytics"}, []string{"Analytics"}),

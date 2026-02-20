@@ -1384,3 +1384,913 @@ func TestService_BuildPlanVariables(t *testing.T) {
 		t.Fatalf("expected telemetryV2 to be nil when TelemetryV2Null is true")
 	}
 }
+
+func TestService_Downloads(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if req.Variables != nil {
+				t.Fatalf("expected nil variables, got %v", req.Variables)
+			}
+			return map[string]any{"data": map[string]any{"downloads": map[string]any{
+				"pppc":   "pppc-data",
+				"rootCA": "ca-data",
+				"vanillaPackage": map[string]any{
+					"version": "5.0.0",
+				},
+			}}}
+		})
+		defer done()
+
+		got, err := svc.GetOrganizationDownloads(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.PPPC != "pppc-data" {
+			t.Fatalf("expected pppc-data, got %s", got.PPPC)
+		}
+		if got.VanillaPackage == nil || got.VanillaPackage.Version != "5.0.0" {
+			t.Fatalf("expected version 5.0.0, got %#v", got.VanillaPackage)
+		}
+	})
+}
+
+func TestService_ChangeManagement(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if req.Variables != nil {
+				t.Fatalf("expected nil variables, got %v", req.Variables)
+			}
+			return map[string]any{"data": map[string]any{"getAppInitializationData": map[string]any{
+				"configFreeze": true,
+			}}}
+		})
+		defer done()
+
+		got, err := svc.GetConfigFreeze(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !got.ConfigFreeze {
+			t.Fatal("expected configFreeze true")
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{"configFreeze": true}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateOrganizationConfigFreeze": map[string]any{
+				"configFreeze": true,
+			}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateOrganizationConfigFreeze(context.Background(), true)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !got.ConfigFreeze {
+			t.Fatal("expected configFreeze true")
+		}
+	})
+}
+
+func TestService_DataRetention(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if req.Variables != nil {
+				t.Fatalf("expected nil variables, got %v", req.Variables)
+			}
+			return map[string]any{"data": map[string]any{"getOrganization": map[string]any{
+				"retention": map[string]any{
+					"database": map[string]any{
+						"log":   map[string]any{"numberOfDays": 30},
+						"alert": map[string]any{"numberOfDays": 60},
+					},
+					"cold": map[string]any{
+						"alert": map[string]any{"numberOfDays": 90},
+					},
+					"updated": "2025-01-01",
+				},
+			}}}
+		})
+		defer done()
+
+		got, err := svc.GetDataRetention(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.Database.Log.NumberOfDays != 30 {
+			t.Fatalf("expected log days 30, got %d", got.Database.Log.NumberOfDays)
+		}
+		if got.Database.Alert.NumberOfDays != 60 {
+			t.Fatalf("expected alert days 60, got %d", got.Database.Alert.NumberOfDays)
+		}
+		if got.Cold.Alert.NumberOfDays != 90 {
+			t.Fatalf("expected cold alert days 90, got %d", got.Cold.Alert.NumberOfDays)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{
+			"databaseLogDays":   int64(30),
+			"databaseAlertDays": int64(60),
+			"coldAlertDays":     int64(90),
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateOrganizationRetention": map[string]any{
+				"retention": map[string]any{
+					"database": map[string]any{
+						"log":   map[string]any{"numberOfDays": 30},
+						"alert": map[string]any{"numberOfDays": 60},
+					},
+					"cold": map[string]any{
+						"alert": map[string]any{"numberOfDays": 90},
+					},
+					"updated": "2025-01-02",
+				},
+			}}}
+		})
+		defer done()
+
+		input := DataRetentionInput{
+			DatabaseLogDays:   30,
+			DatabaseAlertDays: 60,
+			ColdAlertDays:     90,
+		}
+		got, err := svc.UpdateDataRetention(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.Database.Log.NumberOfDays != 30 {
+			t.Fatalf("expected log days 30, got %d", got.Database.Log.NumberOfDays)
+		}
+	})
+}
+
+func TestService_DataForwarding(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if req.Variables != nil {
+				t.Fatalf("expected nil variables, got %v", req.Variables)
+			}
+			return map[string]any{"data": map[string]any{"getOrganization": map[string]any{
+				"uuid": "org-1",
+				"forward": map[string]any{
+					"s3":         map[string]any{"bucket": "my-bucket", "enabled": true},
+					"sentinel":   map[string]any{"enabled": false},
+					"sentinelV2": map[string]any{"enabled": false},
+				},
+			}}}
+		})
+		defer done()
+
+		got, err := svc.GetDataForwarding(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.UUID != "org-1" {
+			t.Fatalf("expected uuid org-1, got %s", got.UUID)
+		}
+		if got.Forward.S3.Bucket != "my-bucket" {
+			t.Fatalf("expected bucket my-bucket, got %s", got.Forward.S3.Bucket)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		input := DataForwardingInput{
+			S3:       ForwardS3Input{Bucket: "bucket", Enabled: true, Encrypted: true, Prefix: "pre", Role: "role"},
+			Sentinel: ForwardSentinelInput{Enabled: false},
+			SentinelV2: ForwardSentinelV2Input{
+				Enabled:       true,
+				AzureTenantID: "tenant",
+				AzureClientID: "client",
+				Endpoint:      "https://ep",
+			},
+		}
+		expected := map[string]any{
+			"s3":         input.S3,
+			"sentinel":   input.Sentinel,
+			"sentinelV2": input.SentinelV2,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateOrganizationForward": map[string]any{
+				"uuid": "org-1",
+				"forward": map[string]any{
+					"s3":         map[string]any{"bucket": "bucket", "enabled": true},
+					"sentinel":   map[string]any{"enabled": false},
+					"sentinelV2": map[string]any{"enabled": true},
+				},
+			}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateDataForwarding(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.UUID != "org-1" {
+			t.Fatalf("expected uuid org-1, got %s", got.UUID)
+		}
+	})
+}
+
+func TestService_Role(t *testing.T) {
+	input := RoleInput{
+		Name:           "admin",
+		ReadResources:  []string{"COMPUTER", "PLAN"},
+		WriteResources: []string{"PLAN"},
+	}
+
+	t.Run("Create", func(t *testing.T) {
+		expected := map[string]any{
+			"name":           input.Name,
+			"readResources":  input.ReadResources,
+			"writeResources": input.WriteResources,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"createRole": map[string]any{"id": "r-1"}}}
+		})
+		defer done()
+
+		got, err := svc.CreateRole(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "r-1" {
+			t.Fatalf("expected id r-1, got %s", got.ID)
+		}
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		expected := map[string]any{"id": "r-2"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"getRole": map[string]any{"id": "r-2"}}}
+		})
+		defer done()
+
+		got, err := svc.GetRole(context.Background(), "r-2")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || got.ID != "r-2" {
+			t.Fatalf("expected id r-2, got %#v", got)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{
+			"id":             "r-3",
+			"name":           input.Name,
+			"readResources":  input.ReadResources,
+			"writeResources": input.WriteResources,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateRole": map[string]any{"id": "r-3"}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateRole(context.Background(), "r-3", input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "r-3" {
+			t.Fatalf("expected id r-3, got %s", got.ID)
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		expected := map[string]any{"id": "r-4"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"deleteRole": map[string]any{"id": "r-4"}}}
+		})
+		defer done()
+
+		if err := svc.DeleteRole(context.Background(), "r-4"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		callCount := 0
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			callCount++
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if callCount == 1 {
+				assertVariablesEqual(t, map[string]any{"pageSize": 100, "direction": "ASC", "field": "name"}, req.Variables)
+				return map[string]any{"data": map[string]any{"listRoles": map[string]any{
+					"items":    []map[string]any{{"id": "r-1"}},
+					"pageInfo": map[string]any{"next": "next", "total": 2},
+				}}}
+			}
+			assertVariablesEqual(t, map[string]any{"pageSize": 100, "direction": "ASC", "field": "name", "nextToken": "next"}, req.Variables)
+			return map[string]any{"data": map[string]any{"listRoles": map[string]any{
+				"items":    []map[string]any{{"id": "r-2"}},
+				"pageInfo": map[string]any{"next": nil, "total": 2},
+			}}}
+		})
+		defer done()
+
+		items, err := svc.ListRoles(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 2 {
+			t.Fatalf("expected 2 items, got %d", len(items))
+		}
+	})
+}
+
+func TestService_User(t *testing.T) {
+	connID := "conn-1"
+	input := UserInput{
+		Email:                 "test@example.com",
+		RoleIDs:               []string{"r-1"},
+		GroupIDs:              []string{"g-1"},
+		ConnectionID:          &connID,
+		ReceiveEmailAlert:     true,
+		EmailAlertMinSeverity: "HIGH",
+	}
+
+	t.Run("Create", func(t *testing.T) {
+		expected := map[string]any{
+			"email":                 "test@example.com",
+			"roleIds":               input.RoleIDs,
+			"groupIds":              input.GroupIDs,
+			"connectionId":          "conn-1",
+			"receiveEmailAlert":     true,
+			"emailAlertMinSeverity": "HIGH",
+			"hasLimitedAppAccess":   false,
+			"RBAC_Connection":       true,
+			"RBAC_Role":             true,
+			"RBAC_Group":            true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"createUser": map[string]any{"id": "u-1"}}}
+		})
+		defer done()
+
+		got, err := svc.CreateUser(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "u-1" {
+			t.Fatalf("expected id u-1, got %s", got.ID)
+		}
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		expected := map[string]any{
+			"id":                  "u-2",
+			"hasLimitedAppAccess": false,
+			"RBAC_Connection":     true,
+			"RBAC_Role":           true,
+			"RBAC_Group":          true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"getUser": map[string]any{"id": "u-2"}}}
+		})
+		defer done()
+
+		got, err := svc.GetUser(context.Background(), "u-2")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || got.ID != "u-2" {
+			t.Fatalf("expected id u-2, got %#v", got)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{
+			"id":                    "u-3",
+			"email":                 "test@example.com",
+			"roleIds":               input.RoleIDs,
+			"groupIds":              input.GroupIDs,
+			"connectionId":          "conn-1",
+			"receiveEmailAlert":     true,
+			"emailAlertMinSeverity": "HIGH",
+			"hasLimitedAppAccess":   false,
+			"RBAC_Connection":       true,
+			"RBAC_Role":             true,
+			"RBAC_Group":            true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateUser": map[string]any{"id": "u-3"}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateUser(context.Background(), "u-3", input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "u-3" {
+			t.Fatalf("expected id u-3, got %s", got.ID)
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		expected := map[string]any{"id": "u-4"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"deleteUser": map[string]any{"id": "u-4"}}}
+		})
+		defer done()
+
+		if err := svc.DeleteUser(context.Background(), "u-4"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		callCount := 0
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			callCount++
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			baseVars := map[string]any{
+				"pageSize":            100,
+				"direction":           "ASC",
+				"field":               "email",
+				"hasLimitedAppAccess": false,
+				"RBAC_Connection":     true,
+				"RBAC_Role":           true,
+				"RBAC_Group":          true,
+			}
+			if callCount == 1 {
+				assertVariablesEqual(t, baseVars, req.Variables)
+				return map[string]any{"data": map[string]any{"listUsers": map[string]any{
+					"items":    []map[string]any{{"id": "u-1"}},
+					"pageInfo": map[string]any{"next": "next", "total": 2},
+				}}}
+			}
+			baseVars["nextToken"] = "next"
+			assertVariablesEqual(t, baseVars, req.Variables)
+			return map[string]any{"data": map[string]any{"listUsers": map[string]any{
+				"items":    []map[string]any{{"id": "u-2"}},
+				"pageInfo": map[string]any{"next": nil, "total": 2},
+			}}}
+		})
+		defer done()
+
+		items, err := svc.ListUsers(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 2 {
+			t.Fatalf("expected 2 items, got %d", len(items))
+		}
+	})
+}
+
+func TestService_User_NoConnectionID(t *testing.T) {
+	input := UserInput{
+		Email:                 "no-conn@example.com",
+		RoleIDs:               []string{"r-1"},
+		GroupIDs:              []string{},
+		ReceiveEmailAlert:     false,
+		EmailAlertMinSeverity: "LOW",
+	}
+
+	expected := map[string]any{
+		"email":                 "no-conn@example.com",
+		"roleIds":               input.RoleIDs,
+		"groupIds":              input.GroupIDs,
+		"connectionId":          nil,
+		"receiveEmailAlert":     false,
+		"emailAlertMinSeverity": "LOW",
+		"hasLimitedAppAccess":   false,
+		"RBAC_Connection":       true,
+		"RBAC_Role":             true,
+		"RBAC_Group":            true,
+	}
+	svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+		assertVariablesEqual(t, expected, req.Variables)
+		return map[string]any{"data": map[string]any{"createUser": map[string]any{"id": "u-nc"}}}
+	})
+	defer done()
+
+	got, err := svc.CreateUser(context.Background(), input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.ID != "u-nc" {
+		t.Fatalf("expected id u-nc, got %s", got.ID)
+	}
+}
+
+func TestService_Group(t *testing.T) {
+	connID := "conn-1"
+	input := GroupInput{
+		Name:         "admins",
+		ConnectionID: &connID,
+		AccessGroup:  true,
+		RoleIDs:      []string{"r-1"},
+	}
+
+	t.Run("Create", func(t *testing.T) {
+		expected := map[string]any{
+			"name":            input.Name,
+			"roleIds":         input.RoleIDs,
+			"accessGroup":     true,
+			"connectionId":    "conn-1",
+			"RBAC_Connection": true,
+			"RBAC_Role":       true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"createGroup": map[string]any{"id": "g-1"}}}
+		})
+		defer done()
+
+		got, err := svc.CreateGroup(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "g-1" {
+			t.Fatalf("expected id g-1, got %s", got.ID)
+		}
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		expected := map[string]any{
+			"id":              "g-2",
+			"RBAC_Connection": true,
+			"RBAC_Role":       true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"getGroup": map[string]any{"id": "g-2"}}}
+		})
+		defer done()
+
+		got, err := svc.GetGroup(context.Background(), "g-2")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || got.ID != "g-2" {
+			t.Fatalf("expected id g-2, got %#v", got)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{
+			"id":              "g-3",
+			"name":            input.Name,
+			"roleIds":         input.RoleIDs,
+			"accessGroup":     true,
+			"connectionId":    "conn-1",
+			"RBAC_Connection": true,
+			"RBAC_Role":       true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateGroup": map[string]any{"id": "g-3"}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateGroup(context.Background(), "g-3", input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ID != "g-3" {
+			t.Fatalf("expected id g-3, got %s", got.ID)
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		expected := map[string]any{"id": "g-4"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"deleteGroup": map[string]any{"id": "g-4"}}}
+		})
+		defer done()
+
+		if err := svc.DeleteGroup(context.Background(), "g-4"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		callCount := 0
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			callCount++
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			baseVars := map[string]any{
+				"pageSize":        100,
+				"direction":       "ASC",
+				"field":           "name",
+				"RBAC_Connection": true,
+				"RBAC_Role":       true,
+			}
+			if callCount == 1 {
+				assertVariablesEqual(t, baseVars, req.Variables)
+				return map[string]any{"data": map[string]any{"listGroups": map[string]any{
+					"items":    []map[string]any{{"id": "g-1"}},
+					"pageInfo": map[string]any{"next": "next", "total": 2},
+				}}}
+			}
+			baseVars["nextToken"] = "next"
+			assertVariablesEqual(t, baseVars, req.Variables)
+			return map[string]any{"data": map[string]any{"listGroups": map[string]any{
+				"items":    []map[string]any{{"id": "g-2"}},
+				"pageInfo": map[string]any{"next": nil, "total": 2},
+			}}}
+		})
+		defer done()
+
+		items, err := svc.ListGroups(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 2 {
+			t.Fatalf("expected 2 items, got %d", len(items))
+		}
+	})
+}
+
+func TestService_Group_NoConnectionID(t *testing.T) {
+	input := GroupInput{
+		Name:        "viewers",
+		AccessGroup: false,
+		RoleIDs:     []string{"r-2"},
+	}
+
+	expected := map[string]any{
+		"name":            "viewers",
+		"roleIds":         input.RoleIDs,
+		"accessGroup":     false,
+		"connectionId":    nil,
+		"RBAC_Connection": true,
+		"RBAC_Role":       true,
+	}
+	svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+		assertVariablesEqual(t, expected, req.Variables)
+		return map[string]any{"data": map[string]any{"createGroup": map[string]any{"id": "g-nc"}}}
+	})
+	defer done()
+
+	got, err := svc.CreateGroup(context.Background(), input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.ID != "g-nc" {
+		t.Fatalf("expected id g-nc, got %s", got.ID)
+	}
+}
+
+func TestService_ApiClient(t *testing.T) {
+	input := ApiClientInput{
+		Name:    "my-client",
+		RoleIDs: []string{"r-1", "r-2"},
+	}
+
+	t.Run("Create", func(t *testing.T) {
+		expected := map[string]any{
+			"name":    input.Name,
+			"roleIds": input.RoleIDs,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"createApiClient": map[string]any{"clientId": "ac-1"}}}
+		})
+		defer done()
+
+		got, err := svc.CreateApiClient(context.Background(), input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ClientID != "ac-1" {
+			t.Fatalf("expected clientId ac-1, got %s", got.ClientID)
+		}
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		expected := map[string]any{"clientId": "ac-2"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"getApiClient": map[string]any{"clientId": "ac-2"}}}
+		})
+		defer done()
+
+		got, err := svc.GetApiClient(context.Background(), "ac-2")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || got.ClientID != "ac-2" {
+			t.Fatalf("expected clientId ac-2, got %#v", got)
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		expected := map[string]any{
+			"clientId": "ac-3",
+			"name":     input.Name,
+			"roleIds":  input.RoleIDs,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"updateApiClient": map[string]any{"clientId": "ac-3"}}}
+		})
+		defer done()
+
+		got, err := svc.UpdateApiClient(context.Background(), "ac-3", input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got.ClientID != "ac-3" {
+			t.Fatalf("expected clientId ac-3, got %s", got.ClientID)
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		expected := map[string]any{"clientId": "ac-4"}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"deleteApiClient": map[string]any{"clientId": "ac-4"}}}
+		})
+		defer done()
+
+		if err := svc.DeleteApiClient(context.Background(), "ac-4"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		callCount := 0
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			callCount++
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			if callCount == 1 {
+				assertVariablesEqual(t, map[string]any{"direction": "DESC", "field": "created"}, req.Variables)
+				return map[string]any{"data": map[string]any{"listApiClients": map[string]any{
+					"items":    []map[string]any{{"clientId": "ac-1"}},
+					"pageInfo": map[string]any{"next": "next", "total": 2},
+				}}}
+			}
+			assertVariablesEqual(t, map[string]any{"direction": "DESC", "field": "created", "nextToken": "next"}, req.Variables)
+			return map[string]any{"data": map[string]any{"listApiClients": map[string]any{
+				"items":    []map[string]any{{"clientId": "ac-2"}},
+				"pageInfo": map[string]any{"next": nil, "total": 2},
+			}}}
+		})
+		defer done()
+
+		items, err := svc.ListApiClients(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 2 {
+			t.Fatalf("expected 2 items, got %d", len(items))
+		}
+	})
+}
+
+func TestService_Computer(t *testing.T) {
+	t.Run("Get", func(t *testing.T) {
+		expected := map[string]any{
+			"uuid":                         "comp-1",
+			"isList":                       false,
+			"RBAC_ThreatPreventionVersion": true,
+			"RBAC_Plan":                    true,
+			"RBAC_Insight":                 true,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"getComputer": map[string]any{"uuid": "comp-1", "hostName": "mac1"}}}
+		})
+		defer done()
+
+		got, err := svc.GetComputer(context.Background(), "comp-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got == nil || *got.UUID != "comp-1" {
+			t.Fatalf("expected uuid comp-1, got %#v", got)
+		}
+		if *got.HostName != "mac1" {
+			t.Fatalf("expected hostName mac1, got %s", *got.HostName)
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		expected := map[string]any{
+			"isList":                       true,
+			"RBAC_Insight":                 true,
+			"RBAC_Plan":                    true,
+			"RBAC_ThreatPreventionVersion": true,
+			"nextToken":                    nil,
+			"pageSize":                     100,
+			"direction":                    "ASC",
+			"field":                        []any{"hostName"},
+			"filter":                       nil,
+		}
+		svc, done := newTestService(t, func(t *testing.T, path string, req graphQLRequest) any {
+			if path != "/app" {
+				t.Fatalf("expected /app, got %s", path)
+			}
+			assertVariablesEqual(t, expected, req.Variables)
+			return map[string]any{"data": map[string]any{"listComputers": map[string]any{
+				"items":    []map[string]any{{"uuid": "c-1"}, {"uuid": "c-2"}},
+				"pageInfo": map[string]any{"next": nil, "total": 2},
+			}}}
+		})
+		defer done()
+
+		items, err := svc.ListComputers(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 2 {
+			t.Fatalf("expected 2 items, got %d", len(items))
+		}
+	})
+}

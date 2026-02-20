@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/provider"
 )
 
@@ -30,4 +32,16 @@ func TestAccPreCheck(t *testing.T) {
 			t.Fatalf("environment variable %s must be set for acceptance tests", env)
 		}
 	}
+}
+
+// TestAccService returns a Service for use in CheckDestroy functions.
+// Returns nil if the required environment variables are not set.
+func TestAccService() *jamfprotect.Service {
+	url := os.Getenv("JAMFPROTECT_URL")
+	clientID := os.Getenv("JAMFPROTECT_CLIENT_ID")
+	clientSecret := os.Getenv("JAMFPROTECT_CLIENT_SECRET")
+	if url == "" || clientID == "" || clientSecret == "" {
+		return nil
+	}
+	return jamfprotect.NewService(client.NewClient(url, clientID, clientSecret))
 }

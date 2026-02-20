@@ -4,14 +4,33 @@
 package plan_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccPlanCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_plan" {
+			continue
+		}
+		result, err := svc.GetPlan(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("plan %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func TestAccPlanResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-plan")
@@ -20,6 +39,7 @@ func TestAccPlanResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccPlanCheckDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{

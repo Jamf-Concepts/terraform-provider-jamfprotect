@@ -4,14 +4,33 @@
 package unified_logging_filter_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccUnifiedLoggingFilterCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_unified_logging_filter" {
+			continue
+		}
+		result, err := svc.GetUnifiedLoggingFilter(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("unified logging filter %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-ulf")
@@ -20,6 +39,7 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccUnifiedLoggingFilterCheckDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{

@@ -4,14 +4,33 @@
 package exception_set_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
 )
+
+func testAccExceptionSetCheckDestroy(s *terraform.State) error {
+	svc := testutil.TestAccService()
+	if svc == nil {
+		return fmt.Errorf("service not configured")
+	}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "jamfprotect_exception_set" {
+			continue
+		}
+		result, err := svc.GetExceptionSet(context.Background(), rs.Primary.ID)
+		if err == nil && result != nil {
+			return fmt.Errorf("exception set %s still exists", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func TestAccExceptionSetResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-exception-set")
@@ -20,6 +39,7 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccExceptionSetCheckDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
@@ -65,6 +85,7 @@ func TestAccExceptionSetResource_withEsExceptions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccExceptionSetCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExceptionSetResourceConfigWithEsExceptions(rName),
@@ -93,6 +114,7 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccExceptionSetCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExceptionSetResourceConfigWithAppSigningInfo(rName),
