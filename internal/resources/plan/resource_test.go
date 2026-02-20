@@ -39,6 +39,9 @@ func TestAccPlanResource_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"updated", // Timestamp may change between create and import
+				},
 			},
 			// Update and Read testing.
 			{
@@ -59,23 +62,19 @@ resource "jamfprotect_action_configuration" "test" {
   name        = "%[1]s-ac"
   description = "Action config for plan test"
 
-  alert_config = {
-    data = {
-      binary              = { attrs = [], related = [] }
-      click_event         = { attrs = [], related = [] }
-      download_event      = { attrs = [], related = [] }
-      file                = { attrs = [], related = [] }
-      fs_event            = { attrs = [], related = [] }
-      group               = { attrs = [], related = [] }
-      proc_event          = { attrs = [], related = [] }
-      process             = { attrs = [], related = [] }
-      screenshot_event    = { attrs = [], related = [] }
-      usb_event           = { attrs = [], related = [] }
-      user                = { attrs = [], related = [] }
-      gk_event            = { attrs = [], related = [] }
-      keylog_register_event = { attrs = [], related = [] }
-      mrt_event           = { attrs = [], related = [] }
-    }
+  alert_data_collection = {
+    binary_included_data_attributes                     = []
+    synthetic_click_event_included_data_attributes      = []
+    download_event_included_data_attributes             = []
+    file_included_data_attributes                       = []
+    file_system_event_included_data_attributes          = []
+    group_included_data_attributes                      = []
+    process_event_included_data_attributes              = []
+    process_included_data_attributes                    = []
+    screenshot_event_included_data_attributes           = []
+    user_included_data_attributes                       = []
+    gatekeeper_event_included_data_attributes           = []
+    keylog_register_event_included_data_attributes      = []
   }
 }
 
