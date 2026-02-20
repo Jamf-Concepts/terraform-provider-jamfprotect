@@ -1,7 +1,7 @@
 [tools]
 go = "latest"
 prek = "latest"
-"aqua:terraform" = "latest"
+terraform = "latest"
 golangci-lint = "latest"
 
 # ── Dependency tasks ─────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ run = "go mod download"
 
 [tasks.tidy]
 description = "Tidy Go module dependencies"
-run = "go mod tidy"
+run = ["go get -u -t ./...", "go mod tidy"]
 
 # ── Build tasks ──────────────────────────────────────────────────────────────
 
