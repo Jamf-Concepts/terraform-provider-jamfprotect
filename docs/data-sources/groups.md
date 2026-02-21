@@ -38,5 +38,5 @@ Read-Only:
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the group.
 - `name` (String) The name of the group.
-- `role_ids` (Set of String) Role IDs assigned to the group.
+- `role_ids` (List of String) Role IDs assigned to the group.
 - `updated` (String) The last-updated timestamp.

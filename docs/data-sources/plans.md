@@ -37,7 +37,7 @@ Read-Only:
 
 - `action_configuration` (String) The ID of the action configuration associated with this plan.
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values: `Block and report`, `Report only`, `Disable`.
-- `analytic_sets` (Set of String) Analytic set UUIDs included in this plan. The type is always `Report`.
+- `analytic_sets` (List of String) Analytic set UUIDs included in this plan. The type is always `Report`.
 - `auto_update` (Boolean) Whether auto-updates are enabled for endpoints using this plan.
 - `communications_protocol` (String) The communications protocol used by the plan. Values: `MQTT:443`, `WebSocket/MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Whether compliance baseline reporting is enabled.

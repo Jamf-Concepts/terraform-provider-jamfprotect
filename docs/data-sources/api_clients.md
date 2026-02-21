@@ -39,4 +39,4 @@ Read-Only:
 - `id` (String) The unique identifier of the API client.
 - `name` (String) The name of the API client.
 - `password` (String, Sensitive) The API client secret (masked when listed).
-- `role_ids` (Set of String) Role IDs assigned to the API client.
+- `role_ids` (List of String) Role IDs assigned to the API client.

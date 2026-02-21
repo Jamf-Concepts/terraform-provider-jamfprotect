@@ -44,7 +44,7 @@ Read-Only:
 - `log_access_and_authentication` (Boolean) Collect access and authentication events.
 - `log_apple_security` (Boolean) Collect Apple security events.
 - `log_applications_and_processes` (Boolean) Collect application and process events.
-- `log_file_path` (Set of String) Log file paths to collect.
+- `log_file_path` (List of String) Log file paths to collect.
 - `log_hardware_and_software` (Boolean) Collect hardware and software events.
 - `log_persistence` (Boolean) Collect persistence-related events.
 - `log_system` (Boolean) Collect system events.
