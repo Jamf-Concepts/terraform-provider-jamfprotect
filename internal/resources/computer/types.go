@@ -23,7 +23,7 @@ type ComputerModel struct {
 	Version                 types.String `tfsdk:"version"`
 	Checkin                 types.String `tfsdk:"checkin"`
 	ConfigHash              types.String `tfsdk:"config_hash"`
-	Tags                    types.Set    `tfsdk:"tags"`
+	Tags                    types.List   `tfsdk:"tags"`
 	SignaturesVersion       types.Int64  `tfsdk:"signatures_version"`
 	Plan                    types.Object `tfsdk:"plan"`
 	InsightsStatsFail       types.Int64  `tfsdk:"insights_stats_fail"`

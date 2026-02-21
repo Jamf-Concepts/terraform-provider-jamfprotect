@@ -49,9 +49,13 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prevent_type", "Team ID"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test prevent list"),
-					resource.TestCheckResourceAttr(resourceName, "list_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "list_data.0", "ABC123DEF4"),
-					resource.TestCheckResourceAttr(resourceName, "entry_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.1", "DEF456GHI7"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.2", "GHI789JKL0"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.3", "JKL012MNO3"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.4", "MNO345PQR6"),
+					resource.TestCheckResourceAttr(resourceName, "entry_count", "5"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 				),
 			},
@@ -99,7 +103,7 @@ resource "jamfprotect_custom_prevent_list" "test" {
   name        = %[1]q
 	prevent_type = %[2]q
   description = %[3]q
-	list_data   = ["ABC123DEF4"]
+	list_data   = ["ABC123DEF4", "DEF456GHI7", "GHI789JKL0", "JKL012MNO3", "MNO345PQR6"]
 }
 `, name, listType, description)
 }

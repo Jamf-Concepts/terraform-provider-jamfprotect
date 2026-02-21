@@ -51,11 +51,24 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sensor_type", "File System Event"),
 					resource.TestCheckResourceAttr(resourceName, "severity", "Informational"),
 					resource.TestCheckResourceAttr(resourceName, "level", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "alpha"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "beta"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "gamma"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "delta"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "terraform-test"),
-					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "DefenseEvasion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "Execution"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "Persistence"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "PrivilegeEscalation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "categories.*", "Testing"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_files.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_files.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "snapshot_files.*", "/tmp/a.log"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "snapshot_files.*", "/tmp/b.log"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "snapshot_files.*", "/tmp/c.log"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "snapshot_files.*", "/tmp/d.log"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "snapshot_files.*", "/tmp/e.log"),
 					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "false"),
 					resource.TestCheckResourceAttr(resourceName, "context_item.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
@@ -95,9 +108,25 @@ func TestAccAnalyticResource_withSmartGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "true"),
 					resource.TestCheckResourceAttr(resourceName, "jamf_pro_smart_group_identifier", "smartgroup"),
-					resource.TestCheckResourceAttr(resourceName, "context_item.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "context_item.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
-						"name": "name",
+						"name": "context_alpha",
+						"type": "String",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
+						"name": "context_beta",
+						"type": "String",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
+						"name": "context_gamma",
+						"type": "String",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
+						"name": "context_delta",
+						"type": "String",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_item.*", map[string]string{
+						"name": "context_epsilon",
 						"type": "String",
 					}),
 				),
@@ -116,9 +145,9 @@ resource "jamfprotect_analytic" "test" {
   level       = 0
   severity    = "Informational"
 
-  tags           = ["terraform-test"]
-  categories     = ["Testing"]
-  snapshot_files = []
+  tags           = ["alpha", "beta", "gamma", "delta", "terraform-test"]
+  categories     = ["DefenseEvasion", "Execution", "Persistence", "PrivilegeEscalation", "Testing"]
+  snapshot_files = ["/tmp/a.log", "/tmp/b.log", "/tmp/c.log", "/tmp/d.log", "/tmp/e.log"]
 
 	add_to_jamf_pro_smart_group = false
 	context_item                 = []
@@ -136,18 +165,40 @@ resource "jamfprotect_analytic" "test" {
   level       = 0
   severity    = "Low"
 
-  tags           = ["terraform-test"]
-  categories     = ["Evasion"]
-  snapshot_files = ["/tmp/snapshot.log"]
+  tags           = ["alpha", "beta", "gamma", "delta", "terraform-test"]
+  categories     = ["DefenseEvasion", "Execution", "Persistence", "PrivilegeEscalation", "Testing"]
+  snapshot_files = ["/tmp/a.log", "/tmp/b.log", "/tmp/c.log", "/tmp/d.log", "/tmp/e.log"]
 
 	add_to_jamf_pro_smart_group   = true
 	jamf_pro_smart_group_identifier = "smartgroup"
 
-	context_item = [{
-    name  = "name"
-    type  = "String"
-		expressions = [""]
-  }]
+	context_item = [
+		{
+			name        = "context_alpha"
+			type        = "String"
+			expressions = [""]
+		},
+		{
+			name        = "context_beta"
+			type        = "String"
+			expressions = [""]
+		},
+		{
+			name        = "context_gamma"
+			type        = "String"
+			expressions = [""]
+		},
+		{
+			name        = "context_delta"
+			type        = "String"
+			expressions = [""]
+		},
+		{
+			name        = "context_epsilon"
+			type        = "String"
+			expressions = [""]
+		},
+	]
 }
 `, name)
 }

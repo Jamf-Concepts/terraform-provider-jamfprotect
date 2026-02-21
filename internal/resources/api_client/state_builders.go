@@ -63,7 +63,7 @@ func apiClientAPIToDataSourceItem(api jamfprotect.ApiClient) ApiClientDataSource
 	return ApiClientDataSourceItemModel{
 		ID:       types.StringValue(api.ClientID),
 		Name:     types.StringValue(api.Name),
-		RoleIDs:  common.StringsToSet(apiClientRoleIDs(api.AssignedRoles)),
+		RoleIDs:  common.SortedStringsToList(apiClientRoleIDs(api.AssignedRoles)),
 		Password: apiClientPasswordDataSourceValue(api.Password),
 		Created:  types.StringValue(api.Created),
 	}

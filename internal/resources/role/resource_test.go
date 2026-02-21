@@ -44,7 +44,7 @@ func TestAccRoleResource_basic(t *testing.T) {
 		CheckDestroy:             testAccRoleCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleResourceConfig(rName, []string{"Analytics"}, []string{"Analytics"}),
+				Config: testAccRoleResourceConfig(rName, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -58,7 +58,7 @@ func TestAccRoleResource_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleResourceConfig(rName+"-updated", []string{"Analytics", "Analytic Sets"}, []string{"Analytics"}),
+				Config: testAccRoleResourceConfig(rName+"-updated", []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry", "Exception Sets"}, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
 				),

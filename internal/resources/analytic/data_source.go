@@ -47,9 +47,9 @@ type AnalyticDataSourceItemModel struct {
 	Filter                      types.String `tfsdk:"filter"`
 	Level                       types.Int64  `tfsdk:"level"`
 	Severity                    types.String `tfsdk:"severity"`
-	Tags                        types.Set    `tfsdk:"tags"`
-	Categories                  types.Set    `tfsdk:"categories"`
-	SnapshotFiles               types.Set    `tfsdk:"snapshot_files"`
+	Tags                        types.List   `tfsdk:"tags"`
+	Categories                  types.List   `tfsdk:"categories"`
+	SnapshotFiles               types.List   `tfsdk:"snapshot_files"`
 	AddToJamfProSmartGroup      types.Bool   `tfsdk:"add_to_jamf_pro_smart_group"`
 	JamfProSmartGroupIdentifier types.String `tfsdk:"jamf_pro_smart_group_identifier"`
 	TenantActions               types.Set    `tfsdk:"tenant_actions"`
@@ -118,17 +118,17 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The severity level.",
 			Computed:            true,
 		},
-		"tags": schema.SetAttribute{
+		"tags": schema.ListAttribute{
 			MarkdownDescription: "Tags associated with the analytic.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"categories": schema.SetAttribute{
+		"categories": schema.ListAttribute{
 			MarkdownDescription: "Categories associated with the analytic.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"snapshot_files": schema.SetAttribute{
+		"snapshot_files": schema.ListAttribute{
 			MarkdownDescription: "Snapshot file paths to capture.",
 			Computed:            true,
 			ElementType:         types.StringType,
@@ -261,9 +261,9 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 		item.LongDescription = types.StringNull()
 	}
 
-	item.Tags = common.StringsToSet(api.Tags)
-	item.Categories = common.StringsToSet(api.Categories)
-	item.SnapshotFiles = common.StringsToSet(api.SnapshotFiles)
+	item.Tags = common.SortedStringsToList(api.Tags)
+	item.Categories = common.SortedStringsToList(api.Categories)
+	item.SnapshotFiles = common.SortedStringsToList(api.SnapshotFiles)
 
 	item.AddToJamfProSmartGroup = types.BoolValue(false)
 	item.JamfProSmartGroupIdentifier = types.StringNull()

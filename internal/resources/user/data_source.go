@@ -36,8 +36,8 @@ type UserDataSourceItemModel struct {
 	ID                     types.String `tfsdk:"id"`
 	Email                  types.String `tfsdk:"email"`
 	IdentityProviderID     types.String `tfsdk:"identity_provider_id"`
-	RoleIDs                types.Set    `tfsdk:"role_ids"`
-	GroupIDs               types.Set    `tfsdk:"group_ids"`
+	RoleIDs                types.List   `tfsdk:"role_ids"`
+	GroupIDs               types.List   `tfsdk:"group_ids"`
 	SendEmailNotifications types.Bool   `tfsdk:"send_email_notifications"`
 	EmailSeverity          types.String `tfsdk:"email_severity"`
 	Created                types.String `tfsdk:"created"`
@@ -77,12 +77,12 @@ func userDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The identity provider identifier for the user.",
 			Computed:            true,
 		},
-		"role_ids": schema.SetAttribute{
+		"role_ids": schema.ListAttribute{
 			MarkdownDescription: "Role IDs assigned to the user.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"group_ids": schema.SetAttribute{
+		"group_ids": schema.ListAttribute{
 			MarkdownDescription: "Group IDs assigned to the user.",
 			Computed:            true,
 			ElementType:         types.StringType,

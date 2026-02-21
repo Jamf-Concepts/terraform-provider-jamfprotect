@@ -77,18 +77,18 @@ resource "jamfprotect_action_configuration" "test" {
   description = %[2]q
 
 	alert_data_collection = {
-		binary_included_data_attributes                     = []
-		synthetic_click_event_included_data_attributes      = []
-		download_event_included_data_attributes             = []
-		file_included_data_attributes                       = []
-		file_system_event_included_data_attributes          = []
-		group_included_data_attributes                      = []
-		process_event_included_data_attributes              = []
-		process_included_data_attributes                    = []
-		screenshot_event_included_data_attributes           = []
-		user_included_data_attributes                       = []
-		gatekeeper_event_included_data_attributes           = []
-		keylog_register_event_included_data_attributes      = []
+		binary_included_data_attributes                     = ["Args", "File", "Sha1", "Sha256", "User"]
+		synthetic_click_event_included_data_attributes      = ["Args", "File", "Sha1", "Sha256", "User"]
+		download_event_included_data_attributes             = ["Args", "File", "Sha1", "Sha256", "User"]
+		file_included_data_attributes                       = ["Args", "File", "Sha1", "Sha256", "User"]
+		file_system_event_included_data_attributes          = ["Args", "File", "Sha1", "Sha256", "User"]
+		group_included_data_attributes                      = ["Args", "File", "Sha1", "Sha256", "User"]
+		process_event_included_data_attributes              = ["Args", "File", "Sha1", "Sha256", "User"]
+		process_included_data_attributes                    = ["Args", "File", "Sha1", "Sha256", "User"]
+		screenshot_event_included_data_attributes           = ["Args", "File", "Sha1", "Sha256", "User"]
+		user_included_data_attributes                       = ["Args", "File", "Sha1", "Sha256", "User"]
+		gatekeeper_event_included_data_attributes           = ["Args", "File", "Sha1", "Sha256", "User"]
+		keylog_register_event_included_data_attributes      = ["Args", "File", "Sha1", "Sha256", "User"]
 	}
 }
 `, name, description)

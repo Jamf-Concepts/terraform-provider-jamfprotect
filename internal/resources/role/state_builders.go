@@ -42,15 +42,15 @@ func roleAPIToDataSourceItem(api jamfprotect.Role) RoleDataSourceItemModel {
 	item := RoleDataSourceItemModel{
 		ID:              types.StringValue(api.ID),
 		Name:            types.StringValue(api.Name),
-		ReadPermissions: common.StringsToSet(readLabels),
+		ReadPermissions: common.SortedStringsToList(readLabels),
 		Created:         types.StringValue(api.Created),
 		Updated:         types.StringValue(api.Updated),
 	}
 
 	if len(writeLabels) == 0 {
-		item.WritePermissions = types.SetNull(types.StringType)
+		item.WritePermissions = types.ListNull(types.StringType)
 	} else {
-		item.WritePermissions = common.StringsToSet(writeLabels)
+		item.WritePermissions = common.SortedStringsToList(writeLabels)
 	}
 
 	return item

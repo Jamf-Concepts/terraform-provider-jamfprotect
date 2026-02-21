@@ -73,8 +73,8 @@ func userAPIToDataSourceItem(api jamfprotect.User) UserDataSourceItemModel {
 		EmailSeverity:          types.StringValue(api.EmailAlertMinSeverity),
 		Created:                types.StringValue(api.Created),
 		Updated:                types.StringValue(api.Updated),
-		RoleIDs:                common.StringsToSet(userRoleIDs(api.AssignedRoles)),
-		GroupIDs:               common.StringsToSet(userGroupIDs(api.AssignedGroups)),
+		RoleIDs:                common.SortedStringsToList(userRoleIDs(api.AssignedRoles)),
+		GroupIDs:               common.SortedStringsToList(userGroupIDs(api.AssignedGroups)),
 	}
 
 	if api.Connection != nil {

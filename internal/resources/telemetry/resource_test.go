@@ -88,7 +88,7 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					Diagnostics:         true,
 					Performance:         true,
 					FileHashes:          true,
-					LogFiles:            []string{"/var/log/system.log", "/var/log/install.log"},
+					LogFiles:            []string{"/var/log/system.log", "/var/log/install.log", "/var/log/apache2/access_log", "/var/log/apache2/error_log", "/var/log/wifi.log"},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -103,7 +103,7 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "collect_diagnostic_and_crash_reports", "true"),
 					resource.TestCheckResourceAttr(resourceName, "collect_performance_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "file_hashes", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_file_path.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_file_path.#", "5"),
 				),
 			},
 			// Update: disable most categories, verify they revert to false.

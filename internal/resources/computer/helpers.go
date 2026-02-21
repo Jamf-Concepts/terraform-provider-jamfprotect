@@ -1,6 +1,8 @@
 package computer
 
 import (
+	"slices"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -94,7 +96,7 @@ func computerDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The hash of the current configuration.",
 			Computed:            true,
 		},
-		"tags": schema.SetAttribute{
+		"tags": schema.ListAttribute{
 			MarkdownDescription: "Tags associated with the computer.",
 			Computed:            true,
 			ElementType:         types.StringType,
@@ -201,13 +203,16 @@ func buildComputerModel(computer jamfprotect.Computer) ComputerModel {
 
 	// Handle tags
 	if computer.Tags != nil && len(*computer.Tags) > 0 {
-		tagElements := make([]attr.Value, len(*computer.Tags))
-		for i, tag := range *computer.Tags {
+		sorted := make([]string, len(*computer.Tags))
+		copy(sorted, *computer.Tags)
+		slices.Sort(sorted)
+		tagElements := make([]attr.Value, len(sorted))
+		for i, tag := range sorted {
 			tagElements[i] = types.StringValue(tag)
 		}
-		model.Tags = types.SetValueMust(types.StringType, tagElements)
+		model.Tags = types.ListValueMust(types.StringType, tagElements)
 	} else {
-		model.Tags = types.SetNull(types.StringType)
+		model.Tags = types.ListNull(types.StringType)
 	}
 
 	// Handle plan

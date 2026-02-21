@@ -35,7 +35,7 @@ type GroupsDataSourceModel struct {
 type GroupDataSourceItemModel struct {
 	ID      types.String `tfsdk:"id"`
 	Name    types.String `tfsdk:"name"`
-	RoleIDs types.Set    `tfsdk:"role_ids"`
+	RoleIDs types.List   `tfsdk:"role_ids"`
 	Created types.String `tfsdk:"created"`
 	Updated types.String `tfsdk:"updated"`
 }
@@ -69,7 +69,7 @@ func groupDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The name of the group.",
 			Computed:            true,
 		},
-		"role_ids": schema.SetAttribute{
+		"role_ids": schema.ListAttribute{
 			MarkdownDescription: "Role IDs assigned to the group.",
 			Computed:            true,
 			ElementType:         types.StringType,
