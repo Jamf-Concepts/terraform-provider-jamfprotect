@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -53,6 +54,14 @@ func StringsToList(vals []string) types.List {
 		elems[i] = types.StringValue(v)
 	}
 	return types.ListValueMust(types.StringType, elems)
+}
+
+// SortedStringsToList copies the given slice, sorts it, and returns a types.List.
+func SortedStringsToList(vals []string) types.List {
+	sorted := make([]string, len(vals))
+	copy(sorted, vals)
+	slices.Sort(sorted)
+	return StringsToList(sorted)
 }
 
 // StringsToSet converts a Go []string into a types.Set of strings.

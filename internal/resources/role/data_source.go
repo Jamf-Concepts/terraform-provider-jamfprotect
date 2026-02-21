@@ -35,8 +35,8 @@ type RolesDataSourceModel struct {
 type RoleDataSourceItemModel struct {
 	ID               types.String `tfsdk:"id"`
 	Name             types.String `tfsdk:"name"`
-	ReadPermissions  types.Set    `tfsdk:"read_permissions"`
-	WritePermissions types.Set    `tfsdk:"write_permissions"`
+	ReadPermissions  types.List   `tfsdk:"read_permissions"`
+	WritePermissions types.List   `tfsdk:"write_permissions"`
 	Created          types.String `tfsdk:"created"`
 	Updated          types.String `tfsdk:"updated"`
 }
@@ -71,12 +71,12 @@ func roleDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The name of the role.",
 			Computed:            true,
 		},
-		"read_permissions": schema.SetAttribute{
+		"read_permissions": schema.ListAttribute{
 			MarkdownDescription: "Read permissions assigned to the role.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
-		"write_permissions": schema.SetAttribute{
+		"write_permissions": schema.ListAttribute{
 			MarkdownDescription: "Write permissions assigned to the role.",
 			Computed:            true,
 			ElementType:         types.StringType,

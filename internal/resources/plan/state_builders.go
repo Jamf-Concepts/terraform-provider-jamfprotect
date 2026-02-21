@@ -150,9 +150,9 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		for i, as := range filteredAnalyticSets {
 			uuids[i] = as.AnalyticSet.UUID
 		}
-		item.AnalyticSets = common.StringsToSet(uuids)
+		item.AnalyticSets = common.SortedStringsToList(uuids)
 	} else {
-		item.AnalyticSets = types.SetNull(types.StringType)
+		item.AnalyticSets = types.ListNull(types.StringType)
 	}
 
 	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {

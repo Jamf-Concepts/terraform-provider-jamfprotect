@@ -35,7 +35,7 @@ type ApiClientsDataSourceModel struct {
 type ApiClientDataSourceItemModel struct {
 	ID       types.String `tfsdk:"id"`
 	Name     types.String `tfsdk:"name"`
-	RoleIDs  types.Set    `tfsdk:"role_ids"`
+	RoleIDs  types.List   `tfsdk:"role_ids"`
 	Password types.String `tfsdk:"password"`
 	Created  types.String `tfsdk:"created"`
 }
@@ -70,7 +70,7 @@ func apiClientDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The name of the API client.",
 			Computed:            true,
 		},
-		"role_ids": schema.SetAttribute{
+		"role_ids": schema.ListAttribute{
 			MarkdownDescription: "Role IDs assigned to the API client.",
 			Computed:            true,
 			ElementType:         types.StringType,

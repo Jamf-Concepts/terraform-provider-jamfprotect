@@ -47,7 +47,7 @@ func groupAPIToDataSourceItem(api jamfprotect.Group) GroupDataSourceItemModel {
 		Name:    types.StringValue(api.Name),
 		Created: types.StringValue(api.Created),
 		Updated: types.StringValue(api.Updated),
-		RoleIDs: common.StringsToSet(groupRoleIDs(api.AssignedRoles)),
+		RoleIDs: common.SortedStringsToList(groupRoleIDs(api.AssignedRoles)),
 	}
 
 	return item

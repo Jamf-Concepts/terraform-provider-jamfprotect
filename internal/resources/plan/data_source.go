@@ -42,7 +42,7 @@ type PlanDataSourceItemModel struct {
 	ExceptionSets            types.List   `tfsdk:"exception_sets"`
 	Telemetry                types.String `tfsdk:"telemetry"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
-	AnalyticSets             types.Set    `tfsdk:"analytic_sets"`
+	AnalyticSets             types.List   `tfsdk:"analytic_sets"`
 	CommunicationsProtocol   types.String `tfsdk:"communications_protocol"`
 	ReportingInterval        types.Int64  `tfsdk:"reporting_interval"`
 	ReportArchitecture       types.Bool   `tfsdk:"report_architecture"`
@@ -122,7 +122,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The ID of the USB control set associated with this plan.",
 			Computed:            true,
 		},
-		"analytic_sets": schema.SetAttribute{
+		"analytic_sets": schema.ListAttribute{
 			MarkdownDescription: "Analytic set UUIDs included in this plan. The type is always `Report`.",
 			Computed:            true,
 			ElementType:         types.StringType,

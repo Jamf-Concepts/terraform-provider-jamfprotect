@@ -7,7 +7,7 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 ## Tooling
 
 - Use `mise` for all toolchain setup and task execution. Run `mise run <task>` to execute tasks (auto-activates tools — no need for `eval "$(mise activate)"`).
-- Go >= 1.25, Terraform >= 1.0.
+- Go >= 1.26, Terraform >= 1.0.
 
 ### Available mise tasks
 
@@ -125,7 +125,7 @@ Optional split-outs for complex resources:
 ## Schema Guidelines
 
 - Schemas should be inline and as flat as possible.
-- Favor sets instead of lists unless sorting is absolutely necessary.
+- Favor sets in resources for unordered data; use lists in data sources (Computed-only) for cheaper plan comparisons. Sort API responses in data source state builders.
 - Favor nested attributes (set/single) instead of blocks wherever possible.
 
 ## Environment Variables

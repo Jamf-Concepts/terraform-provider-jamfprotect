@@ -48,13 +48,21 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test exception set description"),
-					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
 						"type": "Process Event",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
-						"rules.0.rule_type": "Platform Binary",
-						"rules.0.value":     "com.example.app",
+						"type": "File System Event",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Download Event",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Screenshot Event",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Keylog Register Event",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated"),
@@ -149,6 +157,46 @@ resource "jamfprotect_exception_set" "test" {
 				{
 					rule_type = "Platform Binary"
 					value     = "com.example.app"
+				},
+				{
+					rule_type = "Process Path"
+					value     = "/usr/bin/test"
+				},
+			]
+		},
+		{
+			type = "File System Event"
+			rules = [
+				{
+					rule_type = "File Path"
+					value     = "/tmp/test.txt"
+				},
+			]
+		},
+		{
+			type = "Download Event"
+			rules = [
+				{
+					rule_type = "File Path"
+					value     = "/tmp/downloads/test.dmg"
+				},
+			]
+		},
+		{
+			type = "Screenshot Event"
+			rules = [
+				{
+					rule_type = "File Path"
+					value     = "/tmp/screenshots/test.png"
+				},
+			]
+		},
+		{
+			type = "Keylog Register Event"
+			rules = [
+				{
+					rule_type = "Platform Binary"
+					value     = "com.example.keylog"
 				},
 			]
 		},

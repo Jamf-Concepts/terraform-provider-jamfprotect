@@ -38,7 +38,7 @@ type TelemetryV2DataSourceItemModel struct {
 	ID                  types.String `tfsdk:"id"`
 	Name                types.String `tfsdk:"name"`
 	Description         types.String `tfsdk:"description"`
-	LogFilePath         types.Set    `tfsdk:"log_file_path"`
+	LogFilePath         types.List   `tfsdk:"log_file_path"`
 	DiagnosticReports   types.Bool   `tfsdk:"collect_diagnostic_and_crash_reports"`
 	PerformanceMetrics  types.Bool   `tfsdk:"collect_performance_metrics"`
 	FileHashes          types.Bool   `tfsdk:"file_hashes"`
@@ -80,7 +80,7 @@ func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.Sch
 							MarkdownDescription: "A description of the telemetry configuration.",
 							Computed:            true,
 						},
-						"log_file_path": schema.SetAttribute{
+						"log_file_path": schema.ListAttribute{
 							MarkdownDescription: "Log file paths to collect.",
 							Computed:            true,
 							ElementType:         types.StringType,
@@ -168,7 +168,7 @@ func (d *TelemetriesV2DataSource) Read(ctx context.Context, req datasource.ReadR
 			FileHashes:          types.BoolValue(api.FileHashing),
 			Created:             types.StringValue(api.Created),
 			Updated:             types.StringValue(api.Updated),
-			LogFilePath:         common.StringsToSet(api.LogFiles),
+			LogFilePath:         common.SortedStringsToList(api.LogFiles),
 			LogAppsProcesses:    types.BoolValue(flags.LogAppsProcesses),
 			LogAccessAuth:       types.BoolValue(flags.LogAccessAuth),
 			LogUsersGroups:      types.BoolValue(flags.LogUsersGroups),
