@@ -79,7 +79,7 @@ Read-Only:
 - `plan` (Attributes) The plan assigned to the computer. (see [below for nested schema](#nestedatt--computers--plan))
 - `serial` (String) The serial number of the computer.
 - `signatures_version` (Number) The version of threat prevention signatures.
-- `tags` (Set of String) Tags associated with the computer.
+- `tags` (List of String) Tags associated with the computer.
 - `updated` (String) The timestamp when the computer record was last updated.
 - `uuid` (String) The unique identifier of the computer.
 - `version` (String) The version of Jamf Protect installed on the computer.

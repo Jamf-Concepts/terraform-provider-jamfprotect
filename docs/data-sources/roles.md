@@ -38,6 +38,6 @@ Read-Only:
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the role.
 - `name` (String) The name of the role.
-- `read_permissions` (Set of String) Read permissions assigned to the role.
+- `read_permissions` (List of String) Read permissions assigned to the role.
 - `updated` (String) The last-updated timestamp.
-- `write_permissions` (Set of String) Write permissions assigned to the role.
+- `write_permissions` (List of String) Write permissions assigned to the role.

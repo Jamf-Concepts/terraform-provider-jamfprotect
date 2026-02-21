@@ -38,9 +38,9 @@ Read-Only:
 - `created` (String) The creation timestamp.
 - `email` (String) The email address for the user.
 - `email_severity` (String) Minimum severity for email notifications.
-- `group_ids` (Set of String) Group IDs assigned to the user.
+- `group_ids` (List of String) Group IDs assigned to the user.
 - `id` (String) The unique identifier of the user.
 - `identity_provider_id` (String) The identity provider identifier for the user.
-- `role_ids` (Set of String) Role IDs assigned to the user.
+- `role_ids` (List of String) Role IDs assigned to the user.
 - `send_email_notifications` (Boolean) Whether the user receives email notifications.
 - `updated` (String) The last-updated timestamp.

@@ -39,7 +39,7 @@ output "analytic_summary" {
 Read-Only:
 
 - `add_to_jamf_pro_smart_group` (Boolean) Whether the analytic adds devices to a Jamf Pro Smart Group.
-- `categories` (Set of String) Categories associated with the analytic.
+- `categories` (List of String) Categories associated with the analytic.
 - `context_item` (Attributes Set) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context_item))
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the analytic.
@@ -54,8 +54,8 @@ Read-Only:
 - `remediation` (String) Remediation guidance associated with the analytic (read-only).
 - `sensor_type` (String) The sensor type for the analytic.
 - `severity` (String) The severity level.
-- `snapshot_files` (Set of String) Snapshot file paths to capture.
-- `tags` (Set of String) Tags associated with the analytic.
+- `snapshot_files` (List of String) Snapshot file paths to capture.
+- `tags` (List of String) Tags associated with the analytic.
 - `tenant_actions` (Attributes Set) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--analytics--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
