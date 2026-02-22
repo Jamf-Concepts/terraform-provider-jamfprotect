@@ -29,33 +29,6 @@ var _ resource.ResourceWithImportState = &ActionConfigResource{}
 var _ resource.ResourceWithIdentity = &ActionConfigResource{}
 
 var (
-	extendedDataAttributeOptions = []string{
-		"File",
-		"Process",
-		"User",
-		"Group",
-		"Blocked Process",
-		"Blocked Binary",
-		"Source Process",
-		"Destination Process",
-		"Sha1",
-		"Sha256",
-		"Extended Attributes",
-		"Is App Bundle",
-		"Is Screenshot",
-		"Is Quarantined",
-		"Is Download",
-		"Is Directory",
-		"Downloaded From",
-		"Signing Information",
-		"Args",
-		"Is GUI App",
-		"App Path",
-		"Binary",
-		"Parent",
-		"Process Group Leader",
-		"Name",
-	}
 	endpointAlertSeverities = []string{"high", "medium", "low", "informational"}
 	endpointLogTypes        = []string{"telemetry", "unified_logs"}
 	httpMethodOptions       = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
@@ -103,99 +76,99 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"binary_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for binary events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for binary events. Valid options are: " + common.FormatOptions(eventTypeOptions["binary"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["binary"]...)),
 						},
 					},
 					"synthetic_click_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for synthetic click events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for synthetic click events. Valid options are: " + common.FormatOptions(eventTypeOptions["synthetic_click_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["synthetic_click_event"]...)),
 						},
 					},
 					"download_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for download events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for download events. Valid options are: " + common.FormatOptions(eventTypeOptions["download_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["download_event"]...)),
 						},
 					},
 					"file_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for file events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for file events. Valid options are: " + common.FormatOptions(eventTypeOptions["file"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["file"]...)),
 						},
 					},
 					"file_system_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for file system events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for file system events. Valid options are: " + common.FormatOptions(eventTypeOptions["file_system_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["file_system_event"]...)),
 						},
 					},
 					"group_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for group events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for group events. Valid options are: " + common.FormatOptions(eventTypeOptions["group"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["group"]...)),
 						},
 					},
 					"process_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for process events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for process events. Valid options are: " + common.FormatOptions(eventTypeOptions["process_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["process_event"]...)),
 						},
 					},
 					"process_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for process metadata. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for process metadata. Valid options are: " + common.FormatOptions(eventTypeOptions["process"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["process"]...)),
 						},
 					},
 					"screenshot_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for screenshot events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for screenshot events. Valid options are: " + common.FormatOptions(eventTypeOptions["screenshot_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["screenshot_event"]...)),
 						},
 					},
 					"user_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for user events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for user events. Valid options are: " + common.FormatOptions(eventTypeOptions["user"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["user"]...)),
 						},
 					},
 					"gatekeeper_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for gatekeeper events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for gatekeeper events. Valid options are: " + common.FormatOptions(eventTypeOptions["gatekeeper_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["gatekeeper_event"]...)),
 						},
 					},
 					"keylog_register_event_included_data_attributes": schema.SetAttribute{
-						MarkdownDescription: "Included data attributes for keylog register events. Valid options are: " + common.FormatOptions(extendedDataAttributeOptions) + ".",
+						MarkdownDescription: "Included data attributes for keylog register events. Valid options are: " + common.FormatOptions(eventTypeOptions["keylog_register_event"]) + ".",
 						Required:            true,
 						ElementType:         types.StringType,
 						Validators: []validator.Set{
-							setvalidator.ValueStringsAre(stringvalidator.OneOf(extendedDataAttributeOptions...)),
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(eventTypeOptions["keylog_register_event"]...)),
 						},
 					},
 				},

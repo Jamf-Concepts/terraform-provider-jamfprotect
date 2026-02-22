@@ -23,7 +23,7 @@ resource "jamfprotect_action_configuration" "http_integration" {
   # Alert data enrichment configuration
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle"]
-    download_event_included_data_attributes        = ["File", "Process"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Signing Information", "Downloaded From"]
     file_system_event_included_data_attributes     = ["File", "Process", "User"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process", "Blocked Binary"]
@@ -78,15 +78,15 @@ resource "jamfprotect_action_configuration" "kafka_telemetry" {
   # Full data collection for telemetry
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle", "Extended Attributes"]
-    download_event_included_data_attributes        = ["File", "Process", "User", "Downloaded From"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Extended Attributes", "Is Quarantined", "Is Download", "Downloaded From", "Signing Information"]
     file_system_event_included_data_attributes     = ["File", "Process", "User", "Group"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process", "Blocked Binary"]
     group_included_data_attributes                 = ["Name"]
     keylog_register_event_included_data_attributes = ["Source Process", "Destination Process"]
     process_included_data_attributes               = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
-    process_event_included_data_attributes         = ["Process", "User", "Group"]
-    screenshot_event_included_data_attributes      = ["File", "Process"]
+    process_event_included_data_attributes         = ["Process"]
+    screenshot_event_included_data_attributes      = ["File"]
     synthetic_click_event_included_data_attributes = ["Process", "User", "Group"]
     user_included_data_attributes                  = ["Name"]
   }
@@ -198,18 +198,18 @@ resource "jamfprotect_action_configuration" "syslog_integration" {
 
 Required:
 
-- `binary_included_data_attributes` (Set of String) Included data attributes for binary events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `download_event_included_data_attributes` (Set of String) Included data attributes for download events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `file_included_data_attributes` (Set of String) Included data attributes for file events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `file_system_event_included_data_attributes` (Set of String) Included data attributes for file system events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `group_included_data_attributes` (Set of String) Included data attributes for group events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `process_event_included_data_attributes` (Set of String) Included data attributes for process events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `process_included_data_attributes` (Set of String) Included data attributes for process metadata. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
-- `user_included_data_attributes` (Set of String) Included data attributes for user events. Valid options are: `File`, `Process`, `User`, `Group`, `Blocked Process`, `Blocked Binary`, `Source Process`, `Destination Process`, `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `Args`, `Is GUI App`, `App Path`, `Binary`, `Parent`, `Process Group Leader`, `Name`.
+- `binary_included_data_attributes` (Set of String) Included data attributes for binary events. Valid options are: `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `User`, `Group`.
+- `download_event_included_data_attributes` (Set of String) Included data attributes for download events. Valid options are: `File`.
+- `file_included_data_attributes` (Set of String) Included data attributes for file events. Valid options are: `Sha1`, `Sha256`, `Extended Attributes`, `Is App Bundle`, `Is Screenshot`, `Is Quarantined`, `Is Download`, `Is Directory`, `Downloaded From`, `Signing Information`, `User`, `Group`.
+- `file_system_event_included_data_attributes` (Set of String) Included data attributes for file system events. Valid options are: `File`, `Process`, `User`, `Group`.
+- `gatekeeper_event_included_data_attributes` (Set of String) Included data attributes for gatekeeper events. Valid options are: `Blocked Process`, `Blocked Binary`.
+- `group_included_data_attributes` (Set of String) Included data attributes for group events. Valid options are: `Name`.
+- `keylog_register_event_included_data_attributes` (Set of String) Included data attributes for keylog register events. Valid options are: `Source Process`, `Destination Process`.
+- `process_event_included_data_attributes` (Set of String) Included data attributes for process events. Valid options are: `Process`.
+- `process_included_data_attributes` (Set of String) Included data attributes for process metadata. Valid options are: `Args`, `Is GUI App`, `Signing Information`, `App Path`, `Binary`, `User`, `Group`, `Parent`, `Process Group Leader`.
+- `screenshot_event_included_data_attributes` (Set of String) Included data attributes for screenshot events. Valid options are: `File`.
+- `synthetic_click_event_included_data_attributes` (Set of String) Included data attributes for synthetic click events. Valid options are: `Process`, `User`, `Group`.
+- `user_included_data_attributes` (Set of String) Included data attributes for user events. Valid options are: `Name`.
 
 
 <a id="nestedatt--http_endpoints"></a>
