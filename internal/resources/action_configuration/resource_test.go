@@ -77,18 +77,18 @@ resource "jamfprotect_action_configuration" "test" {
   description = %[2]q
 
 	alert_data_collection = {
-		binary_included_data_attributes                     = ["Args", "File", "Sha1", "Sha256", "User"]
-		synthetic_click_event_included_data_attributes      = ["Args", "File", "Sha1", "Sha256", "User"]
-		download_event_included_data_attributes             = ["Args", "File", "Sha1", "Sha256", "User"]
-		file_included_data_attributes                       = ["Args", "File", "Sha1", "Sha256", "User"]
-		file_system_event_included_data_attributes          = ["Args", "File", "Sha1", "Sha256", "User"]
-		group_included_data_attributes                      = ["Args", "File", "Sha1", "Sha256", "User"]
-		process_event_included_data_attributes              = ["Args", "File", "Sha1", "Sha256", "User"]
-		process_included_data_attributes                    = ["Args", "File", "Sha1", "Sha256", "User"]
-		screenshot_event_included_data_attributes           = ["Args", "File", "Sha1", "Sha256", "User"]
-		user_included_data_attributes                       = ["Args", "File", "Sha1", "Sha256", "User"]
-		gatekeeper_event_included_data_attributes           = ["Args", "File", "Sha1", "Sha256", "User"]
-		keylog_register_event_included_data_attributes      = ["Args", "File", "Sha1", "Sha256", "User"]
+		binary_included_data_attributes                     = ["Sha1", "Sha256", "Signing Information"]
+		synthetic_click_event_included_data_attributes      = ["Process", "User", "Group"]
+		download_event_included_data_attributes             = ["File"]
+		file_included_data_attributes                       = ["Sha1", "Sha256", "User", "Group"]
+		file_system_event_included_data_attributes          = ["File", "Process", "User", "Group"]
+		group_included_data_attributes                      = ["Name"]
+		process_event_included_data_attributes              = ["Process"]
+		process_included_data_attributes                    = ["Args", "Binary", "User", "Group"]
+		screenshot_event_included_data_attributes           = ["File"]
+		user_included_data_attributes                       = ["Name"]
+		gatekeeper_event_included_data_attributes           = ["Blocked Process", "Blocked Binary"]
+		keylog_register_event_included_data_attributes      = ["Source Process", "Destination Process"]
 	}
 }
 `, name, description)

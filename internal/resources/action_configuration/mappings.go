@@ -103,6 +103,22 @@ var relatedToExtendedDataAttribute = map[string]string{
 	"binary":  "Binary",
 }
 
+// eventTypeOptions maps each event type's tfName to its valid optional data attribute labels.
+var eventTypeOptions = map[string][]string{
+	"file_system_event":     {"File", "Process", "User", "Group"},
+	"process_event":         {"Process"},
+	"screenshot_event":      {"File"},
+	"synthetic_click_event": {"Process", "User", "Group"},
+	"download_event":        {"File"},
+	"gatekeeper_event":      {"Blocked Process", "Blocked Binary"},
+	"keylog_register_event": {"Source Process", "Destination Process"},
+	"file":                  {"Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"},
+	"process":               {"Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"},
+	"user":                  {"Name"},
+	"group":                 {"Name"},
+	"binary":                {"Sha1", "Sha256", "Extended Attributes", "Is App Bundle", "Is Screenshot", "Is Quarantined", "Is Download", "Is Directory", "Downloaded From", "Signing Information", "User", "Group"},
+}
+
 // eventTypeAttrName returns the Terraform attribute name for a given event type.
 func eventTypeAttrName(tfName string) string {
 	return tfName + "_included_data_attributes"

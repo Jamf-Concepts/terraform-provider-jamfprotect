@@ -9,7 +9,7 @@ resource "jamfprotect_action_configuration" "http_integration" {
   # Alert data enrichment configuration
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle"]
-    download_event_included_data_attributes        = ["File", "Process"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Signing Information", "Downloaded From"]
     file_system_event_included_data_attributes     = ["File", "Process", "User"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process", "Blocked Binary"]
@@ -64,15 +64,15 @@ resource "jamfprotect_action_configuration" "kafka_telemetry" {
   # Full data collection for telemetry
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle", "Extended Attributes"]
-    download_event_included_data_attributes        = ["File", "Process", "User", "Downloaded From"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Extended Attributes", "Is Quarantined", "Is Download", "Downloaded From", "Signing Information"]
     file_system_event_included_data_attributes     = ["File", "Process", "User", "Group"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process", "Blocked Binary"]
     group_included_data_attributes                 = ["Name"]
     keylog_register_event_included_data_attributes = ["Source Process", "Destination Process"]
     process_included_data_attributes               = ["Args", "Is GUI App", "Signing Information", "App Path", "Binary", "User", "Group", "Parent", "Process Group Leader"]
-    process_event_included_data_attributes         = ["Process", "User", "Group"]
-    screenshot_event_included_data_attributes      = ["File", "Process"]
+    process_event_included_data_attributes         = ["Process"]
+    screenshot_event_included_data_attributes      = ["File"]
     synthetic_click_event_included_data_attributes = ["Process", "User", "Group"]
     user_included_data_attributes                  = ["Name"]
   }
