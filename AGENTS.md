@@ -137,7 +137,7 @@ Optional split-outs for complex resources:
 
 ## Testing
 
-- **Unit tests**: `mise run test` — runs schema validation, helper, and client tests (no real API needed).
+- **Unit tests**: `mise run test` — runs schema validation, metadata, plan modifier, state migration, flattener/expander, helper, and client tests (no real API needed).
 - **Acceptance tests**: `mise run testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
 - Test files follow the `*_test.go` convention next to the code they test.
 

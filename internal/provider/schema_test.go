@@ -13,6 +13,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/analytic_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/change_management"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/computer"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/custom_prevent_list"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_forwarding"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/data_retention"
@@ -1670,6 +1671,60 @@ func TestExceptionSetsDataSourceMetadata(t *testing.T) {
 
 	if resp.TypeName != "jamfprotect_exception_sets" {
 		t.Errorf("expected TypeName %q, got %q", "jamfprotect_exception_sets", resp.TypeName)
+	}
+}
+
+func TestComputerDataSourceSchema(t *testing.T) {
+	t.Parallel()
+	ds := computer.NewComputerDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+	uuidAttr, ok := resp.Schema.Attributes["uuid"]
+	if !ok {
+		t.Fatal("expected attribute 'uuid' in data source schema")
+	}
+	if !uuidAttr.IsRequired() {
+		t.Error("expected 'uuid' to be required")
+	}
+}
+
+func TestComputerDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+	ds := computer.NewComputerDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+	if resp.TypeName != "jamfprotect_computer" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_computer", resp.TypeName)
+	}
+}
+
+func TestComputersDataSourceSchema(t *testing.T) {
+	t.Parallel()
+	ds := computer.NewComputersDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+	computersAttr, ok := resp.Schema.Attributes["computers"]
+	if !ok {
+		t.Fatal("expected attribute 'computers' in data source schema")
+	}
+	if !computersAttr.IsComputed() {
+		t.Error("expected 'computers' to be computed")
+	}
+}
+
+func TestComputersDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+	ds := computer.NewComputersDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+	if resp.TypeName != "jamfprotect_computers" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_computers", resp.TypeName)
 	}
 }
 
