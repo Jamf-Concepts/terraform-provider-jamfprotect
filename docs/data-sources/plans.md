@@ -44,7 +44,7 @@ Read-Only:
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Values: `Block and report`, `Report only`, `Disable`.
-- `exception_sets` (List of String) A list of exception set IDs associated with this plan.
+- `exception_sets` (Set of String) A set of exception set IDs associated with this plan.
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
 - `log_level` (String) The log level for the plan. Values: `Error`, `Warning`, `Info`, `Debug`, `Verbose`.
