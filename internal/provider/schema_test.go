@@ -20,6 +20,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/downloads"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/identity_provider"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/role"
@@ -1674,6 +1675,38 @@ func TestExceptionSetsDataSourceMetadata(t *testing.T) {
 	}
 }
 
+func TestIdentityProvidersDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := identity_provider.NewIdentityProvidersDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	identityProvidersAttr, ok := resp.Schema.Attributes["identity_providers"]
+	if !ok {
+		t.Fatal("expected attribute 'identity_providers' in data source schema")
+	}
+	if !identityProvidersAttr.IsComputed() {
+		t.Error("expected 'identity_providers' to be computed")
+	}
+}
+
+func TestIdentityProvidersDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := identity_provider.NewIdentityProvidersDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_identity_providers" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_identity_providers", resp.TypeName)
+	}
+}
+
 func TestComputerDataSourceSchema(t *testing.T) {
 	t.Parallel()
 	ds := computer.NewComputerDataSource()
@@ -1738,7 +1771,7 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 17 {
-		t.Errorf("expected 17 data sources, got %d", len(dataSources))
+	if len(dataSources) != 18 {
+		t.Errorf("expected 18 data sources, got %d", len(dataSources))
 	}
 }
