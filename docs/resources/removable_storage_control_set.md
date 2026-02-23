@@ -111,7 +111,7 @@ resource "jamfprotect_removable_storage_control_set" "selective_usb_control" {
 
 ### Required
 
-- `default_permission` (String) The default permission for removable storage devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `default_permission` (String) The default permission for removable storage devices. Valid options are: `Prevent`, `Read and Write`, `Read Only`.
 - `name` (String) The name of the removable storage control set.
 
 ### Optional
@@ -135,7 +135,7 @@ resource "jamfprotect_removable_storage_control_set" "selective_usb_control" {
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `permission` (String) The permission for matching devices. Valid options are: `Prevent`, `Read and Write`, `Read Only`.
 
 Optional:
 
@@ -147,7 +147,7 @@ Optional:
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `permission` (String) The permission for matching devices. Valid options are: `Prevent`, `Read and Write`, `Read Only`.
 - `product_id` (Attributes List) Vendor and product IDs that this override applies to. IDs must match the format `0x0000`. (see [below for nested schema](#nestedatt--override_product_id--product_id))
 
 Optional:
@@ -170,7 +170,7 @@ Required:
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `permission` (String) The permission for matching devices. Valid options are: `Prevent`, `Read and Write`, `Read Only`.
 - `serial_numbers` (List of String) A list of serial numbers that this override applies to.
 
 Optional:
@@ -184,7 +184,7 @@ Optional:
 
 Required:
 
-- `permission` (String) The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.
+- `permission` (String) The permission for matching devices. Valid options are: `Prevent`, `Read and Write`, `Read Only`.
 - `vendor_ids` (List of String) A list of vendor IDs that this override applies to. IDs must match the format `0x0000`.
 
 Optional:

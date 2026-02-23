@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -44,6 +45,7 @@ func (r *RemovableStorageControlSetResource) Metadata(ctx context.Context, req r
 // Schema defines the removable storage control set schema.
 func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	permissionValidator := stringvalidator.OneOf(permissionUIOptions...)
+	permissionDesc := "The permission for matching devices. Valid options are: " + common.FormatOptions(permissionUIOptions) + "."
 	vendorIDPattern := regexp.MustCompile("^0x[0-9A-Fa-f]{4}$")
 	vendorIDValidator := stringvalidator.RegexMatches(vendorIDPattern, "must be in the form 0x0000")
 
@@ -66,7 +68,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Default:             stringdefault.StaticString(""),
 			},
 			"default_permission": schema.StringAttribute{
-				MarkdownDescription: "The default permission for removable storage devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
+				MarkdownDescription: "The default permission for removable storage devices. Valid options are: " + common.FormatOptions(permissionUIOptions) + ".",
 				Required:            true,
 				Validators:          []validator.String{permissionValidator},
 			},
@@ -96,7 +98,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
+							MarkdownDescription: permissionDesc,
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -114,7 +116,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
+							MarkdownDescription: permissionDesc,
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -145,7 +147,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
+							MarkdownDescription: permissionDesc,
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
@@ -186,7 +188,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"permission": schema.StringAttribute{
-							MarkdownDescription: "The permission for matching devices. Valid values: `Prevent`, `Read and Write`, `Read Only`.",
+							MarkdownDescription: permissionDesc,
 							Required:            true,
 							Validators:          []validator.String{permissionValidator},
 						},
