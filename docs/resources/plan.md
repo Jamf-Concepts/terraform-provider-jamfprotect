@@ -138,7 +138,7 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Defaults to `Block and report`.
-- `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
+- `exception_sets` (Set of String) A set of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.
