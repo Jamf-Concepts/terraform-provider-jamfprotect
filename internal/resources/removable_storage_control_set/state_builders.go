@@ -29,14 +29,8 @@ func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data 
 
 	for _, apiRule := range api.Rules {
 		ruleType := normalizeRemovableStorageRuleType(apiRule.Type)
-		localMessage := types.StringNull()
-		if apiRule.MessageAction != "" {
-			localMessage = types.StringValue(apiRule.MessageAction)
-		}
-		applyTo := types.StringNull()
-		if apiRule.ApplyTo != "" {
-			applyTo = types.StringValue(apiRule.ApplyTo)
-		}
+		localMessage := types.StringValue(apiRule.MessageAction)
+		applyTo := types.StringValue(apiRule.ApplyTo)
 
 		permission := types.StringValue(permissionFromAPI(apiRule.MountAction))
 
