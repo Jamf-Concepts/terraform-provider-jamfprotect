@@ -45,7 +45,7 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	if !data.ExceptionSets.IsNull() {
-		input.ExceptionSets = common.ListToStrings(ctx, data.ExceptionSets, diags)
+		input.ExceptionSets = common.SetToStrings(ctx, data.ExceptionSets, diags)
 	}
 
 	var analyticSets []jamfprotect.PlanAnalyticSetInput

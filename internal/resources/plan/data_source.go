@@ -39,7 +39,7 @@ type PlanDataSourceItemModel struct {
 	LogLevel                 types.String `tfsdk:"log_level"`
 	AutoUpdate               types.Bool   `tfsdk:"auto_update"`
 	ActionConfiguration      types.String `tfsdk:"action_configuration"`
-	ExceptionSets            types.List   `tfsdk:"exception_sets"`
+	ExceptionSets            types.Set    `tfsdk:"exception_sets"`
 	Telemetry                types.String `tfsdk:"telemetry"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.List   `tfsdk:"analytic_sets"`
@@ -109,8 +109,8 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The ID of the action configuration associated with this plan.",
 			Computed:            true,
 		},
-		"exception_sets": schema.ListAttribute{
-			MarkdownDescription: "A list of exception set IDs associated with this plan.",
+		"exception_sets": schema.SetAttribute{
+			MarkdownDescription: "A set of exception set IDs associated with this plan.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},
