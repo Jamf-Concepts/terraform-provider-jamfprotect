@@ -131,15 +131,15 @@ resource "jamfprotect_plan" "monitoring_only" {
 
 ### Optional
 
-- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `Block and report` -> `Prevent`, `Report only` -> `Report`, `Disable` -> omit.
-- `analytic_sets` (Set of String) Analytic set UUIDs to include in this plan. The type is always `Report`.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`.
+- `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
-- `communications_protocol` (String) The communications protocol to use. Defaults to `MQTT:443`.
+- `communications_protocol` (String) The communications protocol to use. Valid options are: `MQTT:443`, `WebSocket/MQTT:443`. Defaults to `MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
 - `description` (String) A description of the plan.
-- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Defaults to `Block and report`. Values map to signatures feed modes: `Block and report` -> `blocking`, `Report only` -> `reportOnly`, `Disable` -> `disabled`.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Defaults to `Block and report`.
 - `exception_sets` (List of String) A list of exception set IDs to associate with this plan.
-- `log_level` (String) The log level for the plan. Defaults to `Error`.
+- `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.
 - `report_hostname` (Boolean) Report the device hostname.
@@ -148,7 +148,7 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `report_model_name` (Boolean) Report the device model name.
 - `report_os_version` (Boolean) Report the OS version details.
 - `report_serial_number` (Boolean) Report the device serial number.
-- `tamper_prevention` (String) Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `Block and report` -> `Prevent`, `Disable` -> omit.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`.
 - `telemetry` (String) The ID of the telemetry configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 

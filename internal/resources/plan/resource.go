@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -64,7 +65,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 			},
 			"log_level": schema.StringAttribute{
-				MarkdownDescription: "The log level for the plan. Defaults to `Error`.",
+				MarkdownDescription: "The log level for the plan. Valid options are: " + common.FormatOptions(logLevelUIOptions) + ". Defaults to `Error`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("Error"),
@@ -96,12 +97,12 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 			"analytic_sets": schema.SetAttribute{
-				MarkdownDescription: "Analytic set UUIDs to include in this plan. The type is always `Report`.",
+				MarkdownDescription: "A set of analytic set IDs to include in this plan.",
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
 			"communications_protocol": schema.StringAttribute{
-				MarkdownDescription: "The communications protocol to use. Defaults to `MQTT:443`.",
+				MarkdownDescription: "The communications protocol to use. Valid options are: " + common.FormatOptions(communicationsProtocolUIOptions) + ". Defaults to `MQTT:443`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("MQTT:443"),
@@ -162,7 +163,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
-				MarkdownDescription: "Endpoint threat prevention setting for the plan. Defaults to `Block and report`. Values map to signatures feed modes: `Block and report` -> `blocking`, `Report only` -> `reportOnly`, `Disable` -> `disabled`.",
+				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Defaults to `Block and report`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("Block and report"),
@@ -171,7 +172,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"advanced_threat_controls": schema.StringAttribute{
-				MarkdownDescription: "Advanced Threat Controls setting for the plan. Values map to the managed analytic set named `Advanced Threat Controls`: `Block and report` -> `Prevent`, `Report only` -> `Report`, `Disable` -> omit.",
+				MarkdownDescription: "Advanced Threat Controls setting for the plan. Valid options are: " + common.FormatOptions(advancedThreatControlsUIOptions) + ".",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -180,7 +181,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"tamper_prevention": schema.StringAttribute{
-				MarkdownDescription: "Tamper Prevention setting for the plan. Values map to the managed analytic set named `Tamper Prevention`: `Block and report` -> `Prevent`, `Disable` -> omit.",
+				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ".",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
