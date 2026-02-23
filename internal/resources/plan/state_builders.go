@@ -42,9 +42,9 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		for i, es := range filteredExceptionSets {
 			uuids[i] = es.UUID
 		}
-		data.ExceptionSets = common.StringsToList(uuids)
+		data.ExceptionSets = common.StringsToSet(uuids)
 	} else if !data.ExceptionSets.IsNull() {
-		data.ExceptionSets = common.StringsToList([]string{})
+		data.ExceptionSets = common.StringsToSet([]string{})
 	}
 
 	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
@@ -127,9 +127,9 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		for i, es := range filteredExceptionSets {
 			uuids[i] = es.UUID
 		}
-		item.ExceptionSets = common.StringsToList(uuids)
+		item.ExceptionSets = common.StringsToSet(uuids)
 	} else {
-		item.ExceptionSets = types.ListNull(types.StringType)
+		item.ExceptionSets = types.SetNull(types.StringType)
 	}
 
 	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {

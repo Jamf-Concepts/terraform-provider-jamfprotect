@@ -83,8 +83,8 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "The ID of the action configuration to associate with this plan.",
 				Required:            true,
 			},
-			"exception_sets": schema.ListAttribute{
-				MarkdownDescription: "A list of exception set IDs to associate with this plan.",
+			"exception_sets": schema.SetAttribute{
+				MarkdownDescription: "A set of exception set IDs to associate with this plan.",
 				Optional:            true,
 				ElementType:         types.StringType,
 			},

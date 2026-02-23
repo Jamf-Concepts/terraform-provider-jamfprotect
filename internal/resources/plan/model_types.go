@@ -17,7 +17,7 @@ type PlanResourceModel struct {
 	LogLevel                 types.String   `tfsdk:"log_level"`
 	AutoUpdate               types.Bool     `tfsdk:"auto_update"`
 	ActionConfiguration      types.String   `tfsdk:"action_configuration"`
-	ExceptionSets            types.List     `tfsdk:"exception_sets"`
+	ExceptionSets            types.Set      `tfsdk:"exception_sets"`
 	Telemetry                types.String   `tfsdk:"telemetry"`
 	USBControlSet            types.String   `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set      `tfsdk:"analytic_sets"`

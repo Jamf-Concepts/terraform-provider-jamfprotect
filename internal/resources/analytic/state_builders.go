@@ -33,11 +33,7 @@ func (r *AnalyticResource) applyState(_ context.Context, data *AnalyticResourceM
 		data.Label = types.StringNull()
 	}
 
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringNull()
-	}
+	data.Description = types.StringValue(api.Description)
 
 	if api.LongDescription != "" {
 		data.LongDescription = types.StringValue(api.LongDescription)
