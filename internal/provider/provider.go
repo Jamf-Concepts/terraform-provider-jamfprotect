@@ -25,6 +25,7 @@ import (
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/downloads"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/exception_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/group"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/identity_provider"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/plan"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/resources/role"
@@ -172,6 +173,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		user.NewUsersDataSource,
 		custom_prevent_list.NewCustomPreventListsDataSource,
 		downloads.NewDownloadsDataSource,
+		identity_provider.NewIdentityProvidersDataSource,
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
 		removable_storage_control_set.NewRemovableStorageControlSetsDataSource,
