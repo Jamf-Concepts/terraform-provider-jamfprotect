@@ -7,38 +7,57 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 ## Supported Resources
 
-| Resource                                    | Description                                                  |
-| ------------------------------------------- | ------------------------------------------------------------ |
-| `jamfprotect_action_config`                 | Manage action configurations                                 |
-| `jamfprotect_analytic`                      | Manage analytics (threat detection rules)                    |
-| `jamfprotect_analytic_set`                  | Manage analytic sets (grouped analytics)                     |
-| `jamfprotect_exception_set`                 | Manage exception sets (analytic exceptions)                  |
-| `jamfprotect_plan`                          | Manage plans (endpoint configurations)                       |
-| `jamfprotect_custom_prevent_list`           | Manage custom prevent lists (allow/block lists)              |
-| `jamfprotect_telemetry`                     | Manage telemetry configurations                              |
-| `jamfprotect_unified_logging_filter`        | Manage unified logging filters                               |
-| `jamfprotect_removable_storage_control_set` | Manage removable storage control sets (device access policy) |
+| Resource | Description |
+| --- | --- |
+| `jamfprotect_action_configuration` | Manage action configurations (alert data enrichment and reporting endpoints) |
+| `jamfprotect_analytic` | Manage custom analytics (threat detection rules) |
+| `jamfprotect_analytic_set` | Manage analytic sets (grouped analytics assigned to plans) |
+| `jamfprotect_api_client` | Manage API clients |
+| `jamfprotect_change_management` | Manage change management (configuration freeze) |
+| `jamfprotect_custom_prevent_list` | Manage custom prevent lists (allow/block by Team ID, file hash, CDHash, or signing ID) |
+| `jamfprotect_data_forwarding` | Manage data forwarding settings |
+| `jamfprotect_data_retention` | Manage data retention settings |
+| `jamfprotect_exception_set` | Manage exception sets (analytic and threat prevention exceptions) |
+| `jamfprotect_group` | Manage groups |
+| `jamfprotect_plan` | Manage plans (endpoint security configurations) |
+| `jamfprotect_removable_storage_control_set` | Manage removable storage control sets (USB device access policies) |
+| `jamfprotect_role` | Manage roles |
+| `jamfprotect_telemetry` | Manage telemetry configurations (event collection and metrics) |
+| `jamfprotect_unified_logging_filter` | Manage unified logging filters (macOS unified log predicates) |
+| `jamfprotect_user` | Manage users |
 
 All resources support full CRUD operations and `terraform import`.
 
+> [!TIP]
+> `jamfprotect_change_management`, `jamfprotect_data_forwarding`, and `jamfprotect_data_retention` are singleton resources — they manage tenant-wide settings rather than individually identifiable objects.
+
 ## Supported Data Sources
 
-| Data Source                                  | Description                                       |
-| -------------------------------------------- | ------------------------------------------------- |
-| `jamfprotect_action_configs`                 | List all action configurations                    |
-| `jamfprotect_analytics`                      | List all analytics (threat detection rules)       |
-| `jamfprotect_analytic_sets`                  | List all analytic sets (grouped analytics)        |
-| `jamfprotect_exception_sets`                 | List all exception sets (analytic exceptions)     |
-| `jamfprotect_plans`                          | List all plans (endpoint configurations)          |
-| `jamfprotect_custom_prevent_lists`           | List all custom prevent lists (allow/block lists) |
-| `jamfprotect_telemetries`                    | List all telemetry configurations                 |
-| `jamfprotect_unified_logging_filters`        | List all unified logging filters                  |
-| `jamfprotect_removable_storage_control_sets` | List all removable storage control sets           |
+| Data Source | Description |
+| --- | --- |
+| `jamfprotect_action_configurations` | List all action configurations |
+| `jamfprotect_analytics` | List all analytics (built-in and custom) |
+| `jamfprotect_analytic_sets` | List all analytic sets |
+| `jamfprotect_api_clients` | List all API clients |
+| `jamfprotect_computer` | Look up a single enrolled computer by UUID |
+| `jamfprotect_computers` | List all enrolled computers |
+| `jamfprotect_custom_prevent_lists` | List all custom prevent lists |
+| `jamfprotect_downloads` | Retrieve Jamf Protect installer and profile download URLs |
+| `jamfprotect_exception_sets` | List all exception sets |
+| `jamfprotect_groups` | List all groups |
+| `jamfprotect_identity_providers` | List all identity providers |
+| `jamfprotect_plan_configuration_profile` | Generate a configuration profile (.mobileconfig) for a plan |
+| `jamfprotect_plans` | List all plans |
+| `jamfprotect_removable_storage_control_sets` | List all removable storage control sets |
+| `jamfprotect_roles` | List all roles |
+| `jamfprotect_telemetries` | List all telemetry configurations |
+| `jamfprotect_unified_logging_filters` | List all unified logging filters |
+| `jamfprotect_users` | List all users |
 
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.25 (to build the provider)
+- [Go](https://golang.org/doc/install) >= 1.26 (to build the provider)
 
 ## Authentication
 
@@ -71,27 +90,29 @@ provider "jamfprotect" {}
 ### Action Configuration
 
 ```hcl
-resource "jamfprotect_action_config" "default" {
+resource "jamfprotect_action_configuration" "default" {
   name        = "Default Action Config"
-  description = "Default alert data enrichment settings."
+  description = "Alert data enrichment with cloud delivery."
 
-  alert_config = {
-    data = {
-      binary                = { attrs = ["signingInfo", "isAppBundle"], related = ["process"] }
-      click_event           = { attrs = [], related = [] }
-      download_event        = { attrs = ["sourceUrl"], related = ["file", "process"] }
-      file                  = { attrs = ["sha256hex", "path"], related = [] }
-      fs_event              = { attrs = ["path"], related = ["process", "file"] }
-      group                 = { attrs = [], related = [] }
-      proc_event            = { attrs = ["ppid", "uid"], related = ["process"] }
-      process               = { attrs = ["name", "path", "pid"], related = ["binary", "user"] }
-      screenshot_event      = { attrs = [], related = [] }
-      usb_event             = { attrs = [], related = [] }
-      user                  = { attrs = ["name", "uid"], related = [] }
-      gk_event              = { attrs = [], related = [] }
-      keylog_register_event = { attrs = [], related = [] }
-      mrt_event             = { attrs = [], related = [] }
-    }
+  alert_data_collection = {
+    binary_included_data_attributes                = ["Sha256", "Signing Information"]
+    download_event_included_data_attributes        = ["File"]
+    file_included_data_attributes                  = ["Sha256", "Signing Information"]
+    file_system_event_included_data_attributes     = ["File", "Process"]
+    gatekeeper_event_included_data_attributes      = ["Blocked Process"]
+    group_included_data_attributes                 = ["Name"]
+    keylog_register_event_included_data_attributes = ["Source Process"]
+    process_included_data_attributes               = ["Args", "Signing Information", "Binary", "User", "Parent"]
+    process_event_included_data_attributes         = ["Process"]
+    screenshot_event_included_data_attributes      = ["File"]
+    synthetic_click_event_included_data_attributes = ["Process"]
+    user_included_data_attributes                  = ["Name"]
+  }
+
+  jamf_protect_cloud_endpoint = {
+    collect_alerts     = ["low", "medium", "high"]
+    collect_logs       = ["telemetry"]
+    destination_filter = null
   }
 }
 ```
@@ -99,28 +120,27 @@ resource "jamfprotect_action_config" "default" {
 ### Analytic
 
 ```hcl
-resource "jamfprotect_analytic" "suspicious_process" {
-  name        = "Detect Suspicious Process"
-  input_type  = "GPProcessEvent"
-  description = "Detect execution of suspicious binaries."
-  filter      = "( $event.type == 1 )"
-  level       = 5
-  severity    = "High"
+resource "jamfprotect_analytic" "suspicious_elevated_shell" {
+  name        = "Suspicious Elevated Shell"
+  description = "Detects shell processes created with elevated privileges."
 
-  tags           = ["security", "threat-hunting"]
-  categories     = ["Execution"]
+  sensor_type = "Process Event"
+  severity    = "High"
+  level       = 99
+  categories  = ["Privilege Escalation"]
+  tags        = ["MITREattack", "T1548"]
+
+  filter = "$event.type == 1 AND $event.process.path.lastPathComponent == \"sh\" AND $event.process.parent.uid == 0"
+
   snapshot_files = []
 
-  analytic_actions = [{
-    name       = "SmartGroup"
-    parameters = "{\"id\":\"smartgroup\"}"
-  }]
-
-  context = [{
-    name  = "process_path"
-    type  = "String"
-    exprs = ["$event.process.path"]
-  }]
+  context_item = [
+    {
+      name        = "ParentProcess"
+      type        = "String"
+      expressions = ["$event.process.parent.path"]
+    },
+  ]
 }
 ```
 
@@ -128,32 +148,48 @@ resource "jamfprotect_analytic" "suspicious_process" {
 
 ```hcl
 resource "jamfprotect_plan" "endpoint_security" {
-  name           = "Endpoint Security Plan"
-  description    = "Standard endpoint security plan with threat prevention."
-  action_configuration = jamfprotect_action_config.default.id
-  auto_update    = true
+  name        = "Endpoint Security Plan"
+  description = "Standard endpoint security plan with threat prevention."
 
-  communications_protocol = "mqtt"
+  action_configuration = jamfprotect_action_configuration.default.id
+  telemetry            = jamfprotect_telemetry.standard.id
 
-  reporting_interval    = 1440
+  analytic_sets = [
+    jamfprotect_analytic_set.core_detections.id,
+  ]
+
+  exception_sets = [
+    jamfprotect_exception_set.baseline.id,
+  ]
+
+  endpoint_threat_prevention = "Block and report"
+  advanced_threat_controls   = "Block and report"
+  tamper_prevention          = "Block and report"
+
+  reporting_interval            = 1440
+  compliance_baseline_reporting = true
+  auto_update                   = true
+  communications_protocol       = "MQTT:443"
+  log_level                     = "Error"
+
   report_architecture   = true
   report_hostname       = true
   report_serial_number  = true
-
-  endpoint_threat_prevention = "BlockAndReport"
-  advanced_threat_controls   = "ReportOnly"
-  tamper_prevention          = "BlockAndReport"
+  report_kernel_version = false
+  report_memory_size    = false
+  report_model_name     = true
+  report_os_version     = true
 }
 ```
 
-### Prevent List
+### Custom Prevent List
 
 ```hcl
 resource "jamfprotect_custom_prevent_list" "trusted_team_ids" {
-  name        = "Trusted Team IDs"
-  description = "Allow list for trusted developer teams"
+  name         = "Trusted Team IDs"
+  description  = "Allow list for trusted developer teams."
   prevent_type = "Team ID"
-  list_data   = ["ABC123DEF4"]
+  list_data    = ["ABC123DEF4"]
 }
 ```
 
@@ -162,10 +198,46 @@ resource "jamfprotect_custom_prevent_list" "trusted_team_ids" {
 ```hcl
 resource "jamfprotect_unified_logging_filter" "auth_events" {
   name        = "Auth Events"
-  description = "Captures authentication events"
+  description = "Captures authentication events."
   filter      = "subsystem == \"com.apple.securityd\""
   tags        = ["auth"]
   enabled     = true
+}
+```
+
+### Removable Storage Control Set
+
+```hcl
+resource "jamfprotect_removable_storage_control_set" "strict" {
+  name                               = "Strict USB Policy"
+  description                        = "Block all removable storage. YubiKeys are allowed."
+  default_permission                 = "Prevent"
+  default_local_notification_message = "Removable storage devices are not permitted."
+
+  override_vendor_id = [
+    {
+      vendor_ids = ["0x1050"]
+      permission = "Read and Write"
+      apply_to   = "All"
+    },
+  ]
+}
+```
+
+### Configuration Profile Export
+
+```hcl
+data "jamfprotect_plan_configuration_profile" "this" {
+  id = jamfprotect_plan.endpoint_security.id
+
+  sign_profile                           = false
+  include_pppc_payload                   = true
+  include_system_extension_payload       = true
+  include_login_background_items_payload = true
+  include_websocket_authorizer_key       = true
+  include_root_ca_certificate            = true
+  include_csr_certificate                = true
+  include_bootstrap_token                = true
 }
 ```
 
