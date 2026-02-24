@@ -3,6 +3,8 @@
 > [!NOTE]
 > This provider is in early development (v0.1.0). All resources have been tested via acceptance tests against a real Jamf Protect tenant. However, the API surface is subject to change as we gather feedback from the community.
 
+This provider was originally created by [James Smith (@smithjw)](https://github.com/smithjw), who kindly donated the source code to [Jamf Concepts](https://github.com/Jamf-Concepts). Thank you, James, for your foundational work on this project.
+
 The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://www.jamf.com/products/jamf-protect/) resources via the Jamf Protect GraphQL API. Built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 (Protocol v6).
 
 ## Supported Resources
@@ -248,7 +250,7 @@ data "jamfprotect_plan_configuration_profile" "this" {
 3. Build the provider:
 
 ```shell
-mise run build
+make build
 ```
 
 ## Developing the Provider
@@ -259,7 +261,7 @@ This provider uses [Go modules](https://github.com/golang/go/wiki/Modules). To a
 
 ```shell
 go get github.com/author/dependency
-mise run tidy
+go mod tidy
 ```
 
 ### Testing
@@ -267,13 +269,13 @@ mise run tidy
 **Unit tests** (no API credentials required):
 
 ```shell
-mise run test
+make test
 ```
 
-**Acceptance tests** (creates real resources -- requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
+**Acceptance tests** (creates real resources — requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
 
 ```shell
-mise run testacc
+make testacc
 ```
 
 ### Documentation
@@ -281,8 +283,10 @@ mise run testacc
 Generate or update documentation:
 
 ```shell
-mise run build:generate-docs
+make generate
 ```
+
+This runs `tfplugindocs` to regenerate the `docs/` directory from schema descriptions and the `templates/` and `examples/` directories.
 
 ## Publishing to Terraform Registry
 
@@ -291,7 +295,7 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 ### Prerequisites
 
 1. **Terraform Registry account**: Sign in at [registry.terraform.io](https://registry.terraform.io) with your GitHub account and authorize the `Jamf-Concepts` namespace.
-2. **GPG signing key**: Generate a GPG key pair and add the public key to the Terraform Registry under [User Settings > Signing Keys](https://registry.terraform.io/settings/gpg-keys). The private key and passphrase must be stored as GitHub Actions secrets (`GPG_PRIVATE_KEY`, `PASSPHRASE`).
+2. **GPG signing key**: Generate a GPG key pair and add the public key to the Terraform Registry under [User Settings > Signing Keys](https://registry.terraform.io/settings/gpg-keys). The private key and passphrase must be stored as GitHub Actions secrets (`TF_SIGNING_KEY`, `TF_SIGNING_KEY_PASSPHRASE`).
 3. **GitHub repository settings**: Ensure the repository is public and the release workflow has write access to contents.
 
 ### Release Process
@@ -299,13 +303,13 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 1. Ensure all tests pass:
 
    ```shell
-   mise run check
+   make test
    ```
 
 2. Regenerate documentation and verify no drift:
 
    ```shell
-   mise run build:generate-docs
+   make generate
    git diff --exit-code
    ```
 
@@ -318,7 +322,7 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 
 4. The [release workflow](.github/workflows/release.yml) automatically:
 
-   - Builds binaries for all supported platforms (linux, darwin, windows, freebsd × amd64, arm64, etc.)
+   - Builds binaries for all supported platforms (linux, darwin, windows, freebsd x amd64, arm64, etc.)
    - Generates SHA256 checksums and signs them with GPG
    - Creates a GitHub release with the binaries, checksums, and Terraform registry manifest
    - The Terraform Registry detects the new release and publishes it
