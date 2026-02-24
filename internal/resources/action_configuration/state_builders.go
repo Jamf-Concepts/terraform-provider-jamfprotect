@@ -60,11 +60,7 @@ func (r *ActionConfigResource) applyState(_ context.Context, data *ActionConfigR
 	data.Created = types.StringValue(api.Created)
 	data.Updated = types.StringValue(api.Updated)
 
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
+	data.Description = types.StringValue(api.Description)
 
 	if api.AlertConfig != nil && api.AlertConfig.Data != nil {
 		dataAttrs := map[string]attr.Value{}

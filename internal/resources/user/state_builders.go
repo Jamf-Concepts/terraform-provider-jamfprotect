@@ -18,14 +18,14 @@ func (r *UserResource) apiToState(_ context.Context, data *UserResourceModel, ap
 	data.Created = types.StringValue(api.Created)
 	data.Updated = types.StringValue(api.Updated)
 
-	roleIDs := userRoleIDs(api.AssignedRoles)
+	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.UserRole) string { return r.ID })
 	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {
 		data.RoleIDs = types.SetNull(types.StringType)
 	} else {
 		data.RoleIDs = common.StringsToSet(roleIDs)
 	}
 
-	groupIDs := userGroupIDs(api.AssignedGroups)
+	groupIDs := common.MapSlice(api.AssignedGroups, func(g jamfprotect.UserGroup) string { return g.ID })
 	if len(groupIDs) == 0 && (data.GroupIDs.IsNull() || data.GroupIDs.IsUnknown()) {
 		data.GroupIDs = types.SetNull(types.StringType)
 	} else {
@@ -39,28 +39,6 @@ func (r *UserResource) apiToState(_ context.Context, data *UserResourceModel, ap
 	}
 }
 
-func userRoleIDs(roles []jamfprotect.UserRole) []string {
-	if len(roles) == 0 {
-		return nil
-	}
-	ids := make([]string, 0, len(roles))
-	for _, role := range roles {
-		ids = append(ids, role.ID)
-	}
-	return ids
-}
-
-func userGroupIDs(groups []jamfprotect.UserGroup) []string {
-	if len(groups) == 0 {
-		return nil
-	}
-	ids := make([]string, 0, len(groups))
-	for _, group := range groups {
-		ids = append(ids, group.ID)
-	}
-	return ids
-}
-
 // userAPIToDataSourceItem maps API user data to a data source item.
 func userAPIToDataSourceItem(api jamfprotect.User) UserDataSourceItemModel {
 	item := UserDataSourceItemModel{
@@ -70,8 +48,8 @@ func userAPIToDataSourceItem(api jamfprotect.User) UserDataSourceItemModel {
 		EmailSeverity:          types.StringValue(api.EmailAlertMinSeverity),
 		Created:                types.StringValue(api.Created),
 		Updated:                types.StringValue(api.Updated),
-		RoleIDs:                common.SortedStringsToList(userRoleIDs(api.AssignedRoles)),
-		GroupIDs:               common.SortedStringsToList(userGroupIDs(api.AssignedGroups)),
+		RoleIDs:                common.SortedStringsToList(common.MapSlice(api.AssignedRoles, func(r jamfprotect.UserRole) string { return r.ID })),
+		GroupIDs:               common.SortedStringsToList(common.MapSlice(api.AssignedGroups, func(g jamfprotect.UserGroup) string { return g.ID })),
 	}
 
 	if api.Connection != nil {

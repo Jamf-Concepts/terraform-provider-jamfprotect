@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -49,7 +50,7 @@ func TestApiClientRoleIDs_ExtractsIDs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := apiClientRoleIDs(tt.roles)
+			got := common.MapSlice(tt.roles, func(r jamfprotect.ApiClientRole) string { return r.ID })
 
 			if len(got) != len(tt.expected) {
 				t.Fatalf("expected %d IDs, got %d", len(tt.expected), len(got))

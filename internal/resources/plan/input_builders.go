@@ -25,20 +25,17 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	if !data.LogLevel.IsNull() {
-		logLevel := logLevelToAPI(data.LogLevel.ValueString())
-		input.LogLevel = &logLevel
+		input.LogLevel = new(logLevelToAPI(data.LogLevel.ValueString()))
 	}
 
 	if data.Telemetry.IsNull() {
 		input.TelemetryV2Null = true
 	} else if !data.Telemetry.IsUnknown() {
-		telemetry := data.Telemetry.ValueString()
-		input.TelemetryV2 = &telemetry
+		input.TelemetryV2 = new(data.Telemetry.ValueString())
 	}
 
 	if !data.USBControlSet.IsNull() {
-		usbControlSet := data.USBControlSet.ValueString()
-		input.USBControlSet = &usbControlSet
+		input.USBControlSet = new(data.USBControlSet.ValueString())
 	}
 
 	if !data.ExceptionSets.IsNull() {

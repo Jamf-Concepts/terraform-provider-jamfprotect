@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"errors"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -55,8 +54,7 @@ func StringsToList(vals []string) types.List {
 
 // SortedStringsToList copies the given slice, sorts it, and returns a types.List.
 func SortedStringsToList(vals []string) types.List {
-	sorted := make([]string, len(vals))
-	copy(sorted, vals)
+	sorted := slices.Clone(vals)
 	slices.Sort(sorted)
 	return StringsToList(sorted)
 }
@@ -114,9 +112,9 @@ func HasStringValue(value types.String) bool {
 
 // FormatOptions formats a list of options as a human-readable string for use in schema descriptions.
 func FormatOptions(values []string) string {
-	quoted := make([]string, 0, len(values))
-	for _, value := range values {
-		quoted = append(quoted, fmt.Sprintf("`%s`", value))
+	quoted := make([]string, len(values))
+	for i, value := range values {
+		quoted[i] = "`" + value + "`"
 	}
 	return strings.Join(quoted, ", ")
 }
@@ -146,4 +144,16 @@ func ResolveTimeouts(t timeouts.Value) timeouts.Value {
 // IsKnownString reports whether a value is set and known.
 func IsKnownString(value types.String) bool {
 	return !value.IsNull() && !value.IsUnknown()
+}
+
+// MapSlice applies fn to each element of items and returns the results.
+func MapSlice[T any, R any](items []T, fn func(T) R) []R {
+	if len(items) == 0 {
+		return nil
+	}
+	result := make([]R, len(items))
+	for i, item := range items {
+		result[i] = fn(item)
+	}
+	return result
 }

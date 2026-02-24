@@ -19,11 +19,7 @@ func (r *AnalyticSetResource) applyState(_ context.Context, data *AnalyticSetRes
 	data.Updated = types.StringValue(api.Updated)
 	data.Managed = types.BoolValue(api.Managed)
 
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
+	data.Description = types.StringValue(api.Description)
 
 	analyticUUIDs := make([]string, 0, len(api.Analytics))
 	for _, a := range api.Analytics {

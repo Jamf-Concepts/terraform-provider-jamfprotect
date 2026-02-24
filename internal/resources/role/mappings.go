@@ -74,15 +74,6 @@ var rolePermissionDependencies = map[string][]string{
 	"DataForward":   {"Organization"},
 }
 
-// rolePermissionAPIValues lists all known API permission values.
-var rolePermissionAPIValues = func() map[string]struct{} {
-	values := make(map[string]struct{}, len(rolePermissionAPIToLabel))
-	for value := range rolePermissionAPIToLabel {
-		values[value] = struct{}{}
-	}
-	return values
-}()
-
 // rolePermissionWriteOptions lists all available write permission options for documentation.
 var rolePermissionWriteOptions = []string{
 	"All",
@@ -146,7 +137,7 @@ func rolePermissionAPIValue(value string) (string, bool) {
 	if value == "Exception" {
 		return value, true
 	}
-	if _, ok := rolePermissionAPIValues[value]; ok {
+	if _, ok := rolePermissionAPIToLabel[value]; ok {
 		return value, true
 	}
 	return "", false

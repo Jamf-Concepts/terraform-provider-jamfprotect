@@ -12,8 +12,7 @@ import (
 
 // sortRuleModels returns a stable, sorted copy of rule models.
 func sortRuleModels(rules []exceptionRuleModel) []exceptionRuleModel {
-	result := make([]exceptionRuleModel, len(rules))
-	copy(result, rules)
+	result := slices.Clone(rules)
 	slices.SortFunc(result, func(left, right exceptionRuleModel) int {
 		return cmp.Compare(ruleModelSortKey(left), ruleModelSortKey(right))
 	})
