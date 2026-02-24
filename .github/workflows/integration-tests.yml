@@ -58,12 +58,19 @@ jobs:
       - run: go mod download
       - run: go test -v -cover -count=1 ./...
 
-  acceptance:
-    name: Acceptance Tests (Terraform ${{ matrix.terraform }})
+  acceptance-gate:
+    name: Acceptance Gate
     needs: unit
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     environment: acceptance
+    steps:
+      - run: echo "Acceptance tests approved"
+
+  acceptance:
+    name: Acceptance Tests (Terraform ${{ matrix.terraform }})
+    needs: acceptance-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 1
