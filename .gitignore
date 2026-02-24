@@ -32,3 +32,4 @@ local_testing/
 .issues/
 .worktrees/
 tmp/
+.env
