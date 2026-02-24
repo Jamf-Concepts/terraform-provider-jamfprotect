@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -48,6 +50,7 @@ func (r *ApiClientResource) Schema(ctx context.Context, req resource.SchemaReque
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the API client.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"role_ids": schema.SetAttribute{
 				MarkdownDescription: "Role IDs assigned to the API client. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.",

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -58,6 +60,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the plan.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the plan.",
@@ -87,6 +90,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A set of exception set IDs to associate with this plan.",
 				Optional:            true,
 				ElementType:         types.StringType,
+				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
 			"telemetry": schema.StringAttribute{
 				MarkdownDescription: "The ID of the telemetry configuration.",
@@ -100,6 +104,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A set of analytic set IDs to include in this plan.",
 				Optional:            true,
 				ElementType:         types.StringType,
+				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
 			"communications_protocol": schema.StringAttribute{
 				MarkdownDescription: "The communications protocol to use. Valid options are: " + common.FormatOptions(communicationsProtocolUIOptions) + ". Defaults to `MQTT:443`.",

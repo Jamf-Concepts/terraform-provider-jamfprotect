@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -60,6 +61,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the removable storage control set.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the removable storage control set.",

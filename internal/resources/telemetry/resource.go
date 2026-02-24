@@ -14,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -51,6 +53,7 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the telemetry v2 configuration.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the telemetry v2 configuration.",

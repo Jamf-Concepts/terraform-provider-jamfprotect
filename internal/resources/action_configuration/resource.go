@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -64,6 +65,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the action configuration.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the action configuration.",

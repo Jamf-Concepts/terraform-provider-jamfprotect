@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -51,6 +52,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the analytic.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"sensor_type": schema.StringAttribute{
 				MarkdownDescription: "The sensor type for the analytic. Valid options are: " + common.FormatOptions(sensorTypeOptions) + ".",
