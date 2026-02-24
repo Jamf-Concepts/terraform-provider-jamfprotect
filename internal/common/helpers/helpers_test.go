@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
 )
 
 func TestListToStrings(t *testing.T) {

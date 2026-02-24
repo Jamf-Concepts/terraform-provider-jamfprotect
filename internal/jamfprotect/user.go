@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
 )
 
 // userFields defines the GraphQL fragment for user fields.

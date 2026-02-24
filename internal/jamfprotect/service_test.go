@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
 )
 
 type graphQLRequest struct {

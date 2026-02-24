@@ -3,14 +3,14 @@ package unified_logging_filter
 import (
 	"context"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ datasource.DataSource = &UnifiedLoggingFiltersDataSource{}

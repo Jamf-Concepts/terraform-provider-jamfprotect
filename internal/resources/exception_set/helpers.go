@@ -5,9 +5,9 @@ import (
 	"slices"
 	"strings"
 
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 // sortRuleModels returns a stable, sorted copy of rule models.

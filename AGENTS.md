@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/jamf-protect/), built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 with Protocol v6. The Go module path is `github.com/smithjw/terraform-provider-jamfprotect`.
+This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/jamf-protect/), built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 with Protocol v6. The Go module path is `github.com/Jamf-Concepts/terraform-provider-jamfprotect`.
 
 ## Tooling
 
@@ -47,7 +47,7 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 ## Project Structure
 
 ```
-main.go                          # Provider entry point (registry.terraform.io/smithjw/jamfprotect)
+main.go                          # Provider entry point (registry.terraform.io/Jamf-Concepts/jamfprotect)
 internal/
   client/                        # GraphQL transport client + auth + logging + sentinel errors
   common/

@@ -2,7 +2,7 @@
 set -e
 
 VERSION="${1:-0.1.0}"
-GITHUB_ORG="smithjw"
+GITHUB_ORG="Jamf-Concepts"
 PROVIDER_NAME="jamfprotect"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 

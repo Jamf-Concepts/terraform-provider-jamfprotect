@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // TestBuildComputerModel_AllFields tests buildComputerModel with all fields populated.

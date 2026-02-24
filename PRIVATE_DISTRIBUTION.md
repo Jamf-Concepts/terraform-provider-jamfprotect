@@ -53,7 +53,7 @@ GitHub Actions will automatically:
 - Build binaries for darwin, linux, windows (amd64, arm64)
 - Generate checksums
 - Sign with GPG
-- Create GitHub Release at: `https://github.com/smithjw/terraform-provider-jamfprotect/releases/tag/v0.1.0`
+- Create GitHub Release at: `https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases/tag/v0.1.0`
 
 **Important:** Even though the repository is private, authorized users can download releases.
 
@@ -83,7 +83,7 @@ terraform version
 
 ### 2. Download the Provider Binary
 
-Visit the [Releases page](https://github.com/smithjw/terraform-provider-jamfprotect/releases) and download the appropriate file for your platform:
+Visit the [Releases page](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases) and download the appropriate file for your platform:
 
 - **macOS Intel:** `terraform-provider-jamfprotect_0.1.0_darwin_amd64.zip`
 - **macOS Apple Silicon:** `terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip`
@@ -110,19 +110,19 @@ elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
 fi
 
 # Create plugin directory
-mkdir -p ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/${VERSION}/${OS}_${ARCH}
+mkdir -p ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/${VERSION}/${OS}_${ARCH}
 
 # Download and extract (replace with your actual GitHub download URL)
-curl -L "https://github.com/smithjw/terraform-provider-jamfprotect/releases/download/v${VERSION}/terraform-provider-jamfprotect_${VERSION}_${OS}_${ARCH}.zip" \
+curl -L "https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases/download/v${VERSION}/terraform-provider-jamfprotect_${VERSION}_${OS}_${ARCH}.zip" \
   -o /tmp/terraform-provider-jamfprotect.zip
 
-unzip /tmp/terraform-provider-jamfprotect.zip -d ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/${VERSION}/${OS}_${ARCH}/
+unzip /tmp/terraform-provider-jamfprotect.zip -d ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/${VERSION}/${OS}_${ARCH}/
 
 # Clean up
 rm /tmp/terraform-provider-jamfprotect.zip
 
 # Verify installation
-ls -la ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/${VERSION}/${OS}_${ARCH}/
+ls -la ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/${VERSION}/${OS}_${ARCH}/
 ```
 
 #### Windows (PowerShell)
@@ -132,12 +132,12 @@ $VERSION = "0.1.0"
 $ARCH = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
 
 # Create plugin directory
-$PluginDir = "$env:APPDATA\terraform.d\plugins\github.com\smithjw\jamfprotect\$VERSION\windows_$ARCH"
+$PluginDir = "$env:APPDATA\terraform.d\plugins\github.com\Jamf-Concepts\jamfprotect\$VERSION\windows_$ARCH"
 New-Item -ItemType Directory -Force -Path $PluginDir
 
 # Download and extract
 $ZipPath = "$env:TEMP\terraform-provider-jamfprotect.zip"
-Invoke-WebRequest -Uri "https://github.com/smithjw/terraform-provider-jamfprotect/releases/download/v$VERSION/terraform-provider-jamfprotect_${VERSION}_windows_${ARCH}.zip" -OutFile $ZipPath
+Invoke-WebRequest -Uri "https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases/download/v$VERSION/terraform-provider-jamfprotect_${VERSION}_windows_${ARCH}.zip" -OutFile $ZipPath
 
 Expand-Archive -Path $ZipPath -DestinationPath $PluginDir -Force
 
@@ -156,7 +156,7 @@ In your Terraform configuration, use the `github.com` source:
 terraform {
   required_providers {
     jamfprotect = {
-      source  = "github.com/smithjw/jamfprotect"
+      source  = "github.com/Jamf-Concepts/jamfprotect"
       version = "0.1.0"
     }
   }
@@ -169,7 +169,7 @@ provider "jamfprotect" {
 }
 ```
 
-**Note:** Use `github.com/smithjw/jamfprotect` (NOT `registry.terraform.io/...`) as the source.
+**Note:** Use `github.com/Jamf-Concepts/jamfprotect` (NOT `registry.terraform.io/...`) as the source.
 
 ### 5. Verify Installation
 
@@ -180,9 +180,9 @@ terraform init
 You should see:
 ```
 Initializing provider plugins...
-- Finding github.com/smithjw/jamfprotect versions matching "0.1.0"...
-- Installing github.com/smithjw/jamfprotect v0.1.0...
-- Installed github.com/smithjw/jamfprotect v0.1.0 (unauthenticated)
+- Finding github.com/Jamf-Concepts/jamfprotect versions matching "0.1.0"...
+- Installing github.com/Jamf-Concepts/jamfprotect v0.1.0...
+- Installed github.com/Jamf-Concepts/jamfprotect v0.1.0 (unauthenticated)
 ```
 
 ## Troubleshooting
@@ -192,12 +192,12 @@ Initializing provider plugins...
 **Problem:**
 ```
 Error: Failed to query available provider packages
-Could not retrieve the list of available versions for provider github.com/smithjw/jamfprotect
+Could not retrieve the list of available versions for provider github.com/Jamf-Concepts/jamfprotect
 ```
 
 **Solution:** Ensure the provider binary is in the correct directory:
-- macOS/Linux: `~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/{OS}_{ARCH}/`
-- Windows: `%APPDATA%\terraform.d\plugins\github.com\smithjw\jamfprotect\0.1.0\windows_{ARCH}\`
+- macOS/Linux: `~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/0.1.0/{OS}_{ARCH}/`
+- Windows: `%APPDATA%\terraform.d\plugins\github.com\Jamf-Concepts\jamfprotect\0.1.0\windows_{ARCH}\`
 
 ### "Checksum Mismatch" Error
 
@@ -206,7 +206,7 @@ Could not retrieve the list of available versions for provider github.com/smithj
 ### Provider Binary Not Executable (macOS/Linux)
 
 ```bash
-chmod +x ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/{OS}_{ARCH}/terraform-provider-jamfprotect_v0.1.0
+chmod +x ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/0.1.0/{OS}_{ARCH}/terraform-provider-jamfprotect_v0.1.0
 ```
 
 ## Upgrading
@@ -374,7 +374,7 @@ Create `scripts/install-provider.sh`:
 set -e
 
 VERSION="${1:-0.1.0}"
-GITHUB_ORG="smithjw"
+GITHUB_ORG="Jamf-Concepts"
 PROVIDER_NAME="jamfprotect"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 
@@ -447,7 +447,7 @@ ______________________________________________________________________
 - Make repository public
 - Add GPG key to Terraform Registry
 - Provider auto-appears in registry within 15 minutes
-- Users can switch from `github.com/smithjw/jamfprotect` to `registry.terraform.io/smithjw/jamfprotect`
+- Users can switch from `github.com/Jamf-Concepts/jamfprotect` to `registry.terraform.io/Jamf-Concepts/jamfprotect`
 
 ______________________________________________________________________
 

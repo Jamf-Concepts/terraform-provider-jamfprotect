@@ -1,6 +1,6 @@
 package data_retention
 
-import "github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+import "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 
 // buildDataRetentionInput builds the API input from the Terraform model.
 func buildDataRetentionInput(data DataRetentionResourceModel) jamfprotect.DataRetentionInput {

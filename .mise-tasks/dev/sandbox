@@ -8,7 +8,7 @@ mkdir -p sandbox
 cat >sandbox/.terraformrc <<EOF
 provider_installation {
   dev_overrides {
-    "smithjw/jamfprotect" = "$PWD"
+    "Jamf-Concepts/jamfprotect" = "$PWD"
   }
   direct {}
 }
@@ -26,7 +26,7 @@ if [ ! -f sandbox/provider.tf ]; then
 terraform {
   required_providers {
     jamfprotect = {
-      source = "smithjw/jamfprotect"
+      source = "Jamf-Concepts/jamfprotect"
     }
   }
 }

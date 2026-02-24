@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
 
 // TestAccDataRetentionResource_basic validates update and import behavior.

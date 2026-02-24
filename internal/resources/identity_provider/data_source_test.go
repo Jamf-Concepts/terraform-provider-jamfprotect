@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/testutil"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
 
 // TestAccIdentityProvidersDataSource_basic validates the data source lists identity provider connections.

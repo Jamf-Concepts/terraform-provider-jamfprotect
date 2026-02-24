@@ -3,7 +3,7 @@ package identity_provider
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // connectionAPIToDataSourceItem maps a Connection API response to a data source item model.

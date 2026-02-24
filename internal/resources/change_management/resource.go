@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &ChangeManagementResource{}

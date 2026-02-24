@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/provider"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/provider"
 )
 
 // TestAccProtoV6ProviderFactories instantiates a provider during acceptance testing.

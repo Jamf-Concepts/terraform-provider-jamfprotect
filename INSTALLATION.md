@@ -8,7 +8,7 @@ The easiest way to install the provider is using the provided script:
 
 ```bash
 # Download and run the installation script
-curl -fsSL https://raw.githubusercontent.com/smithjw/terraform-provider-jamfprotect/main/scripts/install-provider.sh | bash -s -- 0.1.0
+curl -fsSL https://raw.githubusercontent.com/Jamf-Concepts/terraform-provider-jamfprotect/main/scripts/install-provider.sh | bash -s -- 0.1.0
 
 # For private repository (requires GitHub personal access token)
 export GITHUB_TOKEN="your-github-pat-here"
@@ -33,7 +33,7 @@ uname -sm
 
 ### 2. Download the Provider
 
-Visit the [Releases page](https://github.com/smithjw/terraform-provider-jamfprotect/releases) and download the appropriate file:
+Visit the [Releases page](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases) and download the appropriate file:
 
 | Platform            | File                                                     |
 | ------------------- | -------------------------------------------------------- |
@@ -56,7 +56,7 @@ ARCH=$(uname -m)
 [[ "$ARCH" == "aarch64" ]] && ARCH="arm64"
 
 # Create plugin directory
-PLUGIN_DIR="${HOME}/.terraform.d/plugins/github.com/smithjw/jamfprotect/${VERSION}/${OS}_${ARCH}"
+PLUGIN_DIR="${HOME}/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/${VERSION}/${OS}_${ARCH}"
 mkdir -p "${PLUGIN_DIR}"
 
 # Extract downloaded zip
@@ -76,7 +76,7 @@ $VERSION = "0.1.0"
 $ARCH = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
 
 # Create plugin directory
-$PluginDir = "$env:APPDATA\terraform.d\plugins\github.com\smithjw\jamfprotect\$VERSION\windows_$ARCH"
+$PluginDir = "$env:APPDATA\terraform.d\plugins\github.com\Jamf-Concepts\jamfprotect\$VERSION\windows_$ARCH"
 New-Item -ItemType Directory -Force -Path $PluginDir
 
 # Extract (assuming zip is in Downloads)
@@ -100,7 +100,7 @@ terraform {
 
   required_providers {
     jamfprotect = {
-      source  = "github.com/smithjw/jamfprotect"
+      source  = "github.com/Jamf-Concepts/jamfprotect"
       version = "0.1.0"
     }
   }
@@ -143,9 +143,9 @@ Expected output:
 
 ```
 Initializing provider plugins...
-- Finding github.com/smithjw/jamfprotect versions matching "0.1.0"...
-- Installing github.com/smithjw/jamfprotect v0.1.0...
-- Installed github.com/smithjw/jamfprotect v0.1.0 (unauthenticated)
+- Finding github.com/Jamf-Concepts/jamfprotect versions matching "0.1.0"...
+- Installing github.com/Jamf-Concepts/jamfprotect v0.1.0...
+- Installed github.com/Jamf-Concepts/jamfprotect v0.1.0 (unauthenticated)
 
 Terraform has been successfully initialized!
 ```
@@ -166,7 +166,7 @@ ______________________________________________________________________
 
 ```
 Error: Failed to query available provider packages
-Could not retrieve the list of available versions for provider github.com/smithjw/jamfprotect
+Could not retrieve the list of available versions for provider github.com/Jamf-Concepts/jamfprotect
 ```
 
 **Solutions:**
@@ -175,16 +175,16 @@ Could not retrieve the list of available versions for provider github.com/smithj
 
    ```bash
    # macOS/Linux
-   ls ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/*/
+   ls ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/0.1.0/*/
 
    # Windows
-   dir %APPDATA%\terraform.d\plugins\github.com\smithjw\jamfprotect\0.1.0\
+   dir %APPDATA%\terraform.d\plugins\github.com\Jamf-Concepts\jamfprotect\0.1.0\
    ```
 
 2. Ensure the binary is executable (macOS/Linux):
 
    ```bash
-   chmod +x ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/*/terraform-provider-*
+   chmod +x ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/0.1.0/*/terraform-provider-*
    ```
 
 3. Check the binary name matches the expected format:
@@ -216,7 +216,7 @@ macOS Gatekeeper is blocking the binary. Allow it:
 
 ```bash
 # Option 1: Remove quarantine attribute
-xattr -d com.apple.quarantine ~/.terraform.d/plugins/github.com/smithjw/jamfprotect/0.1.0/*/terraform-provider-*
+xattr -d com.apple.quarantine ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect/0.1.0/*/terraform-provider-*
 
 # Option 2: Allow in System Preferences
 # System Preferences > Security & Privacy > General > "Allow Anyway"
@@ -228,7 +228,7 @@ xattr -d com.apple.quarantine ~/.terraform.d/plugins/github.com/smithjw/jamfprot
 
 ```
 Error: Incompatible provider version
-Provider "github.com/smithjw/jamfprotect" v0.1.0 does not have a package available for your current platform, darwin_arm64
+Provider "github.com/Jamf-Concepts/jamfprotect" v0.1.0 does not have a package available for your current platform, darwin_arm64
 ```
 
 **Solution:**
@@ -286,7 +286,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -fsSL https://raw.githubusercontent.com/smithjw/terraform-provider-jamfprotect/main/scripts/install-provider.sh | bash -s -- 0.1.0
+          curl -fsSL https://raw.githubusercontent.com/Jamf-Concepts/terraform-provider-jamfprotect/main/scripts/install-provider.sh | bash -s -- 0.1.0
 
       - name: Terraform Init
         run: terraform init
@@ -323,7 +323,7 @@ Or download manually with authentication:
 
 ```bash
 curl -L -H "Authorization: token ghp_your_token_here" \
-    "https://github.com/smithjw/terraform-provider-jamfprotect/releases/download/v0.1.0/terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip" \
+    "https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases/download/v0.1.0/terraform-provider-jamfprotect_0.1.0_darwin_arm64.zip" \
     -o provider.zip
 ```
 
@@ -335,16 +335,16 @@ Remove the plugin directory:
 
 ```bash
 # macOS/Linux
-rm -rf ~/.terraform.d/plugins/github.com/smithjw/jamfprotect
+rm -rf ~/.terraform.d/plugins/github.com/Jamf-Concepts/jamfprotect
 
 # Windows
-Remove-Item -Recurse -Force "$env:APPDATA\terraform.d\plugins\github.com\smithjw\jamfprotect"
+Remove-Item -Recurse -Force "$env:APPDATA\terraform.d\plugins\github.com\Jamf-Concepts\jamfprotect"
 ```
 
 ______________________________________________________________________
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/smithjw/terraform-provider-jamfprotect/issues)
-- **Documentation:** [README](https://github.com/smithjw/terraform-provider-jamfprotect/blob/main/README.md)
-- **Examples:** [examples/](https://github.com/smithjw/terraform-provider-jamfprotect/tree/main/examples)
+- **Issues:** [GitHub Issues](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/issues)
+- **Documentation:** [README](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/blob/main/README.md)
+- **Examples:** [examples/](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/tree/main/examples)

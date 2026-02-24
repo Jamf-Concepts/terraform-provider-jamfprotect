@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // applyState maps the API response into the Terraform state model.

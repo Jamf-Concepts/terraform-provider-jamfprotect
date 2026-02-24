@@ -4,8 +4,8 @@ import (
 	"context"
 	"slices"
 
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 // ValidateConfig validates exception set configuration inputs.

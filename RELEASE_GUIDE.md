@@ -36,8 +36,8 @@ These steps only need to be done once before your first release:
 ### **1. Terraform Registry Account Setup**
 
 1. Go to [registry.terraform.io](https://registry.terraform.io)
-2. Sign in with your GitHub account (`smithjw`)
-3. Verify you have access to publish under the `smithjw` namespace
+2. Sign in with your GitHub account (`Jamf-Concepts`)
+3. Verify you have access to publish under the `Jamf-Concepts` namespace
 4. Go to [Settings > General](https://registry.terraform.io/settings) and ensure your account is active
 
 ### **2. GPG Signing Key Setup**
@@ -61,7 +61,7 @@ gpg --full-generate-key
 # - Key size: 4096
 # - Expiration: 0 (does not expire) or set expiration
 # - Real name: James Smith
-# - Email: james@smithjw.me (must match GitHub email)
+# - Email: james@Jamf-Concepts.me (must match GitHub email)
 ```
 
 **c. Get your GPG key ID:**
@@ -101,7 +101,7 @@ gpg --armor --export-secret-keys ABCD1234EFGH5678
 
 **b. Add secrets to GitHub:**
 
-1. Go to your repository: https://github.com/smithjw/terraform-provider-jamfprotect
+1. Go to your repository: <https://github.com/Jamf-Concepts/terraform-provider-jamfprotect>
 2. Click **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret** and add:
    - **Name:** `GPG_PRIVATE_KEY`
@@ -183,7 +183,7 @@ git push origin v0.1.0
 
 ### **Step 4: Monitor the Release Workflow**
 
-1. Go to your repository's Actions tab: https://github.com/smithjw/terraform-provider-jamfprotect/actions
+1. Go to your repository's Actions tab: <https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/actions>
 2. You should see a new workflow run named "Release" triggered by the `v0.1.0` tag
 3. Click on the workflow run to monitor progress
 
@@ -204,7 +204,7 @@ The workflow typically takes **3-5 minutes** to complete.
 
 Once the workflow completes:
 
-1. Go to https://github.com/smithjw/terraform-provider-jamfprotect/releases
+1. Go to <https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/releases>
 2. You should see a new release: **v0.1.0**
 3. Verify it contains:
    - ✅ Release notes (from CHANGELOG)
@@ -217,7 +217,7 @@ Once the workflow completes:
 
 The Terraform Registry automatically detects new releases from GitHub. This can take **5-15 minutes**.
 
-1. Go to https://registry.terraform.io/providers/smithjw/jamfprotect
+1. Go to <https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect>
 2. Wait for the provider to appear (first time) or the new version to be listed
 3. Verify the version **0.1.0** is available
 4. Click on the version to see the documentation
@@ -232,7 +232,7 @@ Once published, users (including you) can use the provider like this:
 terraform {
   required_providers {
     jamfprotect = {
-      source  = "smithjw/jamfprotect"
+      source  = "Jamf-Concepts/jamfprotect"
       version = "0.1.0"
     }
   }
