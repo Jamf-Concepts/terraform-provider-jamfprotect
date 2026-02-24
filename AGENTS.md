@@ -6,73 +6,71 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 
 ## Tooling
 
-- Use `mise` for all toolchain setup and task execution. Run `mise run <task>` to execute tasks (auto-activates tools — no need for `eval "$(mise activate)"`).
+- Use `make` for build, lint, test, and doc generation. See `GNUmakefile` for available targets.
 - Go >= 1.26, Terraform >= 1.0.
 
-### Available mise tasks
+### Available make targets
 
-| Task                  | Description                                                 |
-| --------------------- | ----------------------------------------------------------- |
-| `install`             | Install Go module dependencies                              |
-| `tidy`                | Tidy Go module dependencies                                 |
-| `build`               | Build the provider and generate documentation (composite)   |
-| `build:provider`      | Build the provider                                          |
-| `build:generate-docs` | Generate provider documentation with tfplugindocs           |
-| `dev:install`         | Build and install the provider locally (depends on `build`) |
-| `fmt`                 | Format Go source files                                      |
-| `lint`                | Run golangci-lint                                           |
-| `test`                | Run unit tests                                              |
-| `testacc`             | Run acceptance tests (requires environment variables)       |
-| `check`               | Run fmt, lint, and unit tests (composite)                   |
+| Target     | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| `build`    | Build the provider                                    |
+| `install`  | Build and install the provider locally                |
+| `fmt`      | Format Go source files                                |
+| `lint`     | Run golangci-lint                                     |
+| `generate` | Generate provider documentation with tfplugindocs     |
+| `test`     | Run unit tests                                        |
+| `testacc`  | Run acceptance tests (requires environment variables) |
 
-## Python Scripts
-
-- Do not call `python` directly.
-- Use `uv` with the script shebang format:
-  `#!/usr/bin/env -S uv run --script` and inline frontmatter.
-- Run scripts with `uv run path/to/script.py` or `uvx` for CLI tools.
+The default target runs: `fmt lint install generate`.
 
 ## Jamf Protect API
 
 - The Jamf Protect API exposes two GraphQL endpoints:
   - `/graphql` — limited scope, supports introspection.
   - `/app` — full API surface, introspection disabled. **The provider uses this endpoint for all operations.**
-- Token endpoint: `POST ${JAMFPROTECT_URL}/token` with `client_id` + `password` fields → returns `access_token` (no Bearer prefix). Tokens are cached for 25 minutes.
-- Helper scripts in `tools/scripts/`:
-  - `introspect_jamfprotect_schema.py` — introspects `/graphql` for type discovery.
-  - `describe_jamfprotect_graphql.py` — describes types from introspection output.
-  - `mutation.py` — run arbitrary mutations against `/app`.
-- Captured queries and mutations from browser DevTools live in `graphql_api/` (operations covering ActionConfigurations, Analytic, AnalyticSets, ExceptionSets, Plan, CustomPreventList, TelemetryV2, USBControlSet, UnifiedLoggingFilter).
+- Token endpoint: `POST ${JAMFPROTECT_URL}/token` with `client_id` + `password` fields -> returns `access_token` (no Bearer prefix). Tokens are cached for 25 minutes.
 
 ## Project Structure
 
-```
+```text
 main.go                          # Provider entry point (registry.terraform.io/Jamf-Concepts/jamfprotect)
 internal/
   client/                        # GraphQL transport client + auth + logging + sentinel errors
   common/
     constants/                   # Shared constants (timeouts, etc.)
     helpers/                     # Shared helper utilities
+    validators/                  # Shared schema validators (UUID, resource name)
   jamfprotect/                   # Service layer built on the transport client
   provider/                      # Provider wiring + schema validation tests
   resources/                     # Per-resource packages (resource + data source)
-    action_configuration/        # crud.go, data_source.go, input_builders.go, mappings.go, model_types.go, resource.go, schema_types.go, state_builders.go
-    analytic/                     # crud.go, data_source.go, input_builders.go, mappings.go, model_types.go, resource.go, schema_types.go, state_builders.go
-    analytic_set/                # crud.go, data_source.go, helpers.go, resource.go, types.go
-    custom_prevent_list/         # crud.go, data_source.go, helpers.go, resource.go, types.go
-    exception_set/               # crud.go, data_source.go, helpers.go, resource.go, types.go
-    plan/                         # crud.go, data_source.go, helpers.go, resource.go, types.go
-    removable_storage_control_set/ # crud.go, data_source.go, helpers.go, resource.go, types.go
-    telemetry/                   # crud.go, data_source.go, helpers.go, resource.go, types.go
-    unified_logging_filter/      # crud.go, data_source.go, helpers.go, resource.go, types.go
+    action_configuration/        # Reference implementation for complex resources
+    analytic/
+    analytic_set/
+    api_client/
+    change_management/
+    computer/                    # Data source only (enrolled computers)
+    custom_prevent_list/
+    data_forwarding/
+    data_retention/
+    downloads/                   # Data source only (installer/profile download URLs)
+    exception_set/
+    group/
+    identity_provider/           # Data source only (identity providers)
+    plan/
+    removable_storage_control_set/
+    role/
+    telemetry/
+    unified_logging_filter/
+    user/
   testutil/                      # Acceptance test helpers
-graphql_api/                     # Captured GraphQL operations (reference material)
-tools/
-  scripts/                       # Python helper scripts for API discovery
+tools/                           # Go generate tooling (tfplugindocs, copywrite)
 docs/                            # Generated provider documentation (resources + data sources)
 examples/
   resources/                     # Example .tf files for resources
   data-sources/                  # Example .tf files for data sources
+  list-resources/                # Example .tf files for list resources
+  provider/                      # Example provider configuration
+templates/                       # tfplugindocs templates for doc generation
 ```
 
 ## Provider Development
@@ -80,9 +78,9 @@ examples/
 - Terraform Plugin Framework code lives in `internal/`.
 - The GraphQL client (`internal/client`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
 - Resource implementations are grouped by package in `internal/resources/<resource>` with files split by concern (crud, helpers, resource, types, data source).
-- Run formatting and linting before committing: `mise run fmt` and `mise run lint`.
-- Generate docs with `mise run build:generate-docs`.
-- Run tests with `mise run test`; acceptance tests with `mise run testacc` (requires real tenant).
+- Run formatting and linting before committing: `make fmt` and `make lint`.
+- Generate docs with `make generate`.
+- Run tests with `make test`; acceptance tests with `make testacc` (requires real tenant).
 
 ## Code Organization Guidelines
 
@@ -137,22 +135,22 @@ Optional split-outs for complex resources:
 
 ## Testing
 
-- **Unit tests**: `mise run test` — runs schema validation, metadata, plan modifier, state migration, flattener/expander, helper, and client tests (no real API needed).
-- **Acceptance tests**: `mise run testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
+- **Unit tests**: `make test` — runs schema validation, metadata, plan modifier, state migration, flattener/expander, helper, and client tests (no real API needed).
+- **Acceptance tests**: `make testacc` — creates real resources against a Jamf Protect tenant. Requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, and `JAMFPROTECT_CLIENT_SECRET` environment variables.
 - Test files follow the `*_test.go` convention next to the code they test.
 
 ## Adding a New Resource
 
-1. Capture the relevant GraphQL queries/mutations (see `queries_and_mutations/` for examples).
-2. Create `internal/provider/<resource_name>_resource.go` implementing `resource.Resource` with CRUD + `ImportState`.
-3. Register the resource in `provider.go` → `Resources()`.
-4. Create `internal/provider/<resource_name>_resource_test.go` with acceptance tests.
-5. Add schema validation tests in `schema_test.go`.
-6. Update `examples/` with example `.tf` files.
-7. Run `mise run test` to ensure tests pass.
-8. Run `mise run build:generate-docs` to generate documentation from schema descriptions.
+1. Create a new package under `internal/resources/<resource_name>/` following the file conventions above.
+2. Implement `resource.Resource` with CRUD + `ImportState` in `resource.go` and `crud.go`.
+3. Register the resource in `internal/provider/provider.go` -> `Resources()`.
+4. Add acceptance tests in `resource_test.go`.
+5. Add schema validation tests in `internal/provider/schema_test.go`.
+6. Add example `.tf` files under `examples/resources/<resource_name>/`.
+7. Run `make test` to ensure tests pass.
+8. Run `make generate` to generate documentation from schema descriptions.
 
 ## Documentation & Examples
 
 - Update `examples/` when adding new resources or data sources.
-- Run `mise run build:generate-docs` to regenerate documentation from schema descriptions.
+- Run `make generate` to regenerate documentation from schema descriptions.
