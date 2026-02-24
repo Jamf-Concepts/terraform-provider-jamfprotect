@@ -113,7 +113,7 @@ func (c *Client) DoGraphQL(ctx context.Context, path, query string, variables ma
 	if err != nil {
 		return fmt.Errorf("executing graphql request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

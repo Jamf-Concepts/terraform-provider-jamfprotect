@@ -112,7 +112,7 @@ func (c *Client) fetchToken(ctx context.Context) (*Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("requesting token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
