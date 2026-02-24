@@ -1,6 +1,3 @@
-// Copyright (c) James Smith 2025
-// SPDX-License-Identifier: MPL-2.0
-
 package removable_storage_control_set
 
 // permissionUIOptions defines the valid permission options for the UI.

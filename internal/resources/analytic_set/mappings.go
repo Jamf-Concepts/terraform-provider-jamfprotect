@@ -1,6 +1,3 @@
-// Copyright (c) James Smith 2025
-// SPDX-License-Identifier: MPL-2.0
-
 package analytic_set
 
 // systemAnalyticSetNames contains the names of analytic sets that are managed by the system and should be excluded from listings.
