@@ -1,6 +1,0 @@
-mutation deletePreventList($id: ID!) {
-  deletePreventList(id: $id) {
-    id
-    __typename
-  }
-}

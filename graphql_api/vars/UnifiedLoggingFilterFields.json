@@ -1,9 +1,0 @@
-{
-    "uuid": "2501f850-d1df-406a-8d62-d3a7ba40c964",
-    "name": "Admin Elevation - Jamf Connect",
-    "description": null,
-    "filter": "subsystem == \"com.jamf.connect.daemon\" && category == \"PrivilegeElevation\" && (eventMessage CONTAINS \"Added user\" OR eventMessage CONTAINS \"Removed user\")",
-    "tags": [],
-    "enabled": true,
-    "level": "DEFAULT"
-}

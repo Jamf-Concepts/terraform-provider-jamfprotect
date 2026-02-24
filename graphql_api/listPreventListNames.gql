@@ -1,9 +1,0 @@
-query listPreventListNames {
-  listPreventListNames: listPreventLists {
-    items {
-      name
-      __typename
-    }
-    __typename
-  }
-}

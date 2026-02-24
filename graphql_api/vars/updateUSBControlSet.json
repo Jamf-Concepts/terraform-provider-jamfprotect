@@ -1,8 +1,0 @@
-// defaultMountAction can be ReadOnly, ReadWrite, or Prevented
-{
-    "id": "36",
-    "name": "Default",
-    "description": "Description",
-    "defaultMountAction": "ReadWrite",
-    "rules": []
-}

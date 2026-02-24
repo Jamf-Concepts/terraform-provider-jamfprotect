@@ -1,6 +1,0 @@
-mutation deleteGroup($id: ID!) {
-  deleteGroup(id: $id) {
-    id
-    __typename
-  }
-}

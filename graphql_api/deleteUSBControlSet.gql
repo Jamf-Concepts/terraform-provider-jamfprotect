@@ -1,6 +1,0 @@
-mutation deleteUSBControlSet($id: ID!) {
-  deleteUSBControlSet(id: $id) {
-    id
-    __typename
-  }
-}
