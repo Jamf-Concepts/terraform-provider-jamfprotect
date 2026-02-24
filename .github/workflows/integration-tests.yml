@@ -58,26 +58,12 @@ jobs:
       - run: go mod download
       - run: go test -v -cover -count=1 ./...
 
-  acceptance-gate:
-    name: Acceptance Gate
+  acceptance:
+    name: Acceptance Tests
     needs: unit
     runs-on: ubuntu-latest
-    environment: acceptance
-    steps:
-      - run: echo "Acceptance tests approved"
-
-  acceptance:
-    name: Acceptance Tests (Terraform ${{ matrix.terraform }})
-    needs: acceptance-gate
-    runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        terraform:
-          - "1.13.*"
-          - "1.14.*"
+    environment: acceptance
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
@@ -86,7 +72,7 @@ jobs:
           cache: true
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: ${{ matrix.terraform }}
+          terraform_version: "1.14.*"
           terraform_wrapper: false
       - run: go mod download
       - run: go test -v -cover -count=1 -p=1 ./...
