@@ -15,8 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -52,6 +54,7 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the unified logging filter.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the unified logging filter.",

@@ -13,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -50,6 +52,7 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the role.",
 				Required:            true,
+				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"read_permissions": schema.SetAttribute{
 				MarkdownDescription: "Read permissions for the role. Use `all` for full read access. Available permissions include " + common.FormatOptions(rolePermissionReadOptions) + ".",
