@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // apiToState maps the API response into the Terraform state model.

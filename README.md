@@ -286,11 +286,11 @@ mise run build:generate-docs
 
 ## Publishing to Terraform Registry
 
-The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/smithjw/jamfprotect) via GitHub releases with GPG-signed checksums.
+The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect) via GitHub releases with GPG-signed checksums.
 
 ### Prerequisites
 
-1. **Terraform Registry account**: Sign in at [registry.terraform.io](https://registry.terraform.io) with your GitHub account and authorize the `smithjw` namespace.
+1. **Terraform Registry account**: Sign in at [registry.terraform.io](https://registry.terraform.io) with your GitHub account and authorize the `Jamf-Concepts` namespace.
 2. **GPG signing key**: Generate a GPG key pair and add the public key to the Terraform Registry under [User Settings > Signing Keys](https://registry.terraform.io/settings/gpg-keys). The private key and passphrase must be stored as GitHub Actions secrets (`GPG_PRIVATE_KEY`, `PASSPHRASE`).
 3. **GitHub repository settings**: Ensure the repository is public and the release workflow has write access to contents.
 
@@ -329,7 +329,7 @@ The provider is published to the [Terraform Registry](https://registry.terraform
 terraform {
   required_providers {
     jamfprotect = {
-      source  = "smithjw/jamfprotect"
+      source  = "Jamf-Concepts/jamfprotect"
       version = "0.1.0-alpha.1"
     }
   }

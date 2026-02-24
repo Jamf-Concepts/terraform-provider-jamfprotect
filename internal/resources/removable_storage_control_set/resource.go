@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &RemovableStorageControlSetResource{}

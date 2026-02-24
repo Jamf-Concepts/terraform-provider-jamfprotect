@@ -3,8 +3,8 @@ package plan
 import (
 	"testing"
 
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // TestEndpointThreatPreventionToMode_ValidMappings verifies all valid UI values map to the correct API mode.

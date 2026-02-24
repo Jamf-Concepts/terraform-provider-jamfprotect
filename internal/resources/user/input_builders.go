@@ -5,8 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // buildUserInput builds the API input from the Terraform model.

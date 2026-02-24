@@ -3,7 +3,7 @@ package identity_provider
 import (
 	"testing"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // TestConnectionAPIToDataSourceItem_AllFields verifies that all API fields are correctly mapped to the data source item model.

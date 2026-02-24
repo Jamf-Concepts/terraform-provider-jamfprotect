@@ -3,7 +3,7 @@ package jamfprotect
 import (
 	"maps"
 
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
 )
 
 // RBAC variable constants shared across service methods.

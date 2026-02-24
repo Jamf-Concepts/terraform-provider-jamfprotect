@@ -3,9 +3,9 @@ package telemetry
 import (
 	"context"
 
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // buildInput builds the API input from the resource model.
