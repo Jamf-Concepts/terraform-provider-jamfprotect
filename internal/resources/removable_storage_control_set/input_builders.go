@@ -117,12 +117,10 @@ func buildRuleDetails(permission types.String, message types.String, applyTo typ
 		MountAction: permissionToAPI(permission.ValueString()),
 	}
 	if !message.IsNull() {
-		value := message.ValueString()
-		baseRule.MessageAction = &value
+		baseRule.MessageAction = new(message.ValueString())
 	}
 	if !applyTo.IsNull() {
-		value := applyTo.ValueString()
-		baseRule.ApplyTo = &value
+		baseRule.ApplyTo = new(applyTo.ValueString())
 	}
 	return baseRule
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 
 	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
@@ -396,12 +398,7 @@ func buildSupportedReports(ctx context.Context, collectAlerts types.Set, collect
 		}
 	}
 
-	result := make([]string, 0, len(reports))
-	for report := range reports {
-		result = append(result, report)
-	}
-
-	return result
+	return slices.Collect(maps.Keys(reports))
 }
 
 // buildHTTPBatchConfig constructs a batch configuration for an HTTP endpoint from the given resource data.

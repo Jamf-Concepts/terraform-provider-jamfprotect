@@ -3,6 +3,7 @@ package group
 import (
 	"testing"
 
+	common "github.com/smithjw/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/smithjw/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
@@ -35,13 +36,13 @@ func TestGroupRoleIDs_PopulatedSlice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := groupRoleIDs(tt.roles)
+			got := common.MapSlice(tt.roles, func(r jamfprotect.GroupRole) string { return r.ID })
 			if len(got) != len(tt.expected) {
-				t.Fatalf("groupRoleIDs() returned %d elements, want %d", len(got), len(tt.expected))
+				t.Fatalf("MapSlice() returned %d elements, want %d", len(got), len(tt.expected))
 			}
 			for i, id := range got {
 				if id != tt.expected[i] {
-					t.Errorf("groupRoleIDs()[%d] = %q, want %q", i, id, tt.expected[i])
+					t.Errorf("MapSlice()[%d] = %q, want %q", i, id, tt.expected[i])
 				}
 			}
 		})
@@ -51,17 +52,17 @@ func TestGroupRoleIDs_PopulatedSlice(t *testing.T) {
 func TestGroupRoleIDs_EmptySlice(t *testing.T) {
 	t.Parallel()
 
-	got := groupRoleIDs([]jamfprotect.GroupRole{})
+	got := common.MapSlice([]jamfprotect.GroupRole{}, func(r jamfprotect.GroupRole) string { return r.ID })
 	if got != nil {
-		t.Errorf("groupRoleIDs(empty) = %v, want nil", got)
+		t.Errorf("MapSlice(empty) = %v, want nil", got)
 	}
 }
 
 func TestGroupRoleIDs_NilSlice(t *testing.T) {
 	t.Parallel()
 
-	got := groupRoleIDs(nil)
+	got := common.MapSlice(nil, func(r jamfprotect.GroupRole) string { return r.ID })
 	if got != nil {
-		t.Errorf("groupRoleIDs(nil) = %v, want nil", got)
+		t.Errorf("MapSlice(nil) = %v, want nil", got)
 	}
 }

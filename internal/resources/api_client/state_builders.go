@@ -16,24 +16,12 @@ func (r *ApiClientResource) apiToState(_ context.Context, data *ApiClientResourc
 	data.Created = types.StringValue(api.Created)
 	data.Password = apiClientPasswordStateValue(data.Password, api.Password)
 
-	roleIDs := apiClientRoleIDs(api.AssignedRoles)
+	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.ApiClientRole) string { return r.ID })
 	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {
 		data.RoleIDs = types.SetNull(types.StringType)
 	} else {
 		data.RoleIDs = common.StringsToSet(roleIDs)
 	}
-}
-
-// apiClientRoleIDs extracts role IDs from API roles.
-func apiClientRoleIDs(roles []jamfprotect.ApiClientRole) []string {
-	if len(roles) == 0 {
-		return nil
-	}
-	ids := make([]string, 0, len(roles))
-	for _, role := range roles {
-		ids = append(ids, role.ID)
-	}
-	return ids
 }
 
 // apiClientPasswordStateValue preserves an existing password when the API returns a masked value.
@@ -60,7 +48,7 @@ func apiClientAPIToDataSourceItem(api jamfprotect.ApiClient) ApiClientDataSource
 	return ApiClientDataSourceItemModel{
 		ID:       types.StringValue(api.ClientID),
 		Name:     types.StringValue(api.Name),
-		RoleIDs:  common.SortedStringsToList(apiClientRoleIDs(api.AssignedRoles)),
+		RoleIDs:  common.SortedStringsToList(common.MapSlice(api.AssignedRoles, func(r jamfprotect.ApiClientRole) string { return r.ID })),
 		Password: apiClientPasswordDataSourceValue(api.Password),
 		Created:  types.StringValue(api.Created),
 	}

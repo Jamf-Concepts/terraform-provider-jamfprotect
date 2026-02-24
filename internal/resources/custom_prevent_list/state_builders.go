@@ -19,11 +19,7 @@ func (r *CustomPreventListResource) applyState(_ context.Context, data *CustomPr
 	data.Created = types.StringValue(api.Created)
 	data.ListData = common.StringsToList(api.List)
 
-	if api.Description != "" {
-		data.Description = types.StringValue(api.Description)
-	} else {
-		data.Description = types.StringValue("")
-	}
+	data.Description = types.StringValue(api.Description)
 }
 
 // customPreventListAPIToDataSourceItem maps a Jamf Protect prevent list to CustomPreventListDataSourceItemModel.
@@ -36,10 +32,6 @@ func customPreventListAPIToDataSourceItem(api jamfprotect.CustomPreventList, dia
 		ListData:    common.StringsToList(api.List),
 		Created:     types.StringValue(api.Created),
 	}
-	if api.Description != "" {
-		item.Description = types.StringValue(api.Description)
-	} else {
-		item.Description = types.StringValue("")
-	}
+	item.Description = types.StringValue(api.Description)
 	return item
 }

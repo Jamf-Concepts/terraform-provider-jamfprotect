@@ -203,8 +203,7 @@ func buildComputerModel(computer jamfprotect.Computer) ComputerModel {
 
 	// Handle tags
 	if computer.Tags != nil && len(*computer.Tags) > 0 {
-		sorted := make([]string, len(*computer.Tags))
-		copy(sorted, *computer.Tags)
+		sorted := slices.Clone(*computer.Tags)
 		slices.Sort(sorted)
 		tagElements := make([]attr.Value, len(sorted))
 		for i, tag := range sorted {

@@ -20,8 +20,7 @@ func buildUserInput(ctx context.Context, data UserResourceModel, diags *diag.Dia
 	}
 
 	if common.HasStringValue(data.IdentityProviderID) {
-		conn := data.IdentityProviderID.ValueString()
-		input.ConnectionID = &conn
+		input.ConnectionID = new(data.IdentityProviderID.ValueString())
 	}
 
 	return input
