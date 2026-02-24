@@ -1,3 +1,6 @@
+// Copyright Jamf Software LLC 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package change_management_test
 
 import (

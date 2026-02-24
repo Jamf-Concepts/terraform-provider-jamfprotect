@@ -1,3 +1,6 @@
+// Copyright Jamf Software LLC 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package action_configuration
 
 // eventTypeMapping maps snake_case Terraform attribute names to camelCase API field names.
