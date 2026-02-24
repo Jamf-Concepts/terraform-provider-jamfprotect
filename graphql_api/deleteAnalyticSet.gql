@@ -1,6 +1,0 @@
-mutation deleteAnalyticSet($uuid: ID!) {
-  deleteAnalyticSet(uuid: $uuid) {
-    uuid
-    __typename
-  }
-}

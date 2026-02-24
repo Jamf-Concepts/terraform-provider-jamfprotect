@@ -1,7 +1,0 @@
-query listComputersTags {
-  listComputersTags {
-    value
-    count
-    __typename
-  }
-}

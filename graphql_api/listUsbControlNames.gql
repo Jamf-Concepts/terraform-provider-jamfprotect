@@ -1,9 +1,0 @@
-query listUsbControlNames {
-  listUsbControlNames: listUSBControlSets {
-    items {
-      name
-      __typename
-    }
-    __typename
-  }
-}

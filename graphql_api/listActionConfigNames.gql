@@ -1,9 +1,0 @@
-query listActionConfigNames {
-  listActionConfigNames: listActionConfigs {
-    items {
-      name
-      __typename
-    }
-    __typename
-  }
-}
