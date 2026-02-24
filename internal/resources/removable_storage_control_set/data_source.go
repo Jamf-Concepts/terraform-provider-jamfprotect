@@ -1,3 +1,6 @@
+// Copyright Jamf Software LLC 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package removable_storage_control_set
 
 import (
