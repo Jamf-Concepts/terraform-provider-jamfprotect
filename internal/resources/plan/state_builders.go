@@ -36,10 +36,9 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		data.ActionConfiguration = types.StringNull()
 	}
 
-	filteredExceptionSets := filterManagedExceptionSetEntries(api.ExceptionSets)
-	if len(filteredExceptionSets) > 0 {
-		uuids := make([]string, len(filteredExceptionSets))
-		for i, es := range filteredExceptionSets {
+	if len(api.ExceptionSets) > 0 && !data.ExceptionSets.IsNull() {
+		uuids := make([]string, len(api.ExceptionSets))
+		for i, es := range api.ExceptionSets {
 			uuids[i] = es.UUID
 		}
 		data.ExceptionSets = common.StringsToSet(uuids)
@@ -121,10 +120,9 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 		item.ActionConfiguration = types.StringNull()
 	}
 
-	filteredExceptionSets := filterManagedExceptionSetEntries(api.ExceptionSets)
-	if len(filteredExceptionSets) > 0 {
-		uuids := make([]string, len(filteredExceptionSets))
-		for i, es := range filteredExceptionSets {
+	if len(api.ExceptionSets) > 0 {
+		uuids := make([]string, len(api.ExceptionSets))
+		for i, es := range api.ExceptionSets {
 			uuids[i] = es.UUID
 		}
 		item.ExceptionSets = common.StringsToSet(uuids)
