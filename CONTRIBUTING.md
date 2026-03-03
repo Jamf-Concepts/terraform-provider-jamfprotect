@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the Terraform Provider for Jamf P
 ## Prerequisites
 
 - **Go** >= 1.26 (see `go.mod` for the exact version)
-- **Terraform** >= 1.0
+- **Terraform** >= 1.13
 - **golangci-lint** for linting
 - A Jamf Protect tenant with API credentials (for acceptance tests only)
 
