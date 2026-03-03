@@ -7,6 +7,50 @@ This provider was originally created by [James Smith (@smithjw)](https://github.
 
 The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://www.jamf.com/products/jamf-protect/) resources via the Jamf Protect GraphQL API. Built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) v1.17.0 (Protocol v6).
 
+## Requirements
+
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.13
+
+## Installation
+
+The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect). Add the following to your Terraform configuration:
+
+```hcl
+terraform {
+  required_providers {
+    jamfprotect = {
+      source = "Jamf-Concepts/jamfprotect"
+    }
+  }
+}
+```
+
+## Authentication
+
+The provider authenticates against the Jamf Protect API using an API client. Configure credentials via the provider block or environment variables:
+
+| Provider Attribute | Environment Variable        | Description                                                 |
+| ------------------ | --------------------------- | ----------------------------------------------------------- |
+| `url`              | `JAMFPROTECT_URL`           | Base URL (e.g. `https://your-tenant.protect.jamfcloud.com`) |
+| `client_id`        | `JAMFPROTECT_CLIENT_ID`     | API client ID                                               |
+| `client_secret`    | `JAMFPROTECT_CLIENT_SECRET` | API client secret                                           |
+
+### Example Provider Configuration
+
+```hcl
+provider "jamfprotect" {
+  url           = "https://your-tenant.protect.jamfcloud.com"
+  client_id     = var.jamfprotect_client_id
+  client_secret = var.jamfprotect_client_secret
+}
+```
+
+Or use environment variables and leave the provider block empty:
+
+```hcl
+provider "jamfprotect" {}
+```
+
 ## Supported Resources
 
 | Resource | Description |
@@ -56,37 +100,6 @@ All resources support full CRUD operations and `terraform import`.
 | `jamfprotect_unified_logging_filters` | List all unified logging filters |
 | `jamfprotect_users` | List all users |
 
-## Requirements
-
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.26 (to build the provider)
-
-## Authentication
-
-The provider authenticates against the Jamf Protect API using an API client. Configure credentials via the provider block or environment variables:
-
-| Provider Attribute | Environment Variable        | Description                                                 |
-| ------------------ | --------------------------- | ----------------------------------------------------------- |
-| `url`              | `JAMFPROTECT_URL`           | Base URL (e.g. `https://your-tenant.protect.jamfcloud.com`) |
-| `client_id`        | `JAMFPROTECT_CLIENT_ID`     | API client ID                                               |
-| `client_secret`    | `JAMFPROTECT_CLIENT_SECRET` | API client secret                                           |
-
-### Example Provider Configuration
-
-```hcl
-provider "jamfprotect" {
-  url           = "https://your-tenant.protect.jamfcloud.com"
-  client_id     = var.jamfprotect_client_id
-  client_secret = var.jamfprotect_client_secret
-}
-```
-
-Or use environment variables and leave the provider block empty:
-
-```hcl
-provider "jamfprotect" {}
-```
-
 ## Usage Examples
 
 ### Action Configuration
@@ -119,33 +132,6 @@ resource "jamfprotect_action_configuration" "default" {
 }
 ```
 
-### Analytic
-
-```hcl
-resource "jamfprotect_analytic" "suspicious_elevated_shell" {
-  name        = "Suspicious Elevated Shell"
-  description = "Detects shell processes created with elevated privileges."
-
-  sensor_type = "Process Event"
-  severity    = "High"
-  level       = 99
-  categories  = ["Privilege Escalation"]
-  tags        = ["MITREattack", "T1548"]
-
-  filter = "$event.type == 1 AND $event.process.path.lastPathComponent == \"sh\" AND $event.process.parent.uid == 0"
-
-  snapshot_files = []
-
-  context_item = [
-    {
-      name        = "ParentProcess"
-      type        = "String"
-      expressions = ["$event.process.parent.path"]
-    },
-  ]
-}
-```
-
 ### Plan
 
 ```hcl
@@ -155,10 +141,6 @@ resource "jamfprotect_plan" "endpoint_security" {
 
   action_configuration = jamfprotect_action_configuration.default.id
   telemetry            = jamfprotect_telemetry.standard.id
-
-  analytic_sets = [
-    jamfprotect_analytic_set.core_detections.id,
-  ]
 
   exception_sets = [
     jamfprotect_exception_set.baseline.id,
@@ -243,99 +225,30 @@ data "jamfprotect_plan_configuration_profile" "this" {
 }
 ```
 
-## Building The Provider
+## Contributing
 
-1. Clone the repository
-2. Enter the repository directory
-3. Build the provider:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing instructions, and contribution guidelines.
 
-```shell
-make build
-```
+## Feedback & Discussion
 
-## Developing the Provider
+Please contact the project principles via [GitHub Issues](https://github.com/Jamf-Concepts/terraform-provider-jamfprotect/issues).
 
-### Dependencies
+The Jamf Terraform community has discussions in #terraform-provider-jamfprotect on [MacAdmins Slack](https://www.macadmins.org/). Join the conversation!
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules). To add a new dependency:
+## Included components
 
-```shell
-go get github.com/author/dependency
-go mod tidy
-```
+The following third party acknowledgements and licenses are incorporated by reference:
 
-### Testing
+- [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) ([MPL](https://github.com/hashicorp/terraform-plugin-framework?tab=MPL-2.0-1-ov-file))
+- [Terraform Plugin Framework Timeouts](https://github.com/hashicorp/terraform-plugin-framework-timeouts) ([MPL](https://github.com/hashicorp/terraform-plugin-framework-timeouts?tab=MPL-2.0-1-ov-file))
+- [Terraform Plugin Framework Validators](https://github.com/hashicorp/terraform-plugin-framework-validators) ([MPL](https://github.com/hashicorp/terraform-plugin-framework-validators?tab=MPL-2.0-1-ov-file))
+- [Terraform Plugin Go](https://github.com/hashicorp/terraform-plugin-go) ([MPL](https://github.com/hashicorp/terraform-plugin-go?tab=MPL-2.0-1-ov-file))
+- [Terraform Plugin Log](https://github.com/hashicorp/terraform-plugin-log) ([MPL](https://github.com/hashicorp/terraform-plugin-log?tab=MPL-2.0-1-ov-file))
+- [Terraform Plugin Testing](https://github.com/hashicorp/terraform-plugin-testing) ([MPL](https://github.com/hashicorp/terraform-plugin-testing?tab=MPL-2.0-1-ov-file))
+- [Go Retryable HTTP](https://github.com/hashicorp/go-retryablehttp) ([MIT](https://github.com/hashicorp/go-retryablehttp/blob/main/LICENSE))
+- [Go UUID](https://github.com/hashicorp/go-uuid) ([MPL](https://github.com/hashicorp/go-uuid?tab=MPL-2.0-1-ov-file))
+- [x/sync](https://github.com/golang/sync) ([BSD-3-Clause](https://github.com/golang/sync/blob/master/LICENSE))
 
-**Unit tests** (no API credentials required):
+&nbsp;
 
-```shell
-make test
-```
-
-**Acceptance tests** (creates real resources — requires `JAMFPROTECT_URL`, `JAMFPROTECT_CLIENT_ID`, `JAMFPROTECT_CLIENT_SECRET`):
-
-```shell
-make testacc
-```
-
-### Documentation
-
-Generate or update documentation:
-
-```shell
-make generate
-```
-
-This runs `tfplugindocs` to regenerate the `docs/` directory from schema descriptions and the `templates/` and `examples/` directories.
-
-## Publishing to Terraform Registry
-
-The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect) via GitHub releases with GPG-signed checksums.
-
-### Prerequisites
-
-1. **Terraform Registry account**: Sign in at [registry.terraform.io](https://registry.terraform.io) with your GitHub account and authorize the `Jamf-Concepts` namespace.
-2. **GPG signing key**: Generate a GPG key pair and add the public key to the Terraform Registry under [User Settings > Signing Keys](https://registry.terraform.io/settings/gpg-keys). The private key and passphrase must be stored as GitHub Actions secrets (`TF_SIGNING_KEY`, `TF_SIGNING_KEY_PASSPHRASE`).
-3. **GitHub repository settings**: Ensure the repository is public and the release workflow has write access to contents.
-
-### Release Process
-
-1. Ensure all tests pass:
-
-   ```shell
-   make test
-   ```
-
-2. Regenerate documentation and verify no drift:
-
-   ```shell
-   make generate
-   git diff --exit-code
-   ```
-
-3. Create and push a version tag:
-
-   ```shell
-   git tag v0.1.0-alpha.1
-   git push origin v0.1.0-alpha.1
-   ```
-
-4. The [release workflow](.github/workflows/release.yml) automatically:
-
-   - Builds binaries for all supported platforms (linux, darwin, windows, freebsd x amd64, arm64, etc.)
-   - Generates SHA256 checksums and signs them with GPG
-   - Creates a GitHub release with the binaries, checksums, and Terraform registry manifest
-   - The Terraform Registry detects the new release and publishes it
-
-### Using the Alpha Provider
-
-```hcl
-terraform {
-  required_providers {
-    jamfprotect = {
-      source  = "Jamf-Concepts/jamfprotect"
-      version = "0.1.0-alpha.1"
-    }
-  }
-}
-```
+*Copyright 2026, Jamf Software LLC.*

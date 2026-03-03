@@ -83,7 +83,7 @@ Data source attributes returning API data should always use lists. Sort API resp
 
 ## Error Handling
 
-- Use `helpers.IsNotFoundError(err)` for 404 detection in Read/Delete operations.
+- Use `common.IsNotFoundError(err)` for 404 detection in Read/Delete operations (imported as `common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"`).
 - Wrap errors with `fmt.Errorf("context: %w", err)` to preserve the error chain.
 - The GraphQL client defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
 

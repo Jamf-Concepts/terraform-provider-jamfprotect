@@ -110,7 +110,7 @@ Use resource-agnostic filenames and helper names so the same structure can apply
 - `plan_modifiers.go`: schema plan modifiers (if needed).
 - `validators.go`: schema validators (if needed).
 - `list_resource.go`: for list resources implementing `list.ListResource`.
-- `data_source.go`: for data sources implementing `datasource.DataSource`.
+- `data_source.go`: for data sources implementing `datasource.DataSource`. Some packages use variant names (e.g., `data_source_computer.go`, `sets_data_source.go`) when a package has multiple data sources or a non-standard naming need.
 - `resource_test.go`: acceptance tests for the resource.
 
 For list resources, follow the framework list resource pattern. The action configuration list resource is the reference implementation.

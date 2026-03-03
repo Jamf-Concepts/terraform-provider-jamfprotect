@@ -152,25 +152,19 @@ func TestAccMyResource_basic(t *testing.T) {
 
 ## CI/CD
 
-### Integration Tests (automated)
+All CI jobs run in a single workflow: `.github/workflows/integration-tests.yml`, triggered on PRs to `main` and `workflow_dispatch`.
 
-Runs on every PR to `main`. Covers build, lint, doc generation, and unit tests.
-
-Workflow: `.github/workflows/integration-tests.yml`
+### Integration Jobs
 
 | Job        | What it does                         | Timeout |
 | ---------- | ------------------------------------ | ------- |
 | `build`    | `go build` + `golangci-lint run`     | 5 min   |
-| `generate` | Validates generated docs are current | 5 min   |
+| `generate` | Validates generated docs are current | --      |
 | `unit`     | `go test -v -cover -count=1 ./...`   | 10 min  |
 
-### Acceptance Tests (automated, approval-gated)
+### Acceptance Tests (approval-gated)
 
-Runs automatically after integration tests pass, or can be triggered manually via `workflow_dispatch`. Requires approval through the GitHub `acceptance` environment.
-
-Workflow: `.github/workflows/acceptance-tests.yml`
-
-Runs against a matrix of Terraform versions (1.13.x, 1.14.x) with credentials from repository secrets.
+Runs automatically after unit tests pass. Requires approval through the GitHub `acceptance` environment. Uses Terraform 1.14.x with credentials from repository secrets.
 
 ### Required GitHub Secrets
 
