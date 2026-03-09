@@ -36,14 +36,14 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 		data.ActionConfiguration = types.StringNull()
 	}
 
-	if len(api.ExceptionSets) > 0 && !data.ExceptionSets.IsNull() {
+	if len(api.ExceptionSets) > 0 {
 		uuids := make([]string, len(api.ExceptionSets))
 		for i, es := range api.ExceptionSets {
 			uuids[i] = es.UUID
 		}
 		data.ExceptionSets = common.StringsToSet(uuids)
-	} else if !data.ExceptionSets.IsNull() {
-		data.ExceptionSets = common.StringsToSet([]string{})
+	} else {
+		data.ExceptionSets = types.SetNull(types.StringType)
 	}
 
 	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
@@ -65,8 +65,8 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 			uuids[i] = as.AnalyticSet.UUID
 		}
 		data.AnalyticSets = common.StringsToSet(uuids)
-	} else if !data.AnalyticSets.IsNull() {
-		data.AnalyticSets = common.StringsToSet([]string{})
+	} else {
+		data.AnalyticSets = types.SetNull(types.StringType)
 	}
 
 	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
