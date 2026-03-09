@@ -65,9 +65,24 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 
 func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data AnalyticResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if req.State.Raw.IsNull() {
+		if req.Identity == nil {
+			resp.Diagnostics.AddError(
+				"Missing analytic identity",
+				"The resource has no prior state and no identity data to refresh from.",
+			)
+			return
+		}
+		resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("id"), &data.ID)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Timeouts = common.EmptyTimeoutsValue()
+	} else {
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	readTimeout, diags := data.Timeouts.Read(ctx, constants.DefaultReadTimeout)

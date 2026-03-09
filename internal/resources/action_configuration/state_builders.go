@@ -82,6 +82,8 @@ func (r *ActionConfigResource) applyState(_ context.Context, data *ActionConfigR
 		}
 
 		data.AlertDataCollect = dataObj
+	} else {
+		data.AlertDataCollect = types.ObjectNull(alertDataCollectionAttrTypes)
 	}
 
 	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, diags)
