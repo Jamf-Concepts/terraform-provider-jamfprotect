@@ -89,6 +89,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"exception_sets": schema.SetAttribute{
 				MarkdownDescription: "A set of exception set IDs to associate with this plan.",
 				Optional:            true,
+				Computed:            true,
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
