@@ -37,7 +37,7 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	result, err := r.service.CreateRole(ctx, input)
+	result, err := r.client.CreateRole(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating role", err.Error())
 		return
@@ -95,7 +95,7 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetRole(ctx, data.ID.ValueString())
+	result, err := r.client.GetRole(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) || isRoleNullTimestampError(err) {
 			resp.State.RemoveResource(ctx)
@@ -158,7 +158,7 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	result, err := r.service.UpdateRole(ctx, data.ID.ValueString(), input)
+	result, err := r.client.UpdateRole(ctx, data.ID.ValueString(), input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating role", err.Error())
 		return
@@ -201,7 +201,7 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteRole(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteRole(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "role already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

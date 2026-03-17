@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &UserListResource{}
@@ -30,7 +30,7 @@ func NewUserListResource() list.ListResource {
 
 // UserListResource lists users in Jamf Protect.
 type UserListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 type listConfigModel struct {
@@ -54,7 +54,7 @@ func (r *UserListResource) ListResourceConfigSchema(ctx context.Context, req lis
 }
 
 func (r *UserListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *UserListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -73,7 +73,7 @@ func (r *UserListResource) ValidateListResourceConfig(ctx context.Context, req l
 }
 
 func (r *UserListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -90,7 +90,7 @@ func (r *UserListResource) List(ctx context.Context, req list.ListRequest, resp 
 		return
 	}
 
-	items, err := r.service.ListUsers(ctx)
+	items, err := r.client.ListUsers(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing users", err.Error()),
@@ -121,7 +121,7 @@ func (r *UserListResource) List(ctx context.Context, req list.ListRequest, resp 
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetUser(ctx, item.ID)
+			api, err := r.client.GetUser(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading user", err.Error())
 				results = append(results, result)

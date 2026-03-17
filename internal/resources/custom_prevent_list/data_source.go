@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &CustomPreventListsDataSource{}
@@ -22,7 +23,7 @@ func NewCustomPreventListsDataSource() datasource.DataSource {
 
 // CustomPreventListsDataSource lists all custom prevent lists in Jamf Protect.
 type CustomPreventListsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // CustomPreventListsDataSourceModel maps the data source schema.
@@ -91,13 +92,13 @@ func (d *CustomPreventListsDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *CustomPreventListsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *CustomPreventListsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data CustomPreventListsDataSourceModel
 
-	allItems, err := d.service.ListCustomPreventLists(ctx)
+	allItems, err := d.client.ListCustomPreventLists(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing prevent lists", err.Error())
 		return

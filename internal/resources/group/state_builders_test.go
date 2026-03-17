@@ -6,8 +6,8 @@ package group
 import (
 	"testing"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 func TestGroupRoleIDs_PopulatedSlice(t *testing.T) {

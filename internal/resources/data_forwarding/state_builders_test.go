@@ -22,12 +22,12 @@ func TestStringPointerOrNil_ValidString(t *testing.T) {
 		{
 			name:     "non-empty string",
 			input:    types.StringValue("hello"),
-			expected: strPtr("hello"),
+			expected: new("hello"),
 		},
 		{
 			name:     "string with surrounding whitespace",
 			input:    types.StringValue("  trimmed  "),
-			expected: strPtr("trimmed"),
+			expected: new("trimmed"),
 		},
 	}
 
@@ -91,12 +91,12 @@ func TestStringPointerValueOrNull_ValidPointer(t *testing.T) {
 	}{
 		{
 			name:     "non-empty string pointer",
-			input:    strPtr("hello"),
+			input:    new("hello"),
 			expected: types.StringValue("hello"),
 		},
 		{
 			name:     "string with spaces",
-			input:    strPtr("hello world"),
+			input:    new("hello world"),
 			expected: types.StringValue("hello world"),
 		},
 	}
@@ -125,7 +125,7 @@ func TestStringPointerValueOrNull_ReturnsNull(t *testing.T) {
 		},
 		{
 			name:  "empty string pointer",
-			input: strPtr(""),
+			input: new(""),
 		},
 	}
 
@@ -142,6 +142,8 @@ func TestStringPointerValueOrNull_ReturnsNull(t *testing.T) {
 }
 
 // strPtr is a test helper that returns a pointer to the given string.
+//
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }

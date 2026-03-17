@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 func TestListToStrings(t *testing.T) {
@@ -148,27 +148,27 @@ func TestIsNotFoundError(t *testing.T) {
 	}{
 		{
 			name:     "ErrNotFound wrapped with ErrGraphQL",
-			err:      fmt.Errorf("%w: %w: resource not found", client.ErrNotFound, client.ErrGraphQL),
+			err:      fmt.Errorf("%w: %w: resource not found", jamfprotect.ErrNotFound, jamfprotect.ErrGraphQL),
 			expected: true,
 		},
 		{
 			name:     "ErrNotFound alone",
-			err:      client.ErrNotFound,
+			err:      jamfprotect.ErrNotFound,
 			expected: true,
 		},
 		{
 			name:     "ErrNotFound wrapped",
-			err:      fmt.Errorf("wrapped: %w", client.ErrNotFound),
+			err:      fmt.Errorf("wrapped: %w", jamfprotect.ErrNotFound),
 			expected: true,
 		},
 		{
 			name:     "client other error",
-			err:      fmt.Errorf("%w: internal server error", client.ErrGraphQL),
+			err:      fmt.Errorf("%w: internal server error", jamfprotect.ErrGraphQL),
 			expected: false,
 		},
 		{
 			name:     "auth error",
-			err:      fmt.Errorf("%w: bad credentials", client.ErrAuthentication),
+			err:      fmt.Errorf("%w: bad credentials", jamfprotect.ErrAuthentication),
 			expected: false,
 		},
 		{

@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )

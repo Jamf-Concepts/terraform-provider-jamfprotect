@@ -16,15 +16,15 @@ import (
 )
 
 func testAccPlanCheckDestroy(s *terraform.State) error {
-	svc := testutil.TestAccService()
-	if svc == nil {
-		return fmt.Errorf("service not configured")
+	c := testutil.TestAccClient()
+	if c == nil {
+		return fmt.Errorf("client not configured")
 	}
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "jamfprotect_plan" {
 			continue
 		}
-		result, err := svc.GetPlan(context.Background(), rs.Primary.ID)
+		result, err := c.GetPlan(context.Background(), rs.Primary.ID)
 		if err == nil && result != nil {
 			return fmt.Errorf("plan %s still exists", rs.Primary.ID)
 		}

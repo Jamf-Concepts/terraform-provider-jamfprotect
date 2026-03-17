@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 var _ datasource.DataSource = &TelemetriesV2DataSource{}
@@ -25,7 +25,7 @@ func NewTelemetriesV2DataSource() datasource.DataSource {
 
 // TelemetriesV2DataSource lists all v2 telemetry configurations in Jamf Protect.
 type TelemetriesV2DataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // TelemetriesV2DataSourceModel maps the data source schema.
@@ -142,14 +142,14 @@ func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.Sch
 
 // Configure prepares the telemetries service client.
 func (d *TelemetriesV2DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // Read retrieves the telemetry configuration list.
 func (d *TelemetriesV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data TelemetriesV2DataSourceModel
 
-	allItems, err := d.service.ListTelemetriesV2(ctx)
+	allItems, err := d.client.ListTelemetriesV2(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing v2 telemetries", err.Error())
 		return

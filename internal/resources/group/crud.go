@@ -36,7 +36,7 @@ func (r *GroupResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	result, err := r.service.CreateGroup(ctx, input)
+	result, err := r.client.CreateGroup(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating group", err.Error())
 		return
@@ -92,7 +92,7 @@ func (r *GroupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetGroup(ctx, data.ID.ValueString())
+	result, err := r.client.GetGroup(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -153,7 +153,7 @@ func (r *GroupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	result, err := r.service.UpdateGroup(ctx, data.ID.ValueString(), input)
+	result, err := r.client.UpdateGroup(ctx, data.ID.ValueString(), input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating group", err.Error())
 		return
@@ -194,7 +194,7 @@ func (r *GroupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteGroup(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteGroup(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "group already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

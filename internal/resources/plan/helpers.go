@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 const (
@@ -49,7 +49,7 @@ func modeToEndpointThreatPrevention(mode string) (string, bool) {
 
 // resolveManagedAnalyticSetUUIDs loads managed analytic set UUIDs by name.
 func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags *diag.Diagnostics) map[string]string {
-	sets, err := r.service.ListAnalyticSets(ctx)
+	sets, err := r.client.ListAnalyticSets(ctx)
 	if err != nil {
 		diags.AddError("Error listing analytic sets", err.Error())
 		return nil
@@ -175,4 +175,3 @@ func filterManagedAnalyticSetEntries(sets []jamfprotect.PlanAnalyticSet) []jamfp
 
 	return filtered
 }
-

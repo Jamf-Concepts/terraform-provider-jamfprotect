@@ -17,8 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &TelemetryV2Resource{}
@@ -32,7 +33,7 @@ func NewTelemetryV2Resource() resource.Resource {
 
 // TelemetryV2Resource manages a Jamf Protect telemetry v2 configuration.
 type TelemetryV2Resource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // Metadata returns the telemetry v2 resource type name.
@@ -158,7 +159,7 @@ func (r *TelemetryV2Resource) IdentitySchema(ctx context.Context, req resource.I
 
 // Configure prepares the telemetry service client.
 func (r *TelemetryV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing telemetry configurations by ID.

@@ -10,8 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/provider"
 )
 
@@ -34,14 +33,14 @@ func TestAccPreCheck(t *testing.T) {
 	}
 }
 
-// TestAccService returns a Service for use in CheckDestroy functions.
+// TestAccClient returns a Client for use in CheckDestroy functions.
 // Returns nil if the required environment variables are not set.
-func TestAccService() *jamfprotect.Service {
+func TestAccClient() *jamfprotect.Client {
 	url := os.Getenv("JAMFPROTECT_URL")
 	clientID := os.Getenv("JAMFPROTECT_CLIENT_ID")
 	clientSecret := os.Getenv("JAMFPROTECT_CLIENT_SECRET")
 	if url == "" || clientID == "" || clientSecret == "" {
 		return nil
 	}
-	return jamfprotect.NewService(client.NewClient(url, clientID, clientSecret))
+	return jamfprotect.NewClient(url, clientID, clientSecret)
 }

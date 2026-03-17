@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &ExceptionSetsDataSource{}
@@ -22,7 +23,7 @@ func NewExceptionSetsDataSource() datasource.DataSource {
 
 // ExceptionSetsDataSource lists all exception sets in Jamf Protect.
 type ExceptionSetsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // ExceptionSetsDataSourceModel maps the data source schema.
@@ -74,13 +75,13 @@ func exceptionSetDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *ExceptionSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *ExceptionSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ExceptionSetsDataSourceModel
 
-	items, err := d.service.ListExceptionSets(ctx)
+	items, err := d.client.ListExceptionSets(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing exception sets", err.Error())
 		return

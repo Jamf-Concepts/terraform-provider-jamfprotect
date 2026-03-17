@@ -35,7 +35,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	result, err := r.service.CreateUser(ctx, input)
+	result, err := r.client.CreateUser(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user", err.Error())
 		return
@@ -90,7 +90,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetUser(ctx, data.ID.ValueString())
+	result, err := r.client.GetUser(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -152,7 +152,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	result, err := r.service.UpdateUser(ctx, data.ID.ValueString(), input)
+	result, err := r.client.UpdateUser(ctx, data.ID.ValueString(), input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating user", err.Error())
 		return
@@ -192,7 +192,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteUser(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteUser(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "user already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

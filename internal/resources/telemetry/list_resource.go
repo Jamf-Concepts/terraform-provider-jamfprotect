@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &TelemetryV2ListResource{}
@@ -24,7 +24,7 @@ var _ list.ListResourceWithValidateConfig = &TelemetryV2ListResource{}
 
 // TelemetryV2ListResource lists telemetry v2 configurations in Jamf Protect.
 type TelemetryV2ListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list resource configuration.
@@ -54,7 +54,7 @@ func (r *TelemetryV2ListResource) ListResourceConfigSchema(ctx context.Context, 
 
 // Configure assigns the Jamf Protect client for list operations.
 func (r *TelemetryV2ListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ValidateListResourceConfig validates list configuration inputs.
@@ -70,7 +70,7 @@ func (r *TelemetryV2ListResource) ValidateListResourceConfig(ctx context.Context
 
 // List streams telemetry v2 list results.
 func (r *TelemetryV2ListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -87,7 +87,7 @@ func (r *TelemetryV2ListResource) List(ctx context.Context, req list.ListRequest
 		return
 	}
 
-	items, err := r.service.ListTelemetriesV2(ctx)
+	items, err := r.client.ListTelemetriesV2(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing telemetry v2", err.Error()),
@@ -113,7 +113,7 @@ func (r *TelemetryV2ListResource) List(ctx context.Context, req list.ListRequest
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetTelemetryV2(ctx, item.ID)
+			api, err := r.client.GetTelemetryV2(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading telemetry v2", err.Error())
 				results = append(results, result)

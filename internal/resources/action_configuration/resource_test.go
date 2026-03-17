@@ -16,15 +16,15 @@ import (
 )
 
 func testAccActionConfigCheckDestroy(s *terraform.State) error {
-	svc := testutil.TestAccService()
-	if svc == nil {
-		return fmt.Errorf("service not configured")
+	c := testutil.TestAccClient()
+	if c == nil {
+		return fmt.Errorf("client not configured")
 	}
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "jamfprotect_action_configuration" {
 			continue
 		}
-		result, err := svc.GetActionConfig(context.Background(), rs.Primary.ID)
+		result, err := c.GetActionConfig(context.Background(), rs.Primary.ID)
 		if err == nil && result != nil {
 			return fmt.Errorf("action configuration %s still exists", rs.Primary.ID)
 		}

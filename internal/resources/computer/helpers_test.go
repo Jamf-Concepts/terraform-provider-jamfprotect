@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 

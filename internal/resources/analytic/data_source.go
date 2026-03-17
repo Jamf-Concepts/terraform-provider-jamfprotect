@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 var _ datasource.DataSource = &AnalyticsDataSource{}
@@ -28,7 +28,7 @@ func NewAnalyticsDataSource() datasource.DataSource {
 
 // AnalyticsDataSource lists all analytics in Jamf Protect.
 type AnalyticsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // AnalyticsDataSourceModel maps the data source schema.
@@ -203,13 +203,13 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *AnalyticsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *AnalyticsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data AnalyticsDataSourceModel
 
-	items, err := d.service.ListAnalytics(ctx)
+	items, err := d.client.ListAnalytics(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing analytics", err.Error())
 		return

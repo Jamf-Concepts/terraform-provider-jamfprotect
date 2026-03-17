@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &ActionConfigListResource{}
@@ -28,7 +28,7 @@ func NewActionConfigListResource() list.ListResource {
 
 // ActionConfigListResource lists action configurations in Jamf Protect.
 type ActionConfigListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *ActionConfigListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -48,7 +48,7 @@ func (r *ActionConfigListResource) ListResourceConfigSchema(ctx context.Context,
 }
 
 func (r *ActionConfigListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *ActionConfigListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -62,7 +62,7 @@ func (r *ActionConfigListResource) ValidateListResourceConfig(ctx context.Contex
 }
 
 func (r *ActionConfigListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -79,7 +79,7 @@ func (r *ActionConfigListResource) List(ctx context.Context, req list.ListReques
 		return
 	}
 
-	items, err := r.service.ListActionConfigs(ctx)
+	items, err := r.client.ListActionConfigs(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing action configs", err.Error()),
@@ -105,7 +105,7 @@ func (r *ActionConfigListResource) List(ctx context.Context, req list.ListReques
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetActionConfig(ctx, item.ID)
+			api, err := r.client.GetActionConfig(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading action config", err.Error())
 				results = append(results, result)

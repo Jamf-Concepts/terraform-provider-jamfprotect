@@ -40,7 +40,7 @@ func (r *UnifiedLoggingFilterResource) Create(ctx context.Context, req resource.
 		return
 	}
 
-	result, err := r.service.CreateUnifiedLoggingFilter(ctx, *input)
+	result, err := r.client.CreateUnifiedLoggingFilter(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating unified logging filter", err.Error())
 		return
@@ -96,7 +96,7 @@ func (r *UnifiedLoggingFilterResource) Read(ctx context.Context, req resource.Re
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetUnifiedLoggingFilter(ctx, data.ID.ValueString())
+	result, err := r.client.GetUnifiedLoggingFilter(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -159,7 +159,7 @@ func (r *UnifiedLoggingFilterResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	result, err := r.service.UpdateUnifiedLoggingFilter(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateUnifiedLoggingFilter(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating unified logging filter", err.Error())
 		return
@@ -188,7 +188,7 @@ func (r *UnifiedLoggingFilterResource) Delete(ctx context.Context, req resource.
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteUnifiedLoggingFilter(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteUnifiedLoggingFilter(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "unified logging filter already deleted", map[string]any{"uuid": data.ID.ValueString()})
 			return

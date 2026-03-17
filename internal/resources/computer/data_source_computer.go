@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &ComputerDataSource{}
@@ -24,7 +25,7 @@ func NewComputerDataSource() datasource.DataSource {
 
 // ComputerDataSource retrieves a single computer by UUID.
 type ComputerDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (d *ComputerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -46,7 +47,7 @@ func (d *ComputerDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *ComputerDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *ComputerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -60,7 +61,7 @@ func (d *ComputerDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	// Get computer from API
 	uuid := config.UUID.ValueString()
-	computer, err := d.service.GetComputer(ctx, uuid)
+	computer, err := d.client.GetComputer(ctx, uuid)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Jamf Protect Computer",

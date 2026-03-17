@@ -9,8 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // buildVariables converts the Terraform model into a plan input.

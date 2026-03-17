@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &PlanConfigurationProfileDataSource{}
@@ -22,7 +23,7 @@ func NewPlanConfigurationProfileDataSource() datasource.DataSource {
 
 // PlanConfigurationProfileDataSource retrieves a plan configuration profile payload.
 type PlanConfigurationProfileDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // PlanConfigurationProfileDataSourceModel maps the data source schema.
@@ -93,7 +94,7 @@ func (d *PlanConfigurationProfileDataSource) Schema(ctx context.Context, req dat
 }
 
 func (d *PlanConfigurationProfileDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *PlanConfigurationProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -133,7 +134,7 @@ func (d *PlanConfigurationProfileDataSource) Read(ctx context.Context, req datas
 		ServiceManagement: includeLoginBackgroundItems,
 	}
 
-	profile, err := d.service.GetPlansConfigProfile(ctx, data.ID.ValueString(), &input)
+	profile, err := d.client.GetPlansConfigProfile(ctx, data.ID.ValueString(), &input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving plan configuration profile", err.Error())
 		return

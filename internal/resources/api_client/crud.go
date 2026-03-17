@@ -37,7 +37,7 @@ func (r *ApiClientResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	result, err := r.service.CreateApiClient(ctx, input)
+	result, err := r.client.CreateApiClient(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating API client", err.Error())
 		return
@@ -97,7 +97,7 @@ func (r *ApiClientResource) Read(ctx context.Context, req resource.ReadRequest, 
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetApiClient(ctx, data.ID.ValueString())
+	result, err := r.client.GetApiClient(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -160,7 +160,7 @@ func (r *ApiClientResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	result, err := r.service.UpdateApiClient(ctx, data.ID.ValueString(), input)
+	result, err := r.client.UpdateApiClient(ctx, data.ID.ValueString(), input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating API client", err.Error())
 		return
@@ -203,7 +203,7 @@ func (r *ApiClientResource) Delete(ctx context.Context, req resource.DeleteReque
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteApiClient(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteApiClient(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "api client already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

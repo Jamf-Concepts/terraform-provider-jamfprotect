@@ -40,7 +40,7 @@ func (r *RemovableStorageControlSetResource) Create(ctx context.Context, req res
 		return
 	}
 
-	result, err := r.service.CreateRemovableStorageControlSet(ctx, *input)
+	result, err := r.client.CreateRemovableStorageControlSet(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating removable storage control set", err.Error())
 		return
@@ -96,7 +96,7 @@ func (r *RemovableStorageControlSetResource) Read(ctx context.Context, req resou
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetRemovableStorageControlSet(ctx, data.ID.ValueString())
+	result, err := r.client.GetRemovableStorageControlSet(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -159,7 +159,7 @@ func (r *RemovableStorageControlSetResource) Update(ctx context.Context, req res
 		return
 	}
 
-	result, err := r.service.UpdateRemovableStorageControlSet(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateRemovableStorageControlSet(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating removable storage control set", err.Error())
 		return
@@ -200,7 +200,7 @@ func (r *RemovableStorageControlSetResource) Delete(ctx context.Context, req res
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteRemovableStorageControlSet(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteRemovableStorageControlSet(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "Removable storage control set already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

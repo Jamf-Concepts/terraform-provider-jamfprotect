@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &ApiClientsDataSource{}
@@ -23,7 +24,7 @@ func NewApiClientsDataSource() datasource.DataSource {
 
 // ApiClientsDataSource lists all API clients in Jamf Protect.
 type ApiClientsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // ApiClientsDataSourceModel maps the data source schema.
@@ -88,13 +89,13 @@ func apiClientDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *ApiClientsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *ApiClientsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ApiClientsDataSourceModel
 
-	items, err := d.service.ListApiClients(ctx)
+	items, err := d.client.ListApiClients(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing API clients", err.Error())
 		return

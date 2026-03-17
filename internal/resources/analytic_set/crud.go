@@ -42,7 +42,7 @@ func (r *AnalyticSetResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	result, err := r.service.CreateAnalyticSet(ctx, *input)
+	result, err := r.client.CreateAnalyticSet(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating analytic set", err.Error())
 		return
@@ -69,7 +69,7 @@ func (r *AnalyticSetResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *AnalyticSetResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if r.service == nil {
+	if r.client == nil {
 		return
 	}
 
@@ -132,7 +132,7 @@ func (r *AnalyticSetResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetAnalyticSet(ctx, data.ID.ValueString())
+	result, err := r.client.GetAnalyticSet(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -201,7 +201,7 @@ func (r *AnalyticSetResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	result, err := r.service.UpdateAnalyticSet(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateAnalyticSet(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating analytic set", err.Error())
 		return
@@ -241,7 +241,7 @@ func (r *AnalyticSetResource) Delete(ctx context.Context, req resource.DeleteReq
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteAnalyticSet(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteAnalyticSet(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "analytic set already deleted", map[string]any{"uuid": data.ID.ValueString()})
 			return

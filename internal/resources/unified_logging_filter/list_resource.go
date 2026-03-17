@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &UnifiedLoggingFilterListResource{}
@@ -24,7 +24,7 @@ var _ list.ListResourceWithValidateConfig = &UnifiedLoggingFilterListResource{}
 
 // UnifiedLoggingFilterListResource lists unified logging filters in Jamf Protect.
 type UnifiedLoggingFilterListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list resource configuration.
@@ -54,7 +54,7 @@ func (r *UnifiedLoggingFilterListResource) ListResourceConfigSchema(ctx context.
 
 // Configure assigns the Jamf Protect client for list operations.
 func (r *UnifiedLoggingFilterListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ValidateListResourceConfig validates list configuration inputs.
@@ -70,7 +70,7 @@ func (r *UnifiedLoggingFilterListResource) ValidateListResourceConfig(ctx contex
 
 // List streams unified logging filter list results.
 func (r *UnifiedLoggingFilterListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -87,7 +87,7 @@ func (r *UnifiedLoggingFilterListResource) List(ctx context.Context, req list.Li
 		return
 	}
 
-	items, err := r.service.ListUnifiedLoggingFilters(ctx)
+	items, err := r.client.ListUnifiedLoggingFilters(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing unified logging filters", err.Error()),
@@ -113,7 +113,7 @@ func (r *UnifiedLoggingFilterListResource) List(ctx context.Context, req list.Li
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetUnifiedLoggingFilter(ctx, item.UUID)
+			api, err := r.client.GetUnifiedLoggingFilter(ctx, item.UUID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading unified logging filter", err.Error())
 				results = append(results, result)

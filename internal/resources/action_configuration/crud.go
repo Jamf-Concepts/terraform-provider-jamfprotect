@@ -37,7 +37,7 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	result, err := r.service.CreateActionConfig(ctx, *input)
+	result, err := r.client.CreateActionConfig(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating action config", err.Error())
 		return
@@ -92,7 +92,7 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetActionConfig(ctx, data.ID.ValueString())
+	result, err := r.client.GetActionConfig(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -155,7 +155,7 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	result, err := r.service.UpdateActionConfig(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateActionConfig(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating action config", err.Error())
 		return
@@ -195,7 +195,7 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteActionConfig(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteActionConfig(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "action config already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

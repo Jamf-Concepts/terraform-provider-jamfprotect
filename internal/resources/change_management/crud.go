@@ -32,13 +32,13 @@ func (r *ChangeManagementResource) Create(ctx context.Context, req resource.Crea
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	result, err := r.service.UpdateOrganizationConfigFreeze(ctx, data.EnableFreeze.ValueBool())
+	result, err := r.client.UpdateOrganizationConfigFreeze(ctx, data.EnableFreeze.ValueBool())
 	if err != nil {
 		if data.EnableFreeze.ValueBool() || !isChangeFreezeNotActiveError(err) {
 			resp.Diagnostics.AddError("Error updating change management", err.Error())
 			return
 		}
-		fallback, readErr := r.service.GetConfigFreeze(ctx)
+		fallback, readErr := r.client.GetConfigFreeze(ctx)
 		if readErr != nil {
 			resp.Diagnostics.AddError("Error reading change management", readErr.Error())
 			return
@@ -98,7 +98,7 @@ func (r *ChangeManagementResource) Read(ctx context.Context, req resource.ReadRe
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetConfigFreeze(ctx)
+	result, err := r.client.GetConfigFreeze(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading change management", err.Error())
 		return
@@ -148,13 +148,13 @@ func (r *ChangeManagementResource) Update(ctx context.Context, req resource.Upda
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	result, err := r.service.UpdateOrganizationConfigFreeze(ctx, data.EnableFreeze.ValueBool())
+	result, err := r.client.UpdateOrganizationConfigFreeze(ctx, data.EnableFreeze.ValueBool())
 	if err != nil {
 		if data.EnableFreeze.ValueBool() || !isChangeFreezeNotActiveError(err) {
 			resp.Diagnostics.AddError("Error updating change management", err.Error())
 			return
 		}
-		fallback, readErr := r.service.GetConfigFreeze(ctx)
+		fallback, readErr := r.client.GetConfigFreeze(ctx)
 		if readErr != nil {
 			resp.Diagnostics.AddError("Error reading change management", readErr.Error())
 			return
@@ -199,7 +199,7 @@ func (r *ChangeManagementResource) Delete(ctx context.Context, req resource.Dele
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if _, err := r.service.UpdateOrganizationConfigFreeze(ctx, false); err != nil {
+	if _, err := r.client.UpdateOrganizationConfigFreeze(ctx, false); err != nil {
 		if !isChangeFreezeNotActiveError(err) {
 			resp.Diagnostics.AddError("Error deleting change management", err.Error())
 			return

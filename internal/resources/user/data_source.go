@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &UsersDataSource{}
@@ -23,7 +24,7 @@ func NewUsersDataSource() datasource.DataSource {
 
 // UsersDataSource lists all users in Jamf Protect.
 type UsersDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // UsersDataSourceModel maps the data source schema.
@@ -107,13 +108,13 @@ func userDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *UsersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data UsersDataSourceModel
 
-	allUsers, err := d.service.ListUsers(ctx)
+	allUsers, err := d.client.ListUsers(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing users", err.Error())
 		return

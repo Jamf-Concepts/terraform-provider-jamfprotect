@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &PlanListResource{}
@@ -24,7 +24,7 @@ var _ list.ListResourceWithValidateConfig = &PlanListResource{}
 
 // PlanListResource lists plans in Jamf Protect.
 type PlanListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list resource configuration.
@@ -54,7 +54,7 @@ func (r *PlanListResource) ListResourceConfigSchema(ctx context.Context, req lis
 
 // Configure assigns the Jamf Protect client for list operations.
 func (r *PlanListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ValidateListResourceConfig validates list configuration inputs.
@@ -70,7 +70,7 @@ func (r *PlanListResource) ValidateListResourceConfig(ctx context.Context, req l
 
 // List streams plan list results.
 func (r *PlanListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -87,7 +87,7 @@ func (r *PlanListResource) List(ctx context.Context, req list.ListRequest, resp 
 		return
 	}
 
-	items, err := r.service.ListPlans(ctx)
+	items, err := r.client.ListPlans(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing plans", err.Error()),
@@ -113,7 +113,7 @@ func (r *PlanListResource) List(ctx context.Context, req list.ListRequest, resp 
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetPlan(ctx, item.ID)
+			api, err := r.client.GetPlan(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading plan", err.Error())
 				results = append(results, result)

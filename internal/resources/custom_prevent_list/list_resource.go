@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &CustomPreventListListResource{}
@@ -28,7 +28,7 @@ func NewCustomPreventListListResource() list.ListResource {
 
 // CustomPreventListListResource lists custom prevent lists in Jamf Protect.
 type CustomPreventListListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *CustomPreventListListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -48,7 +48,7 @@ func (r *CustomPreventListListResource) ListResourceConfigSchema(ctx context.Con
 }
 
 func (r *CustomPreventListListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *CustomPreventListListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -62,7 +62,7 @@ func (r *CustomPreventListListResource) ValidateListResourceConfig(ctx context.C
 }
 
 func (r *CustomPreventListListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -79,7 +79,7 @@ func (r *CustomPreventListListResource) List(ctx context.Context, req list.ListR
 		return
 	}
 
-	items, err := r.service.ListCustomPreventLists(ctx)
+	items, err := r.client.ListCustomPreventLists(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing custom prevent lists", err.Error()),
@@ -105,7 +105,7 @@ func (r *CustomPreventListListResource) List(ctx context.Context, req list.ListR
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetCustomPreventList(ctx, item.ID)
+			api, err := r.client.GetCustomPreventList(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading custom prevent list", err.Error())
 				results = append(results, result)

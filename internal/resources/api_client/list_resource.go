@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &ApiClientListResource{}
@@ -29,7 +29,7 @@ func NewApiClientListResource() list.ListResource {
 
 // ApiClientListResource lists API clients in Jamf Protect.
 type ApiClientListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list configuration for API client list resources.
@@ -51,7 +51,7 @@ func (r *ApiClientListResource) ListResourceConfigSchema(ctx context.Context, re
 }
 
 func (r *ApiClientListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *ApiClientListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -65,7 +65,7 @@ func (r *ApiClientListResource) ValidateListResourceConfig(ctx context.Context, 
 }
 
 func (r *ApiClientListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -82,7 +82,7 @@ func (r *ApiClientListResource) List(ctx context.Context, req list.ListRequest, 
 		return
 	}
 
-	items, err := r.service.ListApiClients(ctx)
+	items, err := r.client.ListApiClients(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing API clients", err.Error()),
@@ -108,7 +108,7 @@ func (r *ApiClientListResource) List(ctx context.Context, req list.ListRequest, 
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetApiClient(ctx, item.ClientID)
+			api, err := r.client.GetApiClient(ctx, item.ClientID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading API client", err.Error())
 				results = append(results, result)
