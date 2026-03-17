@@ -91,7 +91,7 @@ var exceptionTypeRuleTypeOptions = map[string][]string{
 	"Screenshot Event":                    {"File Path"},
 	"Keylog Register Event":               {"App Signing Info", "Team ID", "Process Path", "Platform Binary", "User"},
 	"Synthetic Click Event":               {"App Signing Info", "Team ID", "Process Path", "Platform Binary", "User"},
-	"Ignore for Analytic":                 {"App Signing Info", "Team ID", "Process Path", "Platform Binary", "User"},
+	"Ignore for Analytic":                 {"App Signing Info", "Team ID", "Process Path", "Platform Binary", "User", "File Path"},
 }
 
 // analyticTypeToExceptionType maps analytics to UI exception types.
