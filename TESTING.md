@@ -41,18 +41,11 @@ Test files live alongside the code they test, following Go convention:
 
 ```text
 internal/
-├── client/
-│   ├── client_test.go                  # Unit: mock HTTP tests
-│   ├── graphql_test.go                 # Unit: GraphQL error handling
-│   └── pagination_test.go             # Unit: pagination helpers
 ├── common/
 │   ├── helpers/helpers_test.go         # Unit: shared helpers
 │   └── validators/
 │       ├── resource_name_test.go       # Unit: resource name validator
 │       └── uuid_test.go               # Unit: UUID validator
-├── jamfprotect/
-│   ├── service_test.go                 # Unit: service layer tests
-│   └── configure_test.go              # Unit: provider configuration
 ├── provider/
 │   └── schema_test.go                  # Unit: schema and metadata validation for all resources/data sources
 ├── resources/

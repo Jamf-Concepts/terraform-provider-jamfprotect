@@ -35,12 +35,10 @@ The default target runs: `fmt lint install generate`.
 ```text
 main.go                          # Provider entry point (registry.terraform.io/Jamf-Concepts/jamfprotect)
 internal/
-  client/                        # GraphQL transport client + auth + logging + sentinel errors
   common/
     constants/                   # Shared constants (timeouts, etc.)
     helpers/                     # Shared helper utilities
     validators/                  # Shared schema validators (UUID, resource name)
-  jamfprotect/                   # Service layer built on the transport client
   provider/                      # Provider wiring + schema validation tests
   resources/                     # Per-resource packages (resource + data source)
     action_configuration/        # Reference implementation for complex resources
@@ -76,7 +74,7 @@ templates/                       # tfplugindocs templates for doc generation
 ## Provider Development
 
 - Terraform Plugin Framework code lives in `internal/`.
-- The GraphQL client (`internal/client`) uses `sync.Mutex` for thread-safe token management and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
+- The provider uses the [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jamfprotect-go-sdk) (`jamfprotect.Client`) for all API operations. The SDK handles authentication, GraphQL transport, and defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
 - Resource implementations are grouped by package in `internal/resources/<resource>` with files split by concern (crud, helpers, resource, types, data source).
 - Run formatting and linting before committing: `make fmt` and `make lint`.
 - Generate docs with `make generate`.
