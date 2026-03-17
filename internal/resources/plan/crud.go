@@ -40,7 +40,7 @@ func (r *PlanResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	created, err := r.service.CreatePlan(ctx, *input)
+	created, err := r.client.CreatePlan(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating plan", err.Error())
 		return
@@ -100,7 +100,7 @@ func (r *PlanResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	plan, err := r.service.GetPlan(ctx, data.ID.ValueString())
+	plan, err := r.client.GetPlan(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -159,7 +159,7 @@ func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	current, err := r.service.GetPlan(ctx, data.ID.ValueString())
+	current, err := r.client.GetPlan(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -181,7 +181,7 @@ func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	updated, err := r.service.UpdatePlan(ctx, data.ID.ValueString(), *input)
+	updated, err := r.client.UpdatePlan(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating plan", err.Error())
 		return
@@ -214,7 +214,7 @@ func (r *PlanResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeletePlan(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeletePlan(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "plan already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

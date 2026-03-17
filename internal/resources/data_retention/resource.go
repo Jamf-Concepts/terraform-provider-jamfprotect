@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ resource.Resource = &DataRetentionResource{}
@@ -34,7 +35,7 @@ func NewDataRetentionResource() resource.Resource {
 
 // DataRetentionResource manages data retention settings in Jamf Protect.
 type DataRetentionResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *DataRetentionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -86,7 +87,7 @@ func (r *DataRetentionResource) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *DataRetentionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing data retention by ID.

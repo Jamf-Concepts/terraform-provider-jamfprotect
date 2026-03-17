@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &RoleListResource{}
@@ -29,7 +29,7 @@ func NewRoleListResource() list.ListResource {
 
 // RoleListResource lists roles in Jamf Protect.
 type RoleListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list configuration for role list resources.
@@ -51,7 +51,7 @@ func (r *RoleListResource) ListResourceConfigSchema(ctx context.Context, req lis
 }
 
 func (r *RoleListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *RoleListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -65,7 +65,7 @@ func (r *RoleListResource) ValidateListResourceConfig(ctx context.Context, req l
 }
 
 func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -82,7 +82,7 @@ func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp 
 		return
 	}
 
-	items, err := r.service.ListRoles(ctx)
+	items, err := r.client.ListRoles(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing roles", err.Error()),
@@ -108,7 +108,7 @@ func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp 
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetRole(ctx, item.ID)
+			api, err := r.client.GetRole(ctx, item.ID)
 			if err != nil {
 				if isRoleNullTimestampError(err) {
 					result.Diagnostics.AddError(

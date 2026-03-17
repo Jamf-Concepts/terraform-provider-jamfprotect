@@ -16,15 +16,15 @@ import (
 )
 
 func testAccExceptionSetCheckDestroy(s *terraform.State) error {
-	svc := testutil.TestAccService()
-	if svc == nil {
-		return fmt.Errorf("service not configured")
+	c := testutil.TestAccClient()
+	if c == nil {
+		return fmt.Errorf("client not configured")
 	}
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "jamfprotect_exception_set" {
 			continue
 		}
-		result, err := svc.GetExceptionSet(context.Background(), rs.Primary.ID)
+		result, err := c.GetExceptionSet(context.Background(), rs.Primary.ID)
 		if err == nil && result != nil {
 			return fmt.Errorf("exception set %s still exists", rs.Primary.ID)
 		}

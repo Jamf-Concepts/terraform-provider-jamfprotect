@@ -20,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &RemovableStorageControlSetResource{}
@@ -36,7 +36,7 @@ func NewRemovableStorageControlSetResource() resource.Resource {
 
 // RemovableStorageControlSetResource manages a Jamf Protect removable storage control set.
 type RemovableStorageControlSetResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *RemovableStorageControlSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -230,7 +230,7 @@ func (r *RemovableStorageControlSetResource) IdentitySchema(ctx context.Context,
 
 // Configure prepares the removable storage control set service client.
 func (r *RemovableStorageControlSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing removable storage control sets by ID.

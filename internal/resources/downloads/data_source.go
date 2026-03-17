@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 // Download package filenames.
@@ -30,7 +31,7 @@ func NewDownloadsDataSource() datasource.DataSource {
 
 // DownloadsDataSource retrieves download payloads for Jamf Protect.
 type DownloadsDataSource struct {
-	service *jamfprotect.Service
+	client  *jamfprotect.Client
 	baseURL string
 }
 
@@ -102,9 +103,9 @@ func (d *DownloadsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *DownloadsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
-	if d.service != nil {
-		d.baseURL = d.service.BaseURL()
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
+	if d.client != nil {
+		d.baseURL = d.client.BaseURL()
 	}
 }
 
@@ -116,7 +117,7 @@ func (d *DownloadsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	downloads, err := d.service.GetOrganizationDownloads(ctx)
+	downloads, err := d.client.GetOrganizationDownloads(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving downloads", err.Error())
 		return

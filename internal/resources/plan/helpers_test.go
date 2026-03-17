@@ -6,7 +6,7 @@ package plan
 import (
 	"testing"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
@@ -331,4 +331,3 @@ func TestFilterManagedAnalyticSetEntries_NoManaged(t *testing.T) {
 		t.Fatalf("filterManagedAnalyticSetEntries returned %d entries, want 2", len(result))
 	}
 }
-

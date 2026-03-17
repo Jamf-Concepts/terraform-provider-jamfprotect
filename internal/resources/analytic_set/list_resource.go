@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &AnalyticSetListResource{}
@@ -29,7 +29,7 @@ func NewAnalyticSetListResource() list.ListResource {
 
 // AnalyticSetListResource lists analytic sets in Jamf Protect.
 type AnalyticSetListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *AnalyticSetListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,7 +49,7 @@ func (r *AnalyticSetListResource) ListResourceConfigSchema(ctx context.Context, 
 }
 
 func (r *AnalyticSetListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *AnalyticSetListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -63,7 +63,7 @@ func (r *AnalyticSetListResource) ValidateListResourceConfig(ctx context.Context
 }
 
 func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -80,7 +80,7 @@ func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest
 		return
 	}
 
-	items, err := r.service.ListAnalyticSets(ctx)
+	items, err := r.client.ListAnalyticSets(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing analytic sets", err.Error()),
@@ -114,7 +114,7 @@ func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetAnalyticSet(ctx, item.UUID)
+			api, err := r.client.GetAnalyticSet(ctx, item.UUID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading analytic set", err.Error())
 				results = append(results, result)

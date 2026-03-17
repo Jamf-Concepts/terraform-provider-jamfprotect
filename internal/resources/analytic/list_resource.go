@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &AnalyticListResource{}
@@ -28,7 +28,7 @@ func NewAnalyticListResource() list.ListResource {
 
 // AnalyticListResource lists analytics in Jamf Protect.
 type AnalyticListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *AnalyticListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -48,7 +48,7 @@ func (r *AnalyticListResource) ListResourceConfigSchema(ctx context.Context, req
 }
 
 func (r *AnalyticListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *AnalyticListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -62,7 +62,7 @@ func (r *AnalyticListResource) ValidateListResourceConfig(ctx context.Context, r
 }
 
 func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -79,7 +79,7 @@ func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, r
 		return
 	}
 
-	items, err := r.service.ListAnalytics(ctx)
+	items, err := r.client.ListAnalytics(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing analytics", err.Error()),
@@ -105,7 +105,7 @@ func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, r
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetAnalytic(ctx, item.UUID)
+			api, err := r.client.GetAnalytic(ctx, item.UUID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading analytic", err.Error())
 				results = append(results, result)

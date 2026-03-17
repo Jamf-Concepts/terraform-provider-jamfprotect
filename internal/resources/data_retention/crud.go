@@ -33,7 +33,7 @@ func (r *DataRetentionResource) Create(ctx context.Context, req resource.CreateR
 	defer cancel()
 
 	input := buildDataRetentionInput(data)
-	result, err := r.service.UpdateDataRetention(ctx, input)
+	result, err := r.client.UpdateDataRetention(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data retention", err.Error())
 		return
@@ -84,7 +84,7 @@ func (r *DataRetentionResource) Read(ctx context.Context, req resource.ReadReque
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetDataRetention(ctx)
+	result, err := r.client.GetDataRetention(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading data retention", err.Error())
 		return
@@ -127,7 +127,7 @@ func (r *DataRetentionResource) Update(ctx context.Context, req resource.UpdateR
 	defer cancel()
 
 	input := buildDataRetentionInput(data)
-	result, err := r.service.UpdateDataRetention(ctx, input)
+	result, err := r.client.UpdateDataRetention(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data retention", err.Error())
 		return

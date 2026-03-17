@@ -39,7 +39,7 @@ func (r *CustomPreventListResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	created, err := r.service.CreateCustomPreventList(ctx, *input)
+	created, err := r.client.CreateCustomPreventList(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating custom prevent list", err.Error())
 		return
@@ -97,7 +97,7 @@ func (r *CustomPreventListResource) Read(ctx context.Context, req resource.ReadR
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	customPreventList, err := r.service.GetCustomPreventList(ctx, data.ID.ValueString())
+	customPreventList, err := r.client.GetCustomPreventList(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -161,7 +161,7 @@ func (r *CustomPreventListResource) Update(ctx context.Context, req resource.Upd
 	if input == nil {
 		return
 	}
-	updated, err := r.service.UpdateCustomPreventList(ctx, data.ID.ValueString(), *input)
+	updated, err := r.client.UpdateCustomPreventList(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating custom prevent list", err.Error())
 		return
@@ -203,7 +203,7 @@ func (r *CustomPreventListResource) Delete(ctx context.Context, req resource.Del
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteCustomPreventList(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteCustomPreventList(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "custom prevent list already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

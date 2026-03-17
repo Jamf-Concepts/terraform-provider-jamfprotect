@@ -9,13 +9,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
-// Ensure TerraformLogger implements client.Logger interface.
-var _ client.Logger = (*TerraformLogger)(nil)
+// Ensure TerraformLogger implements jamfprotect.Logger interface.
+var _ jamfprotect.Logger = (*TerraformLogger)(nil)
 
-// TerraformLogger implements the client.Logger interface using tflog.
+// TerraformLogger implements the jamfprotect.Logger interface using tflog.
 type TerraformLogger struct{}
 
 // NewTerraformLogger creates a new TerraformLogger.

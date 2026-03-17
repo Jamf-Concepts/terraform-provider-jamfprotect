@@ -39,7 +39,7 @@ func (r *ExceptionSetResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	result, err := r.service.CreateExceptionSet(ctx, *input)
+	result, err := r.client.CreateExceptionSet(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating exception set", err.Error())
 		return
@@ -98,7 +98,7 @@ func (r *ExceptionSetResource) Read(ctx context.Context, req resource.ReadReques
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetExceptionSet(ctx, data.ID.ValueString())
+	result, err := r.client.GetExceptionSet(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -165,7 +165,7 @@ func (r *ExceptionSetResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	result, err := r.service.UpdateExceptionSet(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateExceptionSet(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating exception set", err.Error())
 		return
@@ -208,7 +208,7 @@ func (r *ExceptionSetResource) Delete(ctx context.Context, req resource.DeleteRe
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteExceptionSet(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteExceptionSet(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "exception set already deleted", map[string]any{"uuid": data.ID.ValueString()})
 			return

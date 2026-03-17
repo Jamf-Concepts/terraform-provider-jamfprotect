@@ -39,7 +39,7 @@ func (r *TelemetryV2Resource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	result, err := r.service.CreateTelemetryV2(ctx, *input)
+	result, err := r.client.CreateTelemetryV2(ctx, *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating telemetry v2 configuration", err.Error())
 		return
@@ -99,7 +99,7 @@ func (r *TelemetryV2Resource) Read(ctx context.Context, req resource.ReadRequest
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetTelemetryV2(ctx, data.ID.ValueString())
+	result, err := r.client.GetTelemetryV2(ctx, data.ID.ValueString())
 	if err != nil {
 		if common.IsNotFoundError(err) {
 			resp.State.RemoveResource(ctx)
@@ -166,7 +166,7 @@ func (r *TelemetryV2Resource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	result, err := r.service.UpdateTelemetryV2(ctx, data.ID.ValueString(), *input)
+	result, err := r.client.UpdateTelemetryV2(ctx, data.ID.ValueString(), *input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating telemetry v2 configuration", err.Error())
 		return
@@ -210,7 +210,7 @@ func (r *TelemetryV2Resource) Delete(ctx context.Context, req resource.DeleteReq
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
-	if err := r.service.DeleteTelemetryV2(ctx, data.ID.ValueString()); err != nil {
+	if err := r.client.DeleteTelemetryV2(ctx, data.ID.ValueString()); err != nil {
 		if common.IsNotFoundError(err) {
 			tflog.Trace(ctx, "telemetry v2 configuration already deleted", map[string]any{"id": data.ID.ValueString()})
 			return

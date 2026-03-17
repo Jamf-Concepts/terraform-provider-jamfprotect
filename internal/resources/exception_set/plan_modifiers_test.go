@@ -94,8 +94,10 @@ func stringOrNull(s *string) tftypes.Value {
 }
 
 // strPtr returns a pointer to a string literal.
+//
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // timeoutsNull returns a null tftypes.Value for the timeouts block.
@@ -157,12 +159,12 @@ func TestModifyPlan_SortsRules(t *testing.T) {
 
 	// Build an exception with unsorted rules: User before Process Path before App Signing Info.
 	exc := exceptionObject(
-		strPtr("Process Event"),
+		new("Process Event"),
 		nil,
 		[]tftypes.Value{
-			ruleObject(strPtr("User"), strPtr("admin"), nil, nil),
-			ruleObject(strPtr("Process Path"), strPtr("/usr/bin/test"), nil, nil),
-			ruleObject(strPtr("App Signing Info"), nil, strPtr("com.example"), strPtr("TEAM1")),
+			ruleObject(new("User"), new("admin"), nil, nil),
+			ruleObject(new("Process Path"), new("/usr/bin/test"), nil, nil),
+			ruleObject(new("App Signing Info"), nil, new("com.example"), new("TEAM1")),
 		},
 	)
 

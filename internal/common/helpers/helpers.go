@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 // PageInfo represents the pagination metadata returned by list queries.
@@ -78,7 +78,7 @@ func StringsToSet(vals []string) types.Set {
 // This is used to make Delete idempotent — if the resource is already gone, the
 // delete is considered successful.
 func IsNotFoundError(err error) bool {
-	return errors.Is(err, client.ErrNotFound)
+	return errors.Is(err, jamfprotect.ErrNotFound)
 }
 
 // Int64ValueOrNullValue returns a types.Int64Value if the value is non-zero, or types.Int64Null if the value is zero.

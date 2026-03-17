@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &GroupListResource{}
@@ -29,7 +29,7 @@ func NewGroupListResource() list.ListResource {
 
 // GroupListResource lists groups in Jamf Protect.
 type GroupListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *GroupListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,7 +49,7 @@ func (r *GroupListResource) ListResourceConfigSchema(ctx context.Context, req li
 }
 
 func (r *GroupListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *GroupListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
@@ -63,7 +63,7 @@ func (r *GroupListResource) ValidateListResourceConfig(ctx context.Context, req 
 }
 
 func (r *GroupListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -80,7 +80,7 @@ func (r *GroupListResource) List(ctx context.Context, req list.ListRequest, resp
 		return
 	}
 
-	items, err := r.service.ListGroups(ctx)
+	items, err := r.client.ListGroups(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing groups", err.Error()),
@@ -106,7 +106,7 @@ func (r *GroupListResource) List(ctx context.Context, req list.ListRequest, resp
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetGroup(ctx, item.ID)
+			api, err := r.client.GetGroup(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading group", err.Error())
 				results = append(results, result)

@@ -32,7 +32,7 @@ func (r *DataForwardingResource) Create(ctx context.Context, req resource.Create
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	current, err := r.service.GetDataForwarding(ctx)
+	current, err := r.client.GetDataForwarding(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading data forwarding", err.Error())
 		return
@@ -43,7 +43,7 @@ func (r *DataForwardingResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	result, err := r.service.UpdateDataForwarding(ctx, input)
+	result, err := r.client.UpdateDataForwarding(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data forwarding", err.Error())
 		return
@@ -94,7 +94,7 @@ func (r *DataForwardingResource) Read(ctx context.Context, req resource.ReadRequ
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	result, err := r.service.GetDataForwarding(ctx)
+	result, err := r.client.GetDataForwarding(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading data forwarding", err.Error())
 		return
@@ -136,7 +136,7 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	current, err := r.service.GetDataForwarding(ctx)
+	current, err := r.client.GetDataForwarding(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading data forwarding", err.Error())
 		return
@@ -147,7 +147,7 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	result, err := r.service.UpdateDataForwarding(ctx, input)
+	result, err := r.client.UpdateDataForwarding(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating data forwarding", err.Error())
 		return

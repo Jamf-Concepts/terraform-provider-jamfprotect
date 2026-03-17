@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 var _ datasource.DataSource = &UnifiedLoggingFiltersDataSource{}
@@ -25,7 +25,7 @@ func NewUnifiedLoggingFiltersDataSource() datasource.DataSource {
 
 // UnifiedLoggingFiltersDataSource lists all unified logging filters in Jamf Protect.
 type UnifiedLoggingFiltersDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // UnifiedLoggingFiltersDataSourceModel maps the data source schema.
@@ -102,14 +102,14 @@ func (d *UnifiedLoggingFiltersDataSource) Schema(ctx context.Context, req dataso
 
 // Configure prepares the unified logging filter service client.
 func (d *UnifiedLoggingFiltersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // Read retrieves unified logging filters from the API.
 func (d *UnifiedLoggingFiltersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data UnifiedLoggingFiltersDataSourceModel
 
-	allItems, err := d.service.ListUnifiedLoggingFilters(ctx)
+	allItems, err := d.client.ListUnifiedLoggingFilters(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing unified logging filters", err.Error())
 		return

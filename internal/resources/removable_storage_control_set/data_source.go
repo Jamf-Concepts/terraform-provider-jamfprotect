@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
 var _ datasource.DataSource = &RemovableStorageControlSetsDataSource{}
@@ -25,7 +25,7 @@ func NewRemovableStorageControlSetsDataSource() datasource.DataSource {
 
 // RemovableStorageControlSetsDataSource lists all removable storage control sets in Jamf Protect.
 type RemovableStorageControlSetsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // RemovableStorageControlSetsDataSourceModel maps the data source schema.
@@ -237,14 +237,14 @@ func (d *RemovableStorageControlSetsDataSource) Schema(ctx context.Context, req 
 
 // Configure prepares the removable storage control set service client.
 func (d *RemovableStorageControlSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // Read retrieves removable storage control sets from the API.
 func (d *RemovableStorageControlSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data RemovableStorageControlSetsDataSourceModel
 
-	allItems, err := d.service.ListRemovableStorageControlSets(ctx)
+	allItems, err := d.client.ListRemovableStorageControlSets(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing removable storage control sets", err.Error())
 		return

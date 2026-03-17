@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &ComputersDataSource{}
@@ -22,7 +23,7 @@ func NewComputersDataSource() datasource.DataSource {
 
 // ComputersDataSource lists all computers in Jamf Protect.
 type ComputersDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (d *ComputersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -45,13 +46,13 @@ func (d *ComputersDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *ComputersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *ComputersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state ComputersDataSourceModel
 
-	computers, err := d.service.ListComputers(ctx)
+	computers, err := d.client.ListComputers(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Jamf Protect Computers",

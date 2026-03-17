@@ -16,15 +16,15 @@ import (
 )
 
 func testAccUnifiedLoggingFilterCheckDestroy(s *terraform.State) error {
-	svc := testutil.TestAccService()
-	if svc == nil {
-		return fmt.Errorf("service not configured")
+	c := testutil.TestAccClient()
+	if c == nil {
+		return fmt.Errorf("client not configured")
 	}
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "jamfprotect_unified_logging_filter" {
 			continue
 		}
-		result, err := svc.GetUnifiedLoggingFilter(context.Background(), rs.Primary.ID)
+		result, err := c.GetUnifiedLoggingFilter(context.Background(), rs.Primary.ID)
 		if err == nil && result != nil {
 			return fmt.Errorf("unified logging filter %s still exists", rs.Primary.ID)
 		}

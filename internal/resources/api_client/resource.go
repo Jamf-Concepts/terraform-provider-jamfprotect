@@ -16,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &ApiClientResource{}
@@ -31,7 +32,7 @@ func NewApiClientResource() resource.Resource {
 
 // ApiClientResource manages a Jamf Protect API client.
 type ApiClientResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *ApiClientResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -79,7 +80,7 @@ func (r *ApiClientResource) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *ApiClientResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing API clients by ID.

@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ resource.Resource = &ChangeManagementResource{}
@@ -31,7 +32,7 @@ func NewChangeManagementResource() resource.Resource {
 
 // ChangeManagementResource manages change management settings in Jamf Protect.
 type ChangeManagementResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *ChangeManagementResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -62,7 +63,7 @@ func (r *ChangeManagementResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *ChangeManagementResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing change management by ID.

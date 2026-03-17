@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &RoleResource{}
@@ -33,7 +33,7 @@ func NewRoleResource() resource.Resource {
 
 // RoleResource manages a Jamf Protect role.
 type RoleResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *RoleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -84,7 +84,7 @@ func (r *RoleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 }
 
 func (r *RoleResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing roles by ID.

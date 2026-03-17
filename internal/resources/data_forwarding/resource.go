@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ resource.Resource = &DataForwardingResource{}
@@ -37,7 +38,7 @@ func NewDataForwardingResource() resource.Resource {
 
 // DataForwardingResource manages data forwarding settings in Jamf Protect.
 type DataForwardingResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *DataForwardingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -169,7 +170,7 @@ func dataStreamSchema(description string) schema.SingleNestedAttribute {
 }
 
 func (r *DataForwardingResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ImportState supports importing data forwarding by ID.

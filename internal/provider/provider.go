@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/client"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic_set"
@@ -123,20 +123,23 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	client := client.NewClientWithVersion(url, clientID, clientSecret, p.version)
-	if shouldEnableHTTPLogging() {
-		client.SetLogger(NewTerraformLogger())
+	opts := []jamfprotect.Option{
+		jamfprotect.WithUserAgent("terraform-provider-jamfprotect/" + p.version),
 	}
-	if _, err := client.AccessToken(ctx); err != nil {
+	if shouldEnableHTTPLogging() {
+		opts = append(opts, jamfprotect.WithLogger(NewTerraformLogger()))
+	}
+	c := jamfprotect.NewClient(url, clientID, clientSecret, opts...)
+	if _, err := c.AccessToken(ctx); err != nil {
 		resp.Diagnostics.AddError(
 			"Jamf Protect authentication failed",
 			"The provider could not authenticate with the Jamf Protect API. Verify the URL, client ID, and client secret. Details: "+err.Error(),
 		)
 		return
 	}
-	resp.DataSourceData = client
-	resp.ResourceData = client
-	resp.ListResourceData = client
+	resp.DataSourceData = c
+	resp.ResourceData = c
+	resp.ListResourceData = c
 }
 
 func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.Resource {

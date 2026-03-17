@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &AnalyticSetsDataSource{}
@@ -22,7 +23,7 @@ func NewAnalyticSetsDataSource() datasource.DataSource {
 
 // AnalyticSetsDataSource lists all analytic sets in Jamf Protect.
 type AnalyticSetsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // AnalyticSetsDataSourceModel maps the data source schema.
@@ -133,13 +134,13 @@ func analyticSetDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *AnalyticSetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *AnalyticSetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data AnalyticSetsDataSourceModel
 
-	items, err := d.service.ListAnalyticSets(ctx)
+	items, err := d.client.ListAnalyticSets(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing analytic sets", err.Error())
 		return

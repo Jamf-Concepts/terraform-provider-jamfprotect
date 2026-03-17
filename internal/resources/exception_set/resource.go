@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/validators"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ resource.Resource = &ExceptionSetResource{}
@@ -33,7 +33,7 @@ func NewExceptionSetResource() resource.Resource {
 
 // ExceptionSetResource manages a Jamf Protect exception set.
 type ExceptionSetResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 func (r *ExceptionSetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -129,7 +129,7 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *ExceptionSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (r *ExceptionSetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

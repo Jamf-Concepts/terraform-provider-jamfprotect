@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &GroupsDataSource{}
@@ -23,7 +24,7 @@ func NewGroupsDataSource() datasource.DataSource {
 
 // GroupsDataSource lists all groups in Jamf Protect.
 type GroupsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // GroupsDataSourceModel maps the data source schema.
@@ -86,13 +87,13 @@ func groupDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *GroupsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *GroupsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data GroupsDataSourceModel
 
-	allGroups, err := d.service.ListGroups(ctx)
+	allGroups, err := d.client.ListGroups(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing groups", err.Error())
 		return

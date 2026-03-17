@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &ActionConfigsDataSource{}
@@ -22,7 +23,7 @@ func NewActionConfigsDataSource() datasource.DataSource {
 
 // ActionConfigsDataSource lists all action configurations in Jamf Protect.
 type ActionConfigsDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // ActionConfigsDataSourceModel maps the data source schema.
@@ -82,13 +83,13 @@ func (d *ActionConfigsDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *ActionConfigsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *ActionConfigsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ActionConfigsDataSourceModel
 
-	itemsAPI, err := d.service.ListActionConfigs(ctx)
+	itemsAPI, err := d.client.ListActionConfigs(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing action configs", err.Error())
 		return

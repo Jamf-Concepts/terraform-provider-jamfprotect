@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
 var _ datasource.DataSource = &IdentityProvidersDataSource{}
@@ -23,7 +24,7 @@ func NewIdentityProvidersDataSource() datasource.DataSource {
 
 // IdentityProvidersDataSource lists all identity provider connections in Jamf Protect.
 type IdentityProvidersDataSource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // IdentityProvidersDataSourceModel maps the data source schema.
@@ -106,13 +107,13 @@ func identityProviderDataSourceAttributes() map[string]schema.Attribute {
 }
 
 func (d *IdentityProvidersDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	d.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func (d *IdentityProvidersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data IdentityProvidersDataSourceModel
 
-	items, err := d.service.ListConnections(ctx)
+	items, err := d.client.ListConnections(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing identity providers", err.Error())
 		return

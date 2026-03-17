@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 var _ list.ListResource = &RemovableStorageControlSetListResource{}
@@ -24,7 +24,7 @@ var _ list.ListResourceWithValidateConfig = &RemovableStorageControlSetListResou
 
 // RemovableStorageControlSetListResource lists removable storage control sets in Jamf Protect.
 type RemovableStorageControlSetListResource struct {
-	service *jamfprotect.Service
+	client *jamfprotect.Client
 }
 
 // listConfigModel maps list resource configuration.
@@ -54,7 +54,7 @@ func (r *RemovableStorageControlSetListResource) ListResourceConfigSchema(ctx co
 
 // Configure assigns the Jamf Protect client for list operations.
 func (r *RemovableStorageControlSetListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.service = jamfprotect.ConfigureService(req.ProviderData, &resp.Diagnostics)
+	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
 // ValidateListResourceConfig validates list configuration inputs.
@@ -70,7 +70,7 @@ func (r *RemovableStorageControlSetListResource) ValidateListResourceConfig(ctx 
 
 // List streams removable storage control set list results.
 func (r *RemovableStorageControlSetListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
-	if r.service == nil {
+	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Missing Jamf Protect client",
@@ -87,7 +87,7 @@ func (r *RemovableStorageControlSetListResource) List(ctx context.Context, req l
 		return
 	}
 
-	items, err := r.service.ListRemovableStorageControlSets(ctx)
+	items, err := r.client.ListRemovableStorageControlSets(ctx)
 	if err != nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic("Error listing removable storage control sets", err.Error()),
@@ -113,7 +113,7 @@ func (r *RemovableStorageControlSetListResource) List(ctx context.Context, req l
 		}
 
 		if req.IncludeResource {
-			api, err := r.service.GetRemovableStorageControlSet(ctx, item.ID)
+			api, err := r.client.GetRemovableStorageControlSet(ctx, item.ID)
 			if err != nil {
 				result.Diagnostics.AddError("Error reading removable storage control set", err.Error())
 				results = append(results, result)

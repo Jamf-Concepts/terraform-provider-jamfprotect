@@ -6,8 +6,8 @@ package user
 import (
 	"testing"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 )
 
 // TestUserRoleIDs_PopulatedSlice verifies that role IDs are correctly extracted from a populated slice.

@@ -7,8 +7,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
-	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/jamfprotect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -37,7 +37,7 @@ func (r *AnalyticSetResource) validateAnalyticsExist(ctx context.Context, analyt
 		return
 	}
 
-	items, err := r.service.ListAnalytics(ctx)
+	items, err := r.client.ListAnalytics(ctx)
 	if err != nil {
 		diags.AddError("Error listing analytics", err.Error())
 		return
