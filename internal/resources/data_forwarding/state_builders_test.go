@@ -140,10 +140,3 @@ func TestStringPointerValueOrNull_ReturnsNull(t *testing.T) {
 		})
 	}
 }
-
-// strPtr is a test helper that returns a pointer to the given string.
-//
-//go:fix inline
-func strPtr(s string) *string {
-	return new(s)
-}

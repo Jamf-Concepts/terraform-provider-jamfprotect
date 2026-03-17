@@ -93,13 +93,6 @@ func stringOrNull(s *string) tftypes.Value {
 	return tftypes.NewValue(tftypes.String, *s)
 }
 
-// strPtr returns a pointer to a string literal.
-//
-//go:fix inline
-func strPtr(s string) *string {
-	return new(s)
-}
-
 // timeoutsNull returns a null tftypes.Value for the timeouts block.
 func timeoutsNull() tftypes.Value {
 	return tftypes.NewValue(
