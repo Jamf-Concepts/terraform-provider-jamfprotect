@@ -144,6 +144,34 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 	})
 }
 
+func TestAccExceptionSetResource_withIgnoreForAnalyticFilePath(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-exception-set")
+	resourceName := "jamfprotect_exception_set.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccExceptionSetCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExceptionSetResourceConfigWithIgnoreForAnalyticFilePath(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "exceptions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"type": "Ignore for Analytic",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
+						"rules.0.rule_type": "File Path",
+						"rules.0.value":    "/Library/LaunchDaemons/com.example.failure.plist",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccExceptionSetResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_exception_set" "test" {
@@ -219,6 +247,34 @@ resource "jamfprotect_exception_set" "test" {
 				{
 					rule_type = "Process Path"
 					value     = "/usr/bin/test"
+				},
+			]
+		},
+	]
+}
+`, name)
+}
+
+func testAccExceptionSetResourceConfigWithIgnoreForAnalyticFilePath(name string) string {
+	return fmt.Sprintf(`
+data "jamfprotect_analytics" "all" {}
+
+locals {
+  launch_daemon = [for a in data.jamfprotect_analytics.all.analytics : a if a.name == "LaunchDaemon"][0]
+}
+
+resource "jamfprotect_exception_set" "test" {
+  name        = %[1]q
+  description = "Test exception set with Ignore for Analytic File Path rule"
+
+	exceptions = [
+		{
+			type     = "Ignore for Analytic"
+			sub_type = local.launch_daemon.id
+			rules = [
+				{
+					rule_type = "File Path"
+					value     = "/Library/LaunchDaemons/com.example.failure.plist"
 				},
 			]
 		},

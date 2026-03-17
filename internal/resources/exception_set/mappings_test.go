@@ -4,6 +4,7 @@
 package exception_set
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -746,6 +747,26 @@ func TestMapApiEsExceptionType_ThreatPreventionWrongListType(t *testing.T) {
 	_, _, ok := mapApiEsExceptionType("ThreatPrevention", "wrong", "", "")
 	if ok {
 		t.Fatal("expected ok=false for wrong list type with ThreatPrevention, got true")
+	}
+}
+
+func TestExceptionTypeRuleTypeOptions_IgnoreForAnalyticIncludesFilePath(t *testing.T) {
+	t.Parallel()
+
+	allowed := exceptionTypeRuleTypeOptions["Ignore for Analytic"]
+	if allowed == nil {
+		t.Fatal("exceptionTypeRuleTypeOptions missing entry for \"Ignore for Analytic\"")
+	}
+
+	expected := []string{"App Signing Info", "Team ID", "Process Path", "Platform Binary", "User", "File Path"}
+	if len(allowed) != len(expected) {
+		t.Fatalf("expected %d rule types for \"Ignore for Analytic\", got %d: %v", len(expected), len(allowed), allowed)
+	}
+
+	for _, rt := range expected {
+		if !slices.Contains(allowed, rt) {
+			t.Errorf("expected rule type %q to be allowed for \"Ignore for Analytic\", but it was not found", rt)
+		}
 	}
 }
 
