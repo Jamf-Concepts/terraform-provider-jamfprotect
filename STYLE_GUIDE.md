@@ -12,7 +12,7 @@ Code style conventions for the Terraform Provider for Jamf Protect.
 
 ## Dependencies
 
-Only use native Go, `golang.org/x` packages, and Terraform Plugin Framework packages. Do not introduce third-party dependencies without discussion.
+Only use native Go, `golang.org/x` packages, the [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jamfprotect-go-sdk), and Terraform Plugin Framework packages. Do not introduce third-party dependencies without discussion.
 
 ## Resource Package File Conventions
 
@@ -55,19 +55,9 @@ Packages that only contain a data source use `model_types.go` for their model st
 
 Schema and metadata tests live in `internal/provider/schema_test.go`.
 
-## Service Layer Conventions
+## Service Layer
 
-The service layer in `internal/jamfprotect/` wraps the GraphQL client and provides typed CRUD methods per resource:
-
-```go
-func (s *Service) CreateActionConfig(ctx context.Context, input ActionConfigInput) (ActionConfig, error)
-func (s *Service) GetActionConfig(ctx context.Context, id string) (*ActionConfig, error)
-func (s *Service) UpdateActionConfig(ctx context.Context, id string, input ActionConfigInput) (ActionConfig, error)
-func (s *Service) DeleteActionConfig(ctx context.Context, id string) error
-func (s *Service) ListActionConfigs(ctx context.Context) ([]ActionConfigListItem, error)
-```
-
-Each service file contains the GraphQL queries/mutations as constants and the Go types for API request/response payloads.
+The provider uses the [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jamfprotect-go-sdk) (`jamfprotect.Client`) for all API operations. The SDK handles authentication, GraphQL transport, and provides typed CRUD methods per resource. Sentinel errors (`ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`) are defined by the SDK.
 
 ## Schema Guidelines
 
@@ -83,9 +73,9 @@ Data source attributes returning API data should always use lists. Sort API resp
 
 ## Error Handling
 
-- Use `common.IsNotFoundError(err)` for 404 detection in Read/Delete operations (imported as `common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"`).
+- Use `common.IsNotFoundError(err)` for 404 detection in Read/Delete operations (imported as `common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"`). This wraps the SDK's `jamfprotect.ErrNotFound`.
 - Wrap errors with `fmt.Errorf("context: %w", err)` to preserve the error chain.
-- The GraphQL client defines sentinel errors: `ErrAuthentication`, `ErrGraphQL`, `ErrNotFound`.
+- The SDK defines sentinel errors: `jamfprotect.ErrAuthentication`, `jamfprotect.ErrGraphQL`, `jamfprotect.ErrNotFound`.
 
 ## Naming Patterns
 

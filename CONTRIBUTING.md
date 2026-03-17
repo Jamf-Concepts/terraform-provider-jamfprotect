@@ -43,15 +43,14 @@ make
 
 ## Adding a New Resource
 
-1. Add service methods in `internal/jamfprotect/` for the new resource (Create, Get, Update, Delete, List).
-2. Create the resource package under `internal/resources/<resource_name>/` following the file conventions in [AGENTS.md](AGENTS.md#resource-package-file-conventions).
-3. Register the resource in `internal/provider/provider.go` in the `Resources()` method.
-4. Add tests:
+1. Create the resource package under `internal/resources/<resource_name>/` following the file conventions in [AGENTS.md](AGENTS.md#resource-package-file-conventions).
+2. Register the resource in `internal/provider/provider.go` in the `Resources()` method.
+3. Add tests:
    - Schema and metadata tests in `internal/provider/schema_test.go`.
    - Acceptance tests in `internal/resources/<resource_name>/resource_test.go`.
-5. Add example `.tf` files under `examples/resources/jamfprotect_<resource_name>/`.
-6. Run `make generate` to regenerate documentation.
-7. Run `make test` to verify all tests pass.
+4. Add example `.tf` files under `examples/resources/jamfprotect_<resource_name>/`.
+5. Run `make generate` to regenerate documentation.
+6. Run `make test` to verify all tests pass.
 
 ## Adding a New Data Source
 
@@ -65,8 +64,6 @@ See [AGENTS.md](AGENTS.md) for the full project structure and conventions. Key d
 | ---------------------- | -------------------------------------------------------- |
 | `internal/provider/`   | Provider configuration and resource registration         |
 | `internal/resources/`  | Resource, data source, and list resource implementations |
-| `internal/jamfprotect/`| Service layer (GraphQL operations)                       |
-| `internal/client/`     | GraphQL transport client, auth, and error handling       |
 | `internal/common/`     | Shared helpers, constants, and validators                |
 | `internal/testutil/`   | Acceptance test utilities                                |
 | `examples/`            | Example `.tf` configurations                             |
@@ -75,7 +72,7 @@ See [AGENTS.md](AGENTS.md) for the full project structure and conventions. Key d
 
 ## Dependencies
 
-This project uses native Go, `golang.org/x` packages, and Terraform Plugin Framework packages. Do not introduce third-party dependencies without discussion.
+This project uses native Go, `golang.org/x` packages, the [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jamfprotect-go-sdk), and Terraform Plugin Framework packages. Do not introduce third-party dependencies without discussion.
 
 ## Commit Messages
 

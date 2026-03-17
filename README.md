@@ -246,8 +246,8 @@ The following third party acknowledgements and licenses are incorporated by refe
 - [Terraform Plugin Log](https://github.com/hashicorp/terraform-plugin-log) ([MPL](https://github.com/hashicorp/terraform-plugin-log?tab=MPL-2.0-1-ov-file))
 - [Terraform Plugin Testing](https://github.com/hashicorp/terraform-plugin-testing) ([MPL](https://github.com/hashicorp/terraform-plugin-testing?tab=MPL-2.0-1-ov-file))
 - [Go Retryable HTTP](https://github.com/hashicorp/go-retryablehttp) ([MPL](https://github.com/hashicorp/go-retryablehttp?tab=MPL-2.0-1-ov-file))
+- [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jamfprotect-go-sdk) ([MIT](https://github.com/Jamf-Concepts/jamfprotect-go-sdk?tab=MIT-1-ov-file))
 - [Go UUID](https://github.com/hashicorp/go-uuid) ([MPL](https://github.com/hashicorp/go-uuid?tab=MPL-2.0-1-ov-file))
-- [x/sync](https://github.com/golang/sync) ([BSD-3-Clause](https://github.com/golang/sync/blob/master/LICENSE))
 
 &nbsp;
 
