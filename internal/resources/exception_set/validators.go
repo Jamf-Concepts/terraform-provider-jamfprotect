@@ -36,20 +36,21 @@ func (r *ExceptionSetResource) ValidateConfig(ctx context.Context, req resource.
 		}
 
 		exceptionType := exc.Type.ValueString()
+		subTypeUnknown := exc.SubType.IsUnknown()
 		subType := ""
-		hasSubType := !exc.SubType.IsNull() && !exc.SubType.IsUnknown()
+		hasSubType := !exc.SubType.IsNull() && !subTypeUnknown
 		if hasSubType {
 			subType = exc.SubType.ValueString()
 		}
 
-		if exceptionTypeRequiresSubType(exceptionType) && (!hasSubType || subType == "") {
+		if exceptionTypeRequiresSubType(exceptionType) && !subTypeUnknown && (!hasSubType || subType == "") {
 			resp.Diagnostics.AddError(
 				"Missing exception subtype",
 				"Exception types that require a subtype must specify sub_type.",
 			)
 		}
 
-		if exceptionTypeForbidsSubType(exceptionType) && hasSubType && subType != "" {
+		if exceptionTypeForbidsSubType(exceptionType) && (hasSubType && subType != "" || subTypeUnknown) {
 			resp.Diagnostics.AddError(
 				"Unexpected exception subtype",
 				"Exception types that do not support subtypes must not set sub_type.",
@@ -65,14 +66,16 @@ func (r *ExceptionSetResource) ValidateConfig(ctx context.Context, req resource.
 			}
 		}
 
-		key := exceptionType + "|" + subType
-		if _, ok := seen[key]; ok {
-			resp.Diagnostics.AddError(
-				"Duplicate exception type/subtype",
-				"Each exception type and subtype combination can only appear once.",
-			)
-		} else {
-			seen[key] = struct{}{}
+		if !subTypeUnknown {
+			key := exceptionType + "|" + subType
+			if _, ok := seen[key]; ok {
+				resp.Diagnostics.AddError(
+					"Duplicate exception type/subtype",
+					"Each exception type and subtype combination can only appear once.",
+				)
+			} else {
+				seen[key] = struct{}{}
+			}
 		}
 
 		if exc.Rules.IsNull() {
