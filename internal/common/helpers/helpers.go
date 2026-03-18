@@ -33,6 +33,21 @@ func ListToStrings(ctx context.Context, list types.List, diags *diag.Diagnostics
 	return result
 }
 
+// SetContainsUnknown reports whether the set itself is unknown or any of its
+// elements are unknown. This is useful for guarding calls to SetToStrings in
+// validation functions where set elements may reference unresolved resources.
+func SetContainsUnknown(set types.Set) bool {
+	if set.IsUnknown() {
+		return true
+	}
+	for _, elem := range set.Elements() {
+		if elem.IsUnknown() {
+			return true
+		}
+	}
+	return false
+}
+
 // SetToStrings converts a types.Set of strings into a Go []string.
 func SetToStrings(ctx context.Context, set types.Set, diags *diag.Diagnostics) []string {
 	if set.IsNull() || set.IsUnknown() {

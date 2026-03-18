@@ -164,7 +164,7 @@ func TestAccExceptionSetResource_withIgnoreForAnalyticFilePath(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exceptions.*", map[string]string{
 						"rules.0.rule_type": "File Path",
-						"rules.0.value":    "/Library/LaunchDaemons/com.example.failure.plist",
+						"rules.0.value":     "/Library/LaunchDaemons/com.example.failure.plist",
 					}),
 				),
 			},

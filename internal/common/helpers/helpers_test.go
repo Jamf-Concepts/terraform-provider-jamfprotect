@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -190,6 +191,56 @@ func TestIsNotFoundError(t *testing.T) {
 			result := IsNotFoundError(tc.err)
 			if result != tc.expected {
 				t.Errorf("IsNotFoundError(%v) = %v, want %v", tc.err, result, tc.expected)
+			}
+		})
+	}
+}
+
+func TestSetContainsUnknown(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		set      types.Set
+		expected bool
+	}{
+		{
+			name:     "known elements",
+			set:      StringsToSet([]string{"a", "b"}),
+			expected: false,
+		},
+		{
+			name:     "empty set",
+			set:      StringsToSet([]string{}),
+			expected: false,
+		},
+		{
+			name:     "null set",
+			set:      types.SetNull(types.StringType),
+			expected: false,
+		},
+		{
+			name:     "unknown set",
+			set:      types.SetUnknown(types.StringType),
+			expected: true,
+		},
+		{
+			name: "set with unknown element",
+			set: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringUnknown(),
+			}),
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := SetContainsUnknown(tc.set)
+			if result != tc.expected {
+				t.Errorf("SetContainsUnknown() = %v, want %v", result, tc.expected)
 			}
 		})
 	}

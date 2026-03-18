@@ -119,7 +119,17 @@ func (r *UserResource) ValidateConfig(ctx context.Context, req resource.Validate
 		return
 	}
 
-	if !data.IdentityProviderID.IsNull() && !data.IdentityProviderID.IsUnknown() {
+	// If identity_provider_id is set or not yet known, skip validation.
+	// When unknown we cannot determine whether the constraint is satisfied.
+	if !data.IdentityProviderID.IsNull() {
+		return
+	}
+
+	// identity_provider_id is definitively null — role_ids and group_ids
+	// must not be set. Skip if either set contains unknown elements that
+	// cannot be converted to Go strings yet (e.g. references to resources
+	// that have not been created).
+	if common.SetContainsUnknown(data.RoleIDs) || common.SetContainsUnknown(data.GroupIDs) {
 		return
 	}
 
