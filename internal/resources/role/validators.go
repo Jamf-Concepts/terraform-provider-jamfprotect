@@ -23,6 +23,12 @@ func (r *RoleResource) ValidateConfig(ctx context.Context, req resource.Validate
 		return
 	}
 
+	// Skip validation when set elements are not yet known (e.g. references
+	// to other resources or variables that resolve later).
+	if common.SetContainsUnknown(data.ReadPermissions) || common.SetContainsUnknown(data.WritePermissions) {
+		return
+	}
+
 	readValues := common.SetToStrings(ctx, data.ReadPermissions, &resp.Diagnostics)
 	writeValues := common.SetToStrings(ctx, data.WritePermissions, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
