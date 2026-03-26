@@ -3,7 +3,7 @@ module tools
 go 1.26.0
 
 require (
-	github.com/hashicorp/copywrite v0.25.1
+	github.com/hashicorp/copywrite v0.25.2
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 )
 
@@ -29,7 +29,6 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/google/go-github/v45 v45.2.0 // indirect
-	github.com/google/go-github/v75 v75.0.0 // indirect
 	github.com/google/go-github/v84 v84.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -75,7 +74,6 @@ require (
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
