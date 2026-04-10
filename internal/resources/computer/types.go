@@ -16,7 +16,7 @@ type ComputerModel struct {
 	OSPatch                 types.Int64  `tfsdk:"os_patch"`
 	Arch                    types.String `tfsdk:"arch"`
 	CertID                  types.String `tfsdk:"cert_id"`
-	MemorySize              types.Int64  `tfsdk:"memory_size"`
+	MemorySize              types.Float64 `tfsdk:"memory_size"`
 	OSString                types.String `tfsdk:"os_string"`
 	KernelVersion           types.String `tfsdk:"kernel_version"`
 	InstallType             types.String `tfsdk:"install_type"`

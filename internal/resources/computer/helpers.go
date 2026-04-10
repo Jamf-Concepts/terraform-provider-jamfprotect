@@ -59,7 +59,7 @@ func computerDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The certificate ID of the computer.",
 			Computed:            true,
 		},
-		"memory_size": schema.Int64Attribute{
+		"memory_size": schema.Float64Attribute{
 			MarkdownDescription: "The memory size of the computer in bytes.",
 			Computed:            true,
 		},
@@ -181,7 +181,7 @@ func buildComputerModel(computer jamfprotect.Computer) ComputerModel {
 		OSPatch:                 types.Int64PointerValue(computer.OSPatch),
 		Arch:                    types.StringPointerValue(computer.Arch),
 		CertID:                  types.StringPointerValue(computer.CertID),
-		MemorySize:              types.Int64PointerValue(computer.MemorySize),
+		MemorySize:              types.Float64PointerValue(computer.MemorySize),
 		OSString:                types.StringPointerValue(computer.OSString),
 		KernelVersion:           types.StringPointerValue(computer.KernelVersion),
 		InstallType:             types.StringPointerValue(computer.InstallType),
