@@ -22,7 +22,7 @@ func TestBuildComputerModel_AllFields(t *testing.T) {
 	osPatch := int64(0)
 	arch := "arm64"
 	certID := "cert-123"
-	memSize := int64(17179869184) // 16 GB
+	memSize := float64(17179869184) // 16 GB
 	osString := "macOS 14.1"
 	kernelVer := "23.1.0"
 	installType := "pkg"
