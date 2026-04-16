@@ -51,10 +51,10 @@ Read-Only:
 - `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 - `report_architecture` (Boolean) Whether device architecture reporting is enabled.
 - `report_hostname` (Boolean) Whether device hostname reporting is enabled.
-- `report_kernel_version` (Boolean) Whether kernel version reporting is enabled.
+- `report_kernel_version` (Boolean, Deprecated) Whether kernel version reporting is enabled.
 - `report_memory_size` (Boolean) Whether memory size reporting is enabled.
 - `report_model_name` (Boolean) Whether model name reporting is enabled.
-- `report_os_version` (Boolean) Whether OS version reporting is enabled.
+- `report_os_version` (Boolean, Deprecated) Whether OS version reporting is enabled.
 - `report_serial_number` (Boolean) Whether serial number reporting is enabled.
 - `reporting_interval` (Number) The reporting interval in minutes.
 - `tamper_prevention` (String) Tamper Prevention setting for the plan. Values: `Block and report`, `Disable`.

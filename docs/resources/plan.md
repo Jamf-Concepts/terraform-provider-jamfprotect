@@ -142,10 +142,10 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.
 - `report_hostname` (Boolean) Report the device hostname.
-- `report_kernel_version` (Boolean) Report the kernel version.
+- `report_kernel_version` (Boolean, Deprecated) Report the kernel version.
 - `report_memory_size` (Boolean) Report the device memory size.
 - `report_model_name` (Boolean) Report the device model name.
-- `report_os_version` (Boolean) Report the OS version details.
+- `report_os_version` (Boolean, Deprecated) Report the OS version details.
 - `report_serial_number` (Boolean) Report the device serial number.
 - `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`.
 - `telemetry` (String) The ID of the telemetry configuration.
