@@ -14,20 +14,32 @@ import (
 )
 
 // checkNGTPBetaEnrollment returns an error diagnostic when the requested
-// strategy requires the NGTP beta but the tenant has not opted in.
+// strategy requires the NGTP beta but the tenant has not opted in. Result is
+// cached per-resource-instance to avoid redundant API calls across multiple
+// plan blocks in a single Terraform run.
 func (r *PlanResource) checkNGTPBetaEnrollment(ctx context.Context, strategy string, diags *diag.Diagnostics) {
 	if strategy == "Legacy" || strategy == "" {
 		return
 	}
-	statuses, err := r.client.GetBetaAcceptanceStatus(ctx)
-	if err != nil {
-		diags.AddError("Error checking Threat Prevention beta status", err.Error())
-		return
-	}
-	for _, s := range statuses {
-		if s.BetaName == string(jamfprotect.BetaNameNGTP) && s.AcceptedTimestamp != "" {
+	r.ngtpBetaOnce.Do(func() {
+		statuses, err := r.client.GetBetaAcceptanceStatus(ctx)
+		if err != nil {
+			r.ngtpBetaErr = err
 			return
 		}
+		for _, s := range statuses {
+			if s.BetaName == string(jamfprotect.BetaNameNGTP) && s.AcceptedTimestamp != "" {
+				r.ngtpBetaEnrolled = true
+				return
+			}
+		}
+	})
+	if r.ngtpBetaErr != nil {
+		diags.AddError("Error checking Threat Prevention beta status", r.ngtpBetaErr.Error())
+		return
+	}
+	if r.ngtpBetaEnrolled {
+		return
 	}
 	diags.AddError(
 		"Threat Prevention beta not enabled",

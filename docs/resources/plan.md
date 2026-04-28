@@ -130,13 +130,14 @@ resource "jamfprotect_plan" "monitoring_only" {
 
 ### Optional
 
-- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`.
-- `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
+- `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan. Only valid when `threat_prevention_strategy` is `Legacy`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `communications_protocol` (String) The communications protocol to use. Valid options are: `MQTT:443`, `WebSocket/MQTT:443`. Defaults to `MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
+- `custom_engine_config` (Attributes) Per-engine threat prevention configuration. Required when `threat_prevention_strategy` is `Custom`. Reflects server-managed values when strategy is `Managed`. (see [below for nested schema](#nestedatt--custom_engine_config))
 - `description` (String) A description of the plan.
-- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Defaults to `Block and report`.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
 - `exception_sets` (Set of String) A set of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
@@ -147,8 +148,9 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `report_model_name` (Boolean) Report the device model name.
 - `report_os_version` (Boolean, Deprecated) Report the OS version details.
 - `report_serial_number` (Boolean) Report the device serial number.
-- `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
 - `telemetry` (String) The ID of the telemetry configuration.
+- `threat_prevention_strategy` (String) Only available when opted in to the [NGTP beta](https://learn.jamf.com/r/en-US/jamf-protect-documentation/Threat_Prevention_Public_Beta). Threat prevention strategy for the plan. Valid options are: `Legacy`, `Managed`, `Custom`. Defaults to `Legacy`.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -157,6 +159,17 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
 - `updated` (String) The last-updated timestamp.
+
+<a id="nestedatt--custom_engine_config"></a>
+### Nested Schema for `custom_engine_config`
+
+Optional:
+
+- `adversary_tactics` (String) Adversary tactics engine mode. Valid options are: `Block and report`, `Report only`, `Disabled`.
+- `fileless_threats` (String) Fileless threats engine mode. Valid options are: `Block and report`, `Report only`, `Disabled`.
+- `malware_riskware` (String) Malware and riskware engine mode. Valid options are: `Block and report`, `Report only`, `Disabled`.
+- `system_tampering` (String) System tampering engine mode. Valid options are: `Block and report`, `Report only`, `Disabled`.
+
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

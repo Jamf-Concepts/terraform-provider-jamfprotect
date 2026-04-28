@@ -68,6 +68,11 @@ var threatPreventionStrategyAPIToUI = map[string]string{
 // customEngineConfigModeUIOptions lists supported per-engine mode labels.
 var customEngineConfigModeUIOptions = []string{"Block and report", "Report only", "Disabled"}
 
+// experimentalEngineModeAPI is the API enum value sent for the Experimental engine.
+// The field is required by the GraphQL API but not exposed in the schema; the provider
+// always sends DISABLED so users opt in via the Jamf Protect UI rather than Terraform.
+const experimentalEngineModeAPI = "DISABLED"
+
 // customEngineConfigModeUIToAPI maps UI mode labels to API enum values.
 var customEngineConfigModeUIToAPI = map[string]string{
 	"Block and report": "PREVENT",

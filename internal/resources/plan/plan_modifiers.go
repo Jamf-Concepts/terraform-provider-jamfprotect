@@ -14,12 +14,15 @@ import (
 
 var _ resource.ResourceWithModifyPlan = &PlanResource{}
 
-// ModifyPlan handles two concerns:
-//  1. For Custom strategy: carries custom_engine_config forward from state when not
-//     set in config (SingleNestedAttribute does not trigger UseStateForUnknown for
-//     null plan values), and errors at plan-time if no prior state exists.
-//  2. For non-Legacy strategies: errors if legacy-only fields are explicitly set in
-//     config, and nulls out any values carried forward from state.
+// ModifyPlan reconciles threat_prevention_strategy with strategy-specific fields:
+//  1. Custom: carry custom_engine_config from state when not in config (UseStateForUnknown
+//     does not fire on SingleNestedAttribute when plan is null), error if no prior state.
+//  2. Custom: validate all sub-fields are non-null/unknown so failures surface at plan time.
+//  3. Legacy: promote null legacy fields to unknown so apiToState can populate them after
+//     a strategy switch without producing a plan/state inconsistency.
+//  4. Non-Legacy: error if legacy-only fields are explicitly set in config; null any
+//     state carry-overs from a previous Legacy run.
+//  5. Verify NGTP beta enrollment at plan time when strategy is non-Legacy.
 func (r *PlanResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return
@@ -36,11 +39,15 @@ func (r *PlanResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 	}
 	strategy := plan.ThreatPreventionStrategy.ValueString()
 
+	if strategy != "Legacy" {
+		r.checkNGTPBetaEnrollment(ctx, strategy, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	modified := false
 
-	// For Custom strategy, carry custom_engine_config from state when not configured.
-	// UseStateForUnknown does not fire for SingleNestedAttribute when plan is null
-	// (rather than unknown), so we handle it here explicitly.
 	if strategy == "Custom" && (plan.CustomEngineConfig.IsNull() || plan.CustomEngineConfig.IsUnknown()) {
 		carriedFromState := false
 		if !req.State.Raw.IsNull() {
@@ -62,26 +69,27 @@ func (r *PlanResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 		}
 	}
 
-	// Validate all sub-fields are explicitly set for Custom strategy.
 	if strategy == "Custom" && !plan.CustomEngineConfig.IsNull() && !plan.CustomEngineConfig.IsUnknown() {
 		var cfg CustomEngineConfigModel
-		if d := plan.CustomEngineConfig.As(ctx, &cfg, basetypes.ObjectAsOptions{}); !d.HasError() {
-			for _, f := range []struct {
-				name string
-				val  types.String
-			}{
-				{"malware_riskware", cfg.MalwareRiskware},
-				{"adversary_tactics", cfg.AdversaryTactics},
-				{"system_tampering", cfg.SystemTampering},
-				{"fileless_threats", cfg.FilelessThreats},
-			} {
-				if f.val.IsNull() || f.val.IsUnknown() {
-					resp.Diagnostics.AddAttributeError(
-						path.Root("custom_engine_config").AtName(f.name),
-						f.name+" must be set",
-						"All custom_engine_config fields must be specified when threat_prevention_strategy is Custom.",
-					)
-				}
+		resp.Diagnostics.Append(plan.CustomEngineConfig.As(ctx, &cfg, basetypes.ObjectAsOptions{})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		for _, f := range []struct {
+			name string
+			val  types.String
+		}{
+			{"malware_riskware", cfg.MalwareRiskware},
+			{"adversary_tactics", cfg.AdversaryTactics},
+			{"system_tampering", cfg.SystemTampering},
+			{"fileless_threats", cfg.FilelessThreats},
+		} {
+			if f.val.IsNull() || f.val.IsUnknown() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("custom_engine_config").AtName(f.name),
+					f.name+" must be set",
+					"All custom_engine_config fields must be specified when threat_prevention_strategy is Custom.",
+				)
 			}
 		}
 		if resp.Diagnostics.HasError() {
@@ -90,9 +98,6 @@ func (r *PlanResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 	}
 
 	if strategy == "Legacy" {
-		// When legacy fields are null (e.g. transitioning from non-Legacy where apiToState
-		// set them null), UseStateForUnknown won't fire. Mark them unknown so apiToState
-		// can populate them without causing a plan/state inconsistency.
 		if plan.EndpointThreatPrevention.IsNull() {
 			plan.EndpointThreatPrevention = types.StringUnknown()
 			modified = true
@@ -154,7 +159,6 @@ func (r *PlanResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 		return
 	}
 
-	// Null out any state carry-overs for legacy-only fields.
 	if !plan.EndpointThreatPrevention.IsNull() {
 		plan.EndpointThreatPrevention = types.StringNull()
 		modified = true
