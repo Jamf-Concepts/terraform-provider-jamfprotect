@@ -14,8 +14,11 @@ import (
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
-// buildVariables converts the Terraform model into a plan input.
-func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, commsFQDN string, diags *diag.Diagnostics) *jamfprotect.PlanInput {
+// buildVariables converts the Terraform model into a plan input. existingSigMode
+// preserves the API's current signaturesFeedConfig.mode for non-Legacy strategies
+// (where endpoint_threat_prevention is null in our model but the API still requires
+// the field). Pass empty string on Create.
+func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceModel, commsFQDN, existingSigMode string, diags *diag.Diagnostics) *jamfprotect.PlanInput {
 	input := &jamfprotect.PlanInput{
 		Name:          data.Name.ValueString(),
 		ActionConfigs: data.ActionConfiguration.ValueString(),
@@ -153,7 +156,7 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 			AdversaryTactics: adversaryAPI,
 			SystemTampering:  systemAPI,
 			FilelessThreats:  filelessAPI,
-			Experimental:     "DISABLED",
+			Experimental:     experimentalEngineModeAPI,
 		}
 	}
 
@@ -176,8 +179,12 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	}
 
 	if !common.IsKnownString(data.EndpointThreatPrevention) {
+		mode := existingSigMode
+		if mode == "" {
+			mode = "blocking"
+		}
 		input.SignaturesFeedConfig = jamfprotect.PlanSignaturesFeedConfigInput{
-			Mode: "blocking",
+			Mode: mode,
 		}
 	} else {
 		mode, ok := endpointThreatPreventionToMode(data.EndpointThreatPrevention.ValueString())

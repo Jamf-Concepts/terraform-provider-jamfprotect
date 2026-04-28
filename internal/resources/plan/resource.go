@@ -5,6 +5,7 @@ package plan
 
 import (
 	"context"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -38,6 +39,10 @@ func NewPlanResource() resource.Resource {
 // PlanResource manages a Jamf Protect plan.
 type PlanResource struct {
 	client *jamfprotect.Client
+
+	ngtpBetaOnce     sync.Once
+	ngtpBetaEnrolled bool
+	ngtpBetaErr      error
 }
 
 func (r *PlanResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -200,7 +205,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"threat_prevention_strategy": schema.StringAttribute{
-				MarkdownDescription: "Threat prevention strategy for the plan. Valid options are: " + common.FormatOptions(threatPreventionStrategyUIOptions) + ". Defaults to `Legacy`.",
+				MarkdownDescription: "Only available when opted in to the [NGTP beta](https://learn.jamf.com/r/en-US/jamf-protect-documentation/Threat_Prevention_Public_Beta). Threat prevention strategy for the plan. Valid options are: " + common.FormatOptions(threatPreventionStrategyUIOptions) + ". Defaults to `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString("Legacy"),

@@ -41,6 +41,7 @@ Read-Only:
 - `communications_protocol` (String) The communications protocol used by the plan. Values: `MQTT:443`, `WebSocket/MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Whether compliance baseline reporting is enabled.
 - `created` (String) The creation timestamp.
+- `custom_engine_config` (Attributes) Per-engine threat prevention configuration. (see [below for nested schema](#nestedatt--plans--custom_engine_config))
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Values: `Block and report`, `Report only`, `Disable`.
 - `exception_sets` (Set of String) A set of exception set IDs associated with this plan.
@@ -59,4 +60,15 @@ Read-Only:
 - `reporting_interval` (Number) The reporting interval in minutes.
 - `tamper_prevention` (String) Tamper Prevention setting for the plan. Values: `Block and report`, `Disable`.
 - `telemetry` (String) The ID of the telemetry configuration.
+- `threat_prevention_strategy` (String) Threat prevention strategy for the plan. Values: `Legacy`, `Managed`, `Custom`.
 - `updated` (String) The last-updated timestamp.
+
+<a id="nestedatt--plans--custom_engine_config"></a>
+### Nested Schema for `plans.custom_engine_config`
+
+Read-Only:
+
+- `adversary_tactics` (String) Adversary tactics engine mode.
+- `fileless_threats` (String) Fileless threats engine mode.
+- `malware_riskware` (String) Malware and riskware engine mode.
+- `system_tampering` (String) System tampering engine mode.
