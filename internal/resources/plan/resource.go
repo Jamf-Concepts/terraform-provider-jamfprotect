@@ -133,11 +133,11 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"report_kernel_version": schema.BoolAttribute{
-				MarkdownDescription:   "Report the kernel version.",
-				DeprecationMessage:     "This attribute is deprecated. Kernel version is now always collected by the Jamf Protect agent regardless of plan configuration.",
-				Optional:              true,
-				Computed:              true,
-				Default:               booldefault.StaticBool(false),
+				MarkdownDescription: "Report the kernel version.",
+				DeprecationMessage:  "This attribute is deprecated. Kernel version is now always collected by the Jamf Protect agent regardless of plan configuration.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"report_memory_size": schema.BoolAttribute{
 				MarkdownDescription: "Report the device memory size.",
@@ -164,11 +164,11 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"report_os_version": schema.BoolAttribute{
-				MarkdownDescription:   "Report the OS version details.",
-				DeprecationMessage:     "This attribute is deprecated. OS version is now always collected by the Jamf Protect agent regardless of plan configuration.",
-				Optional:              true,
-				Computed:              true,
-				Default:               booldefault.StaticBool(false),
+				MarkdownDescription: "Report the OS version details.",
+				DeprecationMessage:  "This attribute is deprecated. OS version is now always collected by the Jamf Protect agent regardless of plan configuration.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
 				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Defaults to `Block and report`.",

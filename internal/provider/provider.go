@@ -18,6 +18,7 @@ import (
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic_managed"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/api_client"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/change_management"
@@ -146,6 +147,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 	return []func() resource.Resource{
 		action_configuration.NewActionConfigResource,
 		analytic.NewAnalyticResource,
+		analytic_managed.NewAnalyticManagedResource,
 		analytic_set.NewAnalyticSetResource,
 		api_client.NewApiClientResource,
 		change_management.NewChangeManagementResource,
@@ -190,6 +192,7 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 	return []func() list.ListResource{
 		action_configuration.NewActionConfigListResource,
 		analytic.NewAnalyticListResource,
+		analytic_managed.NewAnalyticManagedListResource,
 		analytic_set.NewAnalyticSetListResource,
 		api_client.NewApiClientListResource,
 		custom_prevent_list.NewCustomPreventListListResource,

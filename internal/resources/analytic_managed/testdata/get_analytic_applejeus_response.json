@@ -1,0 +1,34 @@
+{
+    "data": {
+        "getAnalytic": {
+            "uuid": "e59e0cdc-eea2-11e9-ba08-a683e73a7372",
+            "name": "AppleJeusMalware",
+            "label": "Applejeus Malware",
+            "inputType": "GPFSEvent",
+            "filter": "(\"LaunchDaemon\" IN $tags OR \"LaunchAgent\" IN $tags) AND $context.Name.value IN {\"org.jmttrading.plist\", \"com.celastradepro.plist\"}",
+            "description": "Known malware IOC for AppleJeus",
+            "longDescription": "A plist name associated with AppleJeus malware was written.",
+            "created": "2024-02-29T17:13:40.774044Z",
+            "updated": "2026-04-27T19:03:00.187832Z",
+            "actions": null,
+            "analyticActions": [
+                {
+                    "name": "Report",
+                    "parameters": "{}"
+                }
+            ],
+            "tenantActions": null,
+            "tags": [],
+            "level": 1,
+            "severity": "High",
+            "tenantSeverity": null,
+            "snapshotFiles": [],
+            "context": [],
+            "categories": [
+                "Known Malicious File"
+            ],
+            "jamf": true,
+            "remediation": "Jamf Protect has identified a filename that has been associated with malware in the past. Look at the process that created this file to determine how it arrived on the system. Delete this file as well as any other files you find related to the infection."
+        }
+    }
+}
