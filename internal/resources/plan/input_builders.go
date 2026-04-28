@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
@@ -45,72 +46,133 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.ExceptionSets = common.SetToStrings(ctx, data.ExceptionSets, diags)
 	}
 
+	strategy := "Legacy"
+	if common.IsKnownString(data.ThreatPreventionStrategy) {
+		strategy = data.ThreatPreventionStrategy.ValueString()
+	}
+	input.ThreatPreventionStrategy = threatPreventionStrategyToAPI(strategy)
+
 	var analyticSets []jamfprotect.PlanAnalyticSetInput
-	if !data.AnalyticSets.IsNull() {
-		uuids := common.SetToStrings(ctx, data.AnalyticSets, diags)
-		for _, uuid := range uuids {
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: "Report",
-				UUID: uuid,
-			})
+	if strategy == "Legacy" {
+		if !data.AnalyticSets.IsNull() {
+			uuids := common.SetToStrings(ctx, data.AnalyticSets, diags)
+			for _, uuid := range uuids {
+				analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
+					Type: "Report",
+					UUID: uuid,
+				})
+			}
 		}
-	}
 
-	managedSetUUIDs := map[string]string{}
-	shouldResolveManagedSets := len(analyticSets) > 0 || common.IsKnownString(data.AdvancedThreatControls) || common.IsKnownString(data.TamperPrevention)
-	if shouldResolveManagedSets {
-		managedSetUUIDs = r.resolveManagedAnalyticSetUUIDs(ctx, diags)
-		if diags.HasError() {
-			return nil
+		managedSetUUIDs := map[string]string{}
+		shouldResolveManagedSets := len(analyticSets) > 0 || common.IsKnownString(data.AdvancedThreatControls) || common.IsKnownString(data.TamperPrevention)
+		if shouldResolveManagedSets {
+			managedSetUUIDs = r.resolveManagedAnalyticSetUUIDs(ctx, diags)
+			if diags.HasError() {
+				return nil
+			}
+			analyticSets = filterManagedAnalyticSets(analyticSets, managedSetUUIDs, diags)
+			if diags.HasError() {
+				return nil
+			}
 		}
-		analyticSets = filterManagedAnalyticSets(analyticSets, managedSetUUIDs, diags)
-		if diags.HasError() {
-			return nil
-		}
-	}
 
-	if common.IsKnownString(data.AdvancedThreatControls) {
-		advancedValue := data.AdvancedThreatControls.ValueString()
-		if advancedValue != "Disable" {
-			uuid := managedSetUUIDs[advancedThreatControlsName]
-			if uuid == "" {
-				diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", advancedThreatControlsName))
-				return nil
+		if common.IsKnownString(data.AdvancedThreatControls) {
+			advancedValue := data.AdvancedThreatControls.ValueString()
+			if advancedValue != "Disable" {
+				uuid := managedSetUUIDs[advancedThreatControlsName]
+				if uuid == "" {
+					diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", advancedThreatControlsName))
+					return nil
+				}
+				setType, ok := advancedThreatControlsToType(advancedValue)
+				if !ok {
+					diags.AddError("Invalid advanced threat controls value", "advanced_threat_controls must be one of: Block and report, Report only, Disable.")
+					return nil
+				}
+				analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
+					Type: setType,
+					UUID: uuid,
+				})
 			}
-			setType, ok := advancedThreatControlsToType(advancedValue)
-			if !ok {
-				diags.AddError("Invalid advanced threat controls value", "advanced_threat_controls must be one of: Block and report, Report only, Disable.")
-				return nil
-			}
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: setType,
-				UUID: uuid,
-			})
 		}
-	}
 
-	if common.IsKnownString(data.TamperPrevention) {
-		tamperValue := data.TamperPrevention.ValueString()
-		if tamperValue != "Disable" {
-			uuid := managedSetUUIDs[tamperPreventionName]
-			if uuid == "" {
-				diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", tamperPreventionName))
-				return nil
+		if common.IsKnownString(data.TamperPrevention) {
+			tamperValue := data.TamperPrevention.ValueString()
+			if tamperValue != "Disable" {
+				uuid := managedSetUUIDs[tamperPreventionName]
+				if uuid == "" {
+					diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", tamperPreventionName))
+					return nil
+				}
+				setType, ok := tamperPreventionToType(tamperValue)
+				if !ok {
+					diags.AddError("Invalid tamper prevention value", "tamper_prevention must be one of: Block and report, Disable.")
+					return nil
+				}
+				analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
+					Type: setType,
+					UUID: uuid,
+				})
 			}
-			setType, ok := tamperPreventionToType(tamperValue)
-			if !ok {
-				diags.AddError("Invalid tamper prevention value", "tamper_prevention must be one of: Block and report, Disable.")
-				return nil
-			}
-			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{
-				Type: setType,
-				UUID: uuid,
-			})
 		}
+	} else if !data.AnalyticSets.IsNull() && len(data.AnalyticSets.Elements()) > 0 {
+		diags.AddError(
+			"analytic_sets not allowed with this threat prevention strategy",
+			"analytic_sets can only be set when threat_prevention_strategy is Legacy.",
+		)
+		return nil
 	}
 
 	if analyticSets != nil {
 		input.AnalyticSets = analyticSets
+	}
+
+	if strategy == "Custom" {
+		if data.CustomEngineConfig.IsNull() || data.CustomEngineConfig.IsUnknown() {
+			diags.AddError(
+				"custom_engine_config required",
+				"custom_engine_config must be set when threat_prevention_strategy is Custom.",
+			)
+			return nil
+		}
+		var cfg CustomEngineConfigModel
+		diags.Append(data.CustomEngineConfig.As(ctx, &cfg, basetypes.ObjectAsOptions{})...)
+		if diags.HasError() {
+			return nil
+		}
+		malwareAPI, ok := customEngineConfigModeToAPI(cfg.MalwareRiskware.ValueString())
+		if !ok {
+			diags.AddError("Invalid custom engine config mode", "malware_riskware has an invalid value.")
+			return nil
+		}
+		adversaryAPI, ok := customEngineConfigModeToAPI(cfg.AdversaryTactics.ValueString())
+		if !ok {
+			diags.AddError("Invalid custom engine config mode", "adversary_tactics has an invalid value.")
+			return nil
+		}
+		systemAPI, ok := customEngineConfigModeToAPI(cfg.SystemTampering.ValueString())
+		if !ok {
+			diags.AddError("Invalid custom engine config mode", "system_tampering has an invalid value.")
+			return nil
+		}
+		filelessAPI, ok := customEngineConfigModeToAPI(cfg.FilelessThreats.ValueString())
+		if !ok {
+			diags.AddError("Invalid custom engine config mode", "fileless_threats has an invalid value.")
+			return nil
+		}
+		experimentalAPI, ok := customEngineConfigModeToAPI(cfg.Experimental.ValueString())
+		if !ok {
+			diags.AddError("Invalid custom engine config mode", "experimental has an invalid value.")
+			return nil
+		}
+		input.CustomEngineConfig = &jamfprotect.CustomEngineConfigInput{
+			MalwareRiskware:  malwareAPI,
+			AdversaryTactics: adversaryAPI,
+			SystemTampering:  systemAPI,
+			FilelessThreats:  filelessAPI,
+			Experimental:     experimentalAPI,
+		}
 	}
 
 	protocol := communicationsProtocolToAPI("MQTT:443")

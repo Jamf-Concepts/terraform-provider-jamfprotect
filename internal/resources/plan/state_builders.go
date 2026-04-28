@@ -14,7 +14,7 @@ import (
 )
 
 // apiToState maps the API response into the resource state model.
-func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, api jamfprotect.Plan, diags *diag.Diagnostics) {
+func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, api jamfprotect.Plan, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Hash = types.StringValue(api.Hash)
 	data.Name = types.StringValue(api.Name)
@@ -93,10 +93,18 @@ func (r *PlanResource) apiToState(_ context.Context, data *PlanResourceModel, ap
 
 	data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
 	data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
+
+	if api.ThreatPreventionStrategy != "" {
+		data.ThreatPreventionStrategy = types.StringValue(threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy))
+	} else {
+		data.ThreatPreventionStrategy = types.StringValue("Legacy")
+	}
+
+	data.CustomEngineConfig = customEngineConfigToObject(ctx, api.CustomEngineConfig, diags)
 }
 
 // planAPIToDataSourceItem maps a plan to PlanDataSourceItemModel.
-func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanDataSourceItemModel {
+func planAPIToDataSourceItem(api jamfprotect.Plan, diags *diag.Diagnostics) PlanDataSourceItemModel {
 	item := PlanDataSourceItemModel{
 		ID:         types.StringValue(api.ID),
 		Hash:       types.StringValue(api.Hash),
@@ -174,7 +182,51 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, _ *diag.Diagnostics) PlanData
 	item.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, nil)
 	item.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, nil)
 
+	if api.ThreatPreventionStrategy != "" {
+		item.ThreatPreventionStrategy = types.StringValue(threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy))
+	} else {
+		item.ThreatPreventionStrategy = types.StringValue("Legacy")
+	}
+
+	item.CustomEngineConfig = customEngineConfigToObject(context.Background(), api.CustomEngineConfig, diags)
+
 	return item
+}
+
+// customEngineConfigToObject converts an API CustomEngineConfig to a types.Object.
+func customEngineConfigToObject(ctx context.Context, cfg *jamfprotect.CustomEngineConfig, diags *diag.Diagnostics) types.Object {
+	if cfg == nil {
+		return types.ObjectNull(customEngineConfigAttrTypes)
+	}
+	malwareUI, ok := customEngineConfigModeFromAPI(cfg.MalwareRiskware)
+	if !ok {
+		malwareUI = cfg.MalwareRiskware
+	}
+	adversaryUI, ok := customEngineConfigModeFromAPI(cfg.AdversaryTactics)
+	if !ok {
+		adversaryUI = cfg.AdversaryTactics
+	}
+	systemUI, ok := customEngineConfigModeFromAPI(cfg.SystemTampering)
+	if !ok {
+		systemUI = cfg.SystemTampering
+	}
+	filelessUI, ok := customEngineConfigModeFromAPI(cfg.FilelessThreats)
+	if !ok {
+		filelessUI = cfg.FilelessThreats
+	}
+	experimentalUI, ok := customEngineConfigModeFromAPI(cfg.Experimental)
+	if !ok {
+		experimentalUI = cfg.Experimental
+	}
+	obj, d := types.ObjectValueFrom(ctx, customEngineConfigAttrTypes, CustomEngineConfigModel{
+		MalwareRiskware:  types.StringValue(malwareUI),
+		AdversaryTactics: types.StringValue(adversaryUI),
+		SystemTampering:  types.StringValue(systemUI),
+		FilelessThreats:  types.StringValue(filelessUI),
+		Experimental:     types.StringValue(experimentalUI),
+	})
+	diags.Append(d...)
+	return obj
 }
 
 // setReportingFlags maps info sync settings into the resource model.
