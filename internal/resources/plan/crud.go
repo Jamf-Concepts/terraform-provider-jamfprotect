@@ -32,6 +32,11 @@ func (r *PlanResource) Create(ctx context.Context, req resource.CreateRequest, r
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
+	r.checkNGTPBetaEnrollment(ctx, data.ThreatPreventionStrategy.ValueString(), &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := r.buildVariables(ctx, data, commsFQDNPlaceholder, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,6 +163,11 @@ func (r *PlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
+
+	r.checkNGTPBetaEnrollment(ctx, data.ThreatPreventionStrategy.ValueString(), &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	current, err := r.client.GetPlan(ctx, data.ID.ValueString())
 	if err != nil {

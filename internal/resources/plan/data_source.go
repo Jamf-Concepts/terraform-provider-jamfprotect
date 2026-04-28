@@ -57,6 +57,8 @@ type PlanDataSourceItemModel struct {
 	EndpointThreatPrevention types.String `tfsdk:"endpoint_threat_prevention"`
 	AdvancedThreatControls   types.String `tfsdk:"advanced_threat_controls"`
 	TamperPrevention         types.String `tfsdk:"tamper_prevention"`
+	ThreatPreventionStrategy types.String `tfsdk:"threat_prevention_strategy"`
+	CustomEngineConfig       types.Object `tfsdk:"custom_engine_config"`
 	Created                  types.String `tfsdk:"created"`
 	Updated                  types.String `tfsdk:"updated"`
 }
@@ -181,6 +183,36 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 		"tamper_prevention": schema.StringAttribute{
 			MarkdownDescription: "Tamper Prevention setting for the plan. Values: `Block and report`, `Disable`.",
 			Computed:            true,
+		},
+		"threat_prevention_strategy": schema.StringAttribute{
+			MarkdownDescription: "Threat prevention strategy for the plan. Values: `Legacy`, `Managed`, `Custom`.",
+			Computed:            true,
+		},
+		"custom_engine_config": schema.SingleNestedAttribute{
+			MarkdownDescription: "Per-engine threat prevention configuration.",
+			Computed:            true,
+			Attributes: map[string]schema.Attribute{
+				"malware_riskware": schema.StringAttribute{
+					MarkdownDescription: "Malware and riskware engine mode.",
+					Computed:            true,
+				},
+				"adversary_tactics": schema.StringAttribute{
+					MarkdownDescription: "Adversary tactics engine mode.",
+					Computed:            true,
+				},
+				"system_tampering": schema.StringAttribute{
+					MarkdownDescription: "System tampering engine mode.",
+					Computed:            true,
+				},
+				"fileless_threats": schema.StringAttribute{
+					MarkdownDescription: "Fileless threats engine mode.",
+					Computed:            true,
+				},
+				"experimental": schema.StringAttribute{
+					MarkdownDescription: "Experimental engine mode.",
+					Computed:            true,
+				},
+			},
 		},
 		"created": schema.StringAttribute{
 			MarkdownDescription: "The creation timestamp.",

@@ -48,6 +48,68 @@ var advancedThreatControlsUIOptions = []string{"Block and report", "Report only"
 // tamperPreventionUIOptions lists supported tamper prevention labels.
 var tamperPreventionUIOptions = []string{"Block and report", "Disable"}
 
+// threatPreventionStrategyUIOptions lists supported threat prevention strategy labels.
+var threatPreventionStrategyUIOptions = []string{"Legacy", "Managed", "Custom"}
+
+// threatPreventionStrategyUIToAPI maps UI strategy labels to API enum values.
+var threatPreventionStrategyUIToAPI = map[string]string{
+	"Legacy":  "LEGACY",
+	"Managed": "MANAGED",
+	"Custom":  "CUSTOM_ENGINES",
+}
+
+// threatPreventionStrategyAPIToUI maps API enum values to UI labels.
+var threatPreventionStrategyAPIToUI = map[string]string{
+	"LEGACY":         "Legacy",
+	"MANAGED":        "Managed",
+	"CUSTOM_ENGINES": "Custom",
+}
+
+// customEngineConfigModeUIOptions lists supported per-engine mode labels.
+var customEngineConfigModeUIOptions = []string{"Block and report", "Report only", "Disabled"}
+
+// customEngineConfigModeUIToAPI maps UI mode labels to API enum values.
+var customEngineConfigModeUIToAPI = map[string]string{
+	"Block and report": "PREVENT",
+	"Report only":      "REPORT",
+	"Disabled":         "DISABLED",
+}
+
+// customEngineConfigModeAPIToUI maps API enum values to UI mode labels.
+var customEngineConfigModeAPIToUI = map[string]string{
+	"PREVENT":  "Block and report",
+	"REPORT":   "Report only",
+	"DISABLED": "Disabled",
+}
+
+// threatPreventionStrategyToAPI maps a UI strategy label to an API enum value.
+func threatPreventionStrategyToAPI(value string) string {
+	if mapped, ok := threatPreventionStrategyUIToAPI[value]; ok {
+		return mapped
+	}
+	return value
+}
+
+// threatPreventionStrategyFromAPI maps an API enum value to a UI strategy label.
+func threatPreventionStrategyFromAPI(value string) string {
+	if mapped, ok := threatPreventionStrategyAPIToUI[value]; ok {
+		return mapped
+	}
+	return value
+}
+
+// customEngineConfigModeToAPI maps a UI mode label to an API enum value.
+func customEngineConfigModeToAPI(value string) (string, bool) {
+	mapped, ok := customEngineConfigModeUIToAPI[value]
+	return mapped, ok
+}
+
+// customEngineConfigModeFromAPI maps an API enum value to a UI mode label.
+func customEngineConfigModeFromAPI(value string) (string, bool) {
+	mapped, ok := customEngineConfigModeAPIToUI[value]
+	return mapped, ok
+}
+
 // logLevelToAPI maps UI values to API values.
 func logLevelToAPI(value string) string {
 	mapped, ok := logLevelUIToAPI[value]

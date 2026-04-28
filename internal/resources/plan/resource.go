@@ -102,7 +102,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 			"analytic_sets": schema.SetAttribute{
-				MarkdownDescription: "A set of analytic set IDs to include in this plan.",
+				MarkdownDescription: "A set of analytic set IDs to include in this plan. Only valid when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
@@ -189,12 +189,58 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"tamper_prevention": schema.StringAttribute{
-				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ".",
+				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ". Only applies when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				Validators: []validator.String{
 					stringvalidator.OneOf(tamperPreventionUIOptions...),
+				},
+			},
+			"threat_prevention_strategy": schema.StringAttribute{
+				MarkdownDescription: "Threat prevention strategy for the plan. Valid options are: " + common.FormatOptions(threatPreventionStrategyUIOptions) + ". Defaults to `Legacy`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("Legacy"),
+				Validators: []validator.String{
+					stringvalidator.OneOf(threatPreventionStrategyUIOptions...),
+				},
+			},
+			"custom_engine_config": schema.SingleNestedAttribute{
+				MarkdownDescription: "Per-engine threat prevention configuration. Required when `threat_prevention_strategy` is `Custom`. Reflects server-managed values when strategy is `Managed`.",
+				Optional:            true,
+				Computed:            true,
+				Attributes: map[string]schema.Attribute{
+					"malware_riskware": schema.StringAttribute{
+						MarkdownDescription: "Malware and riskware engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
+						Optional:            true,
+						Computed:            true,
+						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
+					},
+					"adversary_tactics": schema.StringAttribute{
+						MarkdownDescription: "Adversary tactics engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
+						Optional:            true,
+						Computed:            true,
+						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
+					},
+					"system_tampering": schema.StringAttribute{
+						MarkdownDescription: "System tampering engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
+						Optional:            true,
+						Computed:            true,
+						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
+					},
+					"fileless_threats": schema.StringAttribute{
+						MarkdownDescription: "Fileless threats engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
+						Optional:            true,
+						Computed:            true,
+						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
+					},
+					"experimental": schema.StringAttribute{
+						MarkdownDescription: "Experimental engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
+						Optional:            true,
+						Computed:            true,
+						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
+					},
 				},
 			},
 			"created": schema.StringAttribute{

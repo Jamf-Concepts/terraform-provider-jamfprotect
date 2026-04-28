@@ -13,6 +13,32 @@ import (
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 )
 
+// checkNGTPBetaEnrollment returns an error diagnostic when the requested
+// strategy requires the NGTP beta but the tenant has not opted in.
+func (r *PlanResource) checkNGTPBetaEnrollment(ctx context.Context, strategy string, diags *diag.Diagnostics) {
+	if strategy == "Legacy" || strategy == "" {
+		return
+	}
+	statuses, err := r.client.GetBetaAcceptanceStatus(ctx)
+	if err != nil {
+		diags.AddError("Error checking Threat Prevention beta status", err.Error())
+		return
+	}
+	for _, s := range statuses {
+		if s.BetaName == string(jamfprotect.BetaNameNGTP) && s.AcceptedTimestamp != "" {
+			return
+		}
+	}
+	diags.AddError(
+		"Threat Prevention beta not enabled",
+		fmt.Sprintf(
+			"threat_prevention_strategy %q requires the Threat Prevention beta. "+
+				"Opt in via the Threat Prevention section in the Jamf Protect UI before applying.",
+			strategy,
+		),
+	)
+}
+
 const (
 	advancedThreatControlsName = "Advanced Threat Controls"
 	tamperPreventionName       = "Tamper Prevention"
