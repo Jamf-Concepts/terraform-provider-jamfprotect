@@ -1,7 +1,7 @@
 // Copyright Jamf Software LLC 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package analytic
+package analytic_managed
 
 import (
 	"context"
@@ -18,26 +18,26 @@ import (
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
-var _ list.ListResource = &AnalyticListResource{}
-var _ list.ListResourceWithConfigure = &AnalyticListResource{}
-var _ list.ListResourceWithValidateConfig = &AnalyticListResource{}
+var _ list.ListResource = &AnalyticManagedListResource{}
+var _ list.ListResourceWithConfigure = &AnalyticManagedListResource{}
+var _ list.ListResourceWithValidateConfig = &AnalyticManagedListResource{}
 
-func NewAnalyticListResource() list.ListResource {
-	return &AnalyticListResource{}
+func NewAnalyticManagedListResource() list.ListResource {
+	return &AnalyticManagedListResource{}
 }
 
-// AnalyticListResource lists analytics in Jamf Protect.
-type AnalyticListResource struct {
+// AnalyticManagedListResource lists Jamf-managed analytics in Jamf Protect (jamf=true only).
+type AnalyticManagedListResource struct {
 	client *jamfprotect.Client
 }
 
-func (r *AnalyticListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_analytic"
+func (r *AnalyticManagedListResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_analytic_managed"
 }
 
-func (r *AnalyticListResource) ListResourceConfigSchema(ctx context.Context, req list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
+func (r *AnalyticManagedListResource) ListResourceConfigSchema(ctx context.Context, req list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists analytics in Jamf Protect.",
+		MarkdownDescription: "Lists Jamf-managed analytics in Jamf Protect for use with `terraform plan -generate-config-out`.",
 		Attributes: map[string]listschema.Attribute{
 			"name_prefix": listschema.StringAttribute{
 				Optional:            true,
@@ -47,11 +47,11 @@ func (r *AnalyticListResource) ListResourceConfigSchema(ctx context.Context, req
 	}
 }
 
-func (r *AnalyticListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *AnalyticManagedListResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.client = common.ConfigureClient(req.ProviderData, &resp.Diagnostics)
 }
 
-func (r *AnalyticListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
+func (r *AnalyticManagedListResource) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
 	var config common.ListConfigModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -61,7 +61,7 @@ func (r *AnalyticListResource) ValidateListResourceConfig(ctx context.Context, r
 	common.ValidateNamePrefix(config, &resp.Diagnostics)
 }
 
-func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
+func (r *AnalyticManagedListResource) List(ctx context.Context, req list.ListRequest, resp *list.ListResultsStream) {
 	if r.client == nil {
 		resp.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
 			diag.NewErrorDiagnostic(
@@ -89,7 +89,7 @@ func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, r
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
-		if item.Jamf {
+		if !item.Jamf {
 			continue
 		}
 		if !common.MatchesNamePrefix(config, item.Name) {
@@ -123,8 +123,8 @@ func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, r
 				continue
 			}
 
-			var data AnalyticResourceModel
-			stateBuilder := AnalyticResource{}
+			var data AnalyticManagedResourceModel
+			stateBuilder := AnalyticManagedResource{}
 			stateBuilder.applyState(ctx, &data, *api, &result.Diagnostics)
 			if result.Diagnostics.HasError() {
 				results = append(results, result)

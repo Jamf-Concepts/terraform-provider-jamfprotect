@@ -146,7 +146,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 		},
 		"report_kernel_version": schema.BoolAttribute{
 			MarkdownDescription: "Whether kernel version reporting is enabled.",
-			DeprecationMessage:   "This attribute is deprecated. Kernel version is now always collected by the Jamf Protect agent regardless of plan configuration.",
+			DeprecationMessage:  "This attribute is deprecated. Kernel version is now always collected by the Jamf Protect agent regardless of plan configuration.",
 			Computed:            true,
 		},
 		"report_memory_size": schema.BoolAttribute{
@@ -167,7 +167,7 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 		},
 		"report_os_version": schema.BoolAttribute{
 			MarkdownDescription: "Whether OS version reporting is enabled.",
-			DeprecationMessage:   "This attribute is deprecated. OS version is now always collected by the Jamf Protect agent regardless of plan configuration.",
+			DeprecationMessage:  "This attribute is deprecated. OS version is now always collected by the Jamf Protect agent regardless of plan configuration.",
 			Computed:            true,
 		},
 		"endpoint_threat_prevention": schema.StringAttribute{

@@ -1,0 +1,17 @@
+{
+    "data": {
+        "updateInternalAnalytic": {
+            "tenantActions": [
+                {
+                    "name": "Report",
+                    "parameters": "{}"
+                },
+                {
+                    "name": "SmartGroup",
+                    "parameters": "{\"id\":\"yes\"}"
+                }
+            ],
+            "tenantSeverity": "Low"
+        }
+    }
+}

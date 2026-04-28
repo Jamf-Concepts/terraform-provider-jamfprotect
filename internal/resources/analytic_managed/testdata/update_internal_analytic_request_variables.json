@@ -1,0 +1,14 @@
+{
+    "uuid": "e59e0cdc-eea2-11e9-ba08-a683e73a7372",
+    "tenantActions": [
+        {
+            "name": "Report",
+            "parameters": "{}"
+        },
+        {
+            "name": "SmartGroup",
+            "parameters": "{\"id\":\"yes\"}"
+        }
+    ],
+    "tenantSeverity": "Low"
+}

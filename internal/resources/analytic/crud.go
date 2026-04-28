@@ -43,6 +43,15 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	if result.Jamf {
+		resp.Diagnostics.AddError(
+			"Unexpected Jamf-managed analytic returned",
+			"CreateAnalytic returned an analytic flagged as Jamf-managed. This resource manages custom analytics only. "+
+				"Use `jamfprotect_analytic_managed` to manage Jamf-managed analytics.",
+		)
+		return
+	}
+
 	r.applyState(ctx, &data, result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -104,6 +113,15 @@ func (r *AnalyticResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	if result == nil {
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if result.Jamf {
+		resp.Diagnostics.AddError(
+			"Analytic is Jamf-managed",
+			"The analytic with UUID "+data.ID.ValueString()+" is Jamf-managed and cannot be managed by `jamfprotect_analytic`. "+
+				"Use the `jamfprotect_analytic_managed` resource instead.",
+		)
 		return
 	}
 
