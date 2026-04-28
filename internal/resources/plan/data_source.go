@@ -208,10 +208,6 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 					MarkdownDescription: "Fileless threats engine mode.",
 					Computed:            true,
 				},
-				"experimental": schema.StringAttribute{
-					MarkdownDescription: "Experimental engine mode.",
-					Computed:            true,
-				},
 			},
 		},
 		"created": schema.StringAttribute{

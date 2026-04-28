@@ -116,26 +116,13 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 				})
 			}
 		}
-	} else if !data.AnalyticSets.IsNull() && len(data.AnalyticSets.Elements()) > 0 {
-		diags.AddError(
-			"analytic_sets not allowed with this threat prevention strategy",
-			"analytic_sets can only be set when threat_prevention_strategy is Legacy.",
-		)
-		return nil
 	}
 
 	if analyticSets != nil {
 		input.AnalyticSets = analyticSets
 	}
 
-	if strategy == "Custom" {
-		if data.CustomEngineConfig.IsNull() || data.CustomEngineConfig.IsUnknown() {
-			diags.AddError(
-				"custom_engine_config required",
-				"custom_engine_config must be set when threat_prevention_strategy is Custom.",
-			)
-			return nil
-		}
+	if strategy == "Custom" && !data.CustomEngineConfig.IsNull() && !data.CustomEngineConfig.IsUnknown() {
 		var cfg CustomEngineConfigModel
 		diags.Append(data.CustomEngineConfig.As(ctx, &cfg, basetypes.ObjectAsOptions{})...)
 		if diags.HasError() {
@@ -161,17 +148,12 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 			diags.AddError("Invalid custom engine config mode", "fileless_threats has an invalid value.")
 			return nil
 		}
-		experimentalAPI, ok := customEngineConfigModeToAPI(cfg.Experimental.ValueString())
-		if !ok {
-			diags.AddError("Invalid custom engine config mode", "experimental has an invalid value.")
-			return nil
-		}
 		input.CustomEngineConfig = &jamfprotect.CustomEngineConfigInput{
 			MalwareRiskware:  malwareAPI,
 			AdversaryTactics: adversaryAPI,
 			SystemTampering:  systemAPI,
 			FilelessThreats:  filelessAPI,
-			Experimental:     experimentalAPI,
+			Experimental:     "DISABLED",
 		}
 	}
 
@@ -193,7 +175,7 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		InsightsSyncInterval: data.ReportingInterval.ValueInt64() * 60,
 	}
 
-	if data.EndpointThreatPrevention.IsNull() {
+	if !common.IsKnownString(data.EndpointThreatPrevention) {
 		input.SignaturesFeedConfig = jamfprotect.PlanSignaturesFeedConfigInput{
 			Mode: "blocking",
 		}

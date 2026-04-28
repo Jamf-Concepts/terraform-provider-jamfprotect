@@ -15,7 +15,6 @@ var customEngineConfigAttrTypes = map[string]attr.Type{
 	"adversary_tactics": types.StringType,
 	"system_tampering":  types.StringType,
 	"fileless_threats":  types.StringType,
-	"experimental":      types.StringType,
 }
 
 // CustomEngineConfigModel maps custom engine threat prevention configuration.
@@ -24,7 +23,6 @@ type CustomEngineConfigModel struct {
 	AdversaryTactics types.String `tfsdk:"adversary_tactics"`
 	SystemTampering  types.String `tfsdk:"system_tampering"`
 	FilelessThreats  types.String `tfsdk:"fileless_threats"`
-	Experimental     types.String `tfsdk:"experimental"`
 }
 
 // PlanResourceModel maps the resource schema data.

@@ -58,17 +58,6 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 		data.USBControlSet = types.StringNull()
 	}
 
-	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
-	if len(filteredAnalyticSets) > 0 {
-		uuids := make([]string, len(filteredAnalyticSets))
-		for i, as := range filteredAnalyticSets {
-			uuids[i] = as.AnalyticSet.UUID
-		}
-		data.AnalyticSets = common.StringsToSet(uuids)
-	} else {
-		data.AnalyticSets = types.SetNull(types.StringType)
-	}
-
 	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
 		data.CommunicationsProtocol = types.StringValue(communicationsProtocolFromAPI(api.CommsConfig.Protocol))
 	} else {
@@ -77,30 +66,42 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 
 	setReportingFlags(data, api.InfoSync)
 
-	if api.SignaturesFeedConfig != nil {
-		if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
-			data.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
+	strategyUI := "Legacy"
+	if api.ThreatPreventionStrategy != "" {
+		strategyUI = threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy)
+	}
+	data.ThreatPreventionStrategy = types.StringValue(strategyUI)
+	data.CustomEngineConfig = customEngineConfigToObject(ctx, api.CustomEngineConfig, diags)
+
+	if strategyUI == "Legacy" {
+		filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
+		if len(filteredAnalyticSets) > 0 {
+			uuids := make([]string, len(filteredAnalyticSets))
+			for i, as := range filteredAnalyticSets {
+				uuids[i] = as.AnalyticSet.UUID
+			}
+			data.AnalyticSets = common.StringsToSet(uuids)
 		} else {
-			diags.AddError(
-				"Unsupported signatures feed mode",
-				"signaturesFeedConfig.mode was not recognized.",
-			)
+			data.AnalyticSets = types.SetNull(types.StringType)
+		}
+		data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
+		data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
+		if api.SignaturesFeedConfig != nil {
+			if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
+				data.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
+			} else {
+				diags.AddError("Unsupported signatures feed mode", "signaturesFeedConfig.mode was not recognized.")
+				data.EndpointThreatPrevention = types.StringNull()
+			}
+		} else {
 			data.EndpointThreatPrevention = types.StringNull()
 		}
 	} else {
+		data.AnalyticSets = types.SetNull(types.StringType)
+		data.AdvancedThreatControls = types.StringNull()
+		data.TamperPrevention = types.StringNull()
 		data.EndpointThreatPrevention = types.StringNull()
 	}
-
-	data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
-	data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
-
-	if api.ThreatPreventionStrategy != "" {
-		data.ThreatPreventionStrategy = types.StringValue(threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy))
-	} else {
-		data.ThreatPreventionStrategy = types.StringValue("Legacy")
-	}
-
-	data.CustomEngineConfig = customEngineConfigToObject(ctx, api.CustomEngineConfig, diags)
 }
 
 // planAPIToDataSourceItem maps a plan to PlanDataSourceItemModel.
@@ -169,26 +170,30 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, diags *diag.Diagnostics) Plan
 
 	setReportingFlagsDataSource(&item, api.InfoSync)
 
-	if api.SignaturesFeedConfig != nil {
-		if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
-			item.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
+	strategyUI := "Legacy"
+	if api.ThreatPreventionStrategy != "" {
+		strategyUI = threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy)
+	}
+	item.ThreatPreventionStrategy = types.StringValue(strategyUI)
+	item.CustomEngineConfig = customEngineConfigToObject(context.Background(), api.CustomEngineConfig, diags)
+
+	if strategyUI == "Legacy" {
+		if api.SignaturesFeedConfig != nil {
+			if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
+				item.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
+			} else {
+				item.EndpointThreatPrevention = types.StringNull()
+			}
 		} else {
 			item.EndpointThreatPrevention = types.StringNull()
 		}
+		item.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, nil)
+		item.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, nil)
 	} else {
 		item.EndpointThreatPrevention = types.StringNull()
+		item.AdvancedThreatControls = types.StringNull()
+		item.TamperPrevention = types.StringNull()
 	}
-
-	item.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, nil)
-	item.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, nil)
-
-	if api.ThreatPreventionStrategy != "" {
-		item.ThreatPreventionStrategy = types.StringValue(threatPreventionStrategyFromAPI(api.ThreatPreventionStrategy))
-	} else {
-		item.ThreatPreventionStrategy = types.StringValue("Legacy")
-	}
-
-	item.CustomEngineConfig = customEngineConfigToObject(context.Background(), api.CustomEngineConfig, diags)
 
 	return item
 }
@@ -214,16 +219,11 @@ func customEngineConfigToObject(ctx context.Context, cfg *jamfprotect.CustomEngi
 	if !ok {
 		filelessUI = cfg.FilelessThreats
 	}
-	experimentalUI, ok := customEngineConfigModeFromAPI(cfg.Experimental)
-	if !ok {
-		experimentalUI = cfg.Experimental
-	}
 	obj, d := types.ObjectValueFrom(ctx, customEngineConfigAttrTypes, CustomEngineConfigModel{
 		MalwareRiskware:  types.StringValue(malwareUI),
 		AdversaryTactics: types.StringValue(adversaryUI),
 		SystemTampering:  types.StringValue(systemUI),
 		FilelessThreats:  types.StringValue(filelessUI),
-		Experimental:     types.StringValue(experimentalUI),
 	})
 	diags.Append(d...)
 	return obj
