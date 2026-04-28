@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -104,6 +105,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"analytic_sets": schema.SetAttribute{
 				MarkdownDescription: "A set of analytic set IDs to include in this plan. Only valid when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
+				Computed:            true,
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
@@ -171,16 +173,16 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
-				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Defaults to `Block and report`.",
+				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString("Block and report"),
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				Validators: []validator.String{
 					stringvalidator.OneOf(endpointThreatPreventionUIOptions...),
 				},
 			},
 			"advanced_threat_controls": schema.StringAttribute{
-				MarkdownDescription: "Advanced Threat Controls setting for the plan. Valid options are: " + common.FormatOptions(advancedThreatControlsUIOptions) + ".",
+				MarkdownDescription: "Advanced Threat Controls setting for the plan. Valid options are: " + common.FormatOptions(advancedThreatControlsUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -189,7 +191,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"tamper_prevention": schema.StringAttribute{
-				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ". Only applies when `threat_prevention_strategy` is `Legacy`.",
+				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -210,6 +212,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "Per-engine threat prevention configuration. Required when `threat_prevention_strategy` is `Custom`. Reflects server-managed values when strategy is `Managed`.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 				Attributes: map[string]schema.Attribute{
 					"malware_riskware": schema.StringAttribute{
 						MarkdownDescription: "Malware and riskware engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
@@ -231,12 +234,6 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 					"fileless_threats": schema.StringAttribute{
 						MarkdownDescription: "Fileless threats engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
-						Optional:            true,
-						Computed:            true,
-						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
-					},
-					"experimental": schema.StringAttribute{
-						MarkdownDescription: "Experimental engine mode. Valid options are: " + common.FormatOptions(customEngineConfigModeUIOptions) + ".",
 						Optional:            true,
 						Computed:            true,
 						Validators:          []validator.String{stringvalidator.OneOf(customEngineConfigModeUIOptions...)},
