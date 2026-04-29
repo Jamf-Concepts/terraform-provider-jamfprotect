@@ -108,7 +108,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 			"analytic_sets": schema.SetAttribute{
-				MarkdownDescription: "A set of analytic set IDs to include in this plan. Only valid when `threat_prevention_strategy` is `Legacy`.",
+				MarkdownDescription: "A set of analytic set IDs to include in this plan. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				ElementType:         types.StringType,
@@ -178,7 +178,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Default:             booldefault.StaticBool(false),
 			},
 			"endpoint_threat_prevention": schema.StringAttribute{
-				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
+				MarkdownDescription: "Endpoint threat prevention setting for the plan. Valid options are: " + common.FormatOptions(endpointThreatPreventionUIOptions) + ". Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -187,7 +187,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"advanced_threat_controls": schema.StringAttribute{
-				MarkdownDescription: "Advanced Threat Controls setting for the plan. Valid options are: " + common.FormatOptions(advancedThreatControlsUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
+				MarkdownDescription: "Advanced Threat Controls setting for the plan. Valid options are: " + common.FormatOptions(advancedThreatControlsUIOptions) + ". Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -196,7 +196,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"tamper_prevention": schema.StringAttribute{
-				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ". Only valid when `threat_prevention_strategy` is `Legacy`.",
+				MarkdownDescription: "Tamper Prevention setting for the plan. Valid options are: " + common.FormatOptions(tamperPreventionUIOptions) + ". Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -214,7 +214,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"custom_engine_config": schema.SingleNestedAttribute{
-				MarkdownDescription: "Per-engine threat prevention configuration. Required when `threat_prevention_strategy` is `Custom`. Reflects server-managed values when strategy is `Managed`.",
+				MarkdownDescription: "Per-engine threat prevention configuration. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Custom`. When omitted, the API-retained value is not tracked in state.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
