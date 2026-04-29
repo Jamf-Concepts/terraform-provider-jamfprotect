@@ -130,14 +130,14 @@ resource "jamfprotect_plan" "monitoring_only" {
 
 ### Optional
 
-- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
-- `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan. Only valid when `threat_prevention_strategy` is `Legacy`.
+- `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
+- `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `communications_protocol` (String) The communications protocol to use. Valid options are: `MQTT:443`, `WebSocket/MQTT:443`. Defaults to `MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
-- `custom_engine_config` (Attributes) Per-engine threat prevention configuration. Required when `threat_prevention_strategy` is `Custom`. Reflects server-managed values when strategy is `Managed`. (see [below for nested schema](#nestedatt--custom_engine_config))
+- `custom_engine_config` (Attributes) Per-engine threat prevention configuration. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Custom`. When omitted, the API-retained value is not tracked in state. (see [below for nested schema](#nestedatt--custom_engine_config))
 - `description` (String) A description of the plan.
-- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
+- `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
 - `exception_sets` (Set of String) A set of exception set IDs to associate with this plan.
 - `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
@@ -148,7 +148,7 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `report_model_name` (Boolean) Report the device model name.
 - `report_os_version` (Boolean, Deprecated) Report the OS version details.
 - `report_serial_number` (Boolean) Report the device serial number.
-- `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`. Only valid when `threat_prevention_strategy` is `Legacy`.
+- `tamper_prevention` (String) Tamper Prevention setting for the plan. Valid options are: `Block and report`, `Disable`. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
 - `telemetry` (String) The ID of the telemetry configuration.
 - `threat_prevention_strategy` (String) Only available when opted in to the [NGTP beta](https://learn.jamf.com/r/en-US/jamf-protect-documentation/Threat_Prevention_Public_Beta). Threat prevention strategy for the plan. Valid options are: `Legacy`, `Managed`, `Custom`. Defaults to `Legacy`.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))

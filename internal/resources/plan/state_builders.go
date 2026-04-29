@@ -73,33 +73,26 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 	data.ThreatPreventionStrategy = types.StringValue(strategyUI)
 	data.CustomEngineConfig = customEngineConfigToObject(ctx, api.CustomEngineConfig, diags)
 
-	if strategyUI == "Legacy" {
-		filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
-		if len(filteredAnalyticSets) > 0 {
-			uuids := make([]string, len(filteredAnalyticSets))
-			for i, as := range filteredAnalyticSets {
-				uuids[i] = as.AnalyticSet.UUID
-			}
-			data.AnalyticSets = common.StringsToSet(uuids)
-		} else {
-			data.AnalyticSets = types.SetNull(types.StringType)
+	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
+	if len(filteredAnalyticSets) > 0 {
+		uuids := make([]string, len(filteredAnalyticSets))
+		for i, as := range filteredAnalyticSets {
+			uuids[i] = as.AnalyticSet.UUID
 		}
-		data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
-		data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
-		if api.SignaturesFeedConfig != nil {
-			if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
-				data.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
-			} else {
-				diags.AddError("Unsupported signatures feed mode", "signaturesFeedConfig.mode was not recognized.")
-				data.EndpointThreatPrevention = types.StringNull()
-			}
+		data.AnalyticSets = common.StringsToSet(uuids)
+	} else {
+		data.AnalyticSets = types.SetNull(types.StringType)
+	}
+	data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
+	data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
+	if api.SignaturesFeedConfig != nil {
+		if endpointThreatPrevention, ok := modeToEndpointThreatPrevention(api.SignaturesFeedConfig.Mode); ok {
+			data.EndpointThreatPrevention = types.StringValue(endpointThreatPrevention)
 		} else {
+			diags.AddError("Unsupported signatures feed mode", "signaturesFeedConfig.mode was not recognized.")
 			data.EndpointThreatPrevention = types.StringNull()
 		}
 	} else {
-		data.AnalyticSets = types.SetNull(types.StringType)
-		data.AdvancedThreatControls = types.StringNull()
-		data.TamperPrevention = types.StringNull()
 		data.EndpointThreatPrevention = types.StringNull()
 	}
 }
