@@ -16,14 +16,20 @@ import (
 )
 
 // apiToState maps the API response into the Terraform state model.
-func (r *DataForwardingResource) apiToState(ctx context.Context, data *DataForwardingResourceModel, api jamfprotect.DataForwardingSettings, externalID string, diags *diag.Diagnostics) {
+func (r *DataForwardingResource) apiToState(ctx context.Context, data *DataForwardingResourceModel, api *jamfprotect.DataForwardingSettings, externalID string, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(dataForwardingResourceID)
+	if api == nil {
+		api = &jamfprotect.DataForwardingSettings{}
+	}
 	data.AmazonS3 = buildAmazonS3Object(api.S3, externalID, diags)
 	data.MicrosoftSentinel = buildMicrosoftSentinelObject(ctx, data.MicrosoftSentinel, api.SentinelV2, diags)
 }
 
 // buildAmazonS3Object maps the S3 response to a Terraform object.
-func buildAmazonS3Object(api jamfprotect.ForwardS3, externalID string, diags *diag.Diagnostics) types.Object {
+func buildAmazonS3Object(api *jamfprotect.ForwardS3, externalID string, diags *diag.Diagnostics) types.Object {
+	if api == nil {
+		api = &jamfprotect.ForwardS3{}
+	}
 	attrs := map[string]attr.Value{
 		"bucket_name":             types.StringValue(api.Bucket),
 		"enabled":                 types.BoolValue(api.Enabled),
@@ -42,9 +48,12 @@ func buildAmazonS3Object(api jamfprotect.ForwardS3, externalID string, diags *di
 }
 
 // buildMicrosoftSentinelObject maps the Sentinel v2 response to a Terraform object.
-func buildMicrosoftSentinelObject(ctx context.Context, current types.Object, api jamfprotect.ForwardSentinelV2, diags *diag.Diagnostics) types.Object {
+func buildMicrosoftSentinelObject(ctx context.Context, current types.Object, api *jamfprotect.ForwardSentinelV2, diags *diag.Diagnostics) types.Object {
+	if api == nil {
+		api = &jamfprotect.ForwardSentinelV2{}
+	}
 	alerts := buildDataStreamObject(api.Alerts, diags)
-	unifiedLogs := buildDataStreamObject(api.ULogs, diags)
+	unifiedLogs := buildDataStreamObject(api.Ulogs, diags)
 	telemetryDeprecated := buildDataStreamObject(api.Telemetries, diags)
 	telemetry := buildDataStreamObject(api.TelemetriesV2, diags)
 	if diags.HasError() {
@@ -72,7 +81,10 @@ func buildMicrosoftSentinelObject(ctx context.Context, current types.Object, api
 }
 
 // buildDataStreamObject maps a data stream response to a Terraform object.
-func buildDataStreamObject(api jamfprotect.DataStream, diags *diag.Diagnostics) types.Object {
+func buildDataStreamObject(api *jamfprotect.DataStream, diags *diag.Diagnostics) types.Object {
+	if api == nil {
+		api = &jamfprotect.DataStream{}
+	}
 	attrs := map[string]attr.Value{
 		"enabled":                           types.BoolValue(api.Enabled),
 		"data_collection_rule_immutable_id": stringPointerValueOrNull(api.DcrImmutableID),

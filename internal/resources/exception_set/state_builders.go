@@ -36,8 +36,8 @@ func exceptionsToState(_ context.Context, apiExceptions []jamfprotect.Exception,
 	meta := map[string][2]string{}
 
 	for _, apiExc := range apiExceptions {
-		analyticUUID := apiExc.AnalyticUuid
-		if analyticUUID == "" && apiExc.Analytic != nil {
+		analyticUUID := ""
+		if apiExc.Analytic != nil {
 			analyticUUID = apiExc.Analytic.UUID
 		}
 
@@ -58,11 +58,11 @@ func exceptionsToState(_ context.Context, apiExceptions []jamfprotect.Exception,
 		appIDValue := types.StringNull()
 		teamIDValue := types.StringNull()
 		if apiExc.AppSigningInfo != nil {
-			if apiExc.AppSigningInfo.AppId != "" {
-				appIDValue = types.StringValue(apiExc.AppSigningInfo.AppId)
+			if apiExc.AppSigningInfo.AppID != "" {
+				appIDValue = types.StringValue(apiExc.AppSigningInfo.AppID)
 			}
-			if apiExc.AppSigningInfo.TeamId != "" {
-				teamIDValue = types.StringValue(apiExc.AppSigningInfo.TeamId)
+			if apiExc.AppSigningInfo.TeamID != "" {
+				teamIDValue = types.StringValue(apiExc.AppSigningInfo.TeamID)
 			}
 		}
 
@@ -96,11 +96,11 @@ func exceptionsToState(_ context.Context, apiExceptions []jamfprotect.Exception,
 		appIDValue := types.StringNull()
 		teamIDValue := types.StringNull()
 		if apiExc.AppSigningInfo != nil {
-			if apiExc.AppSigningInfo.AppId != "" {
-				appIDValue = types.StringValue(apiExc.AppSigningInfo.AppId)
+			if apiExc.AppSigningInfo.AppID != "" {
+				appIDValue = types.StringValue(apiExc.AppSigningInfo.AppID)
 			}
-			if apiExc.AppSigningInfo.TeamId != "" {
-				teamIDValue = types.StringValue(apiExc.AppSigningInfo.TeamId)
+			if apiExc.AppSigningInfo.TeamID != "" {
+				teamIDValue = types.StringValue(apiExc.AppSigningInfo.TeamID)
 			}
 		}
 

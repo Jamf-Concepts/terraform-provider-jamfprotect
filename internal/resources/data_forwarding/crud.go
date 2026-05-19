@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/constants"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
@@ -38,7 +39,11 @@ func (r *DataForwardingResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	input := buildDataForwardingInput(ctx, data, current.Forward.Sentinel, &resp.Diagnostics)
+	var currentSentinel *jamfprotect.ForwardSentinel
+	if current.Forward != nil {
+		currentSentinel = current.Forward.Sentinel
+	}
+	input := buildDataForwardingInput(ctx, data, currentSentinel, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -142,7 +147,11 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	input := buildDataForwardingInput(ctx, data, current.Forward.Sentinel, &resp.Diagnostics)
+	var currentSentinel2 *jamfprotect.ForwardSentinel
+	if current.Forward != nil {
+		currentSentinel2 = current.Forward.Sentinel
+	}
+	input := buildDataForwardingInput(ctx, data, currentSentinel2, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
