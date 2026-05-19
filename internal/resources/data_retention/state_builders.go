@@ -14,11 +14,16 @@ import (
 // apiToState maps the API response into the Terraform state model.
 func (r *DataRetentionResource) apiToState(_ context.Context, data *DataRetentionResourceModel, api jamfprotect.DataRetentionSettings) {
 	data.ID = types.StringValue(dataRetentionResourceID)
-	if api.Database != nil && api.Database.Log != nil {
-		data.InformationalAlertDays = types.Int64Value(api.Database.Log.NumberOfDays)
-	}
-	if api.Database != nil && api.Database.Alert != nil {
-		data.LowMediumHighSeverityDays = types.Int64Value(api.Database.Alert.NumberOfDays)
+	data.InformationalAlertDays = types.Int64Null()
+	data.LowMediumHighSeverityDays = types.Int64Null()
+	data.ArchivedDataDays = types.Int64Null()
+	if api.Database != nil {
+		if api.Database.Log != nil {
+			data.InformationalAlertDays = types.Int64Value(api.Database.Log.NumberOfDays)
+		}
+		if api.Database.Alert != nil {
+			data.LowMediumHighSeverityDays = types.Int64Value(api.Database.Alert.NumberOfDays)
+		}
 	}
 	if api.Cold != nil && api.Cold.Alert != nil {
 		data.ArchivedDataDays = types.Int64Value(api.Cold.Alert.NumberOfDays)

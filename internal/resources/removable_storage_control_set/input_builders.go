@@ -79,6 +79,7 @@ func buildVendorOverrideRule(ctx context.Context, override RemovableStorageVendo
 	vendorRule := jamfprotect.VendorRuleInput{
 		MountAction: permissionToAPI(override.Permission.ValueString()),
 		Vendors:     common.ListToStrings(ctx, override.VendorIDs, diags),
+		ApplyTo:     override.ApplyTo.ValueString(),
 	}
 	if diags.HasError() {
 		return jamfprotect.RemovableStorageControlRuleInput{}, false
@@ -86,9 +87,6 @@ func buildVendorOverrideRule(ctx context.Context, override RemovableStorageVendo
 	if !override.LocalNotificationMessage.IsNull() {
 		msg := override.LocalNotificationMessage.ValueString()
 		vendorRule.MessageAction = &msg
-	}
-	if !override.ApplyTo.IsNull() {
-		vendorRule.ApplyTo = override.ApplyTo.ValueString()
 	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:       "Vendor",
@@ -100,6 +98,7 @@ func buildSerialOverrideRule(ctx context.Context, override RemovableStorageSeria
 	serialRule := jamfprotect.SerialRuleInput{
 		MountAction: permissionToAPI(override.Permission.ValueString()),
 		Serials:     common.ListToStrings(ctx, override.SerialNumbers, diags),
+		ApplyTo:     override.ApplyTo.ValueString(),
 	}
 	if diags.HasError() {
 		return jamfprotect.RemovableStorageControlRuleInput{}, false
@@ -107,9 +106,6 @@ func buildSerialOverrideRule(ctx context.Context, override RemovableStorageSeria
 	if !override.LocalNotificationMessage.IsNull() {
 		msg := override.LocalNotificationMessage.ValueString()
 		serialRule.MessageAction = &msg
-	}
-	if !override.ApplyTo.IsNull() {
-		serialRule.ApplyTo = override.ApplyTo.ValueString()
 	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:       "Serial",
@@ -128,13 +124,11 @@ func buildProductOverrideRule(override RemovableStorageProductOverrideModel) jam
 	productRule := jamfprotect.ProductRuleInput{
 		MountAction: permissionToAPI(override.Permission.ValueString()),
 		Products:    products,
+		ApplyTo:     override.ApplyTo.ValueString(),
 	}
 	if !override.LocalNotificationMessage.IsNull() {
 		msg := override.LocalNotificationMessage.ValueString()
 		productRule.MessageAction = &msg
-	}
-	if !override.ApplyTo.IsNull() {
-		productRule.ApplyTo = override.ApplyTo.ValueString()
 	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:        "Product",
