@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
@@ -63,67 +62,82 @@ func (r *RemovableStorageControlSetResource) buildInput(ctx context.Context, dat
 }
 
 func buildEncryptedOverrideRule(override RemovableStorageEncryptedOverrideModel) jamfprotect.RemovableStorageControlRuleInput {
-	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, types.StringNull())
+	encRule := jamfprotect.EncryptionRuleInput{
+		MountAction: permissionToAPI(override.Permission.ValueString()),
+	}
+	if !override.LocalNotificationMessage.IsNull() {
+		msg := override.LocalNotificationMessage.ValueString()
+		encRule.MessageAction = &msg
+	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:           "Encryption",
-		EncryptionRule: &baseRule,
+		EncryptionRule: &encRule,
 	}
 }
 
 func buildVendorOverrideRule(ctx context.Context, override RemovableStorageVendorOverrideModel, diags *diag.Diagnostics) (jamfprotect.RemovableStorageControlRuleInput, bool) {
-	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
-	baseRule.Vendors = common.ListToStrings(ctx, override.VendorIDs, diags)
+	vendorRule := jamfprotect.VendorRuleInput{
+		MountAction: permissionToAPI(override.Permission.ValueString()),
+		Vendors:     common.ListToStrings(ctx, override.VendorIDs, diags),
+	}
 	if diags.HasError() {
 		return jamfprotect.RemovableStorageControlRuleInput{}, false
 	}
+	if !override.LocalNotificationMessage.IsNull() {
+		msg := override.LocalNotificationMessage.ValueString()
+		vendorRule.MessageAction = &msg
+	}
+	if !override.ApplyTo.IsNull() {
+		vendorRule.ApplyTo = override.ApplyTo.ValueString()
+	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:       "Vendor",
-		VendorRule: &baseRule,
+		VendorRule: &vendorRule,
 	}, true
 }
 
 func buildSerialOverrideRule(ctx context.Context, override RemovableStorageSerialOverrideModel, diags *diag.Diagnostics) (jamfprotect.RemovableStorageControlRuleInput, bool) {
-	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
-	baseRule.Serials = common.ListToStrings(ctx, override.SerialNumbers, diags)
+	serialRule := jamfprotect.SerialRuleInput{
+		MountAction: permissionToAPI(override.Permission.ValueString()),
+		Serials:     common.ListToStrings(ctx, override.SerialNumbers, diags),
+	}
 	if diags.HasError() {
 		return jamfprotect.RemovableStorageControlRuleInput{}, false
 	}
+	if !override.LocalNotificationMessage.IsNull() {
+		msg := override.LocalNotificationMessage.ValueString()
+		serialRule.MessageAction = &msg
+	}
+	if !override.ApplyTo.IsNull() {
+		serialRule.ApplyTo = override.ApplyTo.ValueString()
+	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:       "Serial",
-		SerialRule: &baseRule,
+		SerialRule: &serialRule,
 	}, true
 }
 
 func buildProductOverrideRule(override RemovableStorageProductOverrideModel) jamfprotect.RemovableStorageControlRuleInput {
-	baseRule := buildRuleDetails(override.Permission, override.LocalNotificationMessage, override.ApplyTo)
-	products := make([]jamfprotect.RemovableStorageControlProductPair, 0, len(override.ProductIDs))
+	products := make([]jamfprotect.ProductValueInput, 0, len(override.ProductIDs))
 	for _, product := range override.ProductIDs {
-		products = append(products, jamfprotect.RemovableStorageControlProductPair{
+		products = append(products, jamfprotect.ProductValueInput{
 			Vendor:  product.VendorID.ValueString(),
 			Product: product.ProductID.ValueString(),
 		})
 	}
-	productRule := jamfprotect.RemovableStorageControlProductRuleDetails{
-		MountAction:   baseRule.MountAction,
-		MessageAction: baseRule.MessageAction,
-		ApplyTo:       baseRule.ApplyTo,
-		Products:      products,
+	productRule := jamfprotect.ProductRuleInput{
+		MountAction: permissionToAPI(override.Permission.ValueString()),
+		Products:    products,
+	}
+	if !override.LocalNotificationMessage.IsNull() {
+		msg := override.LocalNotificationMessage.ValueString()
+		productRule.MessageAction = &msg
+	}
+	if !override.ApplyTo.IsNull() {
+		productRule.ApplyTo = override.ApplyTo.ValueString()
 	}
 	return jamfprotect.RemovableStorageControlRuleInput{
 		Type:        "Product",
 		ProductRule: &productRule,
 	}
-}
-
-func buildRuleDetails(permission types.String, message types.String, applyTo types.String) jamfprotect.RemovableStorageControlRuleDetails {
-	baseRule := jamfprotect.RemovableStorageControlRuleDetails{
-		MountAction: permissionToAPI(permission.ValueString()),
-	}
-	if !message.IsNull() {
-		baseRule.MessageAction = new(message.ValueString())
-	}
-	if !applyTo.IsNull() {
-		baseRule.ApplyTo = new(applyTo.ValueString())
-	}
-	return baseRule
 }

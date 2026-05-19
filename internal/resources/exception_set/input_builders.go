@@ -84,10 +84,10 @@ func buildExceptionsInput(ctx context.Context, set types.Set, diags *diag.Diagno
 				}
 				item.IgnoreListType = ignoreListType
 				if ignoreListSubType != "" {
-					item.IgnoreListSubType = ignoreListSubType
+					item.IgnoreListSubType = &ignoreListSubType
 				}
 				if eventType != "" {
-					item.EventType = eventType
+					item.EventType = &eventType
 				}
 
 				if rule.RuleType.ValueString() == "App Signing Info" {
@@ -96,7 +96,8 @@ func buildExceptionsInput(ctx context.Context, set types.Set, diags *diag.Diagno
 						return nil, nil
 					}
 				} else if !rule.Value.IsNull() && !rule.Value.IsUnknown() {
-					item.Value = rule.Value.ValueString()
+					v := rule.Value.ValueString()
+					item.Value = &v
 				}
 
 				es = append(es, item)
@@ -126,7 +127,7 @@ func buildExceptionsInput(ctx context.Context, set types.Set, diags *diag.Diagno
 				item.AnalyticTypes = analyticTypes
 			}
 			if exceptionType == "Ignore for Analytic" {
-				item.AnalyticUuid = subType
+				item.AnalyticUUID = &subType
 			}
 			if rule.RuleType.ValueString() == "App Signing Info" {
 				item.AppSigningInfo = buildAppSigningInfo(rule, diags)
@@ -134,7 +135,8 @@ func buildExceptionsInput(ctx context.Context, set types.Set, diags *diag.Diagno
 					return nil, nil
 				}
 			} else if !rule.Value.IsNull() && !rule.Value.IsUnknown() {
-				item.Value = rule.Value.ValueString()
+				v := rule.Value.ValueString()
+				item.Value = &v
 			}
 			standard = append(standard, item)
 		}
@@ -153,7 +155,7 @@ func buildAppSigningInfo(rule exceptionRuleModel, diags *diag.Diagnostics) *jamf
 		return nil
 	}
 	return &jamfprotect.AppSigningInfoInput{
-		AppId:  rule.AppID.ValueString(),
-		TeamId: rule.TeamID.ValueString(),
+		AppID:  rule.AppID.ValueString(),
+		TeamID: rule.TeamID.ValueString(),
 	}
 }

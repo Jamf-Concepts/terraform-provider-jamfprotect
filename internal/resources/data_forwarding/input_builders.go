@@ -16,7 +16,7 @@ import (
 )
 
 // buildDataForwardingInput builds the API input from the Terraform model.
-func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceModel, currentSentinel jamfprotect.ForwardSentinel, diags *diag.Diagnostics) jamfprotect.DataForwardingInput {
+func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceModel, currentSentinel *jamfprotect.ForwardSentinel, diags *diag.Diagnostics) jamfprotect.DataForwardingInput {
 	var s3 amazonS3ForwardingModel
 	var microsoftSentinel microsoftSentinelForwardingModel
 
@@ -46,14 +46,14 @@ func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceMo
 			Prefix:    common.StringValue(s3.Prefix),
 			Role:      common.StringValue(s3.IAMRole),
 		},
-		Sentinel: jamfprotect.ForwardSentinelInput(currentSentinel),
+		Sentinel: sentinelInputFromCurrent(currentSentinel),
 		SentinelV2: jamfprotect.ForwardSentinelV2Input{
 			Enabled:       microsoftSentinel.Enabled.ValueBool(),
 			AzureTenantID: common.StringValue(microsoftSentinel.DirectoryID),
 			AzureClientID: common.StringValue(microsoftSentinel.ApplicationID),
 			Endpoint:      common.StringValue(microsoftSentinel.DataCollectionEndpoint),
 			Alerts:        alerts,
-			ULogs:         unifiedLogs,
+			Ulogs:         unifiedLogs,
 			Telemetries:   telemetryDeprecated,
 			TelemetriesV2: telemetry,
 		},
@@ -77,6 +77,14 @@ func buildDataStreamInput(ctx context.Context, obj types.Object, diags *diag.Dia
 		DcrImmutableID: stringPointerOrNil(stream.DataCollectionRuleImmutableID),
 		StreamName:     stringPointerOrNil(stream.StreamName),
 	}
+}
+
+// sentinelInputFromCurrent preserves the existing Sentinel v1 config on update.
+func sentinelInputFromCurrent(s *jamfprotect.ForwardSentinel) jamfprotect.ForwardSentinelInput {
+	if s == nil {
+		return jamfprotect.ForwardSentinelInput{}
+	}
+	return jamfprotect.ForwardSentinelInput(*s)
 }
 
 // stringPointerOrNil returns a string pointer for non-empty values.
