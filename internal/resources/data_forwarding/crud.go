@@ -147,11 +147,11 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	var currentSentinel2 *jamfprotect.ForwardSentinel
+	var currentSentinel *jamfprotect.ForwardSentinel
 	if current.Forward != nil {
-		currentSentinel2 = current.Forward.Sentinel
+		currentSentinel = current.Forward.Sentinel
 	}
-	input := buildDataForwardingInput(ctx, data, currentSentinel2, &resp.Diagnostics)
+	input := buildDataForwardingInput(ctx, data, currentSentinel, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
