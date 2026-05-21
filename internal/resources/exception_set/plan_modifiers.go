@@ -70,5 +70,9 @@ func (r *ExceptionSetResource) ModifyPlan(ctx context.Context, req resource.Modi
 		return
 	}
 
+	if setValue.Equal(plan.Exceptions) {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("exceptions"), setValue)...)
 }
