@@ -109,7 +109,6 @@ resource "jamfprotect_analytic" "sensitive_file_access" {
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the analytic set.
 - `managed` (Boolean) Whether this is a Jamf-managed analytic set.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

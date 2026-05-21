@@ -57,7 +57,6 @@ resource "jamfprotect_unified_logging_filter" "application_debugging" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the unified logging filter.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -127,7 +127,6 @@ resource "jamfprotect_removable_storage_control_set" "selective_usb_control" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the removable storage control set.
-- `updated` (String) The last update timestamp.
 
 <a id="nestedatt--override_encrypted_devices"></a>
 ### Nested Schema for `override_encrypted_devices`

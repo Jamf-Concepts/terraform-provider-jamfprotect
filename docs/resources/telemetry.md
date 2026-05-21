@@ -110,7 +110,6 @@ resource "jamfprotect_telemetry" "performance_monitoring" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the telemetry v2 configuration.
-- `updated` (String) The last update timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

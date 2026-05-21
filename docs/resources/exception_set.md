@@ -126,7 +126,6 @@ resource "jamfprotect_exception_set" "endpoint_security_overrides" {
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the exception set.
 - `managed` (Boolean) Whether this is a Jamf-managed exception set.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--exceptions"></a>
 ### Nested Schema for `exceptions`

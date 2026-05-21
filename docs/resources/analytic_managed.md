@@ -61,7 +61,6 @@ resource "jamfprotect_analytic_managed" "imulermalware" {
 - `severity` (String) The base severity of the analytic (read-only — use `tenant_severity` to override).
 - `snapshot_files` (Set of String) Snapshot file paths to collect when the analytic triggers (read-only).
 - `tags` (Set of String) Tags for the analytic (read-only).
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--tenant_actions"></a>
 ### Nested Schema for `tenant_actions`
