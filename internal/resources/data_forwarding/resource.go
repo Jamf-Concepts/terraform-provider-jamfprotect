@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -107,6 +108,7 @@ func (r *DataForwardingResource) Schema(ctx context.Context, req resource.Schema
 					"secret_exists": schema.BoolAttribute{
 						MarkdownDescription: "Whether an application secret is configured.",
 						Computed:            true,
+						PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 					},
 					"directory_id": schema.StringAttribute{
 						MarkdownDescription: "The Azure tenant ID.",

@@ -12,7 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,53 +58,65 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the analytic (read-only — assigned by Jamf).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"sensor_type": schema.StringAttribute{
 				MarkdownDescription: "The sensor type for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "A description of the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"label": schema.StringAttribute{
 				MarkdownDescription: "Display label for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"long_description": schema.StringAttribute{
 				MarkdownDescription: "Long-form description for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The filter expression for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"level": schema.Int64Attribute{
 				MarkdownDescription: "The log level (integer) for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"severity": schema.StringAttribute{
 				MarkdownDescription: "The base severity of the analytic (read-only — use `tenant_severity` to override).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"tags": schema.SetAttribute{
 				MarkdownDescription: "Tags for the analytic (read-only).",
 				Computed:            true,
 				ElementType:         types.StringType,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 			},
 			"categories": schema.SetAttribute{
 				MarkdownDescription: "Categories for the analytic (read-only).",
 				Computed:            true,
 				ElementType:         types.StringType,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 			},
 			"snapshot_files": schema.SetAttribute{
 				MarkdownDescription: "Snapshot file paths to collect when the analytic triggers (read-only).",
 				Computed:            true,
 				ElementType:         types.StringType,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 			},
 			"context_item": schema.SetNestedAttribute{
 				MarkdownDescription: "Context enrichment definitions for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -124,6 +139,7 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 				MarkdownDescription: "Tenant-level action overrides. Set to override the default actions configured on the Jamf-managed analytic.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -143,6 +159,7 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 				MarkdownDescription: "Tenant-level severity override. Valid options are: " + common.FormatOptions(severityOptions) + ".",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				Validators: []validator.String{
 					stringvalidator.OneOf(severityOptions...),
 				},
@@ -159,10 +176,12 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 			"jamf": schema.BoolAttribute{
 				MarkdownDescription: "Indicates whether the analytic is Jamf-managed. Always `true` for this resource.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"remediation": schema.StringAttribute{
 				MarkdownDescription: "Remediation guidance associated with the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

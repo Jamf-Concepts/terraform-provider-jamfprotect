@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
@@ -51,6 +52,11 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 				Config: testAccTelemetryV2ResourceConfig(rName, "Acceptance test telemetry v2", telemetryConfigOpts{
 					LogAccessAuth: true,
 				}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -90,6 +96,11 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					FileHashes:          true,
 					LogFiles:            []string{"/var/log/system.log", "/var/log/install.log", "/var/log/apache2/access_log", "/var/log/apache2/error_log", "/var/log/wifi.log"},
 				}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated telemetry v2"),
@@ -111,6 +122,11 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 				Config: testAccTelemetryV2ResourceConfig(rName, "Updated telemetry v2", telemetryConfigOpts{
 					LogAppsProcesses: true,
 				}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "log_applications_and_processes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "log_access_and_authentication", "false"),
@@ -140,6 +156,11 @@ func TestAccTelemetriesV2DataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTelemetriesV2DataSourceConfig(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.jamfprotect_telemetries.test", "telemetries.#"),
 				),

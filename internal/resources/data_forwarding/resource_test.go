@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
@@ -43,6 +44,11 @@ func TestAccDataForwardingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataForwardingResourceConfig(bucket, prefix, directoryID, applicationID, endpoint),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_s3.bucket_name", bucket),

@@ -72,6 +72,7 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "A description of the plan.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"log_level": schema.StringAttribute{
 				MarkdownDescription: "The log level for the plan. Valid options are: " + common.FormatOptions(logLevelUIOptions) + ". Defaults to `Error`.",

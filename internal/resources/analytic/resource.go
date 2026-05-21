@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -69,10 +71,12 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			"label": schema.StringAttribute{
 				MarkdownDescription: "Display label for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"long_description": schema.StringAttribute{
 				MarkdownDescription: "Long-form description for the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"filter": schema.StringAttribute{
 				MarkdownDescription: "The filter expression for the analytic.",
@@ -147,6 +151,7 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			"tenant_actions": schema.SetNestedAttribute{
 				MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -164,14 +169,17 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 			"tenant_severity": schema.StringAttribute{
 				MarkdownDescription: "Tenant-level severity override (Jamf-managed analytics).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"jamf": schema.BoolAttribute{
 				MarkdownDescription: "Indicates whether the analytic is Jamf-managed (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"remediation": schema.StringAttribute{
 				MarkdownDescription: "Remediation guidance associated with the analytic (read-only).",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

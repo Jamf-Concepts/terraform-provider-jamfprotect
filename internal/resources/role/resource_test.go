@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
@@ -45,6 +46,11 @@ func TestAccRoleResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleResourceConfig(rName, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -59,6 +65,11 @@ func TestAccRoleResource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccRoleResourceConfig(rName+"-updated", []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry", "Exception Sets"}, []string{"Analytics", "Analytic Sets", "Computers", "Plans", "Telemetry"}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
 				),

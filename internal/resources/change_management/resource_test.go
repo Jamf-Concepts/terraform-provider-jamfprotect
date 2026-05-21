@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
@@ -21,6 +22,11 @@ func TestAccChangeManagementResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChangeManagementResourceConfig(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "enable_freeze", "true"),
@@ -33,6 +39,11 @@ func TestAccChangeManagementResource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccChangeManagementResourceConfig(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_freeze", "false"),
 				),

@@ -60,6 +60,7 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "A description of the telemetry v2 configuration.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"log_file_path": schema.SetAttribute{
 				MarkdownDescription: "A set of log file paths to collect from endpoints.",

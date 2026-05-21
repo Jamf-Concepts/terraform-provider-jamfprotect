@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
@@ -44,6 +45,11 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 			// Create and Read testing.
 			{
 				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Test prevent list"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -69,6 +75,11 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 			// Update and Read testing.
 			{
 				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Updated description"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
 				),
@@ -88,6 +99,11 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPreventListResourceConfig(rName, "File Hash", "File hash list"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_type", "File Hash"),
