@@ -188,9 +188,7 @@ resource "jamfprotect_action_configuration" "syslog_integration" {
 ### Read-Only
 
 - `created` (String) The creation timestamp.
-- `hash` (String) The configuration hash.
 - `id` (String) The unique identifier of the action configuration.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--alert_data_collection"></a>
 ### Nested Schema for `alert_data_collection`

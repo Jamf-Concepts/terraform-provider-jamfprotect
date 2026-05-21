@@ -156,9 +156,7 @@ resource "jamfprotect_plan" "monitoring_only" {
 ### Read-Only
 
 - `created` (String) The creation timestamp.
-- `hash` (String) The configuration hash of the plan.
 - `id` (String) The unique identifier of the plan.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--custom_engine_config"></a>
 ### Nested Schema for `custom_engine_config`

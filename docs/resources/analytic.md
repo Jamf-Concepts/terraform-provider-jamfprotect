@@ -238,7 +238,6 @@ resource "jamfprotect_analytic" "with_timeouts" {
 - `remediation` (String) Remediation guidance associated with the analytic (read-only).
 - `tenant_actions` (Attributes Set) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--context_item"></a>
 ### Nested Schema for `context_item`

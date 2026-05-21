@@ -62,7 +62,6 @@ resource "jamfprotect_user" "full_admin" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the user.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

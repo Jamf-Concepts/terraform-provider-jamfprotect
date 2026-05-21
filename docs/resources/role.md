@@ -38,7 +38,6 @@ resource "jamfprotect_role" "basic" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the role.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

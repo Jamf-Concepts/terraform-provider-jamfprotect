@@ -36,7 +36,6 @@ resource "jamfprotect_group" "example" {
 
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the group.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

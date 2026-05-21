@@ -37,7 +37,6 @@ resource "jamfprotect_data_retention" "long_term" {
 ### Read-Only
 
 - `id` (String) The singleton identifier for data retention.
-- `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
