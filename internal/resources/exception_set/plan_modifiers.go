@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -69,6 +70,5 @@ func (r *ExceptionSetResource) ModifyPlan(ctx context.Context, req resource.Modi
 		return
 	}
 
-	plan.Exceptions = setValue
-	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("exceptions"), setValue)...)
 }
