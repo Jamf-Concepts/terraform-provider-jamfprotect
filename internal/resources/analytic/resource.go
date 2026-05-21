@@ -144,10 +144,6 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
-			},
 			"tenant_actions": schema.SetNestedAttribute{
 				MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
 				Computed:            true,

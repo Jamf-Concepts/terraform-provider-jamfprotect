@@ -18,6 +18,5 @@ type UserResourceModel struct {
 	SendEmailNotifications types.Bool     `tfsdk:"send_email_notifications"`
 	EmailSeverity          types.String   `tfsdk:"email_severity"`
 	Created                types.String   `tfsdk:"created"`
-	Updated                types.String   `tfsdk:"updated"`
 	Timeouts               timeouts.Value `tfsdk:"timeouts"`
 }

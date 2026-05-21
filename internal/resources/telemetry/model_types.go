@@ -25,6 +25,5 @@ type TelemetryV2ResourceModel struct {
 	LogAppleSecurity    types.Bool     `tfsdk:"log_apple_security"`
 	LogSystem           types.Bool     `tfsdk:"log_system"`
 	Created             types.String   `tfsdk:"created"`
-	Updated             types.String   `tfsdk:"updated"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }

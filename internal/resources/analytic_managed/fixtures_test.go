@@ -84,7 +84,6 @@ func TestApplyState_FromProdGetAnalytic_AppleJeus(t *testing.T) {
 		{"long_description", data.LongDescription.ValueString(), "A plist name associated with AppleJeus malware was written."},
 		{"severity", data.Severity.ValueString(), "High"},
 		{"created", data.Created.ValueString(), "2024-02-29T17:13:40.774044Z"},
-		{"updated", data.Updated.ValueString(), "2026-04-27T19:03:00.187832Z"},
 	}
 
 	for _, c := range checks {

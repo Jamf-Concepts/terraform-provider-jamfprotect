@@ -16,10 +16,8 @@ import (
 // apiToState maps the API response into the resource state model.
 func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, api jamfprotect.Plan, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
-	data.Hash = types.StringValue(api.Hash)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 	data.AutoUpdate = types.BoolValue(api.AutoUpdate)
 
 	data.Description = types.StringValue(api.Description)

@@ -55,7 +55,6 @@ func TestAccGroupResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			{

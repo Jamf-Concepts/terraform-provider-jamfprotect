@@ -19,7 +19,6 @@ func (r *AnalyticSetResource) applyState(_ context.Context, data *AnalyticSetRes
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 	data.Managed = types.BoolValue(api.Managed)
 
 	data.Description = types.StringValue(api.Description)

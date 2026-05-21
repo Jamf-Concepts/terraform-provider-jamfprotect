@@ -21,7 +21,6 @@ func (r *TelemetryV2Resource) apiToState(_ context.Context, data *TelemetryV2Res
 	data.PerformanceMetrics = types.BoolValue(api.PerformanceMetrics)
 	data.FileHashes = types.BoolValue(api.FileHashing)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 	data.LogFilePath = common.StringsToSet(api.LogFiles)
 	data.LogAppsProcesses = types.BoolValue(flags.LogAppsProcesses)
 	data.LogAccessAuth = types.BoolValue(flags.LogAccessAuth)

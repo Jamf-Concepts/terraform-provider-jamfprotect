@@ -28,7 +28,6 @@ type AnalyticResourceModel struct {
 	TenantSeverity              types.String   `tfsdk:"tenant_severity"`
 	ContextItem                 types.Set      `tfsdk:"context_item"`
 	Created                     types.String   `tfsdk:"created"`
-	Updated                     types.String   `tfsdk:"updated"`
 	Jamf                        types.Bool     `tfsdk:"jamf"`
 	Remediation                 types.String   `tfsdk:"remediation"`
 	Timeouts                    timeouts.Value `tfsdk:"timeouts"`

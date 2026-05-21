@@ -84,10 +84,6 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last update timestamp.",
-				Computed:            true,
-			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Read:   true,

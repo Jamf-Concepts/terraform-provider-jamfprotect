@@ -72,10 +72,6 @@ func (r *DataRetentionResource) Schema(ctx context.Context, req resource.SchemaR
 					int64validator.OneOf(retentionDaysOptions...),
 				},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
-			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Read:   true,

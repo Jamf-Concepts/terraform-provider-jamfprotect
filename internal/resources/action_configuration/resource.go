@@ -57,10 +57,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"hash": schema.StringAttribute{
-				MarkdownDescription: "The configuration hash.",
-				Computed:            true,
-			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the action configuration.",
 				Required:            true,
@@ -396,10 +392,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
 			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

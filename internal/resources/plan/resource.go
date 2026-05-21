@@ -59,10 +59,6 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"hash": schema.StringAttribute{
-				MarkdownDescription: "The configuration hash of the plan.",
-				Computed:            true,
-			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the plan.",
 				Required:            true,
@@ -250,10 +246,6 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
-			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
 			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

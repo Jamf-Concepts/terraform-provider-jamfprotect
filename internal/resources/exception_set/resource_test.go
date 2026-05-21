@@ -71,7 +71,6 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 						"type": "Keylog Register Event",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed"),
 				),
 			},

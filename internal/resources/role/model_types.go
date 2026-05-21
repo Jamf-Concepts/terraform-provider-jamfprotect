@@ -15,6 +15,5 @@ type RoleResourceModel struct {
 	ReadPermissions  types.Set      `tfsdk:"read_permissions"`
 	WritePermissions types.Set      `tfsdk:"write_permissions"`
 	Created          types.String   `tfsdk:"created"`
-	Updated          types.String   `tfsdk:"updated"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

@@ -25,7 +25,6 @@ func (r *AnalyticResource) applyState(_ context.Context, data *AnalyticResourceM
 	data.Level = types.Int64Value(api.Level)
 	data.Severity = types.StringValue(api.Severity)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 
 	if api.Label != "" {
 		data.Label = types.StringValue(api.Label)

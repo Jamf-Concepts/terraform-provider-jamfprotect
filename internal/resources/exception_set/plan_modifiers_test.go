@@ -116,7 +116,6 @@ func rootValue(schemaType tftypes.Type, exceptions tftypes.Value) tftypes.Value 
 		"description": tftypes.NewValue(tftypes.String, nil),
 		"exceptions":  exceptions,
 		"created":     tftypes.NewValue(tftypes.String, nil),
-		"updated":     tftypes.NewValue(tftypes.String, nil),
 		"managed":     tftypes.NewValue(tftypes.Bool, nil),
 		"timeouts":    timeoutsNull(),
 	})
