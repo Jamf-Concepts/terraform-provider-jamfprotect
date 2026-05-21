@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
@@ -47,6 +48,11 @@ func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
 			// Create and Read.
 			{
 				Config: testAccRemovableStorageControlSetResourceConfig(rName, "Acceptance test removable storage control set", "Read Only", "This removable storage device is limited to read-only."),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -63,6 +69,11 @@ func TestAccRemovableStorageControlSetResource_basic(t *testing.T) {
 			// Update.
 			{
 				Config: testAccRemovableStorageControlSetResourceConfig(rName, "Updated removable storage control set", "Prevent", "Removable storage devices are not allowed."),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated removable storage control set"),

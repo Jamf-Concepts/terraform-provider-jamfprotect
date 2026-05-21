@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
@@ -44,6 +45,11 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 			// Create and Read testing.
 			{
 				Config: testAccExceptionSetResourceConfig(rName, "Test exception set description"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -78,6 +84,11 @@ func TestAccExceptionSetResource_basic(t *testing.T) {
 			// Update and Read testing.
 			{
 				Config: testAccExceptionSetResourceConfig(rName, "Updated description"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
 				),
@@ -97,6 +108,11 @@ func TestAccExceptionSetResource_withEsExceptions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExceptionSetResourceConfigWithEsExceptions(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -126,6 +142,11 @@ func TestAccExceptionSetResource_withAppSigningInfo(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExceptionSetResourceConfigWithAppSigningInfo(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -155,6 +176,11 @@ func TestAccExceptionSetResource_withIgnoreForAnalyticFilePath(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExceptionSetResourceConfigWithIgnoreForAnalyticFilePath(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),

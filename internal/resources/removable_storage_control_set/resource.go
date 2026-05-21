@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -67,7 +66,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				MarkdownDescription: "A description of the removable storage control set.",
 				Optional:            true,
 				Computed:            true,
-				Default:             stringdefault.StaticString(""),
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"default_permission": schema.StringAttribute{
 				MarkdownDescription: "The default permission for removable storage devices. Valid options are: " + common.FormatOptions(permissionUIOptions) + ".",
@@ -78,6 +77,7 @@ func (r *RemovableStorageControlSetResource) Schema(ctx context.Context, req res
 				MarkdownDescription: "The default local notification message displayed to users when a removable storage device action is triggered.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
@@ -38,6 +39,11 @@ func TestAccDataRetentionResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRetentionResourceConfig(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "informational_alert_days", "90"),

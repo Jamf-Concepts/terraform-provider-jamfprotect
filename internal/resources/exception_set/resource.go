@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -58,6 +59,7 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "A description of the exception set.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
@@ -71,6 +73,7 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 			"managed": schema.BoolAttribute{
 				MarkdownDescription: "Whether this is a Jamf-managed exception set.",
 				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"exceptions": schema.SetNestedAttribute{
 				MarkdownDescription: "Exception entries aligned with UI type, subtype, and rules.",
