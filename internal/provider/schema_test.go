@@ -89,7 +89,7 @@ func TestAnalyticResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -192,7 +192,7 @@ func TestUnifiedLoggingFilterResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -293,7 +293,7 @@ func TestActionConfigResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "hash", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -385,7 +385,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "hash", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -548,7 +548,7 @@ func TestRemovableStorageControlSetResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -746,7 +746,7 @@ func TestTelemetryV2ResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -837,7 +837,7 @@ func TestUserResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -889,7 +889,7 @@ func TestGroupResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -941,7 +941,7 @@ func TestRoleResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created", "updated"}
+	computedAttrs := []string{"id", "created"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {
@@ -1097,7 +1097,7 @@ func TestDataRetentionResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "updated"}
+	computedAttrs := []string{"id"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {

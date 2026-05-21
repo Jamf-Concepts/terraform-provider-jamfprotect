@@ -14,6 +14,5 @@ type DataRetentionResourceModel struct {
 	InformationalAlertDays    types.Int64    `tfsdk:"informational_alert_days"`
 	LowMediumHighSeverityDays types.Int64    `tfsdk:"low_medium_high_severity_alert_days"`
 	ArchivedDataDays          types.Int64    `tfsdk:"archived_data_days"`
-	Updated                   types.String   `tfsdk:"updated"`
 	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
 }

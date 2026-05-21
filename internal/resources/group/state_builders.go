@@ -17,7 +17,6 @@ func (r *GroupResource) apiToState(_ context.Context, data *GroupResourceModel, 
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 
 	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.GroupRole) string { return r.ID })
 	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {

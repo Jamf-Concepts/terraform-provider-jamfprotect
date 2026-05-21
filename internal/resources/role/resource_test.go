@@ -55,7 +55,6 @@ func TestAccRoleResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			{

@@ -28,5 +28,4 @@ func (r *DataRetentionResource) apiToState(_ context.Context, data *DataRetentio
 	if api.Cold != nil && api.Cold.Alert != nil {
 		data.ArchivedDataDays = types.Int64Value(api.Cold.Alert.NumberOfDays)
 	}
-	data.Updated = types.StringValue(api.Updated)
 }

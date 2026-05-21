@@ -20,6 +20,5 @@ func (r *UnifiedLoggingFilterResource) apiToState(_ context.Context, data *Unifi
 	data.Enabled = types.BoolValue(api.Enabled)
 	data.Tags = common.StringsToSet(api.Tags)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 	data.Description = types.StringValue(api.Description)
 }

@@ -15,7 +15,6 @@ type AnalyticSetResourceModel struct {
 	Description types.String   `tfsdk:"description"`
 	Analytics   types.Set      `tfsdk:"analytics"`
 	Created     types.String   `tfsdk:"created"`
-	Updated     types.String   `tfsdk:"updated"`
 	Managed     types.Bool     `tfsdk:"managed"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }

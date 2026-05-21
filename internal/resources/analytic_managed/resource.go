@@ -169,10 +169,6 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
-			},
 			"jamf": schema.BoolAttribute{
 				MarkdownDescription: "Indicates whether the analytic is Jamf-managed. Always `true` for this resource.",
 				Computed:            true,

@@ -20,7 +20,6 @@ type RemovableStorageControlSetResourceModel struct {
 	OverrideProductID               []RemovableStorageProductOverrideModel   `tfsdk:"override_product_id"`
 	OverrideSerialNumber            []RemovableStorageSerialOverrideModel    `tfsdk:"override_serial_number"`
 	Created                         types.String                             `tfsdk:"created"`
-	Updated                         types.String                             `tfsdk:"updated"`
 	Timeouts                        timeouts.Value                           `tfsdk:"timeouts"`
 }
 

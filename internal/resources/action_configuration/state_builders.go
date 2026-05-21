@@ -58,10 +58,8 @@ func apiEventTypeGetter(apiData *jamfprotect.AlertData, apiName string) *jamfpro
 // applyState maps the API response to the Terraform state model.
 func (r *ActionConfigResource) applyState(_ context.Context, data *ActionConfigResourceModel, api jamfprotect.ActionConfig, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
-	data.Hash = types.StringValue(api.Hash)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 
 	data.Description = types.StringValue(api.Description)
 

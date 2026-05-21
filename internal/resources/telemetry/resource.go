@@ -132,10 +132,6 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last update timestamp.",
-				Computed:            true,
-			},
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Read:   true,

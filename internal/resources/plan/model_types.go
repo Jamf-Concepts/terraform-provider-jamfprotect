@@ -28,7 +28,6 @@ type CustomEngineConfigModel struct {
 // PlanResourceModel maps the resource schema data.
 type PlanResourceModel struct {
 	ID                       types.String   `tfsdk:"id"`
-	Hash                     types.String   `tfsdk:"hash"`
 	Name                     types.String   `tfsdk:"name"`
 	Description              types.String   `tfsdk:"description"`
 	LogLevel                 types.String   `tfsdk:"log_level"`
@@ -54,6 +53,5 @@ type PlanResourceModel struct {
 	ThreatPreventionStrategy types.String   `tfsdk:"threat_prevention_strategy"`
 	CustomEngineConfig       types.Object   `tfsdk:"custom_engine_config"`
 	Created                  types.String   `tfsdk:"created"`
-	Updated                  types.String   `tfsdk:"updated"`
 	Timeouts                 timeouts.Value `tfsdk:"timeouts"`
 }

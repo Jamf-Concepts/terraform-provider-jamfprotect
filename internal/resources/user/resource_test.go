@@ -58,7 +58,6 @@ func TestAccUserResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "send_email_notifications", "true"),
 					resource.TestCheckResourceAttr(resourceName, "email_severity", "Medium"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			{

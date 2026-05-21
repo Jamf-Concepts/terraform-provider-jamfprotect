@@ -63,7 +63,6 @@ func TestAccUnifiedLoggingFilterResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.3", "gamma"),
 					resource.TestCheckResourceAttr(resourceName, "tags.4", "terraform-test"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			// ImportState testing.

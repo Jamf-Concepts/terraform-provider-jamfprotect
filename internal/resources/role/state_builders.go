@@ -17,7 +17,6 @@ func (r *RoleResource) apiToState(_ context.Context, data *RoleResourceModel, ap
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 
 	readLabels := rolePermissionListToLabels(api.Permissions.Read)
 	if len(readLabels) == 0 && (data.ReadPermissions.IsNull() || data.ReadPermissions.IsUnknown()) {

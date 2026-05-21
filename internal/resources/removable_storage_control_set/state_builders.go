@@ -18,7 +18,6 @@ func (r *RemovableStorageControlSetResource) apiToState(_ context.Context, data 
 	data.Name = types.StringValue(api.Name)
 	data.DefaultPermission = types.StringValue(permissionFromAPI(api.DefaultMountAction))
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 	data.Description = types.StringValue(api.Description)
 	data.DefaultLocalNotificationMessage = types.StringValue(api.DefaultMessageAction)
 

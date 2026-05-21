@@ -66,10 +66,6 @@ func (r *ExceptionSetResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated": schema.StringAttribute{
-				MarkdownDescription: "The last-updated timestamp.",
-				Computed:            true,
-			},
 			"managed": schema.BoolAttribute{
 				MarkdownDescription: "Whether this is a Jamf-managed exception set.",
 				Computed:            true,

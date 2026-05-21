@@ -72,7 +72,6 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "collect_performance_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "file_hashes", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			// Import.

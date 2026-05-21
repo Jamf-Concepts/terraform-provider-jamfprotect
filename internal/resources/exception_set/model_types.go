@@ -15,7 +15,6 @@ type ExceptionSetResourceModel struct {
 	Description types.String   `tfsdk:"description"`
 	Exceptions  types.Set      `tfsdk:"exceptions"`
 	Created     types.String   `tfsdk:"created"`
-	Updated     types.String   `tfsdk:"updated"`
 	Managed     types.Bool     `tfsdk:"managed"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }

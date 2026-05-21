@@ -11,7 +11,6 @@ import (
 // ActionConfigResourceModel maps the resource schema data.
 type ActionConfigResourceModel struct {
 	ID                types.String   `tfsdk:"id"`
-	Hash              types.String   `tfsdk:"hash"`
 	Name              types.String   `tfsdk:"name"`
 	Description       types.String   `tfsdk:"description"`
 	AlertDataCollect  types.Object   `tfsdk:"alert_data_collection"`
@@ -21,7 +20,6 @@ type ActionConfigResourceModel struct {
 	LogFileEndpoint   types.Object   `tfsdk:"log_file_endpoint"`
 	JamfCloudEndpoint types.Object   `tfsdk:"jamf_protect_cloud_endpoint"`
 	Created           types.String   `tfsdk:"created"`
-	Updated           types.String   `tfsdk:"updated"`
 	Timeouts          timeouts.Value `tfsdk:"timeouts"`
 }
 

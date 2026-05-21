@@ -78,7 +78,6 @@ func TestAccAnalyticResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "add_to_jamf_pro_smart_group", "false"),
 					resource.TestCheckResourceAttr(resourceName, "context_item.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			// ImportState testing.

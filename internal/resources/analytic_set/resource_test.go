@@ -56,7 +56,6 @@ func TestAccAnalyticSetResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test analytic set description"),
 					resource.TestCheckResourceAttr(resourceName, "analytics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed"),
 				),
 			},

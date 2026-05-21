@@ -49,7 +49,6 @@ func TestAccDataRetentionResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "informational_alert_days", "90"),
 					resource.TestCheckResourceAttr(resourceName, "low_medium_high_severity_alert_days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "archived_data_days", "365"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			{

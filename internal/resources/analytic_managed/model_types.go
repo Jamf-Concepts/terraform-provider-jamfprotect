@@ -28,7 +28,6 @@ type AnalyticManagedResourceModel struct {
 	TenantActions   types.Set      `tfsdk:"tenant_actions"`
 	TenantSeverity  types.String   `tfsdk:"tenant_severity"`
 	Created         types.String   `tfsdk:"created"`
-	Updated         types.String   `tfsdk:"updated"`
 	Jamf            types.Bool     `tfsdk:"jamf"`
 	Remediation     types.String   `tfsdk:"remediation"`
 	Timeouts        timeouts.Value `tfsdk:"timeouts"`

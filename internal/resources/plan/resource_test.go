@@ -55,9 +55,7 @@ func TestAccPlanResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test plan description"),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "hash"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated"),
 				),
 			},
 			// ImportState testing.
@@ -65,9 +63,6 @@ func TestAccPlanResource_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"updated", // Timestamp may change between create and import
-				},
 			},
 			// Update and Read testing.
 			{

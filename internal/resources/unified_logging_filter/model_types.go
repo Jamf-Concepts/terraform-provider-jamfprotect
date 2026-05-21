@@ -17,6 +17,5 @@ type UnifiedLoggingFilterResourceModel struct {
 	Enabled     types.Bool     `tfsdk:"enabled"`
 	Tags        types.Set      `tfsdk:"tags"`
 	Created     types.String   `tfsdk:"created"`
-	Updated     types.String   `tfsdk:"updated"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }

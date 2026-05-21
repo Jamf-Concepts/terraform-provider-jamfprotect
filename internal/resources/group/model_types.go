@@ -14,6 +14,5 @@ type GroupResourceModel struct {
 	Name     types.String   `tfsdk:"name"`
 	RoleIDs  types.Set      `tfsdk:"role_ids"`
 	Created  types.String   `tfsdk:"created"`
-	Updated  types.String   `tfsdk:"updated"`
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }

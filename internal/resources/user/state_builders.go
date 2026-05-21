@@ -19,7 +19,6 @@ func (r *UserResource) apiToState(_ context.Context, data *UserResourceModel, ap
 	data.SendEmailNotifications = types.BoolValue(api.ReceiveEmailAlert)
 	data.EmailSeverity = types.StringValue(api.EmailAlertMinSeverity)
 	data.Created = types.StringValue(api.Created)
-	data.Updated = types.StringValue(api.Updated)
 
 	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.UserRole) string { return r.ID })
 	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {
