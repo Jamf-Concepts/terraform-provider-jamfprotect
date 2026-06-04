@@ -28,4 +28,5 @@ provider "jamfprotect" {
 
 - `client_id` (String) The API client ID for authentication. Can also be set via the `JAMFPROTECT_CLIENT_ID` environment variable.
 - `client_secret` (String, Sensitive) The API client secret for authentication. Can also be set via the `JAMFPROTECT_CLIENT_SECRET` environment variable.
+- `min_request_interval_ms` (Number) Minimum gap in milliseconds enforced between outbound API requests. Defaults to `100`. Set to `0` or a negative value to disable throttling. Can also be set via the `JAMFPROTECT_MIN_REQUEST_INTERVAL_MS` environment variable.
 - `url` (String) The base URL of the Jamf Protect instance (e.g. `https://your-tenant.protect.jamfcloud.com`). Can also be set via the `JAMFPROTECT_URL` environment variable.

@@ -6,7 +6,9 @@ package provider
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/list"
@@ -48,9 +50,10 @@ type JamfProtectProvider struct {
 
 // JamfProtectProviderModel describes the provider data model.
 type JamfProtectProviderModel struct {
-	URL          types.String `tfsdk:"url"`
-	ClientID     types.String `tfsdk:"client_id"`
-	ClientSecret types.String `tfsdk:"client_secret"`
+	URL                  types.String `tfsdk:"url"`
+	ClientID             types.String `tfsdk:"client_id"`
+	ClientSecret         types.String `tfsdk:"client_secret"`
+	MinRequestIntervalMs types.Int64  `tfsdk:"min_request_interval_ms"`
 }
 
 func (p *JamfProtectProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -74,6 +77,10 @@ func (p *JamfProtectProvider) Schema(ctx context.Context, req provider.SchemaReq
 				MarkdownDescription: "The API client secret for authentication. Can also be set via the `JAMFPROTECT_CLIENT_SECRET` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
+			},
+			"min_request_interval_ms": schema.Int64Attribute{
+				MarkdownDescription: "Minimum gap in milliseconds enforced between outbound API requests. Defaults to `100`. Set to `0` or a negative value to disable throttling. Can also be set via the `JAMFPROTECT_MIN_REQUEST_INTERVAL_MS` environment variable.",
+				Optional:            true,
 			},
 		},
 	}
@@ -129,6 +136,13 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 	}
 	if shouldEnableHTTPLogging() {
 		opts = append(opts, jamfprotect.WithLogger(NewTerraformLogger()))
+	}
+	if !data.MinRequestIntervalMs.IsNull() {
+		opts = append(opts, jamfprotect.WithMinRequestInterval(time.Duration(data.MinRequestIntervalMs.ValueInt64())*time.Millisecond))
+	} else if v := os.Getenv("JAMFPROTECT_MIN_REQUEST_INTERVAL_MS"); v != "" {
+		if ms, err := strconv.ParseInt(v, 10, 64); err == nil {
+			opts = append(opts, jamfprotect.WithMinRequestInterval(time.Duration(ms)*time.Millisecond))
+		}
 	}
 	c := jamfprotect.NewClient(url, clientID, clientSecret, opts...)
 	if _, err := c.AccessToken(ctx); err != nil {
