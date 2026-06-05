@@ -68,6 +68,45 @@ func TestAccDataForwardingResource_basic(t *testing.T) {
 	})
 }
 
+// TestAccDataForwardingResource_iamRoleOmitted reproduces issue #107: omitting iam_role
+// causes a provider inconsistency error because the API returns "" but the schema only marks
+// iam_role Optional (not Computed), so Terraform plans null and then sees "".
+func TestAccDataForwardingResource_iamRoleOmitted(t *testing.T) {
+	if os.Getenv(dataForwardingAccEnvFlag) != "1" {
+		t.Skip("Skipping data_forwarding acceptance test. Set TF_ACC_DATA_FORWARDING_TEST=1 to run.")
+	}
+
+	directoryID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureTenantEnv)
+	applicationID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureClientEnv)
+	endpoint := testAccDataForwardingRequiredEnv(t, dataForwardingDceEnv)
+
+	resourceName := "jamfprotect_data_forwarding.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				// amazon_s3.iam_role is intentionally omitted. The API returns "" for the
+				// field, causing a null→"" inconsistency with the current schema (issue #107).
+				Config: testAccDataForwardingResourceConfigIamRoleOmitted(directoryID, applicationID, endpoint),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_s3.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_sentinel.directory_id", directoryID),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_sentinel.application_id", applicationID),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_sentinel.data_collection_endpoint", endpoint),
+				),
+			},
+		},
+	})
+}
+
 // testAccDataForwardingRequiredEnv returns a required environment variable value.
 func testAccDataForwardingRequiredEnv(t *testing.T, key string) string {
 	value := os.Getenv(key)
@@ -75,6 +114,123 @@ func testAccDataForwardingRequiredEnv(t *testing.T, key string) string {
 		t.Fatalf("environment variable %s must be set for data_forwarding acceptance tests", key)
 	}
 	return value
+}
+
+// TestAccDataForwardingResource_amazonS3EnabledIamRoleOmitted is the mirror of
+// TestAccDataForwardingResource_iamRoleOmitted: S3 enabled, Sentinel disabled,
+// iam_role still omitted — same null→"" inconsistency applies (issue #107).
+func TestAccDataForwardingResource_amazonS3EnabledIamRoleOmitted(t *testing.T) {
+	if os.Getenv(dataForwardingAccEnvFlag) != "1" {
+		t.Skip("Skipping data_forwarding acceptance test. Set TF_ACC_DATA_FORWARDING_TEST=1 to run.")
+	}
+
+	bucket := testAccDataForwardingRequiredEnv(t, dataForwardingS3BucketEnv)
+	prefix := testAccDataForwardingRequiredEnv(t, dataForwardingS3PrefixEnv)
+	directoryID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureTenantEnv)
+	applicationID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureClientEnv)
+	endpoint := testAccDataForwardingRequiredEnv(t, dataForwardingDceEnv)
+
+	resourceName := "jamfprotect_data_forwarding.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				// amazon_s3.iam_role intentionally omitted with S3 enabled. The API returns ""
+				// for the field, causing a null→"" inconsistency (issue #107).
+				Config: testAccDataForwardingResourceConfigS3EnabledIamRoleOmitted(bucket, prefix, directoryID, applicationID, endpoint),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_s3.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_s3.bucket_name", bucket),
+					resource.TestCheckResourceAttr(resourceName, "amazon_s3.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_sentinel.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+// testAccDataForwardingResourceConfigIamRoleOmitted builds a config that omits amazon_s3.iam_role
+// to reproduce issue #107 (provider inconsistency: null planned vs "" returned by API).
+func testAccDataForwardingResourceConfigIamRoleOmitted(directoryID, applicationID, endpoint string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_data_forwarding" "test" {
+  amazon_s3 = {
+    enabled     = false
+    bucket_name = ""
+    prefix      = ""
+    # iam_role omitted — API returns "" causing null→"" inconsistency (issue #107)
+  }
+
+  microsoft_sentinel = {
+    enabled                  = false
+    directory_id             = %q
+    application_id           = %q
+    data_collection_endpoint = %q
+
+    alerts = {
+      enabled = false
+    }
+
+    unified_logs = {
+      enabled = false
+    }
+
+    telemetry_deprecated = {
+      enabled = false
+    }
+
+    telemetry = {
+      enabled = false
+    }
+  }
+}
+`, directoryID, applicationID, endpoint)
+}
+
+// testAccDataForwardingResourceConfigS3EnabledIamRoleOmitted builds a config with S3 enabled and
+// microsoft_sentinel disabled. amazon_s3.iam_role is omitted to reproduce issue #107.
+func testAccDataForwardingResourceConfigS3EnabledIamRoleOmitted(bucket, prefix, directoryID, applicationID, endpoint string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_data_forwarding" "test" {
+  amazon_s3 = {
+    enabled     = true
+    bucket_name = %q
+    prefix      = %q
+    # iam_role omitted — API returns "" causing null→"" inconsistency (issue #107)
+  }
+
+  microsoft_sentinel = {
+    enabled                  = false
+    directory_id             = %q
+    application_id           = %q
+    data_collection_endpoint = %q
+
+    alerts = {
+      enabled = false
+    }
+
+    unified_logs = {
+      enabled = false
+    }
+
+    telemetry_deprecated = {
+      enabled = false
+    }
+
+    telemetry = {
+      enabled = false
+    }
+  }
+}
+`, bucket, prefix, directoryID, applicationID, endpoint)
 }
 
 // testAccDataForwardingResourceConfig builds Terraform configuration for data forwarding.

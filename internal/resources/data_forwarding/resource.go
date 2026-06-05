@@ -82,6 +82,7 @@ func (r *DataForwardingResource) Schema(ctx context.Context, req resource.Schema
 					"iam_role": schema.StringAttribute{
 						MarkdownDescription: "The IAM role ARN assumed by Jamf Protect.",
 						Optional:            true,
+						Computed:            true,
 					},
 					"cloudformation_template": schema.StringAttribute{
 						MarkdownDescription: "The CloudFormation template for setting up S3 forwarding.",
