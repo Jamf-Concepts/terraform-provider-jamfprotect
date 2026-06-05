@@ -5,6 +5,9 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"io"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -146,10 +149,23 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 	}
 	c := jamfprotect.NewClient(url, clientID, clientSecret, opts...)
 	if _, err := c.AccessToken(ctx); err != nil {
-		resp.Diagnostics.AddError(
-			"Jamf Protect authentication failed",
-			"The provider could not authenticate with the Jamf Protect API. Verify the URL, client ID, and client secret. Details: "+err.Error(),
-		)
+		detail := "The provider could not authenticate with the Jamf Protect API. Verify the URL, client ID, and client secret. Details: " + err.Error()
+		if errors.Is(err, jamfprotect.ErrUnexpectedResponse) {
+			timestamp := time.Now().UTC().Format(time.RFC3339)
+			egressIP := lookupPublicEgressIP()
+			ipLine := egressIP
+			if ipLine == "" {
+				ipLine = "(unable to determine — run `curl -s https://checkip.amazonaws.com` on the host)"
+			}
+			detail = "The Jamf Protect API returned an HTML page instead of a JSON response. " +
+				"This is typically caused by a security policy blocking requests from your host's IP address.\n\n" +
+				"Contact Jamf Support and provide the following information:\n" +
+				"  - Timestamp:    " + timestamp + "\n" +
+				"  - Instance URL: " + url + "\n" +
+				"  - Egress IP:    " + ipLine + "\n\n" +
+				"Technical details: " + err.Error()
+		}
+		resp.Diagnostics.AddError("Jamf Protect authentication failed", detail)
 		return
 	}
 	resp.DataSourceData = c
@@ -227,6 +243,27 @@ func New(version string) func() provider.Provider {
 			version: version,
 		}
 	}
+}
+
+// lookupPublicEgressIP attempts to discover the host's public egress IP address
+// using a short-lived HTTP request. Returns an empty string if the lookup fails.
+func lookupPublicEgressIP() string {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://checkip.amazonaws.com", nil)
+	if err != nil {
+		return ""
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer func() { _ = resp.Body.Close() }()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 64))
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(body))
 }
 
 func shouldEnableHTTPLogging() bool {
