@@ -29,16 +29,18 @@ type amazonS3ForwardingModel struct {
 
 // microsoftSentinelForwardingModel maps the microsoft_sentinel nested attributes.
 type microsoftSentinelForwardingModel struct {
-	Enabled                types.Bool   `tfsdk:"enabled"`
-	SecretExists           types.Bool   `tfsdk:"secret_exists"`
-	DirectoryID            types.String `tfsdk:"directory_id"`
-	ApplicationID          types.String `tfsdk:"application_id"`
-	DataCollectionEndpoint types.String `tfsdk:"data_collection_endpoint"`
-	ApplicationSecretValue types.String `tfsdk:"application_secret_value"`
-	Alerts                 types.Object `tfsdk:"alerts"`
-	UnifiedLogs            types.Object `tfsdk:"unified_logs"`
-	TelemetryDeprecated    types.Object `tfsdk:"telemetry_deprecated"`
-	Telemetry              types.Object `tfsdk:"telemetry"`
+	Enabled                         types.Bool   `tfsdk:"enabled"`
+	SecretExists                    types.Bool   `tfsdk:"secret_exists"`
+	DirectoryID                     types.String `tfsdk:"directory_id"`
+	ApplicationID                   types.String `tfsdk:"application_id"`
+	DataCollectionEndpoint          types.String `tfsdk:"data_collection_endpoint"`
+	ApplicationSecretValue          types.String `tfsdk:"application_secret_value"`
+	ApplicationSecretValueWO        types.String `tfsdk:"application_secret_value_wo"`
+	ApplicationSecretValueWOVersion types.String `tfsdk:"application_secret_value_wo_version"`
+	Alerts                          types.Object `tfsdk:"alerts"`
+	UnifiedLogs                     types.Object `tfsdk:"unified_logs"`
+	TelemetryDeprecated             types.Object `tfsdk:"telemetry_deprecated"`
+	Telemetry                       types.Object `tfsdk:"telemetry"`
 }
 
 // dataStreamModel maps nested data stream attributes.

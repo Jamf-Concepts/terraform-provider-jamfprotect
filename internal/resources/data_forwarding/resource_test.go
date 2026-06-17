@@ -9,7 +9,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
@@ -231,6 +235,105 @@ resource "jamfprotect_data_forwarding" "test" {
   }
 }
 `, bucket, prefix, directoryID, applicationID, endpoint)
+}
+
+// TestAccDataForwardingResource_writeOnlySecret validates the write-only Azure
+// client secret: it is set on create, rotated by bumping
+// application_secret_value_wo_version, and never persisted to state. Because the
+// API returns only secret_exists (never the secret value), this test verifies
+// plan mechanics, the secret_exists flag, and the null-in-state invariant — it
+// cannot confirm end-to-end that the secret value reached the backend. Rotation
+// is driven by the version attribute: changing the write-only value alone
+// produces no plan diff. Requires Terraform 1.11+ for write-only attributes.
+func TestAccDataForwardingResource_writeOnlySecret(t *testing.T) {
+	if os.Getenv(dataForwardingAccEnvFlag) != "1" {
+		t.Skip("Skipping data_forwarding acceptance test. Set TF_ACC_DATA_FORWARDING_TEST=1 to run.")
+	}
+
+	directoryID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureTenantEnv)
+	applicationID := testAccDataForwardingRequiredEnv(t, dataForwardingAzureClientEnv)
+	endpoint := testAccDataForwardingRequiredEnv(t, dataForwardingDceEnv)
+
+	resourceName := "jamfprotect_data_forwarding.test"
+	woPath := tfjsonpath.New("microsoft_sentinel").AtMapKey("application_secret_value_wo")
+	woVersionPath := tfjsonpath.New("microsoft_sentinel").AtMapKey("application_secret_value_wo_version")
+	secretExistsPath := tfjsonpath.New("microsoft_sentinel").AtMapKey("secret_exists")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		TerraformVersionChecks:   []tfversion.TerraformVersionCheck{tfversion.SkipBelow(tfversion.Version1_11_0)},
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataForwardingResourceConfigWriteOnlySecret(directoryID, applicationID, endpoint, "acc-secret-v1", "1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, woPath, knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, woVersionPath, knownvalue.StringExact("1")),
+					statecheck.ExpectKnownValue(resourceName, secretExistsPath, knownvalue.Bool(true)),
+				},
+			},
+			{
+				Config: testAccDataForwardingResourceConfigWriteOnlySecret(directoryID, applicationID, endpoint, "acc-secret-v2", "2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, woPath, knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, woVersionPath, knownvalue.StringExact("2")),
+					statecheck.ExpectKnownValue(resourceName, secretExistsPath, knownvalue.Bool(true)),
+				},
+			},
+		},
+	})
+}
+
+// testAccDataForwardingResourceConfigWriteOnlySecret builds a config that supplies
+// the Azure client secret via the write-only attribute pair.
+func testAccDataForwardingResourceConfigWriteOnlySecret(directoryID, applicationID, endpoint, secret, version string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_data_forwarding" "test" {
+  amazon_s3 = {
+    enabled     = false
+    bucket_name = ""
+    prefix      = ""
+  }
+
+  microsoft_sentinel = {
+    enabled                             = false
+    directory_id                        = %q
+    application_id                      = %q
+    data_collection_endpoint            = %q
+    application_secret_value_wo         = %q
+    application_secret_value_wo_version = %q
+
+    alerts = {
+      enabled = false
+    }
+
+    unified_logs = {
+      enabled = false
+    }
+
+    telemetry_deprecated = {
+      enabled = false
+    }
+
+    telemetry = {
+      enabled = false
+    }
+  }
+}
+`, directoryID, applicationID, endpoint, secret, version)
 }
 
 // testAccDataForwardingResourceConfig builds Terraform configuration for data forwarding.

@@ -117,7 +117,11 @@ Required:
 
 Optional:
 
-- `application_secret_value` (String, Sensitive) The Azure client secret value. Only sent on update.
+- `application_secret_value` (String, Sensitive, Deprecated) The Azure client secret value. Only sent on update.
+
+~> **Deprecated (2026-06-17):** this attribute stores the secret in plaintext in Terraform state. Use `application_secret_value_wo` together with `application_secret_value_wo_version` instead; the write-only attribute is never persisted to state.
+- `application_secret_value_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) The Azure client secret value, supplied as a [write-only attribute](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) (Terraform 1.11+). The value is sent to Jamf Protect but never stored in Terraform state. Requires `application_secret_value_wo_version`; rotate the secret by changing that version. Conflicts with the deprecated `application_secret_value`.
+- `application_secret_value_wo_version` (String) Version identifier for `application_secret_value_wo`. Change this value (for example to a new timestamp) to push a rotated secret, since the write-only value itself is not tracked in state. Required when `application_secret_value_wo` is set.
 - `enabled` (Boolean) Whether Microsoft Sentinel forwarding is enabled.
 
 Read-Only:

@@ -20,6 +20,7 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 | `generate` | Generate provider documentation with tfplugindocs     |
 | `test`     | Run unit tests                                        |
 | `testacc`  | Run acceptance tests (requires environment variables) |
+| `testacc-run` | Run a subset of acceptance tests (`RUN`/`PKG`/`TESTARGS` overrides) |
 
 The default target runs: `fmt lint install generate`.
 
@@ -88,6 +89,7 @@ templates/                       # tfplugindocs templates for doc generation
 
 ## Code Style Guidelines
 
+- **Always read [`STYLE_GUIDE.md`](./STYLE_GUIDE.md) before making changes.** It is authoritative; follow it even where existing code has drifted from it.
 - Follow Go conventions and idiomatic patterns.
 - Favor clear and descriptive naming for variables, functions, and types.
 - Always ensure constants, functions, variable sets and types have a short comment describing their purpose.
