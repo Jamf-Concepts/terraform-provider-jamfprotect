@@ -64,6 +64,15 @@ The provider uses the [Jamf Protect Go SDK](https://github.com/Jamf-Concepts/jam
 - Keep schemas inline and as flat as possible.
 - Favor nested attributes (`SingleNestedAttribute`, `SetNestedAttribute`, `ListNestedAttribute`) over blocks.
 
+### Write-only attributes for one-way (write-only) API values
+
+Any value the API accepts on a mutation but never returns on read (secrets, tokens, passwords) must be exposed as a [write-only argument](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) (`WriteOnly: true`, Terraform 1.11+), so the value is never persisted to state.
+
+- Name the attribute with a `_wo` suffix and pair it with a `_wo_version` attribute. Bumping the version is the only way to push a rotated value, since the write-only value itself produces no plan diff.
+- Read the value from the request config (`req.Config`) in Create/Update — it is absent from plan and state. Never write it back to state.
+- Bind the pair with `AlsoRequires` (both directions) and any pre-existing plaintext attribute with `ConflictsWith`.
+- When replacing a plaintext attribute, mark the old attribute `DeprecationMessage` with the date deprecated rather than removing it outright.
+
 ### Sets vs Lists
 
 - **Sets** for user-supplied unordered collections where deduplication and order-independent comparison matter (e.g., `tags`, `list_data`, `analytic_sets`).

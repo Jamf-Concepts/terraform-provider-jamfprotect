@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
@@ -15,8 +17,28 @@ import (
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
+// sentinelWriteOnlySecretPath locates the write-only secret within the config.
+var sentinelWriteOnlySecretPath = path.Root("microsoft_sentinel").AtName("application_secret_value_wo")
+
+// sentinelWriteOnlySecret reads the write-only Azure client secret from the
+// request config. Write-only values exist only in config (never plan or state),
+// so this must be sourced from the config on every create and update. Returns
+// nil when unset.
+func sentinelWriteOnlySecret(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *string {
+	var wo types.String
+	diags.Append(config.GetAttribute(ctx, sentinelWriteOnlySecretPath, &wo)...)
+	if diags.HasError() {
+		return nil
+	}
+	return stringPointerOrNil(wo)
+}
+
 // buildDataForwardingInput builds the API input from the Terraform model.
-func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceModel, currentSentinel *jamfprotect.ForwardSentinel, diags *diag.Diagnostics) jamfprotect.DataForwardingInput {
+//
+// woSecret is the write-only application secret read from the request config
+// (nil when unset). When present it takes precedence over the deprecated
+// plaintext application_secret_value attribute.
+func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceModel, currentSentinel *jamfprotect.ForwardSentinel, woSecret *string, diags *diag.Diagnostics) jamfprotect.DataForwardingInput {
 	var s3 amazonS3ForwardingModel
 	var microsoftSentinel microsoftSentinelForwardingModel
 
@@ -36,7 +58,10 @@ func buildDataForwardingInput(ctx context.Context, data DataForwardingResourceMo
 	if diags.HasError() {
 		return jamfprotect.DataForwardingInput{}
 	}
-	secretValue := stringPointerOrNil(microsoftSentinel.ApplicationSecretValue)
+	secretValue := woSecret
+	if secretValue == nil {
+		secretValue = stringPointerOrNil(microsoftSentinel.ApplicationSecretValue)
+	}
 
 	input := jamfprotect.DataForwardingInput{
 		S3: jamfprotect.ForwardS3Input{

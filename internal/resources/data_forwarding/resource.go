@@ -127,10 +127,41 @@ func (r *DataForwardingResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"application_secret_value": schema.StringAttribute{
-						MarkdownDescription: "The Azure client secret value. Only sent on update.",
-						Optional:            true,
-						Sensitive:           true,
-						PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+						MarkdownDescription: "The Azure client secret value. Only sent on update.\n\n" +
+							"~> **Deprecated (2026-06-17):** this attribute stores the secret in plaintext in Terraform " +
+							"state. Use `application_secret_value_wo` together with `application_secret_value_wo_version` " +
+							"instead; the write-only attribute is never persisted to state.",
+						DeprecationMessage: "Deprecated as of 2026-06-17. Use application_secret_value_wo together with " +
+							"application_secret_value_wo_version instead; this attribute stores the secret in plaintext " +
+							"in Terraform state, whereas the write-only attribute is not persisted to state.",
+						Optional:  true,
+						Sensitive: true,
+						Validators: []validator.String{
+							stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("application_secret_value_wo")),
+						},
+						PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+					},
+					"application_secret_value_wo": schema.StringAttribute{
+						MarkdownDescription: "The Azure client secret value, supplied as a " +
+							"[write-only attribute](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) " +
+							"(Terraform 1.11+). The value is sent to Jamf Protect but never stored in Terraform state. " +
+							"Requires `application_secret_value_wo_version`; rotate the secret by changing that version. " +
+							"Conflicts with the deprecated `application_secret_value`.",
+						Optional:  true,
+						Sensitive: true,
+						WriteOnly: true,
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("application_secret_value_wo_version")),
+						},
+					},
+					"application_secret_value_wo_version": schema.StringAttribute{
+						MarkdownDescription: "Version identifier for `application_secret_value_wo`. Change this value " +
+							"(for example to a new timestamp) to push a rotated secret, since the write-only value " +
+							"itself is not tracked in state. Required when `application_secret_value_wo` is set.",
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("application_secret_value_wo")),
+						},
 					},
 					"alerts":               dataStreamSchema("Alerts forwarding settings."),
 					"unified_logs":         dataStreamSchema("Unified logs forwarding settings."),

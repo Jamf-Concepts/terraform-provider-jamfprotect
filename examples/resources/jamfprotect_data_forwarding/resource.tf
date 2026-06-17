@@ -13,7 +13,12 @@ resource "jamfprotect_data_forwarding" "example" {
     directory_id             = "example"
     application_id           = "example"
     data_collection_endpoint = "https://endpoint.azure.com"
-    application_secret_value = "example-secret"
+
+    # Supply the Azure client secret as a write-only attribute (Terraform 1.11+):
+    # it is sent to Jamf Protect but never stored in state. Bump
+    # application_secret_value_wo_version to rotate the secret.
+    application_secret_value_wo         = "example-secret"
+    application_secret_value_wo_version = "1"
 
     alerts = {
       enabled                           = true

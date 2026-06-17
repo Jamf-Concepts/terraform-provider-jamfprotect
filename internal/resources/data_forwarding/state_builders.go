@@ -60,17 +60,24 @@ func buildMicrosoftSentinelObject(ctx context.Context, current types.Object, api
 		return types.ObjectNull(microsoftSentinelForwardingAttrTypes)
 	}
 
+	legacySecret, woVersion := preservedSentinelSecretState(ctx, current, diags)
+	if diags.HasError() {
+		return types.ObjectNull(microsoftSentinelForwardingAttrTypes)
+	}
+
 	attrs := map[string]attr.Value{
-		"enabled":                  types.BoolValue(api.Enabled),
-		"secret_exists":            types.BoolValue(api.SecretExists),
-		"directory_id":             types.StringValue(api.AzureTenantID),
-		"application_id":           types.StringValue(api.AzureClientID),
-		"data_collection_endpoint": types.StringValue(api.Endpoint),
-		"application_secret_value": applicationSecretStateValue(ctx, current, diags),
-		"alerts":                   alerts,
-		"unified_logs":             unifiedLogs,
-		"telemetry_deprecated":     telemetryDeprecated,
-		"telemetry":                telemetry,
+		"enabled":                             types.BoolValue(api.Enabled),
+		"secret_exists":                       types.BoolValue(api.SecretExists),
+		"directory_id":                        types.StringValue(api.AzureTenantID),
+		"application_id":                      types.StringValue(api.AzureClientID),
+		"data_collection_endpoint":            types.StringValue(api.Endpoint),
+		"application_secret_value":            legacySecret,
+		"application_secret_value_wo":         types.StringNull(),
+		"application_secret_value_wo_version": woVersion,
+		"alerts":                              alerts,
+		"unified_logs":                        unifiedLogs,
+		"telemetry_deprecated":                telemetryDeprecated,
+		"telemetry":                           telemetry,
 	}
 	obj, d := types.ObjectValue(microsoftSentinelForwardingAttrTypes, attrs)
 	diags.Append(d...)
@@ -98,20 +105,28 @@ func buildDataStreamObject(api *jamfprotect.DataStream, diags *diag.Diagnostics)
 	return obj
 }
 
-// applicationSecretStateValue preserves the current secret when the API omits it.
-func applicationSecretStateValue(ctx context.Context, current types.Object, diags *diag.Diagnostics) types.String {
+// preservedSentinelSecretState returns the deprecated plaintext secret and the
+// write-only version from prior state, since the API returns neither. The
+// write-only secret value itself is intentionally never carried into state.
+func preservedSentinelSecretState(ctx context.Context, current types.Object, diags *diag.Diagnostics) (legacySecret types.String, woVersion types.String) {
 	if current.IsNull() || current.IsUnknown() {
-		return types.StringNull()
+		return types.StringNull(), types.StringNull()
 	}
 	var model microsoftSentinelForwardingModel
 	diags.Append(current.As(ctx, &model, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
-		return types.StringNull()
+		return types.StringNull(), types.StringNull()
 	}
+
+	legacySecret = types.StringNull()
 	if common.IsKnownString(model.ApplicationSecretValue) {
-		return model.ApplicationSecretValue
+		legacySecret = model.ApplicationSecretValue
 	}
-	return types.StringNull()
+	woVersion = types.StringNull()
+	if common.IsKnownString(model.ApplicationSecretValueWOVersion) {
+		woVersion = model.ApplicationSecretValueWOVersion
+	}
+	return legacySecret, woVersion
 }
 
 // stringPointerValueOrNull maps string pointers into Terraform values.

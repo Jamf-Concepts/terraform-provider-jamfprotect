@@ -28,14 +28,16 @@ var dataStreamAttrTypes = map[string]attr.Type{
 
 // microsoftSentinelForwardingAttrTypes defines the attribute types for microsoft_sentinel.
 var microsoftSentinelForwardingAttrTypes = map[string]attr.Type{
-	"enabled":                  types.BoolType,
-	"secret_exists":            types.BoolType,
-	"directory_id":             types.StringType,
-	"application_id":           types.StringType,
-	"data_collection_endpoint": types.StringType,
-	"application_secret_value": types.StringType,
-	"alerts":                   types.ObjectType{AttrTypes: dataStreamAttrTypes},
-	"unified_logs":             types.ObjectType{AttrTypes: dataStreamAttrTypes},
-	"telemetry_deprecated":     types.ObjectType{AttrTypes: dataStreamAttrTypes},
-	"telemetry":                types.ObjectType{AttrTypes: dataStreamAttrTypes},
+	"enabled":                             types.BoolType,
+	"secret_exists":                       types.BoolType,
+	"directory_id":                        types.StringType,
+	"application_id":                      types.StringType,
+	"data_collection_endpoint":            types.StringType,
+	"application_secret_value":            types.StringType,
+	"application_secret_value_wo":         types.StringType,
+	"application_secret_value_wo_version": types.StringType,
+	"alerts":                              types.ObjectType{AttrTypes: dataStreamAttrTypes},
+	"unified_logs":                        types.ObjectType{AttrTypes: dataStreamAttrTypes},
+	"telemetry_deprecated":                types.ObjectType{AttrTypes: dataStreamAttrTypes},
+	"telemetry":                           types.ObjectType{AttrTypes: dataStreamAttrTypes},
 }

@@ -43,7 +43,11 @@ func (r *DataForwardingResource) Create(ctx context.Context, req resource.Create
 	if current.Forward != nil {
 		currentSentinel = current.Forward.Sentinel
 	}
-	input := buildDataForwardingInput(ctx, data, currentSentinel, &resp.Diagnostics)
+	woSecret := sentinelWriteOnlySecret(ctx, req.Config, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input := buildDataForwardingInput(ctx, data, currentSentinel, woSecret, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -151,7 +155,11 @@ func (r *DataForwardingResource) Update(ctx context.Context, req resource.Update
 	if current.Forward != nil {
 		currentSentinel = current.Forward.Sentinel
 	}
-	input := buildDataForwardingInput(ctx, data, currentSentinel, &resp.Diagnostics)
+	woSecret := sentinelWriteOnlySecret(ctx, req.Config, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input := buildDataForwardingInput(ctx, data, currentSentinel, woSecret, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
