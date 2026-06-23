@@ -42,6 +42,7 @@ type DownloadsDataSourceModel struct {
 	CSRCertificate                     types.String `tfsdk:"csr_certificate"`
 	WebsocketAuthorizerKey             types.String `tfsdk:"websocket_authorizer_key"`
 	NonRemovableSystemExtensionProfile types.String `tfsdk:"non_removable_system_extension_profile"`
+	NetworkContentFilterProfile        types.String `tfsdk:"network_content_filter_profile"`
 	InstallerPackage                   types.Object `tfsdk:"installer_package"`
 }
 
@@ -75,6 +76,11 @@ func (d *DownloadsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 			},
 			"non_removable_system_extension_profile": schema.StringAttribute{
 				MarkdownDescription: "The non-removable system extension profile payload in base64.",
+				Computed:            true,
+				Sensitive:           true,
+			},
+			"network_content_filter_profile": schema.StringAttribute{
+				MarkdownDescription: "The Network Content Filter Profile payload in base64. Deploy this profile before enabling network telemetry (`log_network`) on a telemetry configuration.",
 				Computed:            true,
 				Sensitive:           true,
 			},
@@ -127,6 +133,7 @@ func (d *DownloadsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	data.CSRCertificate = stringValueOrNull(downloads.CSR)
 	data.WebsocketAuthorizerKey = stringValueOrNull(downloads.WebsocketAuth)
 	data.NonRemovableSystemExtensionProfile = stringValueOrNull(downloads.TamperPreventionProfile)
+	data.NetworkContentFilterProfile = stringValueOrNull(downloads.NetworkContentFilterProfile)
 	data.InstallerPackage = buildInstallerPackageObject(d.baseURL, downloads.VanillaPackage, downloads.InstallerUUID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
