@@ -45,6 +45,7 @@ Read-Only:
 - `log_applications_and_processes` (Boolean) Collect application and process events.
 - `log_file_path` (List of String) Log file paths to collect.
 - `log_hardware_and_software` (Boolean) Collect hardware and software events.
+- `log_network` (Boolean) Collect inbound and outbound network connection events.
 - `log_persistence` (Boolean) Collect persistence-related events.
 - `log_system` (Boolean) Collect system events.
 - `log_users_and_groups` (Boolean) Collect user and group management events.

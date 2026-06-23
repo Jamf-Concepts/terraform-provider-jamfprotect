@@ -51,6 +51,11 @@ func TestEventsFromFlags_Individual(t *testing.T) {
 			expected: logSystemEvents,
 		},
 		{
+			name:     "network",
+			flags:    telemetryEventFlags{LogNetwork: true},
+			expected: logNetworkEvents,
+		},
+		{
 			name:     "no flags",
 			flags:    telemetryEventFlags{},
 			expected: []string{},
@@ -77,6 +82,7 @@ func TestEventsFromFlags_AllEnabled(t *testing.T) {
 		LogHardwareSoftware: true,
 		LogAppleSecurity:    true,
 		LogSystem:           true,
+		LogNetwork:          true,
 	}
 
 	got := eventsFromFlags(flags)
@@ -91,6 +97,7 @@ func TestEventsFromFlags_AllEnabled(t *testing.T) {
 		logHardwareAndSoftwareEvents,
 		logAppleSecurityEvents,
 		logSystemEvents,
+		logNetworkEvents,
 	} {
 		for _, e := range list {
 			allEvents[e] = true
@@ -154,6 +161,11 @@ func TestFlagsFromEvents_Individual(t *testing.T) {
 			expected: telemetryEventFlags{LogSystem: true},
 		},
 		{
+			name:     "network",
+			events:   logNetworkEvents,
+			expected: telemetryEventFlags{LogNetwork: true},
+		},
+		{
 			name:     "empty events",
 			events:   []string{},
 			expected: telemetryEventFlags{},
@@ -212,6 +224,7 @@ func TestEventsFromFlags_RoundTrip(t *testing.T) {
 				LogHardwareSoftware: true,
 				LogAppleSecurity:    true,
 				LogSystem:           true,
+				LogNetwork:          true,
 			},
 		},
 		{

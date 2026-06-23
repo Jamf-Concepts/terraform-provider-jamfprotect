@@ -127,6 +127,12 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 			},
+			"log_network": schema.BoolAttribute{
+				MarkdownDescription: "Collect inbound and outbound network connection events, including remote addresses, hostnames, and related process details. Requires Jamf Protect agent 8.14.0 or later and macOS 26 or later, and the Network Content Filter Profile must be deployed before enabling.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",
 				Computed:            true,

@@ -23,3 +23,6 @@ var logAppleSecurityEvents = []string{"gatekeeper_user_override", "xp_malware_de
 
 // logSystemEvents lists event names for system telemetry.
 var logSystemEvents = []string{"kextload", "kextunload", "profile_add", "profile_remove", "settime", "tcc_modify"}
+
+// logNetworkEvents lists event names for network telemetry.
+var logNetworkEvents = []string{"network_connect"}
