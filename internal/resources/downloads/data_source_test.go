@@ -21,6 +21,7 @@ func TestAccDownloadsDataSource_basic(t *testing.T) {
 				Config: testAccDownloadsDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.jamfprotect_downloads.test", "installer_package.version"),
+					resource.TestCheckResourceAttrSet("data.jamfprotect_downloads.test", "network_content_filter_profile"),
 				),
 			},
 		},

@@ -36,6 +36,7 @@ resource "local_file" "non_removable_system_extension_profile" {
 
 - `csr_certificate` (String, Sensitive) The CSR certificate payload in base64.
 - `installer_package` (Attributes) Installer and uninstaller package metadata. (see [below for nested schema](#nestedatt--installer_package))
+- `network_content_filter_profile` (String, Sensitive) The Network Content Filter Profile payload in base64. Deploy this profile before enabling network telemetry (`log_network`) on a telemetry configuration.
 - `non_removable_system_extension_profile` (String, Sensitive) The non-removable system extension profile payload in base64.
 - `root_ca_certificate` (String, Sensitive) The Root CA certificate payload in base64.
 - `safelist_profile` (String, Sensitive) The Jamf Protect Safelist (PPPC) profile payload in base64.
