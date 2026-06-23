@@ -31,6 +31,10 @@ resource "jamfprotect_telemetry" "security_focused" {
   log_system                = true
   log_hardware_and_software = false
 
+  # Network connections (requires Jamf Protect agent 8.14.0+, macOS 26+,
+  # and the Network Content Filter Profile deployed beforehand)
+  log_network = true
+
   # Application monitoring
   log_applications_and_processes = true
 
@@ -101,6 +105,7 @@ resource "jamfprotect_telemetry" "performance_monitoring" {
 - `log_apple_security` (Boolean) Collect Apple security events.
 - `log_applications_and_processes` (Boolean) Collect application and process events.
 - `log_hardware_and_software` (Boolean) Collect hardware and software events.
+- `log_network` (Boolean) Collect inbound and outbound network connection events, including remote addresses, hostnames, and related process details. Requires Jamf Protect agent 8.14.0 or later and macOS 26 or later, and the Network Content Filter Profile must be deployed before enabling.
 - `log_persistence` (Boolean) Collect persistence-related events.
 - `log_system` (Boolean) Collect system events.
 - `log_users_and_groups` (Boolean) Collect user and group management events.

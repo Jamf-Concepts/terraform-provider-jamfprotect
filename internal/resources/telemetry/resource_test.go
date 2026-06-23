@@ -68,6 +68,7 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_hardware_and_software", "false"),
 					resource.TestCheckResourceAttr(resourceName, "log_apple_security", "false"),
 					resource.TestCheckResourceAttr(resourceName, "log_system", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_network", "false"),
 					resource.TestCheckResourceAttr(resourceName, "collect_diagnostic_and_crash_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "collect_performance_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "file_hashes", "false"),
@@ -90,6 +91,7 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					LogHardwareSoftware: true,
 					LogAppleSecurity:    true,
 					LogSystem:           true,
+					LogNetwork:          true,
 					Diagnostics:         true,
 					Performance:         true,
 					FileHashes:          true,
@@ -110,6 +112,7 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_hardware_and_software", "true"),
 					resource.TestCheckResourceAttr(resourceName, "log_apple_security", "true"),
 					resource.TestCheckResourceAttr(resourceName, "log_system", "true"),
+					resource.TestCheckResourceAttr(resourceName, "log_network", "true"),
 					resource.TestCheckResourceAttr(resourceName, "collect_diagnostic_and_crash_reports", "true"),
 					resource.TestCheckResourceAttr(resourceName, "collect_performance_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "file_hashes", "true"),
@@ -134,10 +137,33 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_hardware_and_software", "false"),
 					resource.TestCheckResourceAttr(resourceName, "log_apple_security", "false"),
 					resource.TestCheckResourceAttr(resourceName, "log_system", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_network", "false"),
 					resource.TestCheckResourceAttr(resourceName, "collect_diagnostic_and_crash_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "collect_performance_metrics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "file_hashes", "false"),
 					resource.TestCheckResourceAttr(resourceName, "log_file_path.#", "0"),
+				),
+			},
+			// Update: enable only network telemetry in isolation, verifying the
+			// log_network flag round-trips through the network_connect event alone.
+			{
+				Config: testAccTelemetryV2ResourceConfig(rName, "Updated telemetry v2", telemetryConfigOpts{
+					LogNetwork: true,
+				}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "log_network", "true"),
+					resource.TestCheckResourceAttr(resourceName, "log_applications_and_processes", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_access_and_authentication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_users_and_groups", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_persistence", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_hardware_and_software", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_apple_security", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_system", "false"),
 				),
 			},
 		},
@@ -177,6 +203,7 @@ type telemetryConfigOpts struct {
 	LogHardwareSoftware bool
 	LogAppleSecurity    bool
 	LogSystem           bool
+	LogNetwork          bool
 	Diagnostics         bool
 	Performance         bool
 	FileHashes          bool
@@ -212,12 +239,13 @@ resource "jamfprotect_telemetry" "test" {
   log_hardware_and_software             = %[11]t
   log_apple_security                    = %[12]t
   log_system                            = %[13]t
+  log_network                           = %[14]t
 }
 `, name, description, logFilePath,
 		opts.Diagnostics, opts.Performance, opts.FileHashes,
 		opts.LogAccessAuth, opts.LogAppsProcesses, opts.LogUsersGroups,
 		opts.LogPersistence, opts.LogHardwareSoftware, opts.LogAppleSecurity,
-		opts.LogSystem)
+		opts.LogSystem, opts.LogNetwork)
 }
 
 // testAccTelemetriesV2DataSourceConfig builds Terraform configuration for the telemetries data source.

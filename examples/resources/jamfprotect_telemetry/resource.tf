@@ -16,6 +16,10 @@ resource "jamfprotect_telemetry" "security_focused" {
   log_system                = true
   log_hardware_and_software = false
 
+  # Network connections (requires Jamf Protect agent 8.14.0+, macOS 26+,
+  # and the Network Content Filter Profile deployed beforehand)
+  log_network = true
+
   # Application monitoring
   log_applications_and_processes = true
 

@@ -29,6 +29,7 @@ func (r *TelemetryV2Resource) apiToState(_ context.Context, data *TelemetryV2Res
 	data.LogHardwareSoftware = types.BoolValue(flags.LogHardwareSoftware)
 	data.LogAppleSecurity = types.BoolValue(flags.LogAppleSecurity)
 	data.LogSystem = types.BoolValue(flags.LogSystem)
+	data.LogNetwork = types.BoolValue(flags.LogNetwork)
 
 	data.Description = types.StringValue(api.Description)
 }

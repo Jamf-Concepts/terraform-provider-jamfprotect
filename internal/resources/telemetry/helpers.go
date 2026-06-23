@@ -12,6 +12,7 @@ type telemetryEventFlags struct {
 	LogHardwareSoftware bool
 	LogAppleSecurity    bool
 	LogSystem           bool
+	LogNetwork          bool
 }
 
 // eventsFromFlags builds the event list from the selected categories.
@@ -38,6 +39,9 @@ func eventsFromFlags(flags telemetryEventFlags) []string {
 	}
 	if flags.LogSystem {
 		result = appendEvents(result, logSystemEvents, seen)
+	}
+	if flags.LogNetwork {
+		result = appendEvents(result, logNetworkEvents, seen)
 	}
 	return result
 }
@@ -69,6 +73,7 @@ func flagsFromEvents(events []string) telemetryEventFlags {
 		LogHardwareSoftware: hasAnyEvent(set, logHardwareAndSoftwareEvents),
 		LogAppleSecurity:    hasAnyEvent(set, logAppleSecurityEvents),
 		LogSystem:           hasAnyEvent(set, logSystemEvents),
+		LogNetwork:          hasAnyEvent(set, logNetworkEvents),
 	}
 }
 

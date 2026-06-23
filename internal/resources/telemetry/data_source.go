@@ -49,6 +49,7 @@ type TelemetryV2DataSourceItemModel struct {
 	LogHardwareSoftware types.Bool   `tfsdk:"log_hardware_and_software"`
 	LogAppleSecurity    types.Bool   `tfsdk:"log_apple_security"`
 	LogSystem           types.Bool   `tfsdk:"log_system"`
+	LogNetwork          types.Bool   `tfsdk:"log_network"`
 	Created             types.String `tfsdk:"created"`
 	Updated             types.String `tfsdk:"updated"`
 }
@@ -125,6 +126,10 @@ func (d *TelemetriesV2DataSource) Schema(ctx context.Context, req datasource.Sch
 							MarkdownDescription: "Collect system events.",
 							Computed:            true,
 						},
+						"log_network": schema.BoolAttribute{
+							MarkdownDescription: "Collect inbound and outbound network connection events.",
+							Computed:            true,
+						},
 						"created": schema.StringAttribute{
 							MarkdownDescription: "The creation timestamp.",
 							Computed:            true,
@@ -176,6 +181,7 @@ func (d *TelemetriesV2DataSource) Read(ctx context.Context, req datasource.ReadR
 			LogHardwareSoftware: types.BoolValue(flags.LogHardwareSoftware),
 			LogAppleSecurity:    types.BoolValue(flags.LogAppleSecurity),
 			LogSystem:           types.BoolValue(flags.LogSystem),
+			LogNetwork:          types.BoolValue(flags.LogNetwork),
 		}
 		if api.Description != "" {
 			item.Description = types.StringValue(api.Description)

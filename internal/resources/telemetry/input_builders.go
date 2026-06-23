@@ -21,6 +21,7 @@ func (r *TelemetryV2Resource) buildInput(ctx context.Context, data TelemetryV2Re
 		LogHardwareSoftware: data.LogHardwareSoftware.ValueBool(),
 		LogAppleSecurity:    data.LogAppleSecurity.ValueBool(),
 		LogSystem:           data.LogSystem.ValueBool(),
+		LogNetwork:          data.LogNetwork.ValueBool(),
 	}
 
 	input := &jamfprotect.TelemetryV2Input{
