@@ -61,7 +61,9 @@ func (d *ComputersDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	// Map response to model
+	// Map response to model. Initialize a non-nil slice so the computers
+	// attribute is an empty list (not null) when the tenant has no computers.
+	state.Computers = make([]ComputerModel, 0, len(computers))
 	for _, computer := range computers {
 		computerModel := buildComputerModel(computer)
 		state.Computers = append(state.Computers, computerModel)
