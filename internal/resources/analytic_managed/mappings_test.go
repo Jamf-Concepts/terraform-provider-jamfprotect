@@ -233,8 +233,8 @@ func TestBuildInternalInput_AllNullProducesEmptyInput(t *testing.T) {
 	if got == nil {
 		t.Fatal("expected non-nil input")
 	}
-	if got.TenantSeverity != "" {
-		t.Errorf("expected empty TenantSeverity, got %q", got.TenantSeverity)
+	if got.TenantSeverity != nil {
+		t.Errorf("expected nil TenantSeverity, got %q", *got.TenantSeverity)
 	}
 	if got.TenantActions != nil {
 		t.Errorf("expected nil TenantActions, got %v", got.TenantActions)
@@ -256,8 +256,8 @@ func TestBuildInternalInput_SeverityOnly(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
 	}
-	if got.TenantSeverity != "High" {
-		t.Errorf("expected TenantSeverity=High, got %q", got.TenantSeverity)
+	if got.TenantSeverity == nil || *got.TenantSeverity != "High" {
+		t.Errorf("expected TenantSeverity=High, got %v", got.TenantSeverity)
 	}
 	if got.TenantActions != nil {
 		t.Errorf("expected nil TenantActions, got %v", got.TenantActions)

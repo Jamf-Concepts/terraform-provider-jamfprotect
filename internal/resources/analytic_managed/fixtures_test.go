@@ -237,8 +237,8 @@ func TestBuildInternalInput_MatchesProdRequestShape(t *testing.T) {
 		t.Fatalf("buildInternalInput: %s", diags.Errors()[0].Detail())
 	}
 
-	if got.TenantSeverity != "Low" {
-		t.Errorf("tenant_severity: expected Low, got %q", got.TenantSeverity)
+	if got.TenantSeverity == nil || *got.TenantSeverity != "Low" {
+		t.Errorf("tenant_severity: expected Low, got %v", got.TenantSeverity)
 	}
 
 	if len(got.TenantActions) != len(wantVars.TenantActions) {

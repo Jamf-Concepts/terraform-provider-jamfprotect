@@ -18,7 +18,7 @@ func (r *AnalyticManagedResource) buildInternalInput(ctx context.Context, data A
 	input := &jamfprotect.InternalAnalyticInput{}
 
 	if !data.TenantSeverity.IsNull() && !data.TenantSeverity.IsUnknown() {
-		input.TenantSeverity = data.TenantSeverity.ValueString()
+		input.TenantSeverity = data.TenantSeverity.ValueStringPointer()
 	}
 
 	if !data.TenantActions.IsNull() && !data.TenantActions.IsUnknown() {
