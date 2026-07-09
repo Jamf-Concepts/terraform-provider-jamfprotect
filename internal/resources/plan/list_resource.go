@@ -48,6 +48,7 @@ func (r *PlanListResource) ListResourceConfigSchema(ctx context.Context, req lis
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed plans.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -97,6 +98,10 @@ func (r *PlanListResource) List(ctx context.Context, req list.ListRequest, resp 
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
+		// The Jamf-provided built-in plan is excluded only when opted in.
+		if common.ExcludeBuiltins(config) && isSystemPlanName(item.Name) {
+			continue
+		}
 		if !common.MatchesNamePrefix(config, item.Name) {
 			continue
 		}

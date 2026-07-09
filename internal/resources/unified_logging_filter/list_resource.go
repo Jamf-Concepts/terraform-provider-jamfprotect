@@ -48,6 +48,7 @@ func (r *UnifiedLoggingFilterListResource) ListResourceConfigSchema(ctx context.
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed unified logging filters.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }

@@ -44,6 +44,7 @@ func (r *GroupListResource) ListResourceConfigSchema(ctx context.Context, req li
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed groups.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -90,6 +91,10 @@ func (r *GroupListResource) List(ctx context.Context, req list.ListRequest, resp
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
+		// Jamf-provided built-in groups are excluded only when opted in.
+		if common.ExcludeBuiltins(config) && isSystemGroupName(item.Name) {
+			continue
+		}
 		if !common.MatchesNamePrefix(config, item.Name) {
 			continue
 		}

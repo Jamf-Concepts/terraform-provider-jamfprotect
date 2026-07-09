@@ -23,4 +23,5 @@ list "jamfprotect_telemetry" "example" {
 
 ### Optional
 
+- `exclude_builtins` (Boolean) When true, Jamf-provided built-in / system instances are excluded from the results. Defaults to false — all instances, including built-ins, are returned.
 - `name_prefix` (String) Optional name prefix filter applied to listed telemetry configurations.

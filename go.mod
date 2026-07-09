@@ -1,6 +1,6 @@
 module github.com/Jamf-Concepts/terraform-provider-jamfprotect
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/Jamf-Concepts/jamfprotect-go-sdk v0.7.1

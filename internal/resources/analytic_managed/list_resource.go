@@ -43,6 +43,7 @@ func (r *AnalyticManagedListResource) ListResourceConfigSchema(ctx context.Conte
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed analytics.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }

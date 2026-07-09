@@ -48,6 +48,7 @@ func (r *TelemetryV2ListResource) ListResourceConfigSchema(ctx context.Context, 
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed telemetry configurations.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }

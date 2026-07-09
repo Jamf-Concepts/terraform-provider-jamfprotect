@@ -48,6 +48,7 @@ func (r *ExceptionSetListResource) ListResourceConfigSchema(ctx context.Context,
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed exception sets.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -97,6 +98,10 @@ func (r *ExceptionSetListResource) List(ctx context.Context, req list.ListReques
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
+		// Jamf-managed built-in exception sets are excluded only when opted in.
+		if common.ExcludeBuiltins(config) && item.Managed {
+			continue
+		}
 		if !common.MatchesNamePrefix(config, item.Name) {
 			continue
 		}

@@ -46,6 +46,7 @@ func (r *ApiClientListResource) ListResourceConfigSchema(ctx context.Context, re
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed API clients.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }

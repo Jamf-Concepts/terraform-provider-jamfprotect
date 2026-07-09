@@ -7,6 +7,7 @@ package analytic_set
 var systemAnalyticSetNames = map[string]struct{}{
 	"Advanced Threat Controls": {},
 	"Tamper Prevention":        {},
+	"Default Analytic Set":     {},
 }
 
 // isSystemAnalyticSetName returns true when the analytic set should be excluded from listings.
