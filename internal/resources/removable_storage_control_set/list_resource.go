@@ -48,6 +48,7 @@ func (r *RemovableStorageControlSetListResource) ListResourceConfigSchema(ctx co
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed removable storage control sets.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }

@@ -46,6 +46,7 @@ func (r *RoleListResource) ListResourceConfigSchema(ctx context.Context, req lis
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed roles.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -92,6 +93,10 @@ func (r *RoleListResource) List(ctx context.Context, req list.ListRequest, resp 
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
+		// Jamf-provided built-in roles are excluded only when opted in.
+		if common.ExcludeBuiltins(config) && isSystemRoleName(item.Name) {
+			continue
+		}
 		if !common.MatchesNamePrefix(config, item.Name) {
 			continue
 		}

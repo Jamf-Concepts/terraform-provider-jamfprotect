@@ -44,6 +44,7 @@ func (r *AnalyticSetListResource) ListResourceConfigSchema(ctx context.Context, 
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed analytic sets.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -95,7 +96,8 @@ func (r *AnalyticSetListResource) List(ctx context.Context, req list.ListRequest
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
-		if isSystemAnalyticSetName(item.Name) {
+		// System analytic sets are excluded only when opted in.
+		if common.ExcludeBuiltins(config) && isSystemAnalyticSetName(item.Name) {
 			continue
 		}
 		if prefix != "" && !strings.HasPrefix(item.Name, prefix) {

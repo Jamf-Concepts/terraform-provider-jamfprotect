@@ -43,6 +43,7 @@ func (r *AnalyticListResource) ListResourceConfigSchema(ctx context.Context, req
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed analytics.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
@@ -89,7 +90,8 @@ func (r *AnalyticListResource) List(ctx context.Context, req list.ListRequest, r
 
 	results := make([]list.ListResult, 0, len(items))
 	for _, item := range items {
-		if item.Jamf {
+		// Jamf-provided analytics are excluded only when opted in.
+		if common.ExcludeBuiltins(config) && item.Jamf {
 			continue
 		}
 		if !common.MatchesNamePrefix(config, item.Name) {

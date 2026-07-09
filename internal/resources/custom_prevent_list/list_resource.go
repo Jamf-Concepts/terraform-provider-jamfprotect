@@ -43,6 +43,7 @@ func (r *CustomPreventListListResource) ListResourceConfigSchema(ctx context.Con
 				Optional:            true,
 				MarkdownDescription: "Optional name prefix filter applied to listed custom prevent lists.",
 			},
+			"exclude_builtins": common.ExcludeBuiltinsSchemaAttribute(),
 		},
 	}
 }
