@@ -135,7 +135,7 @@ func computerDataSourceAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"connection_status": schema.StringAttribute{
-			MarkdownDescription: "The current connection status (CONNECTED, DISCONNECTED).",
+			MarkdownDescription: "The current connection status (`Connected`, `Disconnected`).",
 			Computed:            true,
 		},
 		"last_connection": schema.StringAttribute{
@@ -163,7 +163,7 @@ func computerDataSourceAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"pending_plan": schema.Int64Attribute{
-			MarkdownDescription: "Whether there is a pending plan update for the computer.",
+			MarkdownDescription: "The ID of the plan the computer has been assigned but has not yet applied, or null when no plan change is outstanding. Set by `jamfprotect_set_computer_plan` and cleared when the Jamf Protect agent next checks in, at which point `plan.id` becomes this value. Note that a plan cannot be deleted while `plan.id` still references it, even once a move away from it is pending.",
 			Computed:            true,
 		},
 	}

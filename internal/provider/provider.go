@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
+	computeractions "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/actions/computer"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic_managed"
@@ -45,6 +47,7 @@ import (
 
 var _ provider.Provider = &JamfProtectProvider{}
 var _ provider.ProviderWithListResources = &JamfProtectProvider{}
+var _ provider.ProviderWithActions = &JamfProtectProvider{}
 
 // JamfProtectProvider defines the provider implementation.
 type JamfProtectProvider struct {
@@ -171,6 +174,7 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 	resp.DataSourceData = c
 	resp.ResourceData = c
 	resp.ListResourceData = c
+	resp.ActionData = c
 }
 
 func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.Resource {
@@ -234,6 +238,13 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 		telemetry.NewTelemetryV2ListResource,
 		unified_logging_filter.NewUnifiedLoggingFilterListResource,
 		removable_storage_control_set.NewRemovableStorageControlSetListResource,
+	}
+}
+
+func (p *JamfProtectProvider) Actions(ctx context.Context) []func() action.Action {
+	return []func() action.Action{
+		computeractions.NewSetComputerPlanAction,
+		computeractions.NewDeleteComputerAction,
 	}
 }
 

@@ -40,6 +40,8 @@ internal/
     constants/                   # Shared constants (timeouts, etc.)
     helpers/                     # Shared helper utilities
     validators/                  # Shared schema validators (UUID, resource name)
+  actions/                       # Per-domain action packages (imperative operations)
+    computer/                    # Set computer plan, delete computer
   provider/                      # Provider wiring + schema validation tests
   resources/                     # Per-resource packages (resource + data source)
     action_configuration/        # Reference implementation for complex resources
@@ -63,11 +65,12 @@ internal/
     user/
   testutil/                      # Acceptance test helpers
 tools/                           # Go generate tooling (tfplugindocs, copywrite)
-docs/                            # Generated provider documentation (resources + data sources)
+docs/                            # Generated provider documentation (resources, data sources, actions)
 examples/
   resources/                     # Example .tf files for resources
   data-sources/                  # Example .tf files for data sources
   list-resources/                # Example .tf files for list resources
+  actions/                       # Example .tf files for actions
   provider/                      # Example provider configuration
 templates/                       # tfplugindocs templates for doc generation
 ```
@@ -150,7 +153,21 @@ Optional split-outs for complex resources:
 7. Run `make test` to ensure tests pass.
 8. Run `make generate` to generate documentation from schema descriptions.
 
+## Adding a New Action
+
+Actions model imperative operations the provider does not own the lifecycle of. See the Action Package File Conventions in [STYLE_GUIDE.md](STYLE_GUIDE.md) for the full contract.
+
+1. Create a new package under `internal/actions/<domain>/`, named `<domain>actions`, with one file per action.
+2. Implement `action.Action` plus `action.ActionWithConfigure`, naming the action type after the underlying API operation.
+3. Register it in `internal/provider/provider.go` -> `Actions()`.
+4. Add acceptance tests in `action_test.go`, gating anything that mutates the fleet behind its own environment variable.
+5. Add schema validation tests in `internal/provider/schema_test.go`.
+6. Add example `.tf` files under `examples/actions/jamfprotect_<action_name>/action.tf`.
+7. Run `make test` and `make generate`.
+
+Actions require Terraform 1.14 or later.
+
 ## Documentation & Examples
 
-- Update `examples/` when adding new resources or data sources.
+- Update `examples/` when adding new resources, data sources, or actions.
 - Run `make generate` to regenerate documentation from schema descriptions.

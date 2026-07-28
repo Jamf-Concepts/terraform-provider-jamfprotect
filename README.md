@@ -9,7 +9,7 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.13
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.13 (>= 1.14 for [actions](#supported-actions))
 
 ## Installation
 
@@ -99,6 +99,24 @@ All resources support full CRUD operations and `terraform import`.
 | `jamfprotect_telemetries` | List all telemetry configurations |
 | `jamfprotect_unified_logging_filters` | List all unified logging filters |
 | `jamfprotect_users` | List all users |
+
+## Supported Actions
+
+Actions cover imperative operations that Terraform should not model as managed resources, because the provider does not own the object's lifecycle. Both actions below target computers with `computer_uuids`, sourced from the `jamfprotect_computers` data source — a single-element set for one computer, or a `for` expression for a whole fleet in one invocation.
+
+| Action | Description |
+| --- | --- |
+| `jamfprotect_set_computer_plan` | Move one or more computers to a different plan, optionally waiting for the agent to check in |
+| `jamfprotect_delete_computer` | Remove one or more computer records from the tenant (destructive and irreversible) |
+
+Actions require Terraform >= 1.14. Terraform has no destroy-time action events, so these are primarily invoked directly:
+
+```shell
+# Clear a retiring plan's computers so the plan itself can be destroyed —
+# Jamf Protect blocks deletePlan while computers are still assigned to it.
+terraform apply -invoke=action.jamfprotect_delete_computer.offboard
+terraform destroy
+```
 
 ## Usage Examples
 
