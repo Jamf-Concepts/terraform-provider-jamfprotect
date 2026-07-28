@@ -56,6 +56,19 @@ make
 
 Follow the same pattern as resources, but implement `datasource.DataSource` instead of `resource.Resource`. Place the data source in the same resource package (e.g., `internal/resources/<resource_name>/data_source.go`).
 
+## Adding a New Action
+
+Actions cover imperative operations the provider does not own the lifecycle of, where a managed resource would fight the system of record. They require Terraform >= 1.14.
+
+1. Create the action package under `internal/actions/<domain>/` following the file conventions in [STYLE_GUIDE.md](STYLE_GUIDE.md#action-package-file-conventions).
+2. Register the action in `internal/provider/provider.go` in the `Actions()` method.
+3. Add tests:
+   - Schema and metadata tests in `internal/provider/schema_test.go`.
+   - Acceptance tests in `internal/actions/<domain>/action_test.go`, gating anything that mutates the fleet behind its own environment variable.
+4. Add example `.tf` files under `examples/actions/jamfprotect_<action_name>/`.
+5. Run `make generate` to regenerate documentation.
+6. Run `make test` to verify all tests pass.
+
 ## Project Structure
 
 See [AGENTS.md](AGENTS.md) for the full project structure and conventions. Key directories:

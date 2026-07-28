@@ -55,7 +55,7 @@ Read-Only:
 - `cert_id` (String) The certificate ID of the computer.
 - `checkin` (String) The timestamp of the last check-in.
 - `config_hash` (String) The hash of the current configuration.
-- `connection_status` (String) The current connection status (CONNECTED, DISCONNECTED).
+- `connection_status` (String) The current connection status (`Connected`, `Disconnected`).
 - `created` (String) The timestamp when the computer was enrolled.
 - `full_disk_access` (String) Whether Jamf Protect has Full Disk Access on the computer.
 - `host_name` (String) The hostname of the computer.
@@ -74,7 +74,7 @@ Read-Only:
 - `os_minor` (Number) The minor version of the operating system.
 - `os_patch` (Number) The patch version of the operating system.
 - `os_string` (String) The full operating system version string.
-- `pending_plan` (Number) Whether there is a pending plan update for the computer.
+- `pending_plan` (Number) The ID of the plan the computer has been assigned but has not yet applied, or null when no plan change is outstanding. Set by `jamfprotect_set_computer_plan` and cleared when the Jamf Protect agent next checks in, at which point `plan.id` becomes this value. Note that a plan cannot be deleted while `plan.id` still references it, even once a move away from it is pending.
 - `plan` (Attributes) The plan assigned to the computer. (see [below for nested schema](#nestedatt--computers--plan))
 - `serial` (String) The serial number of the computer.
 - `signatures_version` (Number) The version of threat prevention signatures.

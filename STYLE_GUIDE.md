@@ -42,18 +42,43 @@ Resource packages live under `internal/resources/<resource_name>/` and use resou
 
 Packages that only contain a data source use `model_types.go` for their model structs and `data_source.go` for the implementation.
 
+## Action Package File Conventions
+
+[Actions](https://developer.hashicorp.com/terraform/plugin/framework/actions) model imperative operations the provider does not own the lifecycle of — where a managed resource would fight the system of record on every reconcile. Action packages live under `internal/actions/<domain>/`, named `<domain>actions` (for example `internal/actions/computer/` is `package computeractions`), with one file per action:
+
+| File                    | Purpose                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `<action_name>.go`      | One action: type, model struct, Metadata, Schema, Invoke        |
+| `helpers.go`            | Package doc, shared Configure/client handling, shared attributes |
+| `validators.go`         | `action.ConfigValidator` and schema validators                  |
+| `action_test.go`        | Acceptance tests for the package's actions                      |
+| `helpers_test.go`       | Helper function tests                                           |
+| `validators_test.go`    | Validator tests                                                 |
+
+- Name the action type after the underlying API operation (GraphQL `setComputerPlan` becomes `jamfprotect_set_computer_plan`), so it maps mechanically onto its Jamf Platform counterpart when these move to the `jamfplatform` provider.
+- Open `helpers.go` with a package doc block listing the SDK methods the actions call, mirroring the resource packages' service-layer contract.
+- Report progress with `resp.SendProgress` around each API call — an action produces no state, so progress events are the only feedback a practitioner gets.
+- Actions that operate on a collection take a single required set of targets rather than a set plus a scalar convenience attribute — a one-element set covers the single-target case without a `ConfigValidator` to enforce exclusivity. An empty set is a no-op with a warning, never an error, so a pipeline stays re-runnable once the fleet already matches.
+- Already-gone targets warn rather than error, for the same reason.
+- Aggregate per-target failures into a single error diagnostic listing every failure, rather than stopping at the first.
+- Actions require Terraform 1.14, which has no destroy-time events (`before_destroy` / `after_destroy` fail validation). Document direct invocation (`terraform apply -invoke=action.<type>.<name>`) as the primary workflow and `lifecycle.action_trigger` as the secondary one.
+- Destructive actions state the consequence and its limits in the schema description with a `~>` callout; they do not add a confirmation attribute.
+
 ## Test File Conventions
 
 | File                      | Purpose                                    |
 | ------------------------- | ------------------------------------------ |
 | `resource_test.go`        | Acceptance tests for the resource          |
 | `data_source_test.go`     | Acceptance tests for the data source       |
+| `action_test.go`          | Acceptance tests for actions               |
 | `helpers_test.go`         | Helper function tests                      |
 | `input_builders_test.go`  | Input builder tests                        |
 | `state_builders_test.go`  | State builder tests                        |
 | `mappings_test.go`        | Mapping table tests                        |
 
 Schema and metadata tests live in `internal/provider/schema_test.go`.
+
+Acceptance tests that invoke an action need a resource carrying a `lifecycle.action_trigger` (`terraform_data` works), and a `tfversion.SkipBelow(tfversion.Version1_14_0)` version check. Gate anything that mutates the fleet behind its own environment variable so the default `make testacc` run only exercises validation.
 
 ## Service Layer
 

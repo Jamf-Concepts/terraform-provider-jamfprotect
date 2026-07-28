@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	computeractions "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/actions/computer"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/action_configuration"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/analytic_set"
@@ -26,6 +27,7 @@ import (
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/user"
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -1776,5 +1778,111 @@ func TestProviderDataSources(t *testing.T) {
 
 	if len(dataSources) != 18 {
 		t.Errorf("expected 18 data sources, got %d", len(dataSources))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Action schema tests
+// ---------------------------------------------------------------------------
+
+func TestSetComputerPlanActionSchema(t *testing.T) {
+	t.Parallel()
+	a := computeractions.NewSetComputerPlanAction()
+	resp := &action.SchemaResponse{}
+	a.Schema(context.Background(), action.SchemaRequest{}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	for _, name := range []string{"computer_uuids", "plan_id", "wait_for_checkin", "timeout"} {
+		if _, ok := resp.Schema.Attributes[name]; !ok {
+			t.Errorf("expected attribute %q in action schema", name)
+		}
+	}
+	for _, name := range []string{"computer_uuids", "plan_id"} {
+		if attr, ok := resp.Schema.Attributes[name]; !ok || !attr.IsRequired() {
+			t.Errorf("expected %q to be required", name)
+		}
+	}
+	for _, name := range []string{"wait_for_checkin", "timeout"} {
+		if attr, ok := resp.Schema.Attributes[name]; !ok || !attr.IsOptional() {
+			t.Errorf("expected %q to be optional", name)
+		}
+	}
+	if _, ok := resp.Schema.Attributes["computer_uuid"]; ok {
+		t.Error("computer_uuid was collapsed into computer_uuids and must not reappear")
+	}
+}
+
+func TestSetComputerPlanActionMetadata(t *testing.T) {
+	t.Parallel()
+	a := computeractions.NewSetComputerPlanAction()
+	resp := &action.MetadataResponse{}
+	a.Metadata(context.Background(), action.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+	if resp.TypeName != "jamfprotect_set_computer_plan" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_set_computer_plan", resp.TypeName)
+	}
+}
+
+func TestDeleteComputerActionSchema(t *testing.T) {
+	t.Parallel()
+	a := computeractions.NewDeleteComputerAction()
+	resp := &action.SchemaResponse{}
+	a.Schema(context.Background(), action.SchemaRequest{}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	attr, ok := resp.Schema.Attributes["computer_uuids"]
+	if !ok {
+		t.Fatal("expected attribute 'computer_uuids' in action schema")
+	}
+	if !attr.IsRequired() {
+		t.Error("expected 'computer_uuids' to be required")
+	}
+	if len(resp.Schema.Attributes) != 1 {
+		t.Errorf("expected only the computer selector, got %d attributes", len(resp.Schema.Attributes))
+	}
+}
+
+func TestDeleteComputerActionMetadata(t *testing.T) {
+	t.Parallel()
+	a := computeractions.NewDeleteComputerAction()
+	resp := &action.MetadataResponse{}
+	a.Metadata(context.Background(), action.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+	if resp.TypeName != "jamfprotect_delete_computer" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_delete_computer", resp.TypeName)
+	}
+}
+
+// TestActionsAreConfigurable asserts every action takes the provider-configured
+// client, since an action that skips Configure has no way to reach the API.
+func TestActionsAreConfigurable(t *testing.T) {
+	t.Parallel()
+
+	actions := map[string]action.Action{
+		"jamfprotect_set_computer_plan": computeractions.NewSetComputerPlanAction(),
+		"jamfprotect_delete_computer":   computeractions.NewDeleteComputerAction(),
+	}
+
+	for name, a := range actions {
+		if _, ok := a.(action.ActionWithConfigure); !ok {
+			t.Errorf("%s does not implement action.ActionWithConfigure", name)
+		}
+	}
+}
+
+func TestProviderActions(t *testing.T) {
+	t.Parallel()
+
+	provider := New("test")()
+	p, ok := provider.(*JamfProtectProvider)
+	if !ok {
+		t.Fatal("provider is not a *JamfProtectProvider")
+	}
+	actions := p.Actions(context.Background())
+
+	if len(actions) != 2 {
+		t.Errorf("expected 2 actions, got %d", len(actions))
 	}
 }
