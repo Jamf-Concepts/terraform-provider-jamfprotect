@@ -69,7 +69,8 @@ func (p *JamfProtectProvider) Metadata(ctx context.Context, req provider.Metadat
 
 func (p *JamfProtectProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Jamf Protect provider allows you to manage Jamf Protect resources such as analytics, prevent lists, plans, and unified logging filters via the Jamf Protect GraphQL API.",
+		MarkdownDescription: "The Jamf Protect provider allows you to manage Jamf Protect resources such as analytics, prevent lists, plans, and unified logging filters via the Jamf Protect GraphQL API.\n\n" +
+			"**📘 New here? Start with the getting-started guide:** [Managing Jamf Protect with Terraform: The Jamf Protect Provider](https://concepts.jamf.com/en/guides/infrastructure-as-code/managing-jamf-protect-with-terraform-the-jamf-protect-provider/) on Jamf Concepts walks through creating an API client, configuring the provider, defining and applying your first resources, and bringing an existing tenant under management.",
 		Attributes: map[string]schema.Attribute{
 			"url": schema.StringAttribute{
 				MarkdownDescription: "The base URL of the Jamf Protect instance (e.g. `https://your-tenant.protect.jamfcloud.com`). Can also be set via the `JAMFPROTECT_URL` environment variable.",
