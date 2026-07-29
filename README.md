@@ -1,7 +1,9 @@
 # Terraform Provider for Jamf Protect
 
-> [!NOTE]
-> This provider is in early development (v0.1.0). All resources have been tested via acceptance tests against a real Jamf Protect tenant. However, the API surface is subject to change as we gather feedback from the community.
+> [!TIP]
+> **📘 Start here — [Managing Jamf Protect with Terraform: The Jamf Protect Provider](https://concepts.jamf.com/en/guides/infrastructure-as-code/managing-jamf-protect-with-terraform-the-jamf-protect-provider/)**
+>
+> The official getting-started guide on Jamf Concepts. Covers why Jamf Protect has its own provider, what the provider covers, creating an API client, configuring the provider, defining and applying your first resources, and bringing an existing tenant under management with `terraform import` and list resources. New to this provider or to Terraform? Read that first.
 
 This provider was originally created by [James Smith (@smithjw)](https://github.com/smithjw), who kindly donated the source code to [Jamf Concepts](https://github.com/Jamf-Concepts). Thank you, James, for your foundational work on this project.
 
@@ -13,7 +15,9 @@ The Jamf Protect Terraform provider allows you to manage [Jamf Protect](https://
 
 ## Installation
 
-The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect). Add the following to your Terraform configuration:
+The provider is published to the [Terraform Registry](https://registry.terraform.io/providers/Jamf-Concepts/jamfprotect). For a step-by-step walkthrough — from creating an API client through to applying your first configuration and importing an existing tenant — see the Jamf Concepts guide: [**Managing Jamf Protect with Terraform: The Jamf Protect Provider**](https://concepts.jamf.com/en/guides/infrastructure-as-code/managing-jamf-protect-with-terraform-the-jamf-protect-provider/).
+
+Add the following to your Terraform configuration:
 
 ```hcl
 terraform {
