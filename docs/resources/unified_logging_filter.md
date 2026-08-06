@@ -51,6 +51,8 @@ resource "jamfprotect_unified_logging_filter" "application_debugging" {
 
 - `description` (String) A description of the unified logging filter.
 - `enabled` (Boolean) Whether the filter is enabled. Defaults to `true`.
+
+~> This attribute is retained for backwards compatibility and no longer controls whether the filter reaches endpoints. A filter is delivered only when it belongs to a `jamfprotect_unified_logging_filter_set` that is assigned to a plan. Jamf Protect still stores this value but ignores it when generating endpoint configuration.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

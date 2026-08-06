@@ -122,6 +122,19 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.AnalyticSets = analyticSets
 	}
 
+	// A null or unknown value leaves the field off the mutation, which tells the API to
+	// keep the plan's current filter set assignments. A known empty set clears them.
+	if !data.UnifiedLoggingFilterSets.IsNull() && !data.UnifiedLoggingFilterSets.IsUnknown() {
+		filterSets := common.SetToStrings(ctx, data.UnifiedLoggingFilterSets, diags)
+		if diags.HasError() {
+			return nil
+		}
+		if filterSets == nil {
+			filterSets = []string{}
+		}
+		input.UnifiedLoggingFilterSets = filterSets
+	}
+
 	if !data.CustomEngineConfig.IsNull() && !data.CustomEngineConfig.IsUnknown() {
 		var cfg CustomEngineConfigModel
 		diags.Append(data.CustomEngineConfig.As(ctx, &cfg, basetypes.ObjectAsOptions{})...)

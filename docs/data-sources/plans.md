@@ -61,6 +61,7 @@ Read-Only:
 - `tamper_prevention` (String) Tamper Prevention setting for the plan. Values: `Block and report`, `Disable`.
 - `telemetry` (String) The ID of the telemetry configuration.
 - `threat_prevention_strategy` (String) Threat prevention strategy for the plan. Values: `Legacy`, `Managed`, `Custom`.
+- `unified_logging_filter_sets` (List of String) Unified logging filter set UUIDs assigned to this plan.
 - `updated` (String) The last-updated timestamp.
 
 <a id="nestedatt--plans--custom_engine_config"></a>

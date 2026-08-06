@@ -37,6 +37,7 @@ type PlanResourceModel struct {
 	Telemetry                types.String   `tfsdk:"telemetry"`
 	USBControlSet            types.String   `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.Set      `tfsdk:"analytic_sets"`
+	UnifiedLoggingFilterSets types.Set      `tfsdk:"unified_logging_filter_sets"`
 	CommunicationsProtocol   types.String   `tfsdk:"communications_protocol"`
 	ReportingInterval        types.Int64    `tfsdk:"reporting_interval"`
 	ReportArchitecture       types.Bool     `tfsdk:"report_architecture"`

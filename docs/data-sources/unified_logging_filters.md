@@ -39,9 +39,18 @@ Read-Only:
 
 - `created` (String) The creation timestamp.
 - `description` (String) A description of the unified logging filter.
-- `enabled` (Boolean) Whether the filter is enabled.
+- `enabled` (Boolean) Whether the filter is enabled. Retained for backwards compatibility only — it no longer controls whether the filter reaches endpoints. Delivery is determined by filter set membership plus plan assignment.
 - `filter` (String) The predicate filter expression.
 - `id` (String) The unique identifier of the unified logging filter.
 - `name` (String) The name of the unified logging filter.
+- `sets` (Attributes List) Unified logging filter sets that this filter belongs to. (see [below for nested schema](#nestedatt--unified_logging_filters--sets))
 - `tags` (List of String) Tags associated with the filter.
 - `updated` (String) The last-updated timestamp.
+
+<a id="nestedatt--unified_logging_filters--sets"></a>
+### Nested Schema for `unified_logging_filters.sets`
+
+Read-Only:
+
+- `name` (String) The filter set name.
+- `uuid` (String) The filter set UUID.
