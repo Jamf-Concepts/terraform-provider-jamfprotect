@@ -152,6 +152,9 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `telemetry` (String) The ID of the telemetry configuration.
 - `threat_prevention_strategy` (String) Only available when opted in to the [NGTP beta](https://learn.jamf.com/r/en-US/jamf-protect-documentation/Threat_Prevention_Public_Beta). Threat prevention strategy for the plan. Valid options are: `Legacy`, `Managed`, `Custom`. Defaults to `Legacy`.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
+- `unified_logging_filter_sets` (Set of String) A set of unified logging filter set UUIDs to assign to this plan. A unified logging filter reaches this plan's endpoints only when it belongs to one of these filter sets.
+
+Leave unset to keep whatever Jamf Protect already has assigned — including the `Default` filter set that Jamf Protect creates automatically for tenants that had unified logging filters enabled before filter sets existed. Set it to `[]` to explicitly assign none.
 
 ### Read-Only
 

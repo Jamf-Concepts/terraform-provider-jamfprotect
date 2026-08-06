@@ -67,10 +67,11 @@ func (r *UnifiedLoggingFilterResource) Schema(ctx context.Context, req resource.
 				Required:            true,
 			},
 			"enabled": schema.BoolAttribute{
-				MarkdownDescription: "Whether the filter is enabled. Defaults to `true`.",
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Whether the filter is enabled. Defaults to `true`.\n\n" +
+					"~> This attribute is retained for backwards compatibility and no longer controls whether the filter reaches endpoints. A filter is delivered only when it belongs to a `jamfprotect_unified_logging_filter_set` that is assigned to a plan. Jamf Protect still stores this value but ignores it when generating endpoint configuration.",
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
 			"tags": schema.SetAttribute{
 				MarkdownDescription: "A set of tags for the unified logging filter.",

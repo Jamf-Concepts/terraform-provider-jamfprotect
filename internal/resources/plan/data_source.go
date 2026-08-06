@@ -44,6 +44,7 @@ type PlanDataSourceItemModel struct {
 	Telemetry                types.String `tfsdk:"telemetry"`
 	USBControlSet            types.String `tfsdk:"removable_storage_control_set"`
 	AnalyticSets             types.List   `tfsdk:"analytic_sets"`
+	UnifiedLoggingFilterSets types.List   `tfsdk:"unified_logging_filter_sets"`
 	CommunicationsProtocol   types.String `tfsdk:"communications_protocol"`
 	ReportingInterval        types.Int64  `tfsdk:"reporting_interval"`
 	ReportArchitecture       types.Bool   `tfsdk:"report_architecture"`
@@ -127,6 +128,11 @@ func planDataSourceAttributes() map[string]schema.Attribute {
 		},
 		"analytic_sets": schema.ListAttribute{
 			MarkdownDescription: "Analytic set UUIDs included in this plan. The type is always `Report`.",
+			Computed:            true,
+			ElementType:         types.StringType,
+		},
+		"unified_logging_filter_sets": schema.ListAttribute{
+			MarkdownDescription: "Unified logging filter set UUIDs assigned to this plan.",
 			Computed:            true,
 			ElementType:         types.StringType,
 		},

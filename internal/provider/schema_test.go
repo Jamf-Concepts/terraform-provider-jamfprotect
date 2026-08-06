@@ -26,6 +26,7 @@ import (
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/role"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/telemetry"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/unified_logging_filter"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/unified_logging_filter_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/user"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -410,6 +411,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		"telemetry",
 		"removable_storage_control_set",
 		"analytic_sets",
+		"unified_logging_filter_sets",
 		"report_architecture",
 		"report_hostname",
 		"report_kernel_version",
@@ -1776,8 +1778,8 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 18 {
-		t.Errorf("expected 18 data sources, got %d", len(dataSources))
+	if len(dataSources) != 19 {
+		t.Errorf("expected 19 data sources, got %d", len(dataSources))
 	}
 }
 
@@ -1884,5 +1886,135 @@ func TestProviderActions(t *testing.T) {
 
 	if len(actions) != 2 {
 		t.Errorf("expected 2 actions, got %d", len(actions))
+	}
+}
+
+func TestUnifiedLoggingFilterSetResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := unified_logging_filter_set.NewUnifiedLoggingFilterSetResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "filters"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in unified logging filter set schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in unified logging filter set schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	description, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in unified logging filter set schema")
+	}
+	if !description.IsOptional() || !description.IsComputed() {
+		t.Error("expected 'description' to be optional and computed")
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in unified logging filter set schema")
+	}
+}
+
+func TestUnifiedLoggingFilterSetResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := unified_logging_filter_set.NewUnifiedLoggingFilterSetResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_unified_logging_filter_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_unified_logging_filter_set", resp.TypeName)
+	}
+}
+
+func TestUnifiedLoggingFilterSetsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := unified_logging_filter_set.NewUnifiedLoggingFilterSetsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	setsAttr, ok := resp.Schema.Attributes["unified_logging_filter_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'unified_logging_filter_sets' in data source schema")
+	}
+	if !setsAttr.IsComputed() {
+		t.Error("expected 'unified_logging_filter_sets' to be computed")
+	}
+}
+
+func TestUnifiedLoggingFilterSetsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := unified_logging_filter_set.NewUnifiedLoggingFilterSetsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_unified_logging_filter_sets" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_unified_logging_filter_sets", resp.TypeName)
+	}
+}
+
+func TestUnifiedLoggingFilterSetListResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	lr := unified_logging_filter_set.NewUnifiedLoggingFilterSetListResource()
+	resp := &resource.MetadataResponse{}
+	lr.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_unified_logging_filter_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_unified_logging_filter_set", resp.TypeName)
+	}
+}
+
+func TestPlanResourceSchemaUnifiedLoggingFilterSets(t *testing.T) {
+	t.Parallel()
+
+	r := plan.NewPlanResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	attr, ok := resp.Schema.Attributes["unified_logging_filter_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'unified_logging_filter_sets' in plan schema")
+	}
+	// Optional + Computed is what keeps a plan that omits the attribute from
+	// perpetually diffing against a server-side assignment such as the
+	// migration-created "Default" filter set.
+	if !attr.IsOptional() {
+		t.Error("expected 'unified_logging_filter_sets' to be optional")
+	}
+	if !attr.IsComputed() {
+		t.Error("expected 'unified_logging_filter_sets' to be computed")
 	}
 }

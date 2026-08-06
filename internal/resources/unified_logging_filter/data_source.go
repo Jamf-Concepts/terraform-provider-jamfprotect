@@ -41,6 +41,7 @@ type UnifiedLoggingFilterDataSourceItemModel struct {
 	Filter      types.String `tfsdk:"filter"`
 	Enabled     types.Bool   `tfsdk:"enabled"`
 	Tags        types.List   `tfsdk:"tags"`
+	Sets        types.List   `tfsdk:"sets"`
 	Created     types.String `tfsdk:"created"`
 	Updated     types.String `tfsdk:"updated"`
 }
@@ -77,13 +78,29 @@ func (d *UnifiedLoggingFiltersDataSource) Schema(ctx context.Context, req dataso
 							Computed:            true,
 						},
 						"enabled": schema.BoolAttribute{
-							MarkdownDescription: "Whether the filter is enabled.",
+							MarkdownDescription: "Whether the filter is enabled. Retained for backwards compatibility only — it no longer controls whether the filter reaches endpoints. Delivery is determined by filter set membership plus plan assignment.",
 							Computed:            true,
 						},
 						"tags": schema.ListAttribute{
 							MarkdownDescription: "Tags associated with the filter.",
 							Computed:            true,
 							ElementType:         types.StringType,
+						},
+						"sets": schema.ListNestedAttribute{
+							MarkdownDescription: "Unified logging filter sets that this filter belongs to.",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"uuid": schema.StringAttribute{
+										MarkdownDescription: "The filter set UUID.",
+										Computed:            true,
+									},
+									"name": schema.StringAttribute{
+										MarkdownDescription: "The filter set name.",
+										Computed:            true,
+									},
+								},
+							},
 						},
 						"created": schema.StringAttribute{
 							MarkdownDescription: "The creation timestamp.",
@@ -125,8 +142,12 @@ func (d *UnifiedLoggingFiltersDataSource) Read(ctx context.Context, req datasour
 			Filter:  types.StringValue(api.Filter),
 			Enabled: types.BoolValue(api.Enabled),
 			Tags:    common.StringsToList(api.Tags),
+			Sets:    filterSetsToList(api.Sets, &resp.Diagnostics),
 			Created: types.StringValue(api.Created),
 			Updated: types.StringValue(api.Updated),
+		}
+		if resp.Diagnostics.HasError() {
+			return
 		}
 		if api.Description != "" {
 			item.Description = types.StringValue(api.Description)

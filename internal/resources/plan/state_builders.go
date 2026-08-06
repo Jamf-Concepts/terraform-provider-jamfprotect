@@ -81,6 +81,12 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 	} else {
 		data.AnalyticSets = types.SetNull(types.StringType)
 	}
+	filterSetUUIDs := make([]string, 0, len(api.UnifiedLoggingFilterSets))
+	for _, fs := range api.UnifiedLoggingFilterSets {
+		filterSetUUIDs = append(filterSetUUIDs, fs.UUID)
+	}
+	data.UnifiedLoggingFilterSets = common.StringsToSet(filterSetUUIDs)
+
 	data.AdvancedThreatControls = resolveManagedAnalyticSetState(api.AnalyticSets, advancedThreatControlsName, true, diags)
 	data.TamperPrevention = resolveManagedAnalyticSetState(api.AnalyticSets, tamperPreventionName, false, diags)
 	if api.SignaturesFeedConfig != nil {
@@ -152,6 +158,12 @@ func planAPIToDataSourceItem(api jamfprotect.Plan, diags *diag.Diagnostics) Plan
 	} else {
 		item.AnalyticSets = types.ListNull(types.StringType)
 	}
+
+	filterSetUUIDs := make([]string, 0, len(api.UnifiedLoggingFilterSets))
+	for _, fs := range api.UnifiedLoggingFilterSets {
+		filterSetUUIDs = append(filterSetUUIDs, fs.UUID)
+	}
+	item.UnifiedLoggingFilterSets = common.SortedStringsToList(filterSetUUIDs)
 
 	if api.CommsConfig != nil && api.CommsConfig.Protocol != "" {
 		item.CommunicationsProtocol = types.StringValue(communicationsProtocolFromAPI(api.CommsConfig.Protocol))

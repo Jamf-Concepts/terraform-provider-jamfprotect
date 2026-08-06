@@ -111,6 +111,14 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
+			"unified_logging_filter_sets": schema.SetAttribute{
+				MarkdownDescription: "A set of unified logging filter set UUIDs to assign to this plan. A unified logging filter reaches this plan's endpoints only when it belongs to one of these filter sets.\n\n" +
+					"Leave unset to keep whatever Jamf Protect already has assigned — including the `Default` filter set that Jamf Protect creates automatically for tenants that had unified logging filters enabled before filter sets existed. Set it to `[]` to explicitly assign none.",
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Validators:  []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+			},
 			"communications_protocol": schema.StringAttribute{
 				MarkdownDescription: "The communications protocol to use. Valid options are: " + common.FormatOptions(communicationsProtocolUIOptions) + ". Defaults to `MQTT:443`.",
 				Optional:            true,
