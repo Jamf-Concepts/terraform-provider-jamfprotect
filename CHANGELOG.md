@@ -38,4 +38,4 @@ Note that a pending plan move does not release the old plan: `deletePlan` stays 
 ENHANCEMENTS:
 
 - **List Resources:** Added an opt-in `exclude_builtins` configuration attribute to list resources for resource types that have Jamf-provided built-in / system instances (`jamfprotect_analytic`, `jamfprotect_analytic_set`, `jamfprotect_exception_set`, `jamfprotect_plan`, `jamfprotect_role`, `jamfprotect_action_configuration`, `jamfprotect_group`). It defaults to `false` (all instances, including built-ins, are returned); set it to `true` (in a nested `config {}` block) to exclude built-ins from `terraform query` results — e.g. the Default plan, Full Admin / Read Only roles, Default Analytic Set, Default action configuration, Jamf Managed Default Exceptions, and the Default group. Data sources are unchanged.
-- Bumped Go to 1.26.5.
+- Bumped Go to 1.27.1.
