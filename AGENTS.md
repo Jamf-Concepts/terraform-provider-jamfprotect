@@ -7,7 +7,7 @@ This is a Terraform provider for [Jamf Protect](https://www.jamf.com/products/ja
 ## Tooling
 
 - Use `make` for build, lint, test, and doc generation. See `GNUmakefile` for available targets.
-- Go >= 1.26, Terraform >= 1.0.
+- Go >= 1.27, Terraform >= 1.0.
 
 ### Available make targets
 
