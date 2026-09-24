@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/Jamf-Concepts/jamfprotect-go-sdk v0.8.0
-	github.com/hashicorp/go-uuid v1.0.3
+	github.com/hashicorp/go-uuid v1.0.4
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.7.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
