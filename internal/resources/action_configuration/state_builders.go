@@ -5,6 +5,7 @@ package action_configuration
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -86,6 +87,11 @@ func (r *ActionConfigResource) applyState(ctx context.Context, data *ActionConfi
 		data.AlertDataCollect = types.ObjectNull(alertDataCollectionAttrTypes)
 	}
 
+	validateReportClients(api.Clients, diags)
+	if diags.HasError() {
+		return
+	}
+
 	priorHeaders := priorHTTPHeaders(ctx, data.HTTPEndpoints, diags)
 	if diags.HasError() {
 		return
@@ -126,6 +132,27 @@ func priorHTTPHeaders(ctx context.Context, list types.List, diags *diag.Diagnost
 	return headers
 }
 
+// validateReportClients adds an error for each API report client the endpoint attributes cannot represent: an unknown client type, or more than one client of a type modelled as a single endpoint.
+func validateReportClients(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) {
+	counts := map[string]int{}
+	for _, client := range clients {
+		if _, ok := listEndpointClientAttributes[client.Type]; ok {
+			continue
+		}
+		attrName, ok := singleEndpointClientAttributes[client.Type]
+		if !ok {
+			diags.AddError("Unsupported endpoint type",
+				fmt.Sprintf("%q is not a supported action configuration endpoint type", client.Type))
+			continue
+		}
+		counts[client.Type]++
+		if counts[client.Type] == 2 {
+			diags.AddError("Unsupported endpoint configuration",
+				fmt.Sprintf("The action configuration has more than one %s endpoint, but %s holds only one. Remove the extra endpoint in Jamf Protect before managing this action configuration with Terraform.", client.Type, attrName))
+		}
+	}
+}
+
 // buildHTTPEndpointsState constructs the state for HTTP endpoints from the API clients.
 // priorHeaders holds the prior model's headers, which decide the header values
 // stored; see buildHeadersList.
@@ -136,7 +163,7 @@ func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, priorHeaders ma
 		if client.Type != "Http" {
 			continue
 		}
-		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports, diags)
 		attrs := map[string]attr.Value{
 			"collect_alerts": common.StringsToSet(collectAlerts),
 			"collect_logs":   common.StringsToSet(collectLogs),
@@ -168,7 +195,7 @@ func buildKafkaEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Di
 		if client.Type != "Kafka" {
 			continue
 		}
-		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports, diags)
 		attrs := map[string]attr.Value{
 			"collect_alerts": common.StringsToSet(collectAlerts),
 			"collect_logs":   common.StringsToSet(collectLogs),
@@ -200,7 +227,7 @@ func buildSyslogEndpointsState(clients []jamfprotect.ReportClient, diags *diag.D
 		if client.Type != "Syslog" {
 			continue
 		}
-		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports, diags)
 		attrs := map[string]attr.Value{
 			"collect_alerts": common.StringsToSet(collectAlerts),
 			"collect_logs":   common.StringsToSet(collectLogs),
@@ -229,7 +256,7 @@ func buildLogFileEndpointState(clients []jamfprotect.ReportClient, diags *diag.D
 		if client.Type != "LogFile" {
 			continue
 		}
-		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports, diags)
 		attrs := map[string]attr.Value{
 			"collect_alerts":   common.StringsToSet(collectAlerts),
 			"collect_logs":     common.StringsToSet(collectLogs),
@@ -255,7 +282,7 @@ func buildJamfProtectCloudEndpointState(clients []jamfprotect.ReportClient, diag
 		if client.Type != "JamfCloud" {
 			continue
 		}
-		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
+		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports, diags)
 		attrs := map[string]attr.Value{
 			"collect_alerts":     common.StringsToSet(collectAlerts),
 			"collect_logs":       common.StringsToSet(collectLogs),
@@ -271,8 +298,8 @@ func buildJamfProtectCloudEndpointState(clients []jamfprotect.ReportClient, diag
 	return types.ObjectNull(jamfProtectCloudEndpointBlockAttrTypes)
 }
 
-// splitSupportedReports takes a list of API supported report types and splits them into separate lists for alerts and logs.
-func splitSupportedReports(reports []string) ([]string, []string) {
+// splitSupportedReports takes a list of API supported report types and splits them into separate lists for alerts and logs, adding an error for any report type it cannot map.
+func splitSupportedReports(reports []string, diags *diag.Diagnostics) ([]string, []string) {
 	alerts := []string{}
 	logs := []string{}
 	for _, report := range reports {
@@ -289,6 +316,9 @@ func splitSupportedReports(reports []string) ([]string, []string) {
 			logs = append(logs, "telemetry")
 		case "UnifiedLogging":
 			logs = append(logs, "unified_logs")
+		default:
+			diags.AddError("Unsupported report type",
+				fmt.Sprintf("%q is not a supported action configuration report type", report))
 		}
 	}
 	return alerts, logs
