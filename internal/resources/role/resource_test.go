@@ -120,6 +120,41 @@ func TestAccRoleResource_loneExceptionDrift(t *testing.T) {
 	})
 }
 
+// TestAccRoleResource_rbacResourceLabels verifies that the Data Loss Prevention
+// Policies, Endpoint Security Exceptions, Packages, Unified Logging Filter Sets
+// and Uninstaller Tokens permissions can be granted and round-trip with no diff.
+func TestAccRoleResource_rbacResourceLabels(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-role-rbac")
+	resourceName := "jamfprotect_role.test"
+	permissions := []string{"Data Loss Prevention Policies", "Endpoint Security Exceptions", "Packages", "Unified Logging Filter Sets", "Uninstaller Tokens"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccRoleCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleResourceConfig(rName, permissions, permissions),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "read_permissions.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "write_permissions.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "write_permissions.*", "Unified Logging Filter Sets"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // testAccGrantLoneException adds the Exception permission, without Exception
 // Sets, to a role's read and write lists through the SDK.
 func testAccGrantLoneException(t *testing.T, roleID, name string) {

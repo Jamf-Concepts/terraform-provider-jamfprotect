@@ -38,6 +38,11 @@ var rolePermissionLabelToAPI = map[string]string{
 	"Account Information":            "Organization",
 	"Audit Logs":                     "AuditLog",
 	"Endpoint Threat Prevention":     "ThreatPreventionVersion",
+	"Data Loss Prevention Policies":  "DLPPolicy",
+	"Endpoint Security Exceptions":   "EsException",
+	"Packages":                       "Package",
+	"Unified Logging Filter Sets":    "UnifiedLoggingFilterSet",
+	"Uninstaller Tokens":             "UninstallerToken",
 }
 
 // rolePermissionAPIToLabel maps API permission values to friendly names.
@@ -67,6 +72,11 @@ var rolePermissionAPIToLabel = map[string]string{
 	"Organization":            "Account Information",
 	"AuditLog":                "Audit Logs",
 	"ThreatPreventionVersion": "Endpoint Threat Prevention",
+	"DLPPolicy":               "Data Loss Prevention Policies",
+	"EsException":             "Endpoint Security Exceptions",
+	"Package":                 "Packages",
+	"UnifiedLoggingFilterSet": "Unified Logging Filter Sets",
+	"UninstallerToken":        "Uninstaller Tokens",
 }
 
 // rolePermissionDependencies defines read dependencies between permissions.
@@ -93,14 +103,19 @@ var rolePermissionWriteOptions = []string{
 	"Compliance",
 	"Computers",
 	"Data Forwarding",
+	"Data Loss Prevention Policies",
 	"Data Retention",
 	"Downloads",
+	"Endpoint Security Exceptions",
 	"Exception Sets",
+	"Packages",
 	"Plans",
 	"Prevent Lists",
 	"Removable Storage Control Sets",
 	"Telemetry",
 	"Unified Logging",
+	"Unified Logging Filter Sets",
+	"Uninstaller Tokens",
 }
 
 // rolePermissionReadOptions lists all available read permission options for documentation.
@@ -119,14 +134,19 @@ var rolePermissionReadOptions = []string{
 	"Compliance",
 	"Computers",
 	"Data Forwarding",
+	"Data Loss Prevention Policies",
 	"Data Retention",
 	"Downloads",
+	"Endpoint Security Exceptions",
 	"Exception Sets",
+	"Packages",
 	"Plans",
 	"Prevent Lists",
 	"Removable Storage Control Sets",
 	"Telemetry",
 	"Unified Logging",
+	"Unified Logging Filter Sets",
+	"Uninstaller Tokens",
 	"Account Information",
 	"Audit Logs",
 	"Endpoint Threat Prevention",
