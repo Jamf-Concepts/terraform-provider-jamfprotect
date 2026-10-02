@@ -21,7 +21,7 @@ func (r *AnalyticResource) applyState(_ context.Context, data *AnalyticResourceM
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.SensorType = types.StringValue(mapSensorTypeAPIToUI(api.InputType, diags))
-	data.Filter = types.StringValue(normalizeFilterValue(api.Filter))
+	data.Filter = types.StringValue(api.Filter)
 	data.Level = types.Int64Value(api.Level)
 	data.Severity = types.StringValue(api.Severity)
 	data.Created = types.StringValue(api.Created)

@@ -5,7 +5,6 @@ package analytic
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -79,12 +78,4 @@ func mapSensorTypeAPIToUI(value string, diags *diag.Diagnostics) string {
 		fmt.Sprintf("%q is not a supported sensor type", value),
 	)
 	return value
-}
-
-// normalizeFilterValue normalizes the filter value by replacing double backslashes with single backslashes, which is necessary to handle Terraform's escaping of backslashes in strings. If the value is empty, it returns it as-is.
-func normalizeFilterValue(value string) string {
-	if value == "" {
-		return value
-	}
-	return strings.ReplaceAll(value, "\\\\", "\\")
 }
