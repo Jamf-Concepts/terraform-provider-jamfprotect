@@ -23,7 +23,7 @@ resource "jamfprotect_action_configuration" "security_enrichment" {
 
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle"]
-    download_event_included_data_attributes        = ["File", "Downloaded From"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Is Quarantined", "Signing Information"]
     file_system_event_included_data_attributes     = ["File", "Process", "User"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process"]
@@ -53,7 +53,7 @@ resource "jamfprotect_plan" "high_security" {
   auto_update = true
 
   # Communication protocol
-  communications_protocol = "mqtt"
+  communications_protocol = "MQTT:443"
 
   # Reporting settings
   reporting_interval   = 720 # 12 hours
@@ -62,9 +62,9 @@ resource "jamfprotect_plan" "high_security" {
   report_serial_number = true
 
   # Threat prevention settings - Block mode
-  endpoint_threat_prevention = "BlockAndReport"
-  advanced_threat_controls   = "BlockAndReport"
-  tamper_prevention          = "BlockAndReport"
+  endpoint_threat_prevention = "Block and report"
+  advanced_threat_controls   = "Block and report"
+  tamper_prevention          = "Block and report"
 }
 
 # Example: Plan with Report-Only Mode
@@ -105,17 +105,17 @@ resource "jamfprotect_plan" "monitoring_only" {
 
   auto_update = true
 
-  communications_protocol = "mqtt"
+  communications_protocol = "MQTT:443"
 
   reporting_interval   = 1440 # 24 hours
   report_architecture  = false
   report_hostname      = true
   report_serial_number = false
 
-  # All threat prevention in report-only mode
-  endpoint_threat_prevention = "ReportOnly"
-  advanced_threat_controls   = "ReportOnly"
-  tamper_prevention          = "ReportOnly"
+  # Report-only threat prevention. Tamper prevention has no report-only mode.
+  endpoint_threat_prevention = "Report only"
+  advanced_threat_controls   = "Report only"
+  tamper_prevention          = "Disable"
 }
 ```
 

@@ -45,3 +45,4 @@ BUG FIXES:
 
 - `jamfprotect_plan`: a configuration that omits `exception_sets` or `analytic_sets` now keeps the plan's current membership when another attribute changes; previously, sets attached outside Terraform were detached. Setting either attribute to `[]` now clears it instead of failing with an inconsistent result.
 - `jamfprotect_plan`: `advanced_threat_controls` and `tamper_prevention` now identify the Jamf-managed analytic sets by the API's managed flag, so a custom analytic set with the same name is reported in `analytic_sets` instead of being treated as the managed set.
+- `jamfprotect_plan`: the documentation example now uses valid values for `endpoint_threat_prevention`, `advanced_threat_controls`, `tamper_prevention` and `communications_protocol`.
