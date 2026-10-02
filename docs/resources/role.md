@@ -27,12 +27,12 @@ resource "jamfprotect_role" "basic" {
 ### Required
 
 - `name` (String) The name of the role.
-- `read_permissions` (Set of String) Read permissions for the role. Use `all` for full read access. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Retention`, `Downloads`, `Exception Sets`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`, `Account Information`, `Audit Logs`, `Endpoint Threat Prevention`.
+- `read_permissions` (Set of String) Read permissions for the role. Use `all` for full read access. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Loss Prevention Policies`, `Data Retention`, `Downloads`, `Endpoint Security Exceptions`, `Exception Sets`, `Packages`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`, `Unified Logging Filter Sets`, `Uninstaller Tokens`, `Account Information`, `Audit Logs`, `Endpoint Threat Prevention`.
 
 ### Optional
 
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
-- `write_permissions` (Set of String) Write permissions for the role. Write permissions must also be present in read permissions. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Retention`, `Downloads`, `Exception Sets`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`.
+- `write_permissions` (Set of String) Write permissions for the role. Write permissions must also be present in read permissions. Available permissions include `All`, `Account Groups & Mappings`, `Account Identity Providers`, `Account Roles`, `Account Users`, `Actions`, `Alerts`, `Analytic Sets`, `Analytics`, `API Clients`, `Change Management`, `Compliance`, `Computers`, `Data Forwarding`, `Data Loss Prevention Policies`, `Data Retention`, `Downloads`, `Endpoint Security Exceptions`, `Exception Sets`, `Packages`, `Plans`, `Prevent Lists`, `Removable Storage Control Sets`, `Telemetry`, `Unified Logging`, `Unified Logging Filter Sets`, `Uninstaller Tokens`.
 
 ### Read-Only
 
