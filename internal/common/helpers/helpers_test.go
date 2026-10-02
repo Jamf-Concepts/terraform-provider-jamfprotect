@@ -139,6 +139,52 @@ func TestStringsToListRoundTrip(t *testing.T) {
 	}
 }
 
+func TestStringsToSetOrNull(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		prior    types.Set
+		vals     []string
+		expected types.Set
+	}{
+		{
+			name:     "empty with null prior stays null",
+			prior:    types.SetNull(types.StringType),
+			vals:     nil,
+			expected: types.SetNull(types.StringType),
+		},
+		{
+			name:     "empty with empty prior is empty set",
+			prior:    types.SetValueMust(types.StringType, []attr.Value{}),
+			vals:     []string{},
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		{
+			name:     "empty with unknown prior is empty set",
+			prior:    types.SetUnknown(types.StringType),
+			vals:     nil,
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		{
+			name:     "values with null prior",
+			prior:    types.SetNull(types.StringType),
+			vals:     []string{"a", "b"},
+			expected: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := StringsToSetOrNull(tt.prior, tt.vals)
+			if !got.Equal(tt.expected) {
+				t.Errorf("StringsToSetOrNull() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestIsNotFoundError(t *testing.T) {
 	t.Parallel()
 

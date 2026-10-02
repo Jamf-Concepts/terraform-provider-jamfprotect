@@ -89,6 +89,17 @@ func StringsToSet(vals []string) types.Set {
 	return types.SetValueMust(types.StringType, elems)
 }
 
+// StringsToSetOrNull converts a Go []string into a types.Set of strings, returning
+// null rather than an empty set when vals is empty and prior is null. State builders
+// use it so that an attribute omitted from configuration and one set to [] each read
+// back the way they were written.
+func StringsToSetOrNull(prior types.Set, vals []string) types.Set {
+	if len(vals) == 0 && prior.IsNull() {
+		return types.SetNull(types.StringType)
+	}
+	return StringsToSet(vals)
+}
+
 // IsNotFoundError returns true if the error indicates the resource was not found.
 // This is used to make Delete idempotent — if the resource is already gone, the
 // delete is considered successful.
