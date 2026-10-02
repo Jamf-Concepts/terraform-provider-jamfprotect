@@ -24,6 +24,7 @@ type AnalyticResourceModel struct {
 	SnapshotFiles               types.Set      `tfsdk:"snapshot_files"`
 	AddToJamfProSmartGroup      types.Bool     `tfsdk:"add_to_jamf_pro_smart_group"`
 	JamfProSmartGroupIdentifier types.String   `tfsdk:"jamf_pro_smart_group_identifier"`
+	AnalyticActions             types.List     `tfsdk:"analytic_actions"`
 	TenantActions               types.Set      `tfsdk:"tenant_actions"`
 	TenantSeverity              types.String   `tfsdk:"tenant_severity"`
 	ContextItem                 types.Set      `tfsdk:"context_item"`
@@ -31,6 +32,12 @@ type AnalyticResourceModel struct {
 	Jamf                        types.Bool     `tfsdk:"jamf"`
 	Remediation                 types.String   `tfsdk:"remediation"`
 	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
+}
+
+// analyticActionModel maps an analytic action as stored in analytic_actions.
+type analyticActionModel struct {
+	Name       types.String `tfsdk:"name"`
+	Parameters types.Map    `tfsdk:"parameters"`
 }
 
 // analyticContextModel maps AnalyticContextInput / response.

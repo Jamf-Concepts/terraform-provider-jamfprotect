@@ -6,13 +6,17 @@ package analytic_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
 
@@ -290,4 +294,132 @@ resource "jamfprotect_analytic" "test" {
   context_item                = []
 }
 `, name, filter)
+}
+
+// testAccConsoleAnalyticActions are actions an analytic can carry when it is edited outside
+// Terraform; only the SmartGroup entry maps to resource attributes.
+var testAccConsoleAnalyticActions = []jamfprotect.AnalyticActionInput{
+	{Name: "Report", Parameters: "{}"},
+	{Name: "SmartGroup", Parameters: `{"id":"tf-acc-group"}`},
+	{Name: "Webhook", Parameters: `{"url":"https://example.invalid/hook"}`},
+}
+
+// testAccCreateAnalyticWithConsoleActions creates a custom analytic through the SDK carrying
+// testAccConsoleAnalyticActions and removes it when the test ends.
+func testAccCreateAnalyticWithConsoleActions(t *testing.T, c *jamfprotect.Client, name string) string {
+	t.Helper()
+	created, err := c.CreateAnalytic(context.Background(), jamfprotect.AnalyticInput{
+		Name:            name,
+		InputType:       "GPFSEvent",
+		Description:     "Analytic with console actions",
+		Filter:          "( $event.type == Filter )",
+		Level:           0,
+		Severity:        "Informational",
+		Tags:            []string{"terraform-test"},
+		Categories:      []string{"Testing"},
+		SnapshotFiles:   []string{},
+		Context:         []jamfprotect.AnalyticContextInput{},
+		AnalyticActions: testAccConsoleAnalyticActions,
+	})
+	if err != nil {
+		t.Fatalf("creating analytic: %s", err)
+	}
+	t.Cleanup(func() {
+		if a, err := c.GetAnalytic(context.Background(), created.UUID); err == nil && a != nil {
+			if err := c.DeleteAnalytic(context.Background(), created.UUID); err != nil {
+				t.Errorf("deleting analytic %s: %s", created.UUID, err)
+			}
+		}
+	})
+	return created.UUID
+}
+
+// testAccCheckAnalyticActionNames verifies the action names stored on the server, in order.
+func testAccCheckAnalyticActionNames(c *jamfprotect.Client, uuid string, want ...string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		a, err := c.GetAnalytic(context.Background(), uuid)
+		if err != nil {
+			return fmt.Errorf("reading analytic %s: %w", uuid, err)
+		}
+		if a == nil {
+			return fmt.Errorf("analytic %s not found", uuid)
+		}
+		got := make([]string, 0, len(a.AnalyticActions))
+		for _, action := range a.AnalyticActions {
+			got = append(got, action.Name)
+		}
+		if fmt.Sprint(got) != fmt.Sprint(want) {
+			return fmt.Errorf("server analyticActions: expected %v, got %v", want, got)
+		}
+		return nil
+	}
+}
+
+func TestAccAnalyticResource_preservesConsoleActions(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("acceptance test; set TF_ACC=1 to run")
+	}
+	testutil.TestAccPreCheck(t)
+
+	c := testutil.TestAccClient()
+	rName := acctest.RandomWithPrefix("tf-acc-analytic")
+	uuid := testAccCreateAnalyticWithConsoleActions(t, c, rName)
+	resourceName := "jamfprotect_analytic.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccAnalyticCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccAnalyticResourceConfigWithConsoleActions(rName, "Analytic with console actions"),
+				ResourceName:       resourceName,
+				ImportState:        true,
+				ImportStateId:      uuid,
+				ImportStatePersist: true,
+			},
+			{
+				Config: testAccAnalyticResourceConfigWithConsoleActions(rName, "Description changed by Terraform"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("analytic_actions"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{"name": knownvalue.StringExact("Report")}),
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{"name": knownvalue.StringExact("SmartGroup")}),
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{"name": knownvalue.StringExact("Webhook")}),
+						})),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", "Description changed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "analytic_actions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "analytic_actions.2.parameters.url", "https://example.invalid/hook"),
+					testAccCheckAnalyticActionNames(c, uuid, "Report", "SmartGroup", "Webhook"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAnalyticResourceConfigWithConsoleActions(name, description string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_analytic" "test" {
+  name        = %[1]q
+  sensor_type = "File System Event"
+  description = %[2]q
+  filter      = "( $event.type == Filter )"
+  level       = 0
+  severity    = "Informational"
+
+  tags           = ["terraform-test"]
+  categories     = ["Testing"]
+  snapshot_files = []
+
+  add_to_jamf_pro_smart_group     = true
+  jamf_pro_smart_group_identifier = "tf-acc-group"
+  context_item                    = []
+}
+`, name, description)
 }

@@ -52,6 +52,7 @@ type AnalyticDataSourceItemModel struct {
 	SnapshotFiles               types.List   `tfsdk:"snapshot_files"`
 	AddToJamfProSmartGroup      types.Bool   `tfsdk:"add_to_jamf_pro_smart_group"`
 	JamfProSmartGroupIdentifier types.String `tfsdk:"jamf_pro_smart_group_identifier"`
+	AnalyticActions             types.List   `tfsdk:"analytic_actions"`
 	TenantActions               types.Set    `tfsdk:"tenant_actions"`
 	TenantSeverity              types.String `tfsdk:"tenant_severity"`
 	ContextItem                 types.Set    `tfsdk:"context_item"`
@@ -140,6 +141,23 @@ func analyticDataSourceAttributes() map[string]schema.Attribute {
 		"jamf_pro_smart_group_identifier": schema.StringAttribute{
 			MarkdownDescription: "Identifier for the Jamf Pro extension attribute.",
 			Computed:            true,
+		},
+		"analytic_actions": schema.ListNestedAttribute{
+			MarkdownDescription: "The actions stored on the analytic, in the order Jamf Protect returns them.",
+			Computed:            true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"name": schema.StringAttribute{
+						MarkdownDescription: "The action name.",
+						Computed:            true,
+					},
+					"parameters": schema.MapAttribute{
+						MarkdownDescription: "Key-value parameters for the action. Values that are not strings in the API are shown as JSON text.",
+						Computed:            true,
+						ElementType:         types.StringType,
+					},
+				},
+			},
 		},
 		"tenant_actions": schema.SetNestedAttribute{
 			MarkdownDescription: "Tenant-level action overrides (Jamf-managed analytics).",
@@ -286,6 +304,7 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 		break
 	}
 
+	item.AnalyticActions = apiAnalyticActionsToList(api.AnalyticActions, diags)
 	item.TenantActions = apiActionsToSet(api.TenantActions, true, diags)
 
 	if api.TenantSeverity != "" {
