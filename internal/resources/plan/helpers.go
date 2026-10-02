@@ -6,6 +6,7 @@ package plan
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -85,7 +86,8 @@ func modeToEndpointThreatPrevention(mode string) (string, bool) {
 	}
 }
 
-// resolveManagedAnalyticSetUUIDs loads managed analytic set UUIDs by name.
+// resolveManagedAnalyticSetUUIDs loads the UUIDs of the Jamf-managed Advanced Threat
+// Controls and Tamper Prevention analytic sets.
 func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags *diag.Diagnostics) map[string]string {
 	sets, err := r.client.ListAnalyticSets(ctx)
 	if err != nil {
@@ -93,19 +95,33 @@ func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags
 		return nil
 	}
 
-	uuids := map[string]string{}
+	return managedAnalyticSetUUIDs(sets, diags)
+}
+
+// managedAnalyticSetUUIDs picks the UUID of each Jamf-managed analytic set by name.
+// Only sets the API flags as managed are candidates, so a custom set that shares a
+// managed set's name is never selected. Zero or several candidates for a name is an
+// error.
+func managedAnalyticSetUUIDs(sets []jamfprotect.AnalyticSet, diags *diag.Diagnostics) map[string]string {
+	candidates := map[string][]string{}
 	for _, set := range sets {
-		switch set.Name {
-		case advancedThreatControlsName:
-			uuids[advancedThreatControlsName] = set.UUID
-		case tamperPreventionName:
-			uuids[tamperPreventionName] = set.UUID
+		if set.Managed && isManagedAnalyticSetName(set.Name) {
+			candidates[set.Name] = append(candidates[set.Name], set.UUID)
 		}
 	}
 
+	uuids := map[string]string{}
 	for _, name := range []string{advancedThreatControlsName, tamperPreventionName} {
-		if uuids[name] == "" {
-			diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected analytic set named %q.", name))
+		switch len(candidates[name]) {
+		case 0:
+			diags.AddError("Managed analytic set not found", fmt.Sprintf("Expected a Jamf-managed analytic set named %q.", name))
+		case 1:
+			uuids[name] = candidates[name][0]
+		default:
+			diags.AddError(
+				"Ambiguous managed analytic set",
+				fmt.Sprintf("Found %d Jamf-managed analytic sets named %q: %s.", len(candidates[name]), name, strings.Join(candidates[name], ", ")),
+			)
 		}
 	}
 
@@ -114,6 +130,12 @@ func (r *PlanResource) resolveManagedAnalyticSetUUIDs(ctx context.Context, diags
 	}
 
 	return uuids
+}
+
+// isManagedAnalyticSetName reports whether name is the name of one of the Jamf-managed
+// analytic sets exposed through advanced_threat_controls and tamper_prevention.
+func isManagedAnalyticSetName(name string) bool {
+	return name == advancedThreatControlsName || name == tamperPreventionName
 }
 
 // filterManagedAnalyticSets removes managed analytic sets from the plan input.
@@ -169,10 +191,11 @@ func tamperPreventionToType(value string) (string, bool) {
 	}
 }
 
-// resolveManagedAnalyticSetState maps managed analytic sets to UI values.
+// resolveManagedAnalyticSetState maps the Jamf-managed analytic set with the given name
+// to its UI value. Custom sets that share the name are ignored.
 func resolveManagedAnalyticSetState(sets []jamfprotect.PlanAnalyticSet, name string, allowReport bool, diags *diag.Diagnostics) types.String {
 	for _, set := range sets {
-		if set.AnalyticSet.Name != name {
+		if !set.AnalyticSet.Managed || set.AnalyticSet.Name != name {
 			continue
 		}
 		switch set.Type {
@@ -197,7 +220,8 @@ func resolveManagedAnalyticSetState(sets []jamfprotect.PlanAnalyticSet, name str
 	return types.StringValue("Disable")
 }
 
-// filterManagedAnalyticSetEntries drops managed sets from the API list.
+// filterManagedAnalyticSetEntries drops the Jamf-managed Advanced Threat Controls and
+// Tamper Prevention sets from the API list. Custom sets that share their names are kept.
 func filterManagedAnalyticSetEntries(sets []jamfprotect.PlanAnalyticSet) []jamfprotect.PlanAnalyticSet {
 	if len(sets) == 0 {
 		return nil
@@ -205,7 +229,7 @@ func filterManagedAnalyticSetEntries(sets []jamfprotect.PlanAnalyticSet) []jamfp
 
 	filtered := make([]jamfprotect.PlanAnalyticSet, 0, len(sets))
 	for _, set := range sets {
-		if set.AnalyticSet.Name == advancedThreatControlsName || set.AnalyticSet.Name == tamperPreventionName {
+		if set.AnalyticSet.Managed && isManagedAnalyticSetName(set.AnalyticSet.Name) {
 			continue
 		}
 		filtered = append(filtered, set)

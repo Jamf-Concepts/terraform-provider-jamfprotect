@@ -75,3 +75,31 @@ func TestApiToState_MembershipReadFromAPI(t *testing.T) {
 		t.Errorf("AdvancedThreatControls = %q, want %q", got, "Block and report")
 	}
 }
+
+func TestApiToState_CustomSetWithManagedNameIsNotManaged(t *testing.T) {
+	t.Parallel()
+
+	api := jamfprotect.Plan{
+		ID: "1",
+		AnalyticSets: []jamfprotect.PlanAnalyticSet{
+			{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: testCustomUUID, Name: advancedThreatControlsName}},
+			{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: testTPUUID, Name: tamperPreventionName, Managed: true}},
+		},
+	}
+	data := PlanResourceModel{ExceptionSets: types.SetNull(types.StringType), AnalyticSets: types.SetNull(types.StringType)}
+	var diags diag.Diagnostics
+	(&PlanResource{}).apiToState(context.Background(), &data, api, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	want := types.SetValueMust(types.StringType, []attr.Value{types.StringValue(testCustomUUID)})
+	if !data.AnalyticSets.Equal(want) {
+		t.Errorf("AnalyticSets = %v, want %v", data.AnalyticSets, want)
+	}
+	if got := data.AdvancedThreatControls.ValueString(); got != "Disable" {
+		t.Errorf("AdvancedThreatControls = %q, want %q", got, "Disable")
+	}
+	if got := data.TamperPrevention.ValueString(); got != "Block and report" {
+		t.Errorf("TamperPrevention = %q, want %q", got, "Block and report")
+	}
+}

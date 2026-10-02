@@ -286,9 +286,9 @@ func TestFilterManagedAnalyticSetEntries_RemovesManagedSets(t *testing.T) {
 	t.Parallel()
 
 	sets := []jamfprotect.PlanAnalyticSet{
-		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "uuid-1", Name: advancedThreatControlsName}},
+		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "uuid-1", Name: advancedThreatControlsName, Managed: true}},
 		{Type: "Report", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "uuid-2", Name: "Custom Analytics"}},
-		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "uuid-3", Name: tamperPreventionName}},
+		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "uuid-3", Name: tamperPreventionName, Managed: true}},
 	}
 
 	result := filterManagedAnalyticSetEntries(sets)
@@ -329,5 +329,131 @@ func TestFilterManagedAnalyticSetEntries_NoManaged(t *testing.T) {
 
 	if len(result) != 2 {
 		t.Fatalf("filterManagedAnalyticSetEntries returned %d entries, want 2", len(result))
+	}
+}
+
+// TestFilterManagedAnalyticSetEntries_KeepsCustomSetsWithManagedNames verifies a custom
+// set named like a managed set stays in the list.
+func TestFilterManagedAnalyticSetEntries_KeepsCustomSetsWithManagedNames(t *testing.T) {
+	t.Parallel()
+
+	sets := []jamfprotect.PlanAnalyticSet{
+		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "managed-atc", Name: advancedThreatControlsName, Managed: true}},
+		{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "custom-atc", Name: advancedThreatControlsName}},
+		{Type: "Report", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "custom-tp", Name: tamperPreventionName}},
+	}
+
+	result := filterManagedAnalyticSetEntries(sets)
+
+	if len(result) != 2 {
+		t.Fatalf("filterManagedAnalyticSetEntries returned %d entries, want 2", len(result))
+	}
+	if result[0].AnalyticSet.UUID != "custom-atc" || result[1].AnalyticSet.UUID != "custom-tp" {
+		t.Errorf("expected custom-atc and custom-tp to remain, got %v", result)
+	}
+}
+
+// TestResolveManagedAnalyticSetState_IgnoresCustomSetsWithManagedNames verifies only the
+// managed set drives advanced_threat_controls and tamper_prevention.
+func TestResolveManagedAnalyticSetState_IgnoresCustomSetsWithManagedNames(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		sets     []jamfprotect.PlanAnalyticSet
+		expected string
+	}{
+		{
+			name: "custom set only reads as disabled",
+			sets: []jamfprotect.PlanAnalyticSet{
+				{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "custom-atc", Name: advancedThreatControlsName}},
+			},
+			expected: "Disable",
+		},
+		{
+			name: "managed set is used alongside a custom set",
+			sets: []jamfprotect.PlanAnalyticSet{
+				{Type: "Prevent", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "custom-atc", Name: advancedThreatControlsName}},
+				{Type: "Report", AnalyticSet: jamfprotect.PlanAnalyticSetRef{UUID: "managed-atc", Name: advancedThreatControlsName, Managed: true}},
+			},
+			expected: "Report only",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var diags diag.Diagnostics
+			got := resolveManagedAnalyticSetState(tt.sets, advancedThreatControlsName, true, &diags)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if got.ValueString() != tt.expected {
+				t.Errorf("resolveManagedAnalyticSetState() = %q, want %q", got.ValueString(), tt.expected)
+			}
+		})
+	}
+}
+
+// TestManagedAnalyticSetUUIDs_IgnoresCustomSetsWithManagedNames verifies custom sets that
+// share a managed set's name are never selected, whatever their position in the list.
+func TestManagedAnalyticSetUUIDs_IgnoresCustomSetsWithManagedNames(t *testing.T) {
+	t.Parallel()
+
+	managedATC := jamfprotect.AnalyticSet{UUID: "managed-atc", Name: advancedThreatControlsName, Managed: true}
+	managedTP := jamfprotect.AnalyticSet{UUID: "managed-tp", Name: tamperPreventionName, Managed: true}
+	customATC := jamfprotect.AnalyticSet{UUID: "custom-atc", Name: advancedThreatControlsName}
+	customTP := jamfprotect.AnalyticSet{UUID: "custom-tp", Name: tamperPreventionName}
+
+	orders := map[string][]jamfprotect.AnalyticSet{
+		"custom first": {customATC, customTP, managedATC, managedTP},
+		"custom last":  {managedATC, managedTP, customATC, customTP},
+	}
+
+	for name, sets := range orders {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			var diags diag.Diagnostics
+			uuids := managedAnalyticSetUUIDs(sets, &diags)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if uuids[advancedThreatControlsName] != "managed-atc" {
+				t.Errorf("Advanced Threat Controls UUID = %q, want managed-atc", uuids[advancedThreatControlsName])
+			}
+			if uuids[tamperPreventionName] != "managed-tp" {
+				t.Errorf("Tamper Prevention UUID = %q, want managed-tp", uuids[tamperPreventionName])
+			}
+		})
+	}
+}
+
+// TestManagedAnalyticSetUUIDs_Errors verifies a missing or duplicated managed set is an error.
+func TestManagedAnalyticSetUUIDs_Errors(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string][]jamfprotect.AnalyticSet{
+		"only custom sets": {
+			{UUID: "custom-atc", Name: advancedThreatControlsName},
+			{UUID: "custom-tp", Name: tamperPreventionName},
+		},
+		"two managed sets with one name": {
+			{UUID: "managed-atc-1", Name: advancedThreatControlsName, Managed: true},
+			{UUID: "managed-atc-2", Name: advancedThreatControlsName, Managed: true},
+			{UUID: "managed-tp", Name: tamperPreventionName, Managed: true},
+		},
+	}
+
+	for name, sets := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			var diags diag.Diagnostics
+			if uuids := managedAnalyticSetUUIDs(sets, &diags); uuids != nil {
+				t.Errorf("managedAnalyticSetUUIDs() = %v, want nil", uuids)
+			}
+			if !diags.HasError() {
+				t.Error("expected an error diagnostic")
+			}
+		})
 	}
 }
