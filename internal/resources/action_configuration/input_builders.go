@@ -14,9 +14,51 @@ import (
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+// headerPosition identifies an HTTP header by the index of its HTTP endpoint
+// and its index within that endpoint's headers list.
+type headerPosition struct {
+	endpoint int
+	header   int
+}
+
+// httpHeaderWriteOnlyValues reads the write-only header values from the
+// request config, keyed by position. Write-only values are absent from the
+// plan, so Create and Update must read them from the config.
+func httpHeaderWriteOnlyValues(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) map[headerPosition]string {
+	var list types.List
+	diags.Append(config.GetAttribute(ctx, path.Root("http_endpoints"), &list)...)
+	if diags.HasError() || list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+	var endpoints []httpEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() {
+		return nil
+	}
+	values := map[headerPosition]string{}
+	for i, endpoint := range endpoints {
+		if endpoint.Headers.IsNull() || endpoint.Headers.IsUnknown() {
+			continue
+		}
+		var headers []endpointHeaderModel
+		diags.Append(endpoint.Headers.ElementsAs(ctx, &headers, false)...)
+		if diags.HasError() {
+			return nil
+		}
+		for j, h := range headers {
+			if common.IsKnownString(h.ValueWO) {
+				values[headerPosition{endpoint: i, header: j}] = h.ValueWO.ValueString()
+			}
+		}
+	}
+	return values
+}
 
 // extractEventTypeAttributes returns the included data attributes set for the given event type.
 func extractEventTypeAttributes(tfName string, dataModel alertDataCollectionModel) types.Set {
@@ -176,7 +218,9 @@ func mergeExtendedDataAttributes(tfName string, attrs []string, related []string
 }
 
 // buildInput constructs an ActionConfigInput from the given resource data.
-func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) *jamfprotect.ActionConfigInput {
+// woHeaders holds write-only HTTP header values read from the request config;
+// each takes the place of the plaintext value at the same position.
+func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfigResourceModel, woHeaders map[headerPosition]string, diags *diag.Diagnostics) *jamfprotect.ActionConfigInput {
 	input := &jamfprotect.ActionConfigInput{
 		Name: data.Name.ValueString(),
 	}
@@ -210,7 +254,7 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 		"data": apiData,
 	}
 
-	clients := r.buildClients(ctx, data, diags)
+	clients := r.buildClients(ctx, data, woHeaders, diags)
 	if diags.HasError() {
 		return nil
 	}
@@ -221,10 +265,10 @@ func (r *ActionConfigResource) buildInput(ctx context.Context, data ActionConfig
 }
 
 // buildClients constructs a list of client configurations from the given resource data.
-func (r *ActionConfigResource) buildClients(ctx context.Context, data ActionConfigResourceModel, diags *diag.Diagnostics) []map[string]any {
+func (r *ActionConfigResource) buildClients(ctx context.Context, data ActionConfigResourceModel, woHeaders map[headerPosition]string, diags *diag.Diagnostics) []map[string]any {
 	clients := []map[string]any{}
 
-	clients = append(clients, buildHTTPEndpointClients(ctx, data.HTTPEndpoints, diags)...)
+	clients = append(clients, buildHTTPEndpointClients(ctx, data.HTTPEndpoints, woHeaders, diags)...)
 	clients = append(clients, buildKafkaEndpointClients(ctx, data.KafkaEndpoints, diags)...)
 	clients = append(clients, buildSyslogEndpointClients(ctx, data.SyslogEndpoints, diags)...)
 	if client := buildLogFileEndpointClient(ctx, data.LogFileEndpoint, diags); client != nil {
@@ -272,7 +316,7 @@ func defaultNonHTTPBatchConfig() map[string]any {
 }
 
 // buildHTTPEndpointClients constructs client configurations for HTTP endpoints from the given resource data.
-func buildHTTPEndpointClients(ctx context.Context, list types.List, diags *diag.Diagnostics) []map[string]any {
+func buildHTTPEndpointClients(ctx context.Context, list types.List, woHeaders map[headerPosition]string, diags *diag.Diagnostics) []map[string]any {
 	clients := []map[string]any{}
 	if list.IsNull() || list.IsUnknown() {
 		return clients
@@ -282,8 +326,8 @@ func buildHTTPEndpointClients(ctx context.Context, list types.List, diags *diag.
 	if diags.HasError() {
 		return clients
 	}
-	for _, endpoint := range endpoints {
-		params := buildHTTPParams(ctx, endpoint, diags)
+	for i, endpoint := range endpoints {
+		params := buildHTTPParams(ctx, i, endpoint, woHeaders, diags)
 		if diags.HasError() {
 			return clients
 		}
@@ -423,7 +467,7 @@ func buildHTTPBatchConfig(endpoint httpEndpointBlockModel) map[string]any {
 }
 
 // buildHTTPParams constructs the parameters for an HTTP endpoint client from the given resource data.
-func buildHTTPParams(ctx context.Context, endpoint httpEndpointBlockModel, diags *diag.Diagnostics) map[string]any {
+func buildHTTPParams(ctx context.Context, index int, endpoint httpEndpointBlockModel, woHeaders map[headerPosition]string, diags *diag.Diagnostics) map[string]any {
 	params := map[string]any{}
 	if !endpoint.URL.IsNull() && !endpoint.URL.IsUnknown() {
 		params["url"] = endpoint.URL.ValueString()
@@ -438,12 +482,14 @@ func buildHTTPParams(ctx context.Context, endpoint httpEndpointBlockModel, diags
 			return map[string]any{}
 		}
 		headerItems := make([]map[string]any, 0, len(headers))
-		for _, h := range headers {
+		for j, h := range headers {
 			item := map[string]any{}
 			if !h.Header.IsNull() && !h.Header.IsUnknown() {
 				item["header"] = h.Header.ValueString()
 			}
-			if !h.Value.IsNull() && !h.Value.IsUnknown() {
+			if wo, ok := woHeaders[headerPosition{endpoint: index, header: j}]; ok {
+				item["value"] = wo
+			} else if !h.Value.IsNull() && !h.Value.IsUnknown() {
 				item["value"] = h.Value.ValueString()
 			}
 			if len(item) > 0 {

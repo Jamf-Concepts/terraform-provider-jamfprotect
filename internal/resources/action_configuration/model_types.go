@@ -90,8 +90,10 @@ type jamfProtectCloudEndpointBlockModel struct {
 	DestinationFilter types.String `tfsdk:"destination_filter"`
 }
 
-// endpointHeaderModel maps the nested headers block used in HTTP and Jamf Cloud endpoints.
+// endpointHeaderModel maps the nested headers block used in HTTP endpoints.
 type endpointHeaderModel struct {
-	Header types.String `tfsdk:"header"`
-	Value  types.String `tfsdk:"value"`
+	Header         types.String `tfsdk:"header"`
+	Value          types.String `tfsdk:"value"`
+	ValueWO        types.String `tfsdk:"value_wo"`
+	ValueWOVersion types.String `tfsdk:"value_wo_version"`
 }

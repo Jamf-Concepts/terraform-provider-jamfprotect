@@ -56,7 +56,7 @@ func apiEventTypeGetter(apiData *jamfprotect.AlertData, apiName string) *jamfpro
 }
 
 // applyState maps the API response to the Terraform state model.
-func (r *ActionConfigResource) applyState(_ context.Context, data *ActionConfigResourceModel, api jamfprotect.ActionConfig, diags *diag.Diagnostics) {
+func (r *ActionConfigResource) applyState(ctx context.Context, data *ActionConfigResourceModel, api jamfprotect.ActionConfig, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.ID)
 	data.Name = types.StringValue(api.Name)
 	data.Created = types.StringValue(api.Created)
@@ -84,16 +84,53 @@ func (r *ActionConfigResource) applyState(_ context.Context, data *ActionConfigR
 		data.AlertDataCollect = types.ObjectNull(alertDataCollectionAttrTypes)
 	}
 
-	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, diags)
+	woHeaders := writeOnlyHeaders(ctx, data.HTTPEndpoints, diags)
+	if diags.HasError() {
+		return
+	}
+	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, woHeaders, diags)
 	data.KafkaEndpoints = buildKafkaEndpointsState(api.Clients, diags)
 	data.SyslogEndpoints = buildSyslogEndpointsState(api.Clients, diags)
 	data.LogFileEndpoint = buildLogFileEndpointState(api.Clients, diags)
 	data.JamfCloudEndpoint = buildJamfProtectCloudEndpointState(api.Clients, diags)
 }
 
+// writeOnlyHeaders returns the HTTP headers in the prior model that use
+// value_wo, keyed by position, so the state builder can keep their values out
+// of state.
+func writeOnlyHeaders(ctx context.Context, list types.List, diags *diag.Diagnostics) map[headerPosition]endpointHeaderModel {
+	if list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+	var endpoints []httpEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() {
+		return nil
+	}
+	headers := map[headerPosition]endpointHeaderModel{}
+	for i, endpoint := range endpoints {
+		if endpoint.Headers.IsNull() || endpoint.Headers.IsUnknown() {
+			continue
+		}
+		var models []endpointHeaderModel
+		diags.Append(endpoint.Headers.ElementsAs(ctx, &models, false)...)
+		if diags.HasError() {
+			return nil
+		}
+		for j, h := range models {
+			if common.IsKnownString(h.ValueWOVersion) {
+				headers[headerPosition{endpoint: i, header: j}] = h
+			}
+		}
+	}
+	return headers
+}
+
 // buildHTTPEndpointsState constructs the state for HTTP endpoints from the API clients.
-func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Diagnostics) types.List {
+// woHeaders identifies headers managed through value_wo, whose values are not stored.
+func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, woHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
 	items := make([]attr.Value, 0)
+	index := 0
 	for _, client := range clients {
 		if client.Type != "Http" {
 			continue
@@ -104,7 +141,7 @@ func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Dia
 			"collect_logs":   common.StringsToSet(collectLogs),
 			"url":            common.StringValueOrNullValue(client.Params.URL),
 			"method":         common.StringValueOrNullValue(client.Params.Method),
-			"headers":        buildHeadersList(client.Params.Headers, diags),
+			"headers":        buildHeadersList(client.Params.Headers, index, woHeaders, diags),
 		}
 		addBatchConfigAttrs(attrs, client.BatchConfig)
 		if diags.HasError() {
@@ -113,6 +150,7 @@ func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, diags *diag.Dia
 		obj, d := types.ObjectValue(httpEndpointBlockAttrTypes, attrs)
 		diags.Append(d...)
 		items = append(items, obj)
+		index++
 	}
 	if len(items) == 0 {
 		return types.ListNull(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes})
@@ -271,15 +309,26 @@ func addBatchConfigAttrs(attrs map[string]attr.Value, batch *jamfprotect.BatchCo
 }
 
 // buildHeadersList converts a slice of API header models to a Terraform List value.
-func buildHeadersList(headers []jamfprotect.ReportClientHeader, diags *diag.Diagnostics) types.List {
+// A header that the prior model manages through value_wo, at the same position
+// and with the same name, keeps its value out of state and carries its
+// value_wo_version forward.
+func buildHeadersList(headers []jamfprotect.ReportClientHeader, endpoint int, woHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
 	if len(headers) == 0 {
 		return types.ListNull(types.ObjectType{AttrTypes: endpointHeaderAttrTypes})
 	}
 	items := make([]attr.Value, 0, len(headers))
-	for _, h := range headers {
+	for j, h := range headers {
+		value := types.StringValue(h.Value)
+		version := types.StringNull()
+		if prior, ok := woHeaders[headerPosition{endpoint: endpoint, header: j}]; ok && prior.Header.ValueString() == h.Header {
+			value = types.StringNull()
+			version = prior.ValueWOVersion
+		}
 		obj, d := types.ObjectValue(endpointHeaderAttrTypes, map[string]attr.Value{
-			"header": types.StringValue(h.Header),
-			"value":  types.StringValue(h.Value),
+			"header":           types.StringValue(h.Header),
+			"value":            value,
+			"value_wo":         types.StringNull(),
+			"value_wo_version": version,
 		})
 		diags.Append(d...)
 		items = append(items, obj)

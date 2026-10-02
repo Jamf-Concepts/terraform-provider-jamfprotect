@@ -26,8 +26,10 @@ var alertDataCollectionAttrTypes = map[string]attr.Type{
 
 // endpointHeaderAttrTypes defines the attribute types for an endpoint header.
 var endpointHeaderAttrTypes = map[string]attr.Type{
-	"header": types.StringType,
-	"value":  types.StringType,
+	"header":           types.StringType,
+	"value":            types.StringType,
+	"value_wo":         types.StringType,
+	"value_wo_version": types.StringType,
 }
 
 // httpEndpointBlockAttrTypes defines the attribute types for an HTTP endpoint block.

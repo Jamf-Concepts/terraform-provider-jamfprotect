@@ -29,7 +29,11 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	input := r.buildInput(ctx, data, &resp.Diagnostics)
+	woHeaders := httpHeaderWriteOnlyValues(ctx, req.Config, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input := r.buildInput(ctx, data, woHeaders, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -147,7 +151,11 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	input := r.buildInput(ctx, data, &resp.Diagnostics)
+	woHeaders := httpHeaderWriteOnlyValues(ctx, req.Config, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input := r.buildInput(ctx, data, woHeaders, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
