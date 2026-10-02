@@ -6,6 +6,7 @@
 // jamfprotect_delete_computer (remove computer records from the tenant).
 //
 // SDK methods used:
+//   jamfprotect.Client.GetPlan          (query getPlan — target plan existence check)
 //   jamfprotect.Client.SetComputerPlan  (mutation setComputerPlan)
 //   jamfprotect.Client.DeleteComputer   (mutation deleteComputer)
 //   jamfprotect.Client.GetComputer      (query getComputer — existence checks and check-in polling)
@@ -104,10 +105,10 @@ func resolveTargets(ctx context.Context, bulk types.Set, diags *diag.Diagnostics
 	return slices.Compact(uuids)
 }
 
-// computerMissing reports whether an error means the computer UUID no longer
-// exists in the tenant. Jamf Protect never returns ErrNotFound for these calls,
-// so common.IsNotFoundError alone does not detect a deleted computer — every
-// missing-computer response is a GraphQL error. Live-confirmed 2026-07-28:
+// computerMissing reports whether an error means the computer with the given
+// UUID no longer exists in the tenant. Jamf Protect never returns a dedicated
+// not-found error for these calls, so the match is on the exact messages it
+// sends for a missing computer, live-confirmed 2026-07-28:
 //
 //	getComputer     — nil computer plus "Cannot return null for non-nullable
 //	                  type: 'ID' within parent 'Computer' (/getComputer/uuid)"
@@ -116,22 +117,22 @@ func resolveTargets(ctx context.Context, bulk types.Set, diags *diag.Diagnostics
 //
 // The first two are the resolver returning null for a record that has gone,
 // which the non-null schema then rejects; only setComputerPlan says so plainly.
-// ErrNotFound is still checked first, in case the API grows a proper 404.
-func computerMissing(err error) bool {
+// The match is anchored to the requested UUID and to the computer's own uuid
+// field, so an error about another object — a plan, say — is never mistaken
+// for a missing computer. common.IsNotFoundError is deliberately not used: the
+// SDK raises ErrNotFound for any GraphQL message containing "not found".
+func computerMissing(err error, uuid string) bool {
 	if err == nil {
 		return false
 	}
-	if common.IsNotFoundError(err) {
-		return true
-	}
 
 	message := err.Error()
-	if strings.Contains(message, "does not exist") {
+	if strings.Contains(message, fmt.Sprintf("Computer with uuid '%s' does not exist", uuid)) {
 		return true
 	}
 
-	return strings.Contains(message, "Cannot return null for non-nullable type") &&
-		strings.Contains(message, "parent 'Computer'")
+	return strings.Contains(message, "within parent 'Computer' (/getComputer/uuid)") ||
+		strings.Contains(message, "within parent 'Computer' (/deleteComputer/uuid)")
 }
 
 // failureSummary renders per-computer failures as an indented list for a single

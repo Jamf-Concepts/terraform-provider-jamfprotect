@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -127,6 +128,10 @@ func (a *SetComputerPlanAction) Invoke(ctx context.Context, req action.InvokeReq
 		return
 	}
 
+	if !a.ensurePlanExists(ctx, resp, planID) {
+		return
+	}
+
 	var failures []string
 	var moved []string
 	for i, uuid := range uuids {
@@ -134,7 +139,7 @@ func (a *SetComputerPlanAction) Invoke(ctx context.Context, req action.InvokeReq
 
 		computer, err := a.client.SetComputerPlan(ctx, uuid, planID)
 		switch {
-		case computerMissing(err):
+		case computerMissing(err, uuid):
 			resp.Diagnostics.AddWarning(
 				"Computer Not Found",
 				fmt.Sprintf("Computer %s no longer exists in Jamf Protect, so no plan was assigned.", uuid),
@@ -146,6 +151,8 @@ func (a *SetComputerPlanAction) Invoke(ctx context.Context, req action.InvokeReq
 				"Computer Not Found",
 				fmt.Sprintf("Jamf Protect returned no computer for %s, so no plan was assigned. The computer record has most likely been deleted.", uuid),
 			)
+		case !planAssigned(computer, planID):
+			failures = append(failures, fmt.Sprintf("%s (plan %s was not recorded as pending)", checkinStateSummary(uuid, computer), planID))
 		default:
 			moved = append(moved, uuid)
 		}
@@ -164,6 +171,32 @@ func (a *SetComputerPlanAction) Invoke(ctx context.Context, req action.InvokeReq
 	if data.WaitForCheckin.ValueBool() && len(moved) > 0 {
 		a.waitForCheckin(ctx, resp, moved, planID, timeout)
 	}
+}
+
+// ensurePlanExists confirms the target plan exists before any computer is
+// touched. setComputerPlan accepts an unknown numeric plan ID and clears the
+// computer's pending plan instead of failing, so without this check the action
+// would report a move that never happened.
+func (a *SetComputerPlanAction) ensurePlanExists(ctx context.Context, resp *action.InvokeResponse, planID string) bool {
+	resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("Checking that plan %s exists", planID)})
+
+	plan, err := a.client.GetPlan(ctx, planID)
+	switch {
+	case common.IsNotFoundError(err) || (err == nil && plan == nil):
+		resp.Diagnostics.AddError(
+			"Plan Not Found",
+			fmt.Sprintf("Plan %s does not exist in Jamf Protect, so no computer was moved.", planID),
+		)
+		return false
+	case err != nil:
+		resp.Diagnostics.AddError(
+			"Set Computer Plan Failed",
+			fmt.Sprintf("Unable to read plan %s: %s. No computer was moved.", planID, err),
+		)
+		return false
+	}
+
+	return true
 }
 
 // resolveTimeout parses the configured timeout, falling back to
@@ -200,7 +233,7 @@ func (a *SetComputerPlanAction) waitForCheckin(ctx context.Context, resp *action
 		var stillPending []string
 		for _, uuid := range pending {
 			computer, err := a.client.GetComputer(ctx, uuid)
-			if computerMissing(err) || (err == nil && computer == nil) {
+			if computerMissing(err, uuid) || (err == nil && computer == nil) {
 				resp.Diagnostics.AddWarning(
 					"Computer Not Found",
 					fmt.Sprintf("Computer %s disappeared while waiting for check-in, so it is no longer being waited on.", uuid),
@@ -263,6 +296,17 @@ func planSettled(computer *jamfprotect.Computer, planID string) bool {
 	}
 
 	return computer.PendingPlan == nil || *computer.PendingPlan == 0
+}
+
+// planAssigned reports whether a setComputerPlan response records the requested
+// plan, either as the pending plan or as the current plan with nothing pending.
+// A null or different pendingPlan means the assignment did not take.
+func planAssigned(computer *jamfprotect.Computer, planID string) bool {
+	if computer.PendingPlan != nil && strconv.FormatInt(*computer.PendingPlan, 10) == planID {
+		return true
+	}
+
+	return planSettled(computer, planID)
 }
 
 // checkinStateSummary renders the plan-settlement signals for a computer, so a
