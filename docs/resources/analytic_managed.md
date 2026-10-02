@@ -39,7 +39,7 @@ resource "jamfprotect_analytic_managed" "imulermalware" {
 
 ### Optional
 
-- `tenant_actions` (Attributes Set) Tenant-level action overrides. Set to override the default actions configured on the Jamf-managed analytic. (see [below for nested schema](#nestedatt--tenant_actions))
+- `tenant_actions` (Attributes Set) Tenant-level action overrides. Set to replace the default actions configured on the Jamf-managed analytic. Null when the analytic has no tenant override; omitting the attribute leaves the current override unchanged. (see [below for nested schema](#nestedatt--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override. Valid options are: `High`, `Medium`, `Low`, `Informational`.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
