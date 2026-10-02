@@ -14,7 +14,7 @@ import (
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 )
 
-// applyState maps the API response into the Terraform state model.
+// applyState maps the API response into the Terraform state model. An exception set with no exceptions keeps a null exceptions attribute when the model already holds null, so a configuration that omits exceptions matches state, while an explicit empty set stays empty.
 func (r *ExceptionSetResource) applyState(ctx context.Context, data *ExceptionSetResourceModel, api jamfprotect.ExceptionSet, diags *diag.Diagnostics) {
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
@@ -26,7 +26,11 @@ func (r *ExceptionSetResource) applyState(ctx context.Context, data *ExceptionSe
 		data.Description = types.StringValue("")
 	}
 
-	data.Exceptions = exceptionsToState(ctx, api.Exceptions, api.EsExceptions, diags)
+	exceptions := exceptionsToState(ctx, api.Exceptions, api.EsExceptions, diags)
+	if len(exceptions.Elements()) == 0 && data.Exceptions.IsNull() {
+		exceptions = types.SetNull(types.ObjectType{AttrTypes: exceptionAttrTypes})
+	}
+	data.Exceptions = exceptions
 }
 
 // exceptionsToState converts API exceptions into Terraform exception entries.

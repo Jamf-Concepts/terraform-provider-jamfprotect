@@ -197,6 +197,43 @@ func TestAccExceptionSetResource_withIgnoreForAnalyticFilePath(t *testing.T) {
 	})
 }
 
+// TestAccExceptionSetResource_withoutExceptions verifies that an exception set
+// whose configuration omits exceptions applies cleanly and plans no changes.
+func TestAccExceptionSetResource_withoutExceptions(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-exception-set-empty")
+	resourceName := "jamfprotect_exception_set.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccExceptionSetCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "jamfprotect_exception_set" "test" {
+  name        = %q
+  description = "no exceptions"
+}
+`, rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckNoResourceAttr(resourceName, "exceptions.#"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccExceptionSetResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "jamfprotect_exception_set" "test" {
