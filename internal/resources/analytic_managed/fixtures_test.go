@@ -109,7 +109,6 @@ func TestApplyState_FromProdGetAnalytic_AppleJeus(t *testing.T) {
 		t.Errorf("tenant_actions: expected null for an analytic with no tenant override, got %v", data.TenantActions)
 	}
 
-	// Filter is preserved — the fixture filter contains no double-backslashes so it round-trips unchanged.
 	expectedFilter := `("LaunchDaemon" IN $tags OR "LaunchAgent" IN $tags) AND $context.Name.value IN {"org.jmttrading.plist", "com.celastradepro.plist"}`
 	if data.Filter.ValueString() != expectedFilter {
 		t.Errorf("filter:\n  expected %q\n  got      %q", expectedFilter, data.Filter.ValueString())
