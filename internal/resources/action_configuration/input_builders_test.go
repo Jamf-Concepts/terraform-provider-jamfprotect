@@ -245,6 +245,7 @@ func TestSplitSupportedReports(t *testing.T) {
 		reports    []string
 		wantAlerts []string
 		wantLogs   []string
+		wantErr    bool
 	}{
 		{
 			name:       "all alert levels",
@@ -271,17 +272,22 @@ func TestSplitSupportedReports(t *testing.T) {
 			wantLogs:   []string{},
 		},
 		{
-			name:       "unknown report type ignored",
+			name:       "unknown report type errors",
 			reports:    []string{"AlertHigh", "SomethingUnknown"},
 			wantAlerts: []string{"high"},
 			wantLogs:   []string{},
+			wantErr:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			gotAlerts, gotLogs := splitSupportedReports(tt.reports)
+			var diags diag.Diagnostics
+			gotAlerts, gotLogs := splitSupportedReports(tt.reports, &diags)
+			if diags.HasError() != tt.wantErr {
+				t.Errorf("HasError() = %v, want %v: %v", diags.HasError(), tt.wantErr, diags)
+			}
 			if !slices.Equal(gotAlerts, tt.wantAlerts) {
 				t.Errorf("alerts = %v, want %v", gotAlerts, tt.wantAlerts)
 			}
