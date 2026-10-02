@@ -148,6 +148,51 @@ func TestPlanSettled(t *testing.T) {
 	}
 }
 
+func TestPlanAssigned(t *testing.T) {
+	t.Parallel()
+
+	planID := "34"
+	otherPlanID := "35"
+	pending := int64(34)
+	otherPending := int64(35)
+
+	tests := []struct {
+		name     string
+		computer *jamfprotect.Computer
+		want     bool
+	}{
+		{
+			name:     "requested plan pending",
+			computer: &jamfprotect.Computer{Plan: &jamfprotect.ComputerPlan{ID: &otherPlanID}, PendingPlan: &pending},
+			want:     true,
+		},
+		{
+			name:     "already settled on requested plan",
+			computer: &jamfprotect.Computer{Plan: &jamfprotect.ComputerPlan{ID: &planID}},
+			want:     true,
+		},
+		{
+			name:     "pending plan cleared",
+			computer: &jamfprotect.Computer{Plan: &jamfprotect.ComputerPlan{ID: &otherPlanID}},
+			want:     false,
+		},
+		{
+			name:     "different plan pending",
+			computer: &jamfprotect.Computer{Plan: &jamfprotect.ComputerPlan{ID: &otherPlanID}, PendingPlan: &otherPending},
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := planAssigned(tt.computer, planID); got != tt.want {
+				t.Errorf("expected %v, got %v", tt.want, got)
+			}
+		})
+	}
+}
+
 func TestComputerLabel(t *testing.T) {
 	t.Parallel()
 
@@ -257,9 +302,24 @@ func TestComputerMissing(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "wrapped ErrNotFound",
-			err:  fmt.Errorf("GetComputer(%s): %w", uuidA, jamfprotect.ErrNotFound),
-			want: true,
+			name: "setComputerPlan does not exist for another computer",
+			err:  errors.New("SetComputerPlan(" + uuidA + "): jamfprotect: graphql error: Computer with uuid '" + uuidB + "' does not exist. (path: setComputerPlan) (locations: 3:2)"),
+			want: false,
+		},
+		{
+			name: "plan does not exist is not a missing computer",
+			err:  errors.New("SetComputerPlan(" + uuidA + "): jamfprotect: graphql error: Plan with id '999999' does not exist. (path: setComputerPlan) (locations: 3:2)"),
+			want: false,
+		},
+		{
+			name: "wrapped ErrNotFound is not a missing computer",
+			err:  fmt.Errorf("SetComputerPlan(%s): %w: Plan not found with identifier '999999'", uuidA, jamfprotect.ErrNotFound),
+			want: false,
+		},
+		{
+			name: "non-nullable error on another computer field is not a missing computer",
+			err:  errors.New("SetComputerPlan(" + uuidA + "): jamfprotect: graphql error: Cannot return null for non-nullable type: 'String' within parent 'Computer' (/setComputerPlan/certid) (path: setComputerPlan.certid)"),
+			want: false,
 		},
 		{
 			name: "plan dependency block is not a missing computer",
@@ -276,7 +336,7 @@ func TestComputerMissing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := computerMissing(tt.err); got != tt.want {
+			if got := computerMissing(tt.err, uuidA); got != tt.want {
 				t.Errorf("expected %v, got %v", tt.want, got)
 			}
 		})

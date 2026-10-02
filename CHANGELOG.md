@@ -54,3 +54,4 @@ BUG FIXES:
 - `jamfprotect_analytic`, `jamfprotect_analytics`: new computed `analytic_actions` attribute. Updates keep actions other than SmartGroup (for example ones added in the Jamf Protect console) instead of removing them.
 - `jamfprotect_telemetry`: a `log_*` category now reads `true` only when every event in it is collected, so a partially collected category shows a diff that restores it. The new `additional_events` attribute keeps collected events that no category covers, and they are no longer dropped on update. The `jamfprotect_telemetries` data source exposes the same list.
 - `jamfprotect_role`, `data.jamfprotect_roles`: an `Exception` permission granted without `Exception Sets` is now shown as `"Exception"` and appears as drift, rather than being hidden.
+- `jamfprotect_set_computer_plan`: the action now fails when `plan_id` does not exist, or when Jamf Protect does not record the assignment. Previously it reported success while nothing was assigned.
