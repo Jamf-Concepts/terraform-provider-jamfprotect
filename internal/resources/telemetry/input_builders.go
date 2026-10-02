@@ -30,7 +30,7 @@ func (r *TelemetryV2Resource) buildInput(ctx context.Context, data TelemetryV2Re
 		PerformanceMetrics: data.PerformanceMetrics.ValueBool(),
 		FileHashing:        data.FileHashes.ValueBool(),
 		LogFiles:           common.SetToStrings(ctx, data.LogFilePath, diags),
-		Events:             eventsFromFlags(flags),
+		Events:             eventsFromFlags(flags, common.SetToStrings(ctx, data.AdditionalEvents, diags)),
 	}
 
 	if !data.Description.IsNull() {

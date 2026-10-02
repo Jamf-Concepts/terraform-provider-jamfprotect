@@ -6,6 +6,7 @@ package telemetry_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
 
@@ -168,6 +170,131 @@ func TestAccTelemetryV2Resource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TestAccTelemetryV2Resource_partialCategoryRestored validates that a category reduced outside Terraform shows a
+// restoring diff and that events outside every category survive the apply until additional_events removes them.
+func TestAccTelemetryV2Resource_partialCategoryRestored(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-telemetry")
+	resourceName := "jamfprotect_telemetry.test"
+	var telemetryID string
+
+	if testing.Short() {
+		t.Skip("skipping acceptance test")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccTelemetryV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryV2PartialCategoryConfig(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+						telemetryID = value
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "log_access_and_authentication", "true"),
+					resource.TestCheckResourceAttr(resourceName, "additional_events.#", "0"),
+				),
+			},
+			{
+				PreConfig: func() {
+					testAccTelemetryV2SetEvents(t, telemetryID, []string{"login_login", "xpc_connect"})
+				},
+				Config: testAccTelemetryV2PartialCategoryConfig(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "log_access_and_authentication", "true"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "additional_events.*", "xpc_connect"),
+					testAccTelemetryV2CheckEvents(&telemetryID, []string{"login_login", "sudo", "authentication", "xpc_connect"}, nil),
+				),
+			},
+			{
+				Config: testAccTelemetryV2PartialCategoryConfig(rName, "additional_events = []"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "additional_events.#", "0"),
+					testAccTelemetryV2CheckEvents(&telemetryID, []string{"sudo"}, []string{"xpc_connect"}),
+				),
+			},
+		},
+	})
+}
+
+// testAccTelemetryV2SetEvents replaces a telemetry configuration's events through the API, outside Terraform.
+func testAccTelemetryV2SetEvents(t *testing.T, id string, events []string) {
+	t.Helper()
+	c := testutil.TestAccClient()
+	if c == nil {
+		t.Fatal("client not configured")
+	}
+	ctx := context.Background()
+	current, err := c.GetTelemetryV2(ctx, id)
+	if err != nil || current == nil {
+		t.Fatalf("reading telemetry v2 %s: %v", id, err)
+	}
+	_, err = c.UpdateTelemetryV2(ctx, id, jamfprotect.TelemetryV2Input{
+		Name:               current.Name,
+		Description:        current.Description,
+		LogFiles:           append([]string{}, current.LogFiles...),
+		LogFileCollection:  current.LogFileCollection,
+		PerformanceMetrics: current.PerformanceMetrics,
+		FileHashing:        current.FileHashing,
+		Events:             events,
+	})
+	if err != nil {
+		t.Fatalf("updating telemetry v2 %s: %v", id, err)
+	}
+}
+
+// testAccTelemetryV2CheckEvents verifies the API's event list contains and omits the given events.
+func testAccTelemetryV2CheckEvents(id *string, present, absent []string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		c := testutil.TestAccClient()
+		if c == nil {
+			return fmt.Errorf("client not configured")
+		}
+		result, err := c.GetTelemetryV2(context.Background(), *id)
+		if err != nil || result == nil {
+			return fmt.Errorf("reading telemetry v2 %s: %v", *id, err)
+		}
+		for _, event := range present {
+			if !slices.Contains(result.Events, event) {
+				return fmt.Errorf("expected event %q in %v", event, result.Events)
+			}
+		}
+		for _, event := range absent {
+			if slices.Contains(result.Events, event) {
+				return fmt.Errorf("expected event %q to be absent from %v", event, result.Events)
+			}
+		}
+		return nil
+	}
+}
+
+// testAccTelemetryV2PartialCategoryConfig builds a telemetry configuration with access and authentication enabled.
+func testAccTelemetryV2PartialCategoryConfig(name, extra string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_telemetry" "test" {
+  name                          = %[1]q
+  description                   = "Acceptance test partial category"
+  log_file_path                 = []
+  log_access_and_authentication = true
+  %[2]s
+}
+`, name, extra)
 }
 
 // TestAccTelemetriesV2DataSource_basic validates the data source lists telemetry configurations.
