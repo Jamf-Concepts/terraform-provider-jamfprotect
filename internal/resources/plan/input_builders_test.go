@@ -173,3 +173,33 @@ func TestBuildVariables_AnalyticSetsCarriedWithManagedSets(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildVariables_ManagedSetsIgnoreCustomNamesakes(t *testing.T) {
+	t.Parallel()
+
+	sets := append([]jamfprotect.AnalyticSet{
+		{UUID: testCustomUUID, Name: advancedThreatControlsName},
+		{UUID: "22222222-2222-4222-8222-222222222222", Name: tamperPreventionName},
+	}, testManagedAnalyticSets...)
+	data := testPlanModel()
+	data.AdvancedThreatControls = types.StringValue("Block and report")
+	data.TamperPrevention = types.StringValue("Block and report")
+
+	var diags diag.Diagnostics
+	input := newTestPlanResource(t, sets).buildVariables(context.Background(), data, "fqdn", "", &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	want := []jamfprotect.PlanAnalyticSetInput{
+		{Type: "Prevent", UUID: testATCUUID},
+		{Type: "Prevent", UUID: testTPUUID},
+	}
+	if len(input.AnalyticSets) != len(want) {
+		t.Fatalf("AnalyticSets = %#v, want %#v", input.AnalyticSets, want)
+	}
+	for i := range want {
+		if input.AnalyticSets[i] != want[i] {
+			t.Errorf("AnalyticSets[%d] = %#v, want %#v", i, input.AnalyticSets[i], want[i])
+		}
+	}
+}
