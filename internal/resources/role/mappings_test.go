@@ -4,6 +4,7 @@
 package role
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -393,6 +394,33 @@ func TestRolePermissionHasAll_Absent(t *testing.T) {
 			t.Parallel()
 			if rolePermissionHasAll(tt.values) {
 				t.Errorf("rolePermissionHasAll(%v) = true, want false", tt.values)
+			}
+		})
+	}
+}
+
+// TestRolePermissionListToLabels verifies that Exception is hidden only when ExceptionSet is in the same list.
+func TestRolePermissionListToLabels(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		values []string
+		want   []string
+	}{
+		{"exception hidden beside exception set", []string{"ExceptionSet", "Exception", "Plan"}, []string{"Exception Sets", "Plans"}},
+		{"lone exception surfaced", []string{"Exception"}, []string{"Exception"}},
+		{"exception surfaced beside other permissions", []string{"Plan", "Exception"}, []string{"Exception", "Plans"}},
+		{"duplicates collapsed", []string{"Plan", "Plan"}, []string{"Plans"}},
+		{"empty slice", []string{}, nil},
+		{"nil slice", nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := rolePermissionListToLabels(tt.values); !slices.Equal(got, tt.want) {
+				t.Errorf("rolePermissionListToLabels(%v) = %v, want %v", tt.values, got, tt.want)
 			}
 		})
 	}
