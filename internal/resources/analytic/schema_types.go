@@ -15,6 +15,10 @@ var analyticContextAttrTypes = map[string]attr.Type{
 	"expressions": types.SetType{ElemType: types.StringType},
 }
 
+// analyticActionAttrTypes defines the attribute types for an analytic action object. It shares
+// the shape of a tenant action.
+var analyticActionAttrTypes = tenantActionAttrTypes
+
 // tenantActionAttrTypes defines the attribute types for the Tenant Action block within an AnalyticAction.
 var tenantActionAttrTypes = map[string]attr.Type{
 	"name":       types.StringType,
