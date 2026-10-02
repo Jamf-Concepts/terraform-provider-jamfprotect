@@ -1,3 +1,10 @@
+variable "siem_api_token" {
+  description = "Bearer token for the SIEM HTTP endpoint."
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
+
 # Example: Action Configuration with HTTP Endpoint
 # This example shows how to configure alert forwarding to an external HTTP endpoint
 # such as a SIEM, SOAR, or webhook integration.
@@ -39,8 +46,11 @@ resource "jamfprotect_action_configuration" "http_integration" {
           value  = "application/json"
         },
         {
-          header = "Authorization"
-          value  = "Bearer YOUR_API_TOKEN"
+          # Write-only (Terraform 1.11+): sent to Jamf Protect, never stored in state.
+          # Change value_wo_version to push a rotated token.
+          header           = "Authorization"
+          value_wo         = var.siem_api_token
+          value_wo_version = "1"
         },
       ]
     },
