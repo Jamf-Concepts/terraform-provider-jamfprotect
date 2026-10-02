@@ -25,12 +25,31 @@ jobs:
         with:
           go-version-file: "go.mod"
           cache: true
+      # Imports the signing key with gpg directly: the repository's Actions
+      # policy allows only GitHub-owned and verified actions, so a third-party
+      # import action fails at startup. The passphrase is preset in gpg-agent
+      # so GoReleaser can sign non-interactively.
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
         id: import_gpg
-        with:
-          gpg_private_key: ${{ secrets.TF_SIGNING_KEY }}
-          passphrase: ${{ secrets.TF_SIGNING_KEY_PASSPHRASE }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.TF_SIGNING_KEY }}
+          PASSPHRASE: ${{ secrets.TF_SIGNING_KEY_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          gnupg_home="${GNUPGHOME:-$HOME/.gnupg}"
+          mkdir -p "$gnupg_home"
+          chmod 700 "$gnupg_home"
+          echo "allow-preset-passphrase" >> "$gnupg_home/gpg-agent.conf"
+          gpgconf --kill gpg-agent
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          if [ -n "${PASSPHRASE:-}" ]; then
+            preset="$(gpgconf --list-dirs libexecdir)/gpg-preset-passphrase"
+            for keygrip in $(gpg --batch --with-colons --with-keygrip --list-secret-keys | awk -F: '$1 == "grp" { print $10 }'); do
+              printf '%s' "$PASSPHRASE" | "$preset" --preset "$keygrip"
+            done
+          fi
+          fingerprint="$(gpg --batch --with-colons --list-secret-keys | awk -F: '$1 == "fpr" { print $10; exit }')"
+          echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
