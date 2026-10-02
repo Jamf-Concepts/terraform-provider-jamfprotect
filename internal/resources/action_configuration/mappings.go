@@ -43,6 +43,19 @@ var apiEventTypeMapping = []struct {
 	{"malware_removal_tool_event", "mrtEvent"},
 }
 
+// listEndpointClientAttributes maps API report client types modelled as a list of endpoints to their Terraform attribute names.
+var listEndpointClientAttributes = map[string]string{
+	"Http":   "http_endpoints",
+	"Kafka":  "kafka_endpoints",
+	"Syslog": "syslog_endpoints",
+}
+
+// singleEndpointClientAttributes maps API report client types modelled as a single endpoint to their Terraform attribute names.
+var singleEndpointClientAttributes = map[string]string{
+	"LogFile":   "log_file_endpoint",
+	"JamfCloud": "jamf_protect_cloud_endpoint",
+}
+
 // extendedDataAttributeToAttr maps extended data attribute names to their corresponding API attribute names.
 var extendedDataAttributeToAttr = map[string]string{
 	"Sha1":                "sha1hex",

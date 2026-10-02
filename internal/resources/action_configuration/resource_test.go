@@ -6,6 +6,7 @@ package action_configuration_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 
+	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/testutil"
 )
 
@@ -252,4 +254,75 @@ resource "jamfprotect_action_configuration" "test" {
 	]
 }
 `, name, token, version)
+}
+
+// TestAccActionConfigResource_importRejectsSecondJamfCloudEndpoint verifies that
+// importing an action configuration with two JamfCloud clients fails, rather
+// than importing the first one and dropping the second. The API accepts the
+// second client, but jamf_protect_cloud_endpoint holds only one.
+func TestAccActionConfigResource_importRejectsSecondJamfCloudEndpoint(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-ac-dup")
+	var configID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccActionConfigCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					configID = testAccCreateActionConfigWithTwoJamfCloudClients(t, rName)
+				},
+				Config:       testAccActionConfigResourceConfig(rName, "duplicate JamfCloud clients"),
+				ResourceName: "jamfprotect_action_configuration.test",
+				ImportState:  true,
+				ImportStateIdFunc: func(*terraform.State) (string, error) {
+					return configID, nil
+				},
+				ExpectError: regexp.MustCompile(`more than one JamfCloud endpoint`),
+			},
+		},
+	})
+}
+
+// testAccCreateActionConfigWithTwoJamfCloudClients creates, through the SDK, an
+// action configuration carrying two JamfCloud clients, and deletes it when the
+// test ends.
+func testAccCreateActionConfigWithTwoJamfCloudClients(t *testing.T, name string) string {
+	t.Helper()
+
+	c := testutil.TestAccClient()
+	if c == nil {
+		t.Fatal("client not configured")
+	}
+
+	eventTypes := map[string]any{}
+	for _, eventType := range []string{"binary", "clickEvent", "downloadEvent", "file", "fsEvent", "gkEvent", "group", "keylogRegisterEvent", "mrtEvent", "procEvent", "process", "screenshotEvent", "usbEvent", "user"} {
+		eventTypes[eventType] = map[string]any{"attrs": []string{}, "related": []string{}}
+	}
+	jamfCloudClient := func(reports ...string) map[string]any {
+		return map[string]any{
+			"type":             "JamfCloud",
+			"supportedReports": reports,
+			"batchConfig":      map[string]any{"sizeIndex": 1, "windowInSeconds": 0},
+			"params":           "{}",
+		}
+	}
+
+	created, err := c.CreateActionConfig(context.Background(), jamfprotect.ActionConfigInput{
+		Name:        name,
+		Description: "duplicate JamfCloud clients",
+		Clients:     []map[string]any{jamfCloudClient("AlertHigh"), jamfCloudClient("AlertLow", "Telemetry")},
+		AlertConfig: map[string]any{"data": eventTypes},
+	})
+	if err != nil {
+		t.Fatalf("creating action configuration out of band: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := c.DeleteActionConfig(context.Background(), created.ID); err != nil {
+			t.Errorf("deleting action configuration %s: %v", created.ID, err)
+		}
+	})
+
+	return created.ID
 }
