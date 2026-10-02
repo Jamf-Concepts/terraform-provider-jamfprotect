@@ -34,15 +34,11 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 		data.ActionConfiguration = types.StringNull()
 	}
 
-	if len(api.ExceptionSets) > 0 {
-		uuids := make([]string, len(api.ExceptionSets))
-		for i, es := range api.ExceptionSets {
-			uuids[i] = es.UUID
-		}
-		data.ExceptionSets = common.StringsToSet(uuids)
-	} else {
-		data.ExceptionSets = types.SetNull(types.StringType)
+	exceptionSetUUIDs := make([]string, len(api.ExceptionSets))
+	for i, es := range api.ExceptionSets {
+		exceptionSetUUIDs[i] = es.UUID
 	}
+	data.ExceptionSets = common.StringsToSetOrNull(data.ExceptionSets, exceptionSetUUIDs)
 
 	if api.TelemetryV2 != nil && api.TelemetryV2.ID != "" {
 		data.Telemetry = types.StringValue(api.TelemetryV2.ID)
@@ -72,15 +68,11 @@ func (r *PlanResource) apiToState(ctx context.Context, data *PlanResourceModel, 
 	data.CustomEngineConfig = customEngineConfigToObject(ctx, api.CustomEngineConfig, diags)
 
 	filteredAnalyticSets := filterManagedAnalyticSetEntries(api.AnalyticSets)
-	if len(filteredAnalyticSets) > 0 {
-		uuids := make([]string, len(filteredAnalyticSets))
-		for i, as := range filteredAnalyticSets {
-			uuids[i] = as.AnalyticSet.UUID
-		}
-		data.AnalyticSets = common.StringsToSet(uuids)
-	} else {
-		data.AnalyticSets = types.SetNull(types.StringType)
+	analyticSetUUIDs := make([]string, len(filteredAnalyticSets))
+	for i, as := range filteredAnalyticSets {
+		analyticSetUUIDs[i] = as.AnalyticSet.UUID
 	}
+	data.AnalyticSets = common.StringsToSetOrNull(data.AnalyticSets, analyticSetUUIDs)
 	filterSetUUIDs := make([]string, 0, len(api.UnifiedLoggingFilterSets))
 	for _, fs := range api.UnifiedLoggingFilterSets {
 		filterSetUUIDs = append(filterSetUUIDs, fs.UUID)
