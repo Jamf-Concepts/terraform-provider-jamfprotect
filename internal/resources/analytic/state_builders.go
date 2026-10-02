@@ -65,6 +65,7 @@ func (r *AnalyticResource) applyState(_ context.Context, data *AnalyticResourceM
 		break
 	}
 
+	data.AnalyticActions = apiAnalyticActionsToList(api.AnalyticActions, diags)
 	data.TenantActions = apiActionsToSet(api.TenantActions, true, diags)
 
 	if api.TenantSeverity != "" {

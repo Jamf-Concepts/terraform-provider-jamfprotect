@@ -230,6 +230,7 @@ resource "jamfprotect_analytic" "with_timeouts" {
 
 ### Read-Only
 
+- `analytic_actions` (Attributes List) The actions stored on the analytic, in the order Jamf Protect returns them (read-only). The `SmartGroup` entry follows `add_to_jamf_pro_smart_group` and `jamf_pro_smart_group_identifier`; any other entries, such as ones added in the Jamf Protect console, are kept when the analytic is updated. (see [below for nested schema](#nestedatt--analytic_actions))
 - `created` (String) The creation timestamp.
 - `id` (String) The unique identifier of the analytic.
 - `jamf` (Boolean) Indicates whether the analytic is Jamf-managed (read-only).
@@ -258,6 +259,15 @@ Optional:
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+
+
+<a id="nestedatt--analytic_actions"></a>
+### Nested Schema for `analytic_actions`
+
+Read-Only:
+
+- `name` (String) The action name (e.g. `Report`, `SmartGroup`).
+- `parameters` (Map of String) Action parameters as key-value pairs (e.g. `{id = "smartgroup"}`). Values that are not strings in the API are shown as JSON text.
 
 
 <a id="nestedatt--tenant_actions"></a>
