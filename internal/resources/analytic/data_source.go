@@ -236,7 +236,7 @@ func analyticAPIToDataSourceItem(api jamfprotect.Analytic, diags *diag.Diagnosti
 		ID:         types.StringValue(api.UUID),
 		Name:       types.StringValue(api.Name),
 		SensorType: types.StringValue(mapSensorTypeAPIToUI(api.InputType, diags)),
-		Filter:     types.StringValue(normalizeFilterValue(api.Filter)),
+		Filter:     types.StringValue(api.Filter),
 		Level:      types.Int64Value(api.Level),
 		Severity:   types.StringValue(api.Severity),
 		Created:    types.StringValue(api.Created),
