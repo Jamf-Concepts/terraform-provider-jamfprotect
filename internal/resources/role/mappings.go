@@ -182,16 +182,17 @@ func rolePermissionListToAPI(values []string, diags *diag.Diagnostics, fieldName
 	return apiValues
 }
 
-// rolePermissionListToLabels converts API permission values to friendly names.
+// rolePermissionListToLabels converts API permission values to friendly names. Exception is hidden only when ExceptionSet is in the same list, mirroring rolePermissionAddHiddenException, so a grant of Exception on its own stays visible.
 func rolePermissionListToLabels(values []string) []string {
 	if len(values) == 0 {
 		return nil
 	}
 
+	hideException := slices.Contains(values, "ExceptionSet")
 	labels := make([]string, 0, len(values))
 	seen := make(map[string]struct{}, len(values))
 	for _, value := range values {
-		if value == "Exception" {
+		if value == "Exception" && hideException {
 			continue
 		}
 		label := rolePermissionLabel(value)
