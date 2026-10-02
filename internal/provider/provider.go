@@ -143,7 +143,7 @@ func (p *JamfProtectProvider) Configure(ctx context.Context, req provider.Config
 		jamfprotect.WithUserAgent("terraform-provider-jamfprotect/" + p.version),
 	}
 	if shouldEnableHTTPLogging() {
-		opts = append(opts, jamfprotect.WithLogger(NewTerraformLogger()))
+		opts = append(opts, jamfprotect.WithLogger(NewTerraformLogger(clientSecret)))
 	}
 	if !data.MinRequestIntervalMs.IsNull() {
 		opts = append(opts, jamfprotect.WithMinRequestInterval(time.Duration(data.MinRequestIntervalMs.ValueInt64())*time.Millisecond))

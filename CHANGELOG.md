@@ -56,3 +56,4 @@ BUG FIXES:
 - `jamfprotect_role`, `data.jamfprotect_roles`: an `Exception` permission granted without `Exception Sets` is now shown as `"Exception"` and appears as drift, rather than being hidden.
 - `jamfprotect_set_computer_plan`: the action now fails when `plan_id` does not exist, or when Jamf Protect does not record the assignment. Previously it reported success while nothing was assigned.
 - `jamfprotect_exception_set`: an exception set with no `exceptions` now applies, instead of failing with "Provider produced inconsistent result after apply".
+- Provider debug logs (`TF_LOG=debug` or `trace`) mask the configured `client_secret` in every logged HTTP field.
