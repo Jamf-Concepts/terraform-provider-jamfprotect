@@ -82,34 +82,34 @@ func TestNormalizeFilterValue(t *testing.T) {
 	}
 }
 
-func TestApiActionsToSet_EmptyAndNil(t *testing.T) {
+func TestApiActionsToSet_NilIsNull(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		api  []jamfprotect.AnalyticAction
-	}{
-		{"nil slice", nil},
-		{"empty slice", []jamfprotect.AnalyticAction{}},
+	var diags diag.Diagnostics
+	got := apiActionsToSet(nil, &diags)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
 	}
+	if !got.IsNull() {
+		t.Fatalf("expected null set for an absent tenant override, got %v", got)
+	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func TestApiActionsToSet_EmptyIsEmptySet(t *testing.T) {
+	t.Parallel()
 
-			var diags diag.Diagnostics
-			got := apiActionsToSet(tt.api, &diags)
+	var diags diag.Diagnostics
+	got := apiActionsToSet([]jamfprotect.AnalyticAction{}, &diags)
 
-			if diags.HasError() {
-				t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
-			}
-			if got.IsNull() {
-				t.Fatal("expected empty (non-null) set, got null")
-			}
-			if len(got.Elements()) != 0 {
-				t.Errorf("expected 0 elements, got %d", len(got.Elements()))
-			}
-		})
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
+	}
+	if got.IsNull() {
+		t.Fatal("expected empty (non-null) set for an explicit empty override, got null")
+	}
+	if len(got.Elements()) != 0 {
+		t.Errorf("expected 0 elements, got %d", len(got.Elements()))
 	}
 }
 

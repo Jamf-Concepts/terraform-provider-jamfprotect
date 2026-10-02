@@ -96,6 +96,8 @@ func (r *AnalyticManagedResource) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+// Update sends the tenant overrides and refreshes state with a follow-up read, because the
+// updateInternalAnalytic response omits fields such as long_description and remediation.
 func (r *AnalyticManagedResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data AnalyticManagedResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -126,13 +128,25 @@ func (r *AnalyticManagedResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	result, err := r.client.UpdateInternalAnalytic(ctx, data.ID.ValueString(), *input)
-	if err != nil {
+	if _, err := r.client.UpdateInternalAnalytic(ctx, data.ID.ValueString(), *input); err != nil {
 		resp.Diagnostics.AddError("Error updating Jamf-managed analytic", err.Error())
 		return
 	}
 
-	r.applyState(ctx, &data, result, &resp.Diagnostics)
+	result, err := r.client.GetAnalytic(ctx, data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading Jamf-managed analytic after update", err.Error())
+		return
+	}
+	if result == nil {
+		resp.Diagnostics.AddError(
+			"Jamf-managed analytic not found after update",
+			"GetAnalytic returned no analytic with UUID "+data.ID.ValueString()+".",
+		)
+		return
+	}
+
+	r.applyState(ctx, &data, *result, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -78,8 +78,13 @@ func (r *AnalyticManagedResource) applyState(_ context.Context, data *AnalyticMa
 	}
 }
 
-// apiActionsToSet maps API tenant actions into a Terraform set.
+// apiActionsToSet maps API tenant actions into a Terraform set. A nil slice means the analytic
+// carries no tenant override and maps to null, so it is never sent back as an explicit empty
+// override; an empty slice is an explicit empty override and maps to an empty set.
 func apiActionsToSet(api []jamfprotect.AnalyticAction, diags *diag.Diagnostics) types.Set {
+	if api == nil {
+		return types.SetNull(types.ObjectType{AttrTypes: tenantActionAttrTypes})
+	}
 	if len(api) == 0 {
 		return types.SetValueMust(types.ObjectType{AttrTypes: tenantActionAttrTypes}, []attr.Value{})
 	}
