@@ -750,7 +750,7 @@ func TestTelemetryV2ResourceSchema(t *testing.T) {
 		}
 	}
 
-	computedAttrs := []string{"id", "created"}
+	computedAttrs := []string{"id", "created", "additional_events"}
 	for _, attr := range computedAttrs {
 		a, ok := resp.Schema.Attributes[attr]
 		if !ok {

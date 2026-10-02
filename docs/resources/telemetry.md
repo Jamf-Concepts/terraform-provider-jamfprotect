@@ -4,11 +4,14 @@ page_title: "jamfprotect_telemetry Resource - terraform-provider-jamfprotect"
 subcategory: ""
 description: |-
   Manages a telemetry v2 configuration in Jamf Protect. Telemetry configurations define which endpoint security events, log files, and performance metrics are collected from managed endpoints.
+  Each log_* category attribute reads true only when the configuration collects every event in that category, so a configuration that collects part of a category shows a diff that restores the full category. Events that no category covers are kept in additional_events.
 ---
 
 # jamfprotect_telemetry (Resource)
 
 Manages a telemetry v2 configuration in Jamf Protect. Telemetry configurations define which endpoint security events, log files, and performance metrics are collected from managed endpoints.
+
+Each `log_*` category attribute reads `true` only when the configuration collects every event in that category, so a configuration that collects part of a category shows a diff that restores the full category. Events that no category covers are kept in `additional_events`.
 
 ## Example Usage
 
@@ -97,6 +100,7 @@ resource "jamfprotect_telemetry" "performance_monitoring" {
 
 ### Optional
 
+- `additional_events` (Set of String) Endpoint security event names to collect in addition to the `log_*` categories, for events that no category covers (for example `xpc_connect` or `fork`). The Jamf Protect API rejects names it does not support. Omit the attribute to keep the configuration's current additional events, including any added outside Terraform; set it to `[]` to remove them. An event that belongs to a category cannot be listed here; enable that category instead.
 - `collect_diagnostic_and_crash_reports` (Boolean) Whether diagnostic and crash report collection is enabled.
 - `collect_performance_metrics` (Boolean) Whether performance metrics collection is enabled.
 - `description` (String) A description of the telemetry v2 configuration.

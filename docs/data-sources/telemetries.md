@@ -34,6 +34,7 @@ output "telemetry_v2_names" {
 
 Read-Only:
 
+- `additional_events` (List of String) Collected event names that no category covers, sorted.
 - `collect_diagnostic_and_crash_reports` (Boolean) Whether diagnostic and crash report collection is enabled.
 - `collect_performance_metrics` (Boolean) Whether performance metrics collection is enabled.
 - `created` (String) The creation timestamp.

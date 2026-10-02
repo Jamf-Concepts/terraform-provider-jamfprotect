@@ -64,7 +64,7 @@ func TestEventsFromFlags_Individual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := eventsFromFlags(tt.flags)
+			got := eventsFromFlags(tt.flags, nil)
 			if !slices.Equal(got, tt.expected) {
 				t.Errorf("expected %v, got %v", tt.expected, got)
 			}
@@ -85,7 +85,7 @@ func TestEventsFromFlags_AllEnabled(t *testing.T) {
 		LogNetwork:          true,
 	}
 
-	got := eventsFromFlags(flags)
+	got := eventsFromFlags(flags, nil)
 
 	// Count total unique events across all categories.
 	allEvents := make(map[string]bool)
@@ -187,24 +187,24 @@ func TestFlagsFromEvents_Individual(t *testing.T) {
 	}
 }
 
-// TestFlagsFromEvents_SingleEvent verifies that a single event from a category activates the flag.
-func TestFlagsFromEvents_SingleEvent(t *testing.T) {
-	// A single "exec" event should activate LogAppsProcesses.
-	flags := flagsFromEvents([]string{"exec"})
-	if !flags.LogAppsProcesses {
-		t.Error("expected LogAppsProcesses to be true for event 'exec'")
-	}
-	if flags.LogAccessAuth {
-		t.Error("expected LogAccessAuth to be false")
+// TestFlagsFromEvents_PartialCategory verifies that a category with any event missing reads as disabled.
+func TestFlagsFromEvents_PartialCategory(t *testing.T) {
+	tests := []struct {
+		name   string
+		events []string
+	}{
+		{name: "single event", events: []string{"sudo"}},
+		{name: "all but one", events: logAccessAndAuthenticationEvents[1:]},
+		{name: "single event plus unmodelled", events: []string{"login_login", "xpc_connect"}},
 	}
 
-	// A single "sudo" event should activate LogAccessAuth.
-	flags = flagsFromEvents([]string{"sudo"})
-	if !flags.LogAccessAuth {
-		t.Error("expected LogAccessAuth to be true for event 'sudo'")
-	}
-	if flags.LogAppsProcesses {
-		t.Error("expected LogAppsProcesses to be false")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := flagsFromEvents(tt.events)
+			if got != (telemetryEventFlags{}) {
+				t.Errorf("expected no flags for a partial category, got %+v", got)
+			}
+		})
 	}
 }
 
@@ -247,7 +247,7 @@ func TestEventsFromFlags_RoundTrip(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			events := eventsFromFlags(tt.flags)
+			events := eventsFromFlags(tt.flags, nil)
 			roundTripped := flagsFromEvents(events)
 			if roundTripped != tt.flags {
 				t.Errorf("round-trip mismatch:\n  original:     %+v\n  events:       %v\n  round-tripped: %+v", tt.flags, events, roundTripped)
@@ -268,15 +268,72 @@ func TestAppendEvents_Deduplication(t *testing.T) {
 	}
 }
 
-// TestUnknownEventsIgnored verifies that unknown events from the API don't crash flagsFromEvents.
+// TestUnknownEventsIgnored verifies that unmodelled events do not affect category flags.
 func TestUnknownEventsIgnored(t *testing.T) {
-	flags := flagsFromEvents([]string{"unknown_future_event", "exec"})
-	if !flags.LogAppsProcesses {
-		t.Error("expected LogAppsProcesses to be true for event 'exec'")
+	events := append([]string{"unknown_future_event"}, logApplicationsAndProcessesEvents...)
+	got := flagsFromEvents(events)
+	if got != (telemetryEventFlags{LogAppsProcesses: true}) {
+		t.Errorf("expected only LogAppsProcesses, got %+v", got)
 	}
-	// Unknown event should not cause any other flags to be set.
-	if flags.LogAccessAuth || flags.LogUsersGroups || flags.LogPersistence ||
-		flags.LogHardwareSoftware || flags.LogAppleSecurity || flags.LogSystem {
-		t.Error("unexpected flag set from unknown event")
+}
+
+// TestEventsFromFlags_AdditionalEvents verifies additional events follow the category events without duplicates.
+func TestEventsFromFlags_AdditionalEvents(t *testing.T) {
+	got := eventsFromFlags(telemetryEventFlags{LogPersistence: true}, []string{"xpc_connect", "fork", "xpc_connect"})
+	expected := append(slices.Clone(logPersistenceEvents), "xpc_connect", "fork")
+	if !slices.Equal(got, expected) {
+		t.Errorf("expected %v, got %v", expected, got)
+	}
+}
+
+// TestEventsFromFlags_RoundTripWithAdditionalEvents verifies flags and additional events survive an API round trip.
+func TestEventsFromFlags_RoundTripWithAdditionalEvents(t *testing.T) {
+	flags := telemetryEventFlags{LogAccessAuth: true, LogSystem: true}
+	additional := []string{"xpc_connect", "setuid"}
+
+	events := eventsFromFlags(flags, additional)
+	if got := flagsFromEvents(events); got != flags {
+		t.Errorf("flags round-trip mismatch: expected %+v, got %+v", flags, got)
+	}
+	if got := unmodelledEvents(events); !slices.Equal(got, additional) {
+		t.Errorf("additional events round-trip mismatch: expected %v, got %v", additional, got)
+	}
+}
+
+// TestUnmodelledEvents verifies only events outside every category are returned, once each, in order.
+func TestUnmodelledEvents(t *testing.T) {
+	tests := []struct {
+		name     string
+		events   []string
+		expected []string
+	}{
+		{name: "nil", events: nil, expected: []string{}},
+		{name: "only category events", events: []string{"sudo", "exec", "network_connect"}, expected: []string{}},
+		{name: "mixed", events: []string{"login_login", "xpc_connect", "exec", "fork"}, expected: []string{"xpc_connect", "fork"}},
+		{name: "duplicates", events: []string{"fork", "fork", "setuid"}, expected: []string{"fork", "setuid"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := unmodelledEvents(tt.events)
+			if !slices.Equal(got, tt.expected) {
+				t.Errorf("expected %v, got %v", tt.expected, got)
+			}
+		})
+	}
+}
+
+// TestEventCategoryAttribute verifies events map to the attribute of the category that collects them.
+func TestEventCategoryAttribute(t *testing.T) {
+	for _, category := range telemetryEventCategories {
+		for _, event := range category.Events {
+			got, ok := eventCategoryAttribute(event)
+			if !ok || got != category.Attribute {
+				t.Errorf("event %q: expected %q, got %q (found=%v)", event, category.Attribute, got, ok)
+			}
+		}
+	}
+	if got, ok := eventCategoryAttribute("xpc_connect"); ok {
+		t.Errorf("expected xpc_connect to have no category, got %q", got)
 	}
 }
