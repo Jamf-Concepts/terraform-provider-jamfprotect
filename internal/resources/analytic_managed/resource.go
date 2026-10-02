@@ -136,7 +136,7 @@ func (r *AnalyticManagedResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"tenant_actions": schema.SetNestedAttribute{
-				MarkdownDescription: "Tenant-level action overrides. Set to override the default actions configured on the Jamf-managed analytic.",
+				MarkdownDescription: "Tenant-level action overrides. Set to replace the default actions configured on the Jamf-managed analytic. Null when the analytic has no tenant override; omitting the attribute leaves the current override unchanged.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
