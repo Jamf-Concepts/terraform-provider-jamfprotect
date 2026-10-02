@@ -147,6 +147,42 @@ resource "terraform_data" "trigger" {
 	})
 }
 
+// TestAccSetComputerPlanAction_unknownPlan verifies that a plan_id the tenant
+// does not have fails the action before any computer is touched.
+// setComputerPlan accepts an unknown numeric plan ID and clears the computer's
+// pending plan, so without the pre-check this would report success. The plan
+// lookup fails first, so the well-formed but non-existent computer UUID is never
+// sent and nothing is mutated.
+func TestAccSetComputerPlanAction_unknownPlan(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		TerraformVersionChecks:   []tfversion.TerraformVersionCheck{tfversion.SkipBelow(tfversion.Version1_14_0)},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+action "jamfprotect_set_computer_plan" "unknown" {
+  config {
+    computer_uuids = ["00000000-0000-4000-8000-000000000000"]
+    plan_id        = "999999999"
+  }
+}
+
+resource "terraform_data" "trigger" {
+  lifecycle {
+    action_trigger {
+      events  = [after_create]
+      actions = [action.jamfprotect_set_computer_plan.unknown]
+    }
+  }
+}
+`,
+				ExpectError: regexp.MustCompile(`Plan Not Found`),
+			},
+		},
+	})
+}
+
 // TestAccSetComputerPlanAction_invoke moves a real computer to a real plan and
 // waits for the agent to check in on it. Gated on operator-supplied targets,
 // because it needs an enrolled computer and a plan that exists in the tenant:

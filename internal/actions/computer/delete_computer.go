@@ -85,7 +85,7 @@ func (a *DeleteComputerAction) Invoke(ctx context.Context, req action.InvokeRequ
 	deleted := 0
 	for i, uuid := range uuids {
 		computer, err := a.client.GetComputer(ctx, uuid)
-		if computerMissing(err) || (err == nil && computer == nil) {
+		if computerMissing(err, uuid) || (err == nil && computer == nil) {
 			resp.Diagnostics.AddWarning(
 				"Computer Already Deleted",
 				fmt.Sprintf("Computer %s does not exist in Jamf Protect, so there was nothing to delete.", uuid),
