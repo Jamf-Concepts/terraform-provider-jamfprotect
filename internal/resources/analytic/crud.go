@@ -167,7 +167,12 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	input := r.buildInput(ctx, data, state.AnalyticActions, &resp.Diagnostics)
+	priorActions := r.priorAnalyticActions(ctx, data.ID.ValueString(), state.AnalyticActions, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := r.buildInput(ctx, data, priorActions, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
