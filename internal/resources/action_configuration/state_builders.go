@@ -5,6 +5,8 @@ package action_configuration
 
 import (
 	"context"
+	"slices"
+	"strings"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
@@ -308,19 +310,56 @@ func addBatchConfigAttrs(attrs map[string]attr.Value, batch *jamfprotect.BatchCo
 	attrs["max_batch_size_bytes"] = common.Int64ValueOrNullValue(batch.SizeInBytes)
 }
 
+// matchWriteOnlyHeaders pairs API headers on an endpoint, by index, with the
+// prior value_wo headers they carry forward. A header matches the prior header
+// at the same position with the same name; failing that, it takes the first
+// unused prior value_wo header on the same endpoint whose name matches ignoring
+// case, so a header moved out of band still keeps its value out of state.
+func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint int, woHeaders map[headerPosition]endpointHeaderModel) map[int]endpointHeaderModel {
+	matched := map[int]endpointHeaderModel{}
+	used := map[int]bool{}
+	for j, h := range headers {
+		if prior, ok := woHeaders[headerPosition{endpoint: endpoint, header: j}]; ok && prior.Header.ValueString() == h.Header {
+			matched[j] = prior
+			used[j] = true
+		}
+	}
+	var candidates []int
+	for pos := range woHeaders {
+		if pos.endpoint == endpoint {
+			candidates = append(candidates, pos.header)
+		}
+	}
+	slices.Sort(candidates)
+	for j, h := range headers {
+		if _, ok := matched[j]; ok {
+			continue
+		}
+		for _, c := range candidates {
+			prior := woHeaders[headerPosition{endpoint: endpoint, header: c}]
+			if !used[c] && strings.EqualFold(prior.Header.ValueString(), h.Header) {
+				matched[j] = prior
+				used[c] = true
+				break
+			}
+		}
+	}
+	return matched
+}
+
 // buildHeadersList converts a slice of API header models to a Terraform List value.
-// A header that the prior model manages through value_wo, at the same position
-// and with the same name, keeps its value out of state and carries its
-// value_wo_version forward.
+// A header matched to a prior value_wo header by matchWriteOnlyHeaders keeps its
+// value out of state and carries its value_wo_version forward.
 func buildHeadersList(headers []jamfprotect.ReportClientHeader, endpoint int, woHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
 	if len(headers) == 0 {
 		return types.ListNull(types.ObjectType{AttrTypes: endpointHeaderAttrTypes})
 	}
+	matched := matchWriteOnlyHeaders(headers, endpoint, woHeaders)
 	items := make([]attr.Value, 0, len(headers))
 	for j, h := range headers {
 		value := types.StringValue(h.Value)
 		version := types.StringNull()
-		if prior, ok := woHeaders[headerPosition{endpoint: endpoint, header: j}]; ok && prior.Header.ValueString() == h.Header {
+		if prior, ok := matched[j]; ok {
 			value = types.StringNull()
 			version = prior.ValueWOVersion
 		}
