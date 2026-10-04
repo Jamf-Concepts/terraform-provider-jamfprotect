@@ -50,6 +50,14 @@ func TestBuildHeadersList_WriteOnly(t *testing.T) {
 			wantVersion: []types.String{types.StringNull(), types.StringNull()},
 		},
 		{
+			name: "write-only header moved to another position is matched by name",
+			woHeaders: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 1}: {Header: types.StringValue("authorization"), ValueWOVersion: types.StringValue("1")},
+			},
+			wantValues:  []types.String{types.StringNull(), types.StringValue("application/json")},
+			wantVersion: []types.String{types.StringValue("1"), types.StringNull()},
+		},
+		{
 			name: "write-only header on another endpoint is not matched",
 			woHeaders: map[headerPosition]endpointHeaderModel{
 				{endpoint: 1, header: 0}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("1")},
@@ -88,5 +96,76 @@ func TestBuildHeadersList_WriteOnly(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestBuildHTTPEndpointsState_WriteOnlyHeaderMoved verifies that a value_wo header whose position
+// moved on the server, after another header was removed out of band, stays out of state.
+func TestBuildHTTPEndpointsState_WriteOnlyHeaderMoved(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	woHeaders := map[headerPosition]endpointHeaderModel{
+		{endpoint: 0, header: 1}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("1")},
+	}
+	clients := []jamfprotect.ReportClient{{
+		Type: "Http",
+		Params: jamfprotect.ReportClientParams{
+			URL:     "https://example.invalid/hook",
+			Method:  "POST",
+			Headers: []jamfprotect.ReportClientHeader{{Header: "Authorization", Value: "Bearer SECRET"}},
+		},
+	}}
+
+	var diags diag.Diagnostics
+	list := buildHTTPEndpointsState(clients, woHeaders, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	var endpoints []httpEndpointBlockModel
+	diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
+	if diags.HasError() || len(endpoints) != 1 {
+		t.Fatalf("expected one endpoint, got %d: %v", len(endpoints), diags)
+	}
+	var headers []endpointHeaderModel
+	diags.Append(endpoints[0].Headers.ElementsAs(ctx, &headers, false)...)
+	if diags.HasError() || len(headers) != 1 {
+		t.Fatalf("expected one header, got %d: %v", len(headers), diags)
+	}
+	if !headers[0].Value.IsNull() {
+		t.Errorf("value = %v, want null", headers[0].Value)
+	}
+	if !headers[0].ValueWOVersion.Equal(types.StringValue("1")) {
+		t.Errorf("value_wo_version = %v, want \"1\"", headers[0].ValueWOVersion)
+	}
+}
+
+// TestMatchWriteOnlyHeaders_PositionWins verifies that exact position matches are assigned before
+// name fallbacks, so a fallback cannot take a prior header another API header matches exactly.
+func TestMatchWriteOnlyHeaders_PositionWins(t *testing.T) {
+	t.Parallel()
+
+	woHeaders := map[headerPosition]endpointHeaderModel{
+		{endpoint: 0, header: 1}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("b")},
+		{endpoint: 0, header: 2}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("c")},
+	}
+	headers := []jamfprotect.ReportClientHeader{
+		{Header: "Authorization"},
+		{Header: "Authorization"},
+		{Header: "Authorization"},
+	}
+
+	matched := matchWriteOnlyHeaders(headers, 0, woHeaders)
+	if len(matched) != 2 {
+		t.Fatalf("expected 2 matches, got %d: %v", len(matched), matched)
+	}
+	if got := matched[1].ValueWOVersion.ValueString(); got != "b" {
+		t.Errorf("header 1 version = %q, want b", got)
+	}
+	if got := matched[2].ValueWOVersion.ValueString(); got != "c" {
+		t.Errorf("header 2 version = %q, want c", got)
+	}
+	if _, ok := matched[0]; ok {
+		t.Errorf("header 0 should not match, got %v", matched[0])
 	}
 }
