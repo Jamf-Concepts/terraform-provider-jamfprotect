@@ -144,3 +144,22 @@ func analyticActionParametersToMap(raw string, diags *diag.Diagnostics) (types.M
 	diags.Append(d...)
 	return params, !d.HasError()
 }
+
+// priorAnalyticActions returns the analytic actions an update merges the SmartGroup action into:
+// the actions in prior state, or the analytic's live actions when prior state predates the
+// analytic_actions attribute and holds null.
+func (r *AnalyticResource) priorAnalyticActions(ctx context.Context, id string, stateActions types.List, diags *diag.Diagnostics) types.List {
+	if !stateActions.IsNull() {
+		return stateActions
+	}
+	live, err := r.client.GetAnalytic(ctx, id)
+	if err != nil {
+		diags.AddError("Error reading analytic actions before update", fmt.Sprintf("analytic_actions is not in state and reading analytic %s failed: %s", id, err.Error()))
+		return stateActions
+	}
+	if live == nil {
+		diags.AddError("Error reading analytic actions before update", fmt.Sprintf("analytic_actions is not in state and analytic %s was not found.", id))
+		return stateActions
+	}
+	return apiAnalyticActionsToList(live.AnalyticActions, diags)
+}

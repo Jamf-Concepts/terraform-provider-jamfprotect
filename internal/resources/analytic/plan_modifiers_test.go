@@ -92,3 +92,17 @@ func TestAnalyticActionsPlanModifier_LeavesUnknownWhenSmartGroupUnknown(t *testi
 		t.Errorf("expected analytic_actions to stay unknown, got %v", resp.PlanValue)
 	}
 }
+
+func TestAnalyticActionsPlanModifier_LeavesUnknownWhenStateNull(t *testing.T) {
+	t.Parallel()
+
+	elemType := types.ObjectType{AttrTypes: analyticActionAttrTypes}
+	unknown := types.ListUnknown(elemType)
+	req := analyticActionsModifierRequest(t, types.BoolValue(true), types.StringValue("new-group"), types.ListNull(elemType), unknown)
+	resp := planmodifier.ListResponse{PlanValue: req.PlanValue}
+
+	analyticActionsPlanModifier{}.PlanModifyList(context.Background(), req, &resp)
+	if !resp.PlanValue.IsUnknown() {
+		t.Errorf("expected analytic_actions to stay unknown when prior state holds null, got %v", resp.PlanValue)
+	}
+}

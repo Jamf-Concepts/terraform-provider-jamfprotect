@@ -25,10 +25,12 @@ func (m analyticActionsPlanModifier) MarkdownDescription(ctx context.Context) st
 	return m.Description(ctx)
 }
 
-// PlanModifyList computes analytic_actions when the framework has marked it unknown and the
-// Smart Group attributes are known; otherwise the planned value is left as it is.
+// PlanModifyList computes analytic_actions when the framework has marked it unknown, prior state
+// holds the attribute and the Smart Group attributes are known; otherwise the planned value is
+// left as it is. A create, or state written before the attribute existed, stays unknown because
+// the actions sent are not known until apply.
 func (m analyticActionsPlanModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.Plan.Raw.IsNull() || !req.PlanValue.IsUnknown() {
+	if req.Plan.Raw.IsNull() || !req.PlanValue.IsUnknown() || req.StateValue.IsNull() {
 		return
 	}
 

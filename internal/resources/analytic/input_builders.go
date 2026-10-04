@@ -14,8 +14,8 @@ import (
 )
 
 // buildInput converts the Terraform model into the service input. priorActions holds the
-// analytic_actions from prior state (null on create); actions other than SmartGroup are carried
-// over from it, and the SmartGroup action follows the Smart Group attributes.
+// analytic's current actions (null on create); actions other than SmartGroup are carried over
+// from it, and the SmartGroup action follows the Smart Group attributes.
 func (r *AnalyticResource) buildInput(ctx context.Context, data AnalyticResourceModel, priorActions types.List, diags *diag.Diagnostics) *jamfprotect.AnalyticInput {
 	sensorType := mapSensorTypeUIToAPI(data.SensorType.ValueString(), diags)
 	if diags.HasError() {
