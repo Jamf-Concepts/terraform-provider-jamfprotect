@@ -240,7 +240,7 @@ Optional:
 Optional:
 
 - `header` (String) HTTP header name.
-- `value` (String, Sensitive) HTTP header value. Stored in Terraform state; use `value_wo` for credentials such as an `Authorization` token so the value is never persisted. Conflicts with `value_wo`.
+- `value` (String, Sensitive) HTTP header value. Stored in Terraform state; use `value_wo` for credentials such as an `Authorization` token so the value is never persisted. A value changed outside Terraform is read back as null rather than stored, so the next plan restores the configured value. Conflicts with `value_wo`.
 - `value_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) HTTP header value, supplied as a [write-only attribute](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) (Terraform 1.11+). The value is sent to Jamf Protect but never stored in Terraform state, so changes made outside Terraform are not detected. Requires `value_wo_version`; rotate the value by changing that version.
 - `value_wo_version` (String) Version identifier for `value_wo`. Change this value (for example to a new timestamp) to push a rotated header value, since the write-only value itself is not tracked in state. Required when `value_wo` is set.
 

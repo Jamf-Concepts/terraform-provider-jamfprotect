@@ -12,183 +12,209 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// TestBuildHeadersList_WriteOnly verifies that headers managed through value_wo keep their values out of state.
-func TestBuildHeadersList_WriteOnly(t *testing.T) {
+// testSecret is the value_wo secret the API returns, which must never reach state.
+const testSecret = "Bearer SECRET"
+
+// plainHeader returns a prior header model that stores its value in state.
+func plainHeader(name, value string) endpointHeaderModel {
+	return endpointHeaderModel{Header: types.StringValue(name), Value: types.StringValue(value), ValueWO: types.StringNull(), ValueWOVersion: types.StringNull()}
+}
+
+// writeOnlyHeader returns a prior header model managed through value_wo.
+func writeOnlyHeader(name, version string) endpointHeaderModel {
+	return endpointHeaderModel{Header: types.StringValue(name), Value: types.StringNull(), ValueWO: types.StringNull(), ValueWOVersion: types.StringValue(version)}
+}
+
+// httpClient returns an API HTTP report client carrying the given headers.
+func httpClient(headers ...jamfprotect.ReportClientHeader) jamfprotect.ReportClient {
+	return jamfprotect.ReportClient{Type: "Http", Params: jamfprotect.ReportClientParams{URL: "https://example.invalid/hook", Method: "POST", Headers: headers}}
+}
+
+// stateHeaders flattens HTTP endpoint state into header models per endpoint.
+func stateHeaders(t *testing.T, list types.List) [][]endpointHeaderModel {
+	t.Helper()
+	ctx := context.Background()
+	var endpoints []httpEndpointBlockModel
+	if d := list.ElementsAs(ctx, &endpoints, false); d.HasError() {
+		t.Fatalf("endpoints: %v", d)
+	}
+	out := make([][]endpointHeaderModel, 0, len(endpoints))
+	for _, endpoint := range endpoints {
+		var headers []endpointHeaderModel
+		if !endpoint.Headers.IsNull() {
+			if d := endpoint.Headers.ElementsAs(ctx, &headers, false); d.HasError() {
+				t.Fatalf("headers: %v", d)
+			}
+		}
+		out = append(out, headers)
+	}
+	return out
+}
+
+// TestBuildHTTPEndpointsState_HeaderValues verifies, across three consecutive refreshes each fed
+// the previous refresh's state, that a value_wo secret never reaches state whatever changed outside
+// Terraform, and that an unchanged configuration keeps its plain values and converges.
+func TestBuildHTTPEndpointsState_HeaderValues(t *testing.T) {
 	t.Parallel()
 
-	apiHeaders := []jamfprotect.ReportClientHeader{
-		{Header: "Authorization", Value: "Bearer secret"},
-		{Header: "Content-Type", Value: "application/json"},
+	auth := func(value string) jamfprotect.ReportClientHeader {
+		return jamfprotect.ReportClientHeader{Header: "Authorization", Value: value}
 	}
+	contentType := jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "application/json"}
+	null := types.StringNull()
+	str := types.StringValue
 
 	tests := []struct {
 		name        string
-		woHeaders   map[headerPosition]endpointHeaderModel
-		endpoint    int
-		wantValues  []types.String
-		wantVersion []types.String
+		prior       map[headerPosition]endpointHeaderModel
+		clients     []jamfprotect.ReportClient
+		wantValues  [][]types.String
+		wantVersion [][]types.String
 	}{
 		{
-			name:        "no write-only headers",
-			wantValues:  []types.String{types.StringValue("Bearer secret"), types.StringValue("application/json")},
-			wantVersion: []types.String{types.StringNull(), types.StringNull()},
+			name: "unchanged configuration",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: plainHeader("Content-Type", "application/json"),
+				{endpoint: 0, header: 1}: writeOnlyHeader("Authorization", "1"),
+			},
+			clients:     []jamfprotect.ReportClient{httpClient(contentType, auth(testSecret))},
+			wantValues:  [][]types.String{{str("application/json"), null}},
+			wantVersion: [][]types.String{{null, str("1")}},
 		},
 		{
-			name: "write-only header at matching position",
-			woHeaders: map[headerPosition]endpointHeaderModel{
-				{endpoint: 0, header: 0}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("1")},
+			name: "write-only and same-named plain header on different endpoints",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1"),
+				{endpoint: 1, header: 0}: plainHeader("Authorization", "Bearer PLAIN"),
 			},
-			wantValues:  []types.String{types.StringNull(), types.StringValue("application/json")},
-			wantVersion: []types.String{types.StringValue("1"), types.StringNull()},
+			clients:     []jamfprotect.ReportClient{httpClient(auth(testSecret)), httpClient(auth("Bearer PLAIN"))},
+			wantValues:  [][]types.String{{null}, {str("Bearer PLAIN")}},
+			wantVersion: [][]types.String{{str("1")}, {null}},
 		},
 		{
-			name: "write-only header with a different name is not matched",
-			woHeaders: map[headerPosition]endpointHeaderModel{
-				{endpoint: 0, header: 0}: {Header: types.StringValue("X-Api-Key"), ValueWOVersion: types.StringValue("1")},
+			name: "header moved within its endpoint",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: plainHeader("Content-Type", "application/json"),
+				{endpoint: 0, header: 1}: writeOnlyHeader("Authorization", "1"),
 			},
-			wantValues:  []types.String{types.StringValue("Bearer secret"), types.StringValue("application/json")},
-			wantVersion: []types.String{types.StringNull(), types.StringNull()},
+			clients:     []jamfprotect.ReportClient{httpClient(auth(testSecret))},
+			wantValues:  [][]types.String{{null}},
+			wantVersion: [][]types.String{{str("1")}},
 		},
 		{
-			name: "write-only header moved to another position is matched by name",
-			woHeaders: map[headerPosition]endpointHeaderModel{
-				{endpoint: 0, header: 1}: {Header: types.StringValue("authorization"), ValueWOVersion: types.StringValue("1")},
+			name: "earlier endpoint deleted",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: plainHeader("Content-Type", "application/json"),
+				{endpoint: 1, header: 0}: writeOnlyHeader("Authorization", "1"),
 			},
-			wantValues:  []types.String{types.StringNull(), types.StringValue("application/json")},
-			wantVersion: []types.String{types.StringValue("1"), types.StringNull()},
+			clients:     []jamfprotect.ReportClient{httpClient(auth(testSecret))},
+			wantValues:  [][]types.String{{null}},
+			wantVersion: [][]types.String{{null}},
 		},
 		{
-			name: "write-only header on another endpoint is not matched",
-			woHeaders: map[headerPosition]endpointHeaderModel{
-				{endpoint: 1, header: 0}: {Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("1")},
+			name:        "header renamed on the server",
+			prior:       map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1")},
+			clients:     []jamfprotect.ReportClient{httpClient(jamfprotect.ReportClientHeader{Header: "X-Api-Key", Value: testSecret})},
+			wantValues:  [][]types.String{{null}},
+			wantVersion: [][]types.String{{null}},
+		},
+		{
+			name:        "endpoint inserted ahead",
+			prior:       map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1")},
+			clients:     []jamfprotect.ReportClient{httpClient(auth("Bearer OTHER")), httpClient(auth(testSecret))},
+			wantValues:  [][]types.String{{null}, {null}},
+			wantVersion: [][]types.String{{str("1")}, {null}},
+		},
+		{
+			name: "endpoints reordered",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1"),
+				{endpoint: 1, header: 0}: plainHeader("Authorization", "Bearer PLAIN"),
 			},
-			wantValues:  []types.String{types.StringValue("Bearer secret"), types.StringValue("application/json")},
-			wantVersion: []types.String{types.StringNull(), types.StringNull()},
+			clients:     []jamfprotect.ReportClient{httpClient(auth("Bearer PLAIN")), httpClient(auth(testSecret))},
+			wantValues:  [][]types.String{{null}, {null}},
+			wantVersion: [][]types.String{{str("1")}, {null}},
+		},
+		{
+			name: "same-named headers swapped",
+			prior: map[headerPosition]endpointHeaderModel{
+				{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1"),
+				{endpoint: 0, header: 1}: plainHeader("Authorization", "Bearer PLAIN"),
+			},
+			clients:     []jamfprotect.ReportClient{httpClient(auth("Bearer PLAIN"), auth(testSecret))},
+			wantValues:  [][]types.String{{null, null}},
+			wantVersion: [][]types.String{{str("1"), null}},
+		},
+		{
+			name:        "same-named header inserted ahead",
+			prior:       map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1")},
+			clients:     []jamfprotect.ReportClient{httpClient(auth("Bearer NEW"), auth(testSecret))},
+			wantValues:  [][]types.String{{null, null}},
+			wantVersion: [][]types.String{{str("1"), null}},
+		},
+		{
+			name:        "plain value changed on the server",
+			prior:       map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: plainHeader("Content-Type", "application/json")},
+			clients:     []jamfprotect.ReportClient{httpClient(jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "text/plain"})},
+			wantValues:  [][]types.String{{null}},
+			wantVersion: [][]types.String{{null}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			ctx := context.Background()
 
-			var diags diag.Diagnostics
-			list := buildHeadersList(apiHeaders, matchWriteOnlyHeaders(apiHeaders, tt.endpoint, tt.woHeaders), tt.woHeaders, false, &diags)
-			if diags.HasError() {
-				t.Fatalf("unexpected diagnostics: %v", diags)
-			}
-			var got []endpointHeaderModel
-			diags.Append(list.ElementsAs(context.Background(), &got, false)...)
-			if diags.HasError() {
-				t.Fatalf("unexpected diagnostics: %v", diags)
-			}
-			if len(got) != len(apiHeaders) {
-				t.Fatalf("got %d headers, want %d", len(got), len(apiHeaders))
-			}
-			for i, h := range got {
-				if !h.Value.Equal(tt.wantValues[i]) {
-					t.Errorf("header %d value = %v, want %v", i, h.Value, tt.wantValues[i])
+			prior := tt.prior
+			for refresh := 1; refresh <= 3; refresh++ {
+				var diags diag.Diagnostics
+				list := buildHTTPEndpointsState(tt.clients, prior, &diags)
+				if diags.HasError() {
+					t.Fatalf("refresh %d: unexpected diagnostics: %v", refresh, diags)
 				}
-				if !h.ValueWOVersion.Equal(tt.wantVersion[i]) {
-					t.Errorf("header %d value_wo_version = %v, want %v", i, h.ValueWOVersion, tt.wantVersion[i])
+				got := stateHeaders(t, list)
+				if len(got) != len(tt.wantValues) {
+					t.Fatalf("refresh %d: got %d endpoints, want %d", refresh, len(got), len(tt.wantValues))
 				}
-				if !h.ValueWO.IsNull() {
-					t.Errorf("header %d value_wo = %v, want null", i, h.ValueWO)
+				for i := range got {
+					if len(got[i]) != len(tt.wantValues[i]) {
+						t.Fatalf("refresh %d endpoint %d: got %d headers, want %d", refresh, i, len(got[i]), len(tt.wantValues[i]))
+					}
+					for j, h := range got[i] {
+						if h.Value.ValueString() == testSecret {
+							t.Errorf("refresh %d endpoint %d header %d: secret stored in state", refresh, i, j)
+						}
+						if !h.Value.Equal(tt.wantValues[i][j]) {
+							t.Errorf("refresh %d endpoint %d header %d value = %v, want %v", refresh, i, j, h.Value, tt.wantValues[i][j])
+						}
+						if !h.ValueWOVersion.Equal(tt.wantVersion[i][j]) {
+							t.Errorf("refresh %d endpoint %d header %d value_wo_version = %v, want %v", refresh, i, j, h.ValueWOVersion, tt.wantVersion[i][j])
+						}
+					}
+				}
+				prior = priorHTTPHeaders(ctx, list, &diags)
+				if diags.HasError() {
+					t.Fatalf("refresh %d: priorHTTPHeaders: %v", refresh, diags)
 				}
 			}
 		})
 	}
 }
 
-// TestBuildHTTPEndpointsState_WriteOnlyFailsClosed verifies that a value_wo secret stays out of
-// state when its header moved, its endpoint shifted or it was renamed out of band, and that plain
-// header values stay in state when every value_wo header is matched.
-func TestBuildHTTPEndpointsState_WriteOnlyFailsClosed(t *testing.T) {
+// TestBuildHTTPEndpointsState_NoPriorHeaders verifies that without a prior model, as on import,
+// header values are read from the API.
+func TestBuildHTTPEndpointsState_NoPriorHeaders(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
-	httpClient := func(headers ...jamfprotect.ReportClientHeader) jamfprotect.ReportClient {
-		return jamfprotect.ReportClient{Type: "Http", Params: jamfprotect.ReportClientParams{URL: "https://example.invalid/hook", Method: "POST", Headers: headers}}
+	var diags diag.Diagnostics
+	list := buildHTTPEndpointsState([]jamfprotect.ReportClient{httpClient(jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "application/json"})}, nil, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
 	}
-	auth := jamfprotect.ReportClientHeader{Header: "Authorization", Value: "Bearer SECRET"}
-	contentType := jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "application/json"}
-	woAuth := endpointHeaderModel{Header: types.StringValue("Authorization"), ValueWOVersion: types.StringValue("1")}
-
-	tests := []struct {
-		name        string
-		woHeaders   map[headerPosition]endpointHeaderModel
-		clients     []jamfprotect.ReportClient
-		wantValues  [][]types.String
-		wantVersion [][]types.String
-		wantWarning bool
-	}{
-		{
-			name:        "all write-only headers matched keeps plain values",
-			woHeaders:   map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 1}: woAuth},
-			clients:     []jamfprotect.ReportClient{httpClient(contentType, auth)},
-			wantValues:  [][]types.String{{types.StringValue("application/json"), types.StringNull()}},
-			wantVersion: [][]types.String{{types.StringNull(), types.StringValue("1")}},
-		},
-		{
-			name:        "header moved within its endpoint",
-			woHeaders:   map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 1}: woAuth},
-			clients:     []jamfprotect.ReportClient{httpClient(auth)},
-			wantValues:  [][]types.String{{types.StringNull()}},
-			wantVersion: [][]types.String{{types.StringValue("1")}},
-		},
-		{
-			name:        "earlier endpoint deleted",
-			woHeaders:   map[headerPosition]endpointHeaderModel{{endpoint: 1, header: 0}: woAuth},
-			clients:     []jamfprotect.ReportClient{httpClient(auth, contentType)},
-			wantValues:  [][]types.String{{types.StringNull(), types.StringNull()}},
-			wantVersion: [][]types.String{{types.StringNull(), types.StringNull()}},
-			wantWarning: true,
-		},
-		{
-			name:      "header renamed on the server",
-			woHeaders: map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: woAuth},
-			clients: []jamfprotect.ReportClient{
-				httpClient(jamfprotect.ReportClientHeader{Header: "X-Api-Key", Value: "Bearer SECRET"}),
-				httpClient(contentType),
-			},
-			wantValues:  [][]types.String{{types.StringNull()}, {types.StringNull()}},
-			wantVersion: [][]types.String{{types.StringNull()}, {types.StringNull()}},
-			wantWarning: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var diags diag.Diagnostics
-			list := buildHTTPEndpointsState(tt.clients, tt.woHeaders, &diags)
-			if diags.HasError() {
-				t.Fatalf("unexpected diagnostics: %v", diags)
-			}
-			if got := diags.WarningsCount() > 0; got != tt.wantWarning {
-				t.Errorf("warning emitted = %t, want %t: %v", got, tt.wantWarning, diags)
-			}
-			var endpoints []httpEndpointBlockModel
-			diags.Append(list.ElementsAs(ctx, &endpoints, false)...)
-			if diags.HasError() || len(endpoints) != len(tt.wantValues) {
-				t.Fatalf("got %d endpoints, want %d: %v", len(endpoints), len(tt.wantValues), diags)
-			}
-			for i, endpoint := range endpoints {
-				var headers []endpointHeaderModel
-				diags.Append(endpoint.Headers.ElementsAs(ctx, &headers, false)...)
-				if diags.HasError() || len(headers) != len(tt.wantValues[i]) {
-					t.Fatalf("endpoint %d: got %d headers, want %d: %v", i, len(headers), len(tt.wantValues[i]), diags)
-				}
-				for j, h := range headers {
-					if !h.Value.Equal(tt.wantValues[i][j]) {
-						t.Errorf("endpoint %d header %d value = %v, want %v", i, j, h.Value, tt.wantValues[i][j])
-					}
-					if !h.ValueWOVersion.Equal(tt.wantVersion[i][j]) {
-						t.Errorf("endpoint %d header %d value_wo_version = %v, want %v", i, j, h.ValueWOVersion, tt.wantVersion[i][j])
-					}
-				}
-			}
-		})
+	got := stateHeaders(t, list)
+	if len(got) != 1 || len(got[0]) != 1 || got[0][0].Value.ValueString() != "application/json" {
+		t.Errorf("expected the API value in state, got %v", got)
 	}
 }
 

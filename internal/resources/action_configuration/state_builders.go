@@ -5,7 +5,6 @@ package action_configuration
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -87,21 +86,20 @@ func (r *ActionConfigResource) applyState(ctx context.Context, data *ActionConfi
 		data.AlertDataCollect = types.ObjectNull(alertDataCollectionAttrTypes)
 	}
 
-	woHeaders := writeOnlyHeaders(ctx, data.HTTPEndpoints, diags)
+	priorHeaders := priorHTTPHeaders(ctx, data.HTTPEndpoints, diags)
 	if diags.HasError() {
 		return
 	}
-	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, woHeaders, diags)
+	data.HTTPEndpoints = buildHTTPEndpointsState(api.Clients, priorHeaders, diags)
 	data.KafkaEndpoints = buildKafkaEndpointsState(api.Clients, diags)
 	data.SyslogEndpoints = buildSyslogEndpointsState(api.Clients, diags)
 	data.LogFileEndpoint = buildLogFileEndpointState(api.Clients, diags)
 	data.JamfCloudEndpoint = buildJamfProtectCloudEndpointState(api.Clients, diags)
 }
 
-// writeOnlyHeaders returns the HTTP headers in the prior model that use
-// value_wo, keyed by position, so the state builder can keep their values out
-// of state.
-func writeOnlyHeaders(ctx context.Context, list types.List, diags *diag.Diagnostics) map[headerPosition]endpointHeaderModel {
+// priorHTTPHeaders returns the HTTP headers in the prior model keyed by
+// position, or nil when the prior model has no HTTP endpoints, as on import.
+func priorHTTPHeaders(ctx context.Context, list types.List, diags *diag.Diagnostics) map[headerPosition]endpointHeaderModel {
 	if list.IsNull() || list.IsUnknown() {
 		return nil
 	}
@@ -121,48 +119,29 @@ func writeOnlyHeaders(ctx context.Context, list types.List, diags *diag.Diagnost
 			return nil
 		}
 		for j, h := range models {
-			if common.IsKnownString(h.ValueWOVersion) {
-				headers[headerPosition{endpoint: i, header: j}] = h
-			}
+			headers[headerPosition{endpoint: i, header: j}] = h
 		}
 	}
 	return headers
 }
 
 // buildHTTPEndpointsState constructs the state for HTTP endpoints from the API clients.
-// woHeaders identifies headers managed through value_wo, whose values are not stored.
-// When a prior value_wo header matches no API header, such as after an endpoint is
-// deleted or a header renamed out of band, every unmatched header value is kept out
-// of state, because any of them could hold that secret.
-func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, woHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
-	var httpClients []jamfprotect.ReportClient
+// priorHeaders holds the prior model's headers, which decide the header values
+// stored; see buildHeadersList.
+func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, priorHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
+	items := make([]attr.Value, 0)
+	index := 0
 	for _, client := range clients {
-		if client.Type == "Http" {
-			httpClients = append(httpClients, client)
+		if client.Type != "Http" {
+			continue
 		}
-	}
-	matches := make([]map[int]headerPosition, len(httpClients))
-	consumed := map[headerPosition]bool{}
-	for i, client := range httpClients {
-		matches[i] = matchWriteOnlyHeaders(client.Params.Headers, i, woHeaders)
-		for _, pos := range matches[i] {
-			consumed[pos] = true
-		}
-	}
-	failClosed := len(consumed) < len(woHeaders)
-	if failClosed {
-		warnUnmatchedWriteOnlyHeaders(woHeaders, consumed, diags)
-	}
-
-	items := make([]attr.Value, 0, len(httpClients))
-	for i, client := range httpClients {
 		collectAlerts, collectLogs := splitSupportedReports(client.SupportedReports)
 		attrs := map[string]attr.Value{
 			"collect_alerts": common.StringsToSet(collectAlerts),
 			"collect_logs":   common.StringsToSet(collectLogs),
 			"url":            common.StringValueOrNullValue(client.Params.URL),
 			"method":         common.StringValueOrNullValue(client.Params.Method),
-			"headers":        buildHeadersList(client.Params.Headers, matches[i], woHeaders, failClosed, diags),
+			"headers":        buildHeadersList(client.Params.Headers, index, priorHeaders, diags),
 		}
 		addBatchConfigAttrs(attrs, client.BatchConfig)
 		if diags.HasError() {
@@ -171,6 +150,7 @@ func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, woHeaders map[h
 		obj, d := types.ObjectValue(httpEndpointBlockAttrTypes, attrs)
 		diags.Append(d...)
 		items = append(items, obj)
+		index++
 	}
 	if len(items) == 0 {
 		return types.ListNull(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes})
@@ -178,33 +158,6 @@ func buildHTTPEndpointsState(clients []jamfprotect.ReportClient, woHeaders map[h
 	list, d := types.ListValue(types.ObjectType{AttrTypes: httpEndpointBlockAttrTypes}, items)
 	diags.Append(d...)
 	return list
-}
-
-// warnUnmatchedWriteOnlyHeaders adds a warning naming each prior value_wo header
-// that no API header matched.
-func warnUnmatchedWriteOnlyHeaders(woHeaders map[headerPosition]endpointHeaderModel, consumed map[headerPosition]bool, diags *diag.Diagnostics) {
-	var unmatched []headerPosition
-	for pos := range woHeaders {
-		if !consumed[pos] {
-			unmatched = append(unmatched, pos)
-		}
-	}
-	slices.SortFunc(unmatched, func(a, b headerPosition) int {
-		if a.endpoint != b.endpoint {
-			return a.endpoint - b.endpoint
-		}
-		return a.header - b.header
-	})
-	names := make([]string, 0, len(unmatched))
-	for _, pos := range unmatched {
-		names = append(names, fmt.Sprintf("%q (http_endpoints[%d].headers[%d])", woHeaders[pos].Header.ValueString(), pos.endpoint, pos.header))
-	}
-	diags.AddWarning(
-		"HTTP header values kept out of state",
-		fmt.Sprintf("The action configuration no longer has a header matching the write-only header %s, so it may have been changed outside Terraform. "+
-			"To keep a write-only value out of state, the values of all HTTP headers not matched to a write-only header are left null. "+
-			"The next plan shows them as changes; applying it sends the configured values again.", strings.Join(names, ", ")),
-	)
 }
 
 // buildKafkaEndpointsState constructs the state for Kafka endpoints from the API clients.
@@ -356,22 +309,26 @@ func addBatchConfigAttrs(attrs map[string]attr.Value, batch *jamfprotect.BatchCo
 }
 
 // matchWriteOnlyHeaders pairs API headers on an endpoint, by index, with the
-// positions of the prior value_wo headers they carry forward. A header matches
-// the prior header at the same position with the same name ignoring case;
-// failing that, it takes the first unused prior value_wo header on the same
-// endpoint with that name, so a header moved out of band still matches.
-func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint int, woHeaders map[headerPosition]endpointHeaderModel) map[int]headerPosition {
+// positions of the prior value_wo headers whose value_wo_version they carry
+// forward. A header matches the prior value_wo header at the same position with
+// the same name ignoring case; failing that, it takes the first unused prior
+// value_wo header on the same endpoint with that name.
+func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint int, priorHeaders map[headerPosition]endpointHeaderModel) map[int]headerPosition {
+	isWriteOnly := func(pos headerPosition, name string) bool {
+		prior, ok := priorHeaders[pos]
+		return ok && common.IsKnownString(prior.ValueWOVersion) && strings.EqualFold(prior.Header.ValueString(), name)
+	}
 	matched := map[int]headerPosition{}
 	used := map[int]bool{}
 	for j, h := range headers {
 		pos := headerPosition{endpoint: endpoint, header: j}
-		if prior, ok := woHeaders[pos]; ok && strings.EqualFold(prior.Header.ValueString(), h.Header) {
+		if isWriteOnly(pos, h.Header) {
 			matched[j] = pos
 			used[j] = true
 		}
 	}
 	var candidates []int
-	for pos := range woHeaders {
+	for pos := range priorHeaders {
 		if pos.endpoint == endpoint {
 			candidates = append(candidates, pos.header)
 		}
@@ -383,7 +340,7 @@ func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint in
 		}
 		for _, c := range candidates {
 			pos := headerPosition{endpoint: endpoint, header: c}
-			if !used[c] && strings.EqualFold(woHeaders[pos].Header.ValueString(), h.Header) {
+			if !used[c] && isWriteOnly(pos, h.Header) {
 				matched[j] = pos
 				used[c] = true
 				break
@@ -393,23 +350,37 @@ func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint in
 	return matched
 }
 
+// keepHeaderValue reports whether an API header value may be stored in state:
+// when there are no prior headers, as on import, or when the prior header at the
+// same position has the same name and already holds that value. A value that is
+// not already in state is never written to it, so a value_wo secret cannot reach
+// state whatever changed outside Terraform.
+func keepHeaderValue(priorHeaders map[headerPosition]endpointHeaderModel, pos headerPosition, h jamfprotect.ReportClientHeader) bool {
+	if priorHeaders == nil {
+		return true
+	}
+	prior, ok := priorHeaders[pos]
+	return ok && strings.EqualFold(prior.Header.ValueString(), h.Header) && common.IsKnownString(prior.Value) && prior.Value.ValueString() == h.Value
+}
+
 // buildHeadersList converts a slice of API header models to a Terraform List value.
-// A header in matched keeps its value out of state and carries the value_wo_version
-// of its prior value_wo header forward. When failClosed is set, every other header
-// also keeps its value out of state.
-func buildHeadersList(headers []jamfprotect.ReportClientHeader, matched map[int]headerPosition, woHeaders map[headerPosition]endpointHeaderModel, failClosed bool, diags *diag.Diagnostics) types.List {
+// A header matched to a prior value_wo header carries its value_wo_version
+// forward with a null value. Any other header keeps its value only when
+// keepHeaderValue allows it, and is null otherwise, so the next plan shows the
+// configured value as a change.
+func buildHeadersList(headers []jamfprotect.ReportClientHeader, endpoint int, priorHeaders map[headerPosition]endpointHeaderModel, diags *diag.Diagnostics) types.List {
 	if len(headers) == 0 {
 		return types.ListNull(types.ObjectType{AttrTypes: endpointHeaderAttrTypes})
 	}
+	matched := matchWriteOnlyHeaders(headers, endpoint, priorHeaders)
 	items := make([]attr.Value, 0, len(headers))
 	for j, h := range headers {
-		value := types.StringValue(h.Value)
+		value := types.StringNull()
 		version := types.StringNull()
 		if pos, ok := matched[j]; ok {
-			value = types.StringNull()
-			version = woHeaders[pos].ValueWOVersion
-		} else if failClosed {
-			value = types.StringNull()
+			version = priorHeaders[pos].ValueWOVersion
+		} else if keepHeaderValue(priorHeaders, headerPosition{endpoint: endpoint, header: j}, h) {
+			value = types.StringValue(h.Value)
 		}
 		obj, d := types.ObjectValue(endpointHeaderAttrTypes, map[string]attr.Value{
 			"header":           types.StringValue(h.Header),
