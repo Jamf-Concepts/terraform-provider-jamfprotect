@@ -99,6 +99,7 @@ func (r *ActionConfigResource) applyState(ctx context.Context, data *ActionConfi
 
 // priorHTTPHeaders returns the HTTP headers in the prior model keyed by
 // position, or nil when the prior model has no HTTP endpoints, as on import.
+// No prior header means no header value is kept from the API.
 func priorHTTPHeaders(ctx context.Context, list types.List, diags *diag.Diagnostics) map[headerPosition]endpointHeaderModel {
 	if list.IsNull() || list.IsUnknown() {
 		return nil
@@ -351,14 +352,11 @@ func matchWriteOnlyHeaders(headers []jamfprotect.ReportClientHeader, endpoint in
 }
 
 // keepHeaderValue reports whether an API header value may be stored in state:
-// when there are no prior headers, as on import, or when the prior header at the
-// same position has the same name and already holds that value. A value that is
-// not already in state is never written to it, so a value_wo secret cannot reach
-// state whatever changed outside Terraform.
+// only when the prior header at the same position has the same name and already
+// holds that value. A value that is not already in state is never written to it,
+// including on import, so a value_wo secret cannot reach state whatever changed
+// outside Terraform.
 func keepHeaderValue(priorHeaders map[headerPosition]endpointHeaderModel, pos headerPosition, h jamfprotect.ReportClientHeader) bool {
-	if priorHeaders == nil {
-		return true
-	}
 	prior, ok := priorHeaders[pos]
 	return ok && strings.EqualFold(prior.Header.ValueString(), h.Header) && common.IsKnownString(prior.Value) && prior.Value.ValueString() == h.Value
 }

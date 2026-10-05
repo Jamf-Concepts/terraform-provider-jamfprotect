@@ -146,8 +146,31 @@ func TestAccActionConfigResource_httpHeaderWriteOnly(t *testing.T) {
 					testAccCheckActionConfigHTTPHeaderValue(resourceName, "Authorization", "Bearer tf-acc-two"),
 				),
 			},
+			{
+				ResourceName:     resourceName,
+				ImportState:      true,
+				ImportStateCheck: testAccCheckImportedHeaderValuesNull,
+			},
 		},
 	})
+}
+
+// testAccCheckImportedHeaderValuesNull checks that an import stores no HTTP
+// header value, so a write-only secret never reaches state.
+func testAccCheckImportedHeaderValuesNull(states []*terraform.InstanceState) error {
+	if len(states) != 1 {
+		return fmt.Errorf("expected 1 imported state, got %d", len(states))
+	}
+	attrs := states[0].Attributes
+	if attrs["http_endpoints.0.headers.#"] != "2" {
+		return fmt.Errorf("expected 2 imported headers, got %q", attrs["http_endpoints.0.headers.#"])
+	}
+	for _, key := range []string{"http_endpoints.0.headers.0.value", "http_endpoints.0.headers.1.value"} {
+		if value, ok := attrs[key]; ok && value != "" {
+			return fmt.Errorf("%s is set in imported state", key)
+		}
+	}
+	return nil
 }
 
 // testAccCheckActionConfigHTTPHeaderValue checks the value Jamf Protect holds
