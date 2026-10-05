@@ -230,8 +230,9 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 									},
 									"value": schema.StringAttribute{
 										MarkdownDescription: "HTTP header value. Stored in Terraform state; use `value_wo` for credentials " +
-											"such as an `Authorization` token so the value is never persisted. A value changed outside Terraform is " +
-											"read back as null rather than stored, so the next plan restores the configured value. Conflicts with `value_wo`.",
+											"such as an `Authorization` token so the value is never persisted. A refresh keeps a value only when it matches " +
+											"the value already in state: after an import, or when a value is changed outside Terraform, the value reads " +
+											"back as null and the next plan restores the configured value. Conflicts with `value_wo`.",
 										Optional:  true,
 										Sensitive: true,
 										Validators: []validator.String{

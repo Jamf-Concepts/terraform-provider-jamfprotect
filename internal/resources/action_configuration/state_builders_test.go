@@ -202,19 +202,52 @@ func TestBuildHTTPEndpointsState_HeaderValues(t *testing.T) {
 	}
 }
 
-// TestBuildHTTPEndpointsState_NoPriorHeaders verifies that without a prior model, as on import,
-// header values are read from the API.
+// TestBuildHTTPEndpointsState_NoPriorHeaders verifies that without prior headers, as on import or
+// in the list resource, no header value is read from the API.
 func TestBuildHTTPEndpointsState_NoPriorHeaders(t *testing.T) {
 	t.Parallel()
 
 	var diags diag.Diagnostics
-	list := buildHTTPEndpointsState([]jamfprotect.ReportClient{httpClient(jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "application/json"})}, nil, &diags)
+	clients := []jamfprotect.ReportClient{httpClient(
+		jamfprotect.ReportClientHeader{Header: "Authorization", Value: testSecret},
+		jamfprotect.ReportClientHeader{Header: "Content-Type", Value: "application/json"},
+	)}
+	list := buildHTTPEndpointsState(clients, nil, &diags)
 	if diags.HasError() {
 		t.Fatalf("unexpected diagnostics: %v", diags)
 	}
 	got := stateHeaders(t, list)
-	if len(got) != 1 || len(got[0]) != 1 || got[0][0].Value.ValueString() != "application/json" {
-		t.Errorf("expected the API value in state, got %v", got)
+	if len(got) != 1 || len(got[0]) != 2 {
+		t.Fatalf("expected one endpoint with two headers, got %v", got)
+	}
+	for j, h := range got[0] {
+		if !h.Value.IsNull() {
+			t.Errorf("header %d value = %v, want null", j, h.Value)
+		}
+	}
+}
+
+// TestBuildHTTPEndpointsState_EndpointRecreated verifies that a refresh which persists a null
+// http_endpoints, after the endpoint was deleted outside Terraform, does not let the next refresh
+// store the secret when the endpoint is re-created.
+func TestBuildHTTPEndpointsState_EndpointRecreated(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	var diags diag.Diagnostics
+	prior := map[headerPosition]endpointHeaderModel{{endpoint: 0, header: 0}: writeOnlyHeader("Authorization", "1")}
+	deleted := buildHTTPEndpointsState(nil, prior, &diags)
+	if diags.HasError() || !deleted.IsNull() {
+		t.Fatalf("expected a null list after the endpoint is deleted, got %v: %v", deleted, diags)
+	}
+	prior = priorHTTPHeaders(ctx, deleted, &diags)
+	recreated := buildHTTPEndpointsState([]jamfprotect.ReportClient{httpClient(jamfprotect.ReportClientHeader{Header: "Authorization", Value: testSecret})}, prior, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	got := stateHeaders(t, recreated)
+	if len(got) != 1 || len(got[0]) != 1 || !got[0][0].Value.IsNull() {
+		t.Errorf("expected the re-created header value to stay null, got %v", got)
 	}
 }
 
