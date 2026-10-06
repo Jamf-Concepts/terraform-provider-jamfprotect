@@ -29,7 +29,7 @@ func (r *AnalyticResource) Create(ctx context.Context, req resource.CreateReques
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
-	input := r.buildInput(ctx, data, &resp.Diagnostics)
+	input := r.buildInput(ctx, data, types.ListNull(types.ObjectType{AttrTypes: analyticActionAttrTypes}), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -167,7 +167,12 @@ func (r *AnalyticResource) Update(ctx context.Context, req resource.UpdateReques
 	ctx, cancel := context.WithTimeout(ctx, updateTimeout)
 	defer cancel()
 
-	input := r.buildInput(ctx, data, &resp.Diagnostics)
+	priorActions := r.priorAnalyticActions(ctx, data.ID.ValueString(), state.AnalyticActions, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := r.buildInput(ctx, data, priorActions, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

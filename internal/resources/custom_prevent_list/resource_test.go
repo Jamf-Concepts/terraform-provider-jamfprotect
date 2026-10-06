@@ -6,6 +6,7 @@ package custom_prevent_list_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -44,7 +45,7 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing.
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Test prevent list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Test prevent list", teamIDListData),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -74,7 +75,7 @@ func TestAccCustomPreventListResource_basic(t *testing.T) {
 			},
 			// Update and Read testing.
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Updated description"),
+				Config: testAccCustomPreventListResourceConfig(rName, "Team ID", "Updated description", teamIDListData),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -98,7 +99,7 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 		CheckDestroy:             testAccCustomPreventListCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPreventListResourceConfig(rName, "File Hash", "File hash list"),
+				Config: testAccCustomPreventListResourceConfig(rName, "File Hash", "File hash list", fileHashListData),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -107,19 +108,38 @@ func TestAccCustomPreventListResource_fileHash(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_type", "File Hash"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "list_data.0", fileHashListData[0]),
+					resource.TestCheckResourceAttr(resourceName, "entry_count", "5"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCustomPreventListResourceConfig(name, listType, description string) string {
+// teamIDListData is a set of Apple Team ID shaped entries (10 alphanumeric characters) for TEAMID prevent lists.
+var teamIDListData = []string{"ABC123DEF4", "DEF456GHI7", "GHI789JKL0", "JKL012MNO3", "MNO345PQR6"}
+
+// fileHashListData is a set of SHA-256 digests for FILEHASH prevent lists, which the API rejects unless each entry is a 64 character hex digest.
+var fileHashListData = []string{
+	"462320ac115842cfa2be74f5758d5ebd54fb8b0f2869cfbd563015be61ffc787",
+	"1da053f341d3fd479306c7bc31ef21a651022fc832881e229447a1f212cb12e5",
+	"333f58994b8c2403b15cf39db4b672e353a15942febb2acd45127a5351eff16b",
+	"d8bc624eb92e98b45d030439f3de684f7811285e608d4b92b0c67c5da231ccfc",
+	"3d1f69af560f768a26620285715414ebd4b2690c7d1c094150317172a1187096",
+}
+
+func testAccCustomPreventListResourceConfig(name, listType, description string, listData []string) string {
+	quoted := make([]string, 0, len(listData))
+	for _, entry := range listData {
+		quoted = append(quoted, fmt.Sprintf("%q", entry))
+	}
 	return fmt.Sprintf(`
 resource "jamfprotect_custom_prevent_list" "test" {
-  name        = %[1]q
-	prevent_type = %[2]q
-  description = %[3]q
-	list_data   = ["ABC123DEF4", "DEF456GHI7", "GHI789JKL0", "JKL012MNO3", "MNO345PQR6"]
+  name         = %[1]q
+  prevent_type = %[2]q
+  description  = %[3]q
+  list_data    = [%[4]s]
 }
-`, name, listType, description)
+`, name, listType, description, strings.Join(quoted, ", "))
 }

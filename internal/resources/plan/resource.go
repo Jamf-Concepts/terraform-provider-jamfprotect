@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -90,11 +91,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:            true,
 			},
 			"exception_sets": schema.SetAttribute{
-				MarkdownDescription: "A set of exception set IDs to associate with this plan.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+				MarkdownDescription: "A set of exception set IDs to associate with this plan.\n\n" +
+					"Leave unset to keep whatever exception sets Jamf Protect already has assigned to the plan. Set it to `[]` to explicitly assign none.",
+				Optional:      true,
+				Computed:      true,
+				ElementType:   types.StringType,
+				Validators:    []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 			},
 			"telemetry": schema.StringAttribute{
 				MarkdownDescription: "The ID of the telemetry configuration.",
@@ -105,11 +108,13 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:            true,
 			},
 			"analytic_sets": schema.SetAttribute{
-				MarkdownDescription: "A set of analytic set IDs to include in this plan. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				Validators:          []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+				MarkdownDescription: "A set of analytic set IDs to include in this plan. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.\n\n" +
+					"Leave unset to keep whatever analytic sets Jamf Protect already has assigned to the plan. Set it to `[]` to explicitly assign none. The Advanced Threat Controls and Tamper Prevention sets are managed through `advanced_threat_controls` and `tamper_prevention`, not this attribute.",
+				Optional:      true,
+				Computed:      true,
+				ElementType:   types.StringType,
+				Validators:    []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 			},
 			"unified_logging_filter_sets": schema.SetAttribute{
 				MarkdownDescription: "A set of unified logging filter set UUIDs to assign to this plan. A unified logging filter reaches this plan's endpoints only when it belongs to one of these filter sets.\n\n" +

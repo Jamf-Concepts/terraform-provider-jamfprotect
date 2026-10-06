@@ -38,6 +38,11 @@ var rolePermissionLabelToAPI = map[string]string{
 	"Account Information":            "Organization",
 	"Audit Logs":                     "AuditLog",
 	"Endpoint Threat Prevention":     "ThreatPreventionVersion",
+	"Data Loss Prevention Policies":  "DLPPolicy",
+	"Endpoint Security Exceptions":   "EsException",
+	"Packages":                       "Package",
+	"Unified Logging Filter Sets":    "UnifiedLoggingFilterSet",
+	"Uninstaller Tokens":             "UninstallerToken",
 }
 
 // rolePermissionAPIToLabel maps API permission values to friendly names.
@@ -67,6 +72,11 @@ var rolePermissionAPIToLabel = map[string]string{
 	"Organization":            "Account Information",
 	"AuditLog":                "Audit Logs",
 	"ThreatPreventionVersion": "Endpoint Threat Prevention",
+	"DLPPolicy":               "Data Loss Prevention Policies",
+	"EsException":             "Endpoint Security Exceptions",
+	"Package":                 "Packages",
+	"UnifiedLoggingFilterSet": "Unified Logging Filter Sets",
+	"UninstallerToken":        "Uninstaller Tokens",
 }
 
 // rolePermissionDependencies defines read dependencies between permissions.
@@ -93,14 +103,19 @@ var rolePermissionWriteOptions = []string{
 	"Compliance",
 	"Computers",
 	"Data Forwarding",
+	"Data Loss Prevention Policies",
 	"Data Retention",
 	"Downloads",
+	"Endpoint Security Exceptions",
 	"Exception Sets",
+	"Packages",
 	"Plans",
 	"Prevent Lists",
 	"Removable Storage Control Sets",
 	"Telemetry",
 	"Unified Logging",
+	"Unified Logging Filter Sets",
+	"Uninstaller Tokens",
 }
 
 // rolePermissionReadOptions lists all available read permission options for documentation.
@@ -119,14 +134,19 @@ var rolePermissionReadOptions = []string{
 	"Compliance",
 	"Computers",
 	"Data Forwarding",
+	"Data Loss Prevention Policies",
 	"Data Retention",
 	"Downloads",
+	"Endpoint Security Exceptions",
 	"Exception Sets",
+	"Packages",
 	"Plans",
 	"Prevent Lists",
 	"Removable Storage Control Sets",
 	"Telemetry",
 	"Unified Logging",
+	"Unified Logging Filter Sets",
+	"Uninstaller Tokens",
 	"Account Information",
 	"Audit Logs",
 	"Endpoint Threat Prevention",
@@ -182,16 +202,17 @@ func rolePermissionListToAPI(values []string, diags *diag.Diagnostics, fieldName
 	return apiValues
 }
 
-// rolePermissionListToLabels converts API permission values to friendly names.
+// rolePermissionListToLabels converts API permission values to friendly names. Exception is hidden only when ExceptionSet is in the same list, mirroring rolePermissionAddHiddenException, so a grant of Exception on its own stays visible.
 func rolePermissionListToLabels(values []string) []string {
 	if len(values) == 0 {
 		return nil
 	}
 
+	hideException := slices.Contains(values, "ExceptionSet")
 	labels := make([]string, 0, len(values))
 	seen := make(map[string]struct{}, len(values))
 	for _, value := range values {
-		if value == "Exception" {
+		if value == "Exception" && hideException {
 			continue
 		}
 		label := rolePermissionLabel(value)

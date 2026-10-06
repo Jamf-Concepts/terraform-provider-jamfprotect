@@ -1,4 +1,0 @@
-[[allowlists]]
-  description = "Placeholder token in INSTALLATION.md"
-  paths = ["INSTALLATION.md"]
-  regexes = ['''ghp_your_token_here''']

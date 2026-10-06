@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,7 +45,7 @@ func (r *TelemetryV2Resource) Metadata(ctx context.Context, req resource.Metadat
 // Schema defines the telemetry v2 schema.
 func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a telemetry v2 configuration in Jamf Protect. Telemetry configurations define which endpoint security events, log files, and performance metrics are collected from managed endpoints.",
+		MarkdownDescription: "Manages a telemetry v2 configuration in Jamf Protect. Telemetry configurations define which endpoint security events, log files, and performance metrics are collected from managed endpoints.\n\nEach `log_*` category attribute reads `true` only when the configuration collects every event in that category, so a configuration that collects part of a category shows a diff that restores the full category. Events that no category covers are kept in `additional_events`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the telemetry v2 configuration.",
@@ -132,6 +133,14 @@ func (r *TelemetryV2Resource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+			},
+			"additional_events": schema.SetAttribute{
+				MarkdownDescription: "Endpoint security event names to collect in addition to the `log_*` categories, for events that no category covers (for example `xpc_connect` or `fork`). The Jamf Protect API rejects names it does not support. Omit the attribute to keep the configuration's current additional events, including any added outside Terraform; set it to `[]` to remove them. An event that belongs to a category cannot be listed here; enable that category instead.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
+				Validators:          []validator.Set{additionalEventsValidator{}},
 			},
 			"created": schema.StringAttribute{
 				MarkdownDescription: "The creation timestamp.",

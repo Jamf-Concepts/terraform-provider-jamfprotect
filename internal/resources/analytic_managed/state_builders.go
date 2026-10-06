@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -22,7 +21,7 @@ func (r *AnalyticManagedResource) applyState(_ context.Context, data *AnalyticMa
 	data.ID = types.StringValue(api.UUID)
 	data.Name = types.StringValue(api.Name)
 	data.SensorType = types.StringValue(mapSensorTypeAPIToUI(api.InputType))
-	data.Filter = types.StringValue(normalizeFilterValue(api.Filter))
+	data.Filter = types.StringValue(api.Filter)
 	data.Level = types.Int64Value(api.Level)
 	data.Severity = types.StringValue(api.Severity)
 	data.Created = types.StringValue(api.Created)
@@ -78,8 +77,13 @@ func (r *AnalyticManagedResource) applyState(_ context.Context, data *AnalyticMa
 	}
 }
 
-// apiActionsToSet maps API tenant actions into a Terraform set.
+// apiActionsToSet maps API tenant actions into a Terraform set. A nil slice means the analytic
+// carries no tenant override and maps to null, so it is never sent back as an explicit empty
+// override; an empty slice is an explicit empty override and maps to an empty set.
 func apiActionsToSet(api []jamfprotect.AnalyticAction, diags *diag.Diagnostics) types.Set {
+	if api == nil {
+		return types.SetNull(types.ObjectType{AttrTypes: tenantActionAttrTypes})
+	}
 	if len(api) == 0 {
 		return types.SetValueMust(types.ObjectType{AttrTypes: tenantActionAttrTypes}, []attr.Value{})
 	}
@@ -123,12 +127,4 @@ func mapSensorTypeAPIToUI(apiValue string) string {
 		return ui
 	}
 	return apiValue
-}
-
-// normalizeFilterValue strips Terraform's escaping of backslashes in filter strings.
-func normalizeFilterValue(value string) string {
-	if value == "" {
-		return value
-	}
-	return strings.ReplaceAll(value, `\\`, `\`)
 }

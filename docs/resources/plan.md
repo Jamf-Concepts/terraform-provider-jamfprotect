@@ -23,7 +23,7 @@ resource "jamfprotect_action_configuration" "security_enrichment" {
 
   alert_data_collection = {
     binary_included_data_attributes                = ["Sha1", "Sha256", "Signing Information", "Is App Bundle"]
-    download_event_included_data_attributes        = ["File", "Downloaded From"]
+    download_event_included_data_attributes        = ["File"]
     file_included_data_attributes                  = ["Sha1", "Sha256", "Is Quarantined", "Signing Information"]
     file_system_event_included_data_attributes     = ["File", "Process", "User"]
     gatekeeper_event_included_data_attributes      = ["Blocked Process"]
@@ -53,7 +53,7 @@ resource "jamfprotect_plan" "high_security" {
   auto_update = true
 
   # Communication protocol
-  communications_protocol = "mqtt"
+  communications_protocol = "MQTT:443"
 
   # Reporting settings
   reporting_interval   = 720 # 12 hours
@@ -62,9 +62,9 @@ resource "jamfprotect_plan" "high_security" {
   report_serial_number = true
 
   # Threat prevention settings - Block mode
-  endpoint_threat_prevention = "BlockAndReport"
-  advanced_threat_controls   = "BlockAndReport"
-  tamper_prevention          = "BlockAndReport"
+  endpoint_threat_prevention = "Block and report"
+  advanced_threat_controls   = "Block and report"
+  tamper_prevention          = "Block and report"
 }
 
 # Example: Plan with Report-Only Mode
@@ -105,17 +105,17 @@ resource "jamfprotect_plan" "monitoring_only" {
 
   auto_update = true
 
-  communications_protocol = "mqtt"
+  communications_protocol = "MQTT:443"
 
   reporting_interval   = 1440 # 24 hours
   report_architecture  = false
   report_hostname      = true
   report_serial_number = false
 
-  # All threat prevention in report-only mode
-  endpoint_threat_prevention = "ReportOnly"
-  advanced_threat_controls   = "ReportOnly"
-  tamper_prevention          = "ReportOnly"
+  # Report-only threat prevention. Tamper prevention has no report-only mode.
+  endpoint_threat_prevention = "Report only"
+  advanced_threat_controls   = "Report only"
+  tamper_prevention          = "Disable"
 }
 ```
 
@@ -132,6 +132,8 @@ resource "jamfprotect_plan" "monitoring_only" {
 
 - `advanced_threat_controls` (String) Advanced Threat Controls setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
 - `analytic_sets` (Set of String) A set of analytic set IDs to include in this plan. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
+
+Leave unset to keep whatever analytic sets Jamf Protect already has assigned to the plan. Set it to `[]` to explicitly assign none. The Advanced Threat Controls and Tamper Prevention sets are managed through `advanced_threat_controls` and `tamper_prevention`, not this attribute.
 - `auto_update` (Boolean) Whether to enable auto-updates for endpoints using this plan. Defaults to `true`.
 - `communications_protocol` (String) The communications protocol to use. Valid options are: `MQTT:443`, `WebSocket/MQTT:443`. Defaults to `MQTT:443`.
 - `compliance_baseline_reporting` (Boolean) Report compliance baseline data.
@@ -139,6 +141,8 @@ resource "jamfprotect_plan" "monitoring_only" {
 - `description` (String) A description of the plan.
 - `endpoint_threat_prevention` (String) Endpoint threat prevention setting for the plan. Valid options are: `Block and report`, `Report only`, `Disable`. Ignored by the Jamf Protect agent when `threat_prevention_strategy` is not `Legacy`.
 - `exception_sets` (Set of String) A set of exception set IDs to associate with this plan.
+
+Leave unset to keep whatever exception sets Jamf Protect already has assigned to the plan. Set it to `[]` to explicitly assign none.
 - `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.

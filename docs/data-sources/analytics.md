@@ -38,6 +38,7 @@ output "analytic_summary" {
 Read-Only:
 
 - `add_to_jamf_pro_smart_group` (Boolean) Whether the analytic adds devices to a Jamf Pro Smart Group.
+- `analytic_actions` (Attributes List) The actions stored on the analytic, in the order Jamf Protect returns them. (see [below for nested schema](#nestedatt--analytics--analytic_actions))
 - `categories` (List of String) Categories associated with the analytic.
 - `context_item` (Attributes Set) Context entries for the analytic. (see [below for nested schema](#nestedatt--analytics--context_item))
 - `created` (String) The creation timestamp.
@@ -58,6 +59,15 @@ Read-Only:
 - `tenant_actions` (Attributes Set) Tenant-level action overrides (Jamf-managed analytics). (see [below for nested schema](#nestedatt--analytics--tenant_actions))
 - `tenant_severity` (String) Tenant-level severity override (Jamf-managed analytics).
 - `updated` (String) The last-updated timestamp.
+
+<a id="nestedatt--analytics--analytic_actions"></a>
+### Nested Schema for `analytics.analytic_actions`
+
+Read-Only:
+
+- `name` (String) The action name.
+- `parameters` (Map of String) Key-value parameters for the action. Values that are not strings in the API are shown as JSON text.
+
 
 <a id="nestedatt--analytics--context_item"></a>
 ### Nested Schema for `analytics.context_item`

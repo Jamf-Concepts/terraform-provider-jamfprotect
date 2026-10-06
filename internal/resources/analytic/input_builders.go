@@ -5,16 +5,18 @@ package analytic
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// buildInput converts the Terraform model into the service input.
-func (r *AnalyticResource) buildInput(ctx context.Context, data AnalyticResourceModel, diags *diag.Diagnostics) *jamfprotect.AnalyticInput {
+// buildInput converts the Terraform model into the service input. priorActions holds the
+// analytic's current actions (null on create); actions other than SmartGroup are carried over
+// from it, and the SmartGroup action follows the Smart Group attributes.
+func (r *AnalyticResource) buildInput(ctx context.Context, data AnalyticResourceModel, priorActions types.List, diags *diag.Diagnostics) *jamfprotect.AnalyticInput {
 	sensorType := mapSensorTypeUIToAPI(data.SensorType.ValueString(), diags)
 	if diags.HasError() {
 		return nil
@@ -38,24 +40,14 @@ func (r *AnalyticResource) buildInput(ctx context.Context, data AnalyticResource
 	input.Categories = common.SetToStrings(ctx, data.Categories, diags)
 	input.SnapshotFiles = common.SetToStrings(ctx, data.SnapshotFiles, diags)
 
-	actions := []jamfprotect.AnalyticActionInput{}
-	if !data.AddToJamfProSmartGroup.IsNull() && data.AddToJamfProSmartGroup.ValueBool() {
-		paramValue := "{}"
-		if !data.JamfProSmartGroupIdentifier.IsNull() && data.JamfProSmartGroupIdentifier.ValueString() != "" {
-			paramMap := map[string]string{"id": data.JamfProSmartGroupIdentifier.ValueString()}
-			jsonBytes, err := json.Marshal(paramMap)
-			if err != nil {
-				diags.AddError("Error encoding Smart Group identifier", err.Error())
-				return nil
-			}
-			paramValue = string(jsonBytes)
-		}
-		actions = append(actions, jamfprotect.AnalyticActionInput{
-			Name:       "SmartGroup",
-			Parameters: paramValue,
-		})
+	actions := mergeSmartGroupAction(ctx, priorActions, smartGroupAction(data.AddToJamfProSmartGroup, data.JamfProSmartGroupIdentifier), diags)
+	if diags.HasError() {
+		return nil
 	}
-	input.AnalyticActions = actions
+	input.AnalyticActions = analyticActionsToInput(ctx, actions, diags)
+	if diags.HasError() {
+		return nil
+	}
 
 	var ctxEntries []jamfprotect.AnalyticContextInput
 	if !data.ContextItem.IsNull() {

@@ -105,16 +105,10 @@ func TestApplyState_FromProdGetAnalytic_AppleJeus(t *testing.T) {
 		t.Errorf("tenant_severity: expected null, got %q", data.TenantSeverity.ValueString())
 	}
 
-	// tenant_actions is null in the source JSON; applyState produces an empty (non-null)
-	// set so plan diffs are predictable.
-	if data.TenantActions.IsNull() {
-		t.Error("tenant_actions: expected empty (non-null) set")
-	}
-	if len(data.TenantActions.Elements()) != 0 {
-		t.Errorf("tenant_actions: expected 0 elements, got %d", len(data.TenantActions.Elements()))
+	if !data.TenantActions.IsNull() {
+		t.Errorf("tenant_actions: expected null for an analytic with no tenant override, got %v", data.TenantActions)
 	}
 
-	// Filter is preserved — the fixture filter contains no double-backslashes so it round-trips unchanged.
 	expectedFilter := `("LaunchDaemon" IN $tags OR "LaunchAgent" IN $tags) AND $context.Name.value IN {"org.jmttrading.plist", "com.celastradepro.plist"}`
 	if data.Filter.ValueString() != expectedFilter {
 		t.Errorf("filter:\n  expected %q\n  got      %q", expectedFilter, data.Filter.ValueString())
@@ -138,11 +132,10 @@ func TestApplyState_FromProdGetAnalytic_AppleJeus(t *testing.T) {
 	}
 }
 
-// TestApplyState_FromProdUpdateResponse verifies state mapping against a real production
-// updateInternalAnalytic response. The response shape is a partial Analytic (only the fields
-// the mutation explicitly returns) — the rest unmarshal to zero values, but the mutation in
-// our SDK uses the full AnalyticFields fragment, so in practice we get a full payload back.
-// This test exercises the partial-response shape just to confirm graceful handling.
+// TestApplyState_FromProdUpdateResponse_Partial verifies state mapping against a real production
+// updateInternalAnalytic response. The response is a partial Analytic: the API omits fields
+// such as longDescription and remediation, which is why Update refreshes state with a
+// follow-up GetAnalytic. This test confirms the partial shape is still handled gracefully.
 func TestApplyState_FromProdUpdateResponse_Partial(t *testing.T) {
 	t.Parallel()
 
@@ -188,6 +181,38 @@ func TestApplyState_FromProdUpdateResponse_Partial(t *testing.T) {
 	}
 	if !foundSmartGroup {
 		t.Error("expected to find SmartGroup tenant action")
+	}
+}
+
+// TestApplyStateThenBuildInternalInput_NoOverrideOmitsTenantActions verifies that importing a
+// Jamf-managed analytic with no tenant override and then setting only tenant_severity does not
+// send an explicit empty tenantActions list.
+func TestApplyStateThenBuildInternalInput_NoOverrideOmitsTenantActions(t *testing.T) {
+	t.Parallel()
+
+	env := loadFixture[getAnalyticEnvelope](t, "get_analytic_applejeus_response.json")
+
+	r := &AnalyticManagedResource{}
+	var data AnalyticManagedResourceModel
+	var diags diag.Diagnostics
+	r.applyState(context.Background(), &data, env.Data.GetAnalytic, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
+	}
+
+	data.TenantSeverity = types.StringValue("Low")
+	got := r.buildInternalInput(context.Background(), data, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors()[0].Detail())
+	}
+	if got == nil {
+		t.Fatal("expected input, got nil")
+	}
+	if got.TenantActions != nil {
+		t.Errorf("expected nil TenantActions, got %v", got.TenantActions)
+	}
+	if got.TenantSeverity == nil || *got.TenantSeverity != "Low" {
+		t.Errorf("expected TenantSeverity=Low, got %v", got.TenantSeverity)
 	}
 }
 

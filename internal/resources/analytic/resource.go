@@ -118,6 +118,24 @@ func (r *AnalyticResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Identifier for the Jamf Pro extension attribute (only used when adding to a Smart Group).",
 				Optional:            true,
 			},
+			"analytic_actions": schema.ListNestedAttribute{
+				MarkdownDescription: "The actions stored on the analytic, in the order Jamf Protect returns them (read-only). The `SmartGroup` entry follows `add_to_jamf_pro_smart_group` and `jamf_pro_smart_group_identifier`; any other entries, such as ones added in the Jamf Protect console, are kept when the analytic is updated.",
+				Computed:            true,
+				PlanModifiers:       []planmodifier.List{analyticActionsPlanModifier{}},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							MarkdownDescription: "The action name (e.g. `Report`, `SmartGroup`).",
+							Computed:            true,
+						},
+						"parameters": schema.MapAttribute{
+							MarkdownDescription: "Action parameters as key-value pairs (e.g. `{id = \"smartgroup\"}`). Values that are not strings in the API are shown as JSON text.",
+							Computed:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
 			"context_item": schema.SetNestedAttribute{
 				MarkdownDescription: "Context enrichment definitions for the analytic.",
 				Required:            true,

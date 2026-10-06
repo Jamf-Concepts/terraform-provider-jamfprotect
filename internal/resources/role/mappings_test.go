@@ -4,6 +4,7 @@
 package role
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -44,6 +45,11 @@ func TestRolePermissionAPIValue_ValidLabels(t *testing.T) {
 		{"Account Information", "Account Information", "Organization"},
 		{"Audit Logs", "Audit Logs", "AuditLog"},
 		{"Endpoint Threat Prevention", "Endpoint Threat Prevention", "ThreatPreventionVersion"},
+		{"Data Loss Prevention Policies", "Data Loss Prevention Policies", "DLPPolicy"},
+		{"Endpoint Security Exceptions", "Endpoint Security Exceptions", "EsException"},
+		{"Packages", "Packages", "Package"},
+		{"Unified Logging Filter Sets", "Unified Logging Filter Sets", "UnifiedLoggingFilterSet"},
+		{"Uninstaller Tokens", "Uninstaller Tokens", "UninstallerToken"},
 	}
 
 	for _, tt := range tests {
@@ -130,6 +136,11 @@ func TestRolePermissionLabel_ValidAPIValues(t *testing.T) {
 		{"Organization", "Organization", "Account Information"},
 		{"AuditLog", "AuditLog", "Audit Logs"},
 		{"ThreatPreventionVersion", "ThreatPreventionVersion", "Endpoint Threat Prevention"},
+		{"DLPPolicy", "DLPPolicy", "Data Loss Prevention Policies"},
+		{"EsException", "EsException", "Endpoint Security Exceptions"},
+		{"Package", "Package", "Packages"},
+		{"UnifiedLoggingFilterSet", "UnifiedLoggingFilterSet", "Unified Logging Filter Sets"},
+		{"UninstallerToken", "UninstallerToken", "Uninstaller Tokens"},
 	}
 
 	for _, tt := range tests {
@@ -393,6 +404,70 @@ func TestRolePermissionHasAll_Absent(t *testing.T) {
 			t.Parallel()
 			if rolePermissionHasAll(tt.values) {
 				t.Errorf("rolePermissionHasAll(%v) = true, want false", tt.values)
+			}
+		})
+	}
+}
+
+// TestRolePermissionListToLabels verifies that Exception is hidden only when ExceptionSet is in the same list.
+func TestRolePermissionListToLabels(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		values []string
+		want   []string
+	}{
+		{"exception hidden beside exception set", []string{"ExceptionSet", "Exception", "Plan"}, []string{"Exception Sets", "Plans"}},
+		{"lone exception surfaced", []string{"Exception"}, []string{"Exception"}},
+		{"exception surfaced beside other permissions", []string{"Plan", "Exception"}, []string{"Exception", "Plans"}},
+		{"duplicates collapsed", []string{"Plan", "Plan"}, []string{"Plans"}},
+		{"empty slice", []string{}, nil},
+		{"nil slice", nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := rolePermissionListToLabels(tt.values); !slices.Equal(got, tt.want) {
+				t.Errorf("rolePermissionListToLabels(%v) = %v, want %v", tt.values, got, tt.want)
+			}
+		})
+	}
+}
+
+// rbacResources pins the Jamf Protect RBAC_RESOURCE enum (jprotect-api
+// api/primary/schema.graphql), so a value added upstream fails the coverage test
+// below until it gets a label.
+var rbacResources = []string{
+	"all", "ActionConfigs", "Alert", "Analytic", "AnalyticSet", "ApiClient", "AuditLog", "Computer",
+	"Connection", "ConfigFreeze", "Exception", "EsException", "ExceptionSet", "Group", "Insight",
+	"Organization", "DataForward", "DataRetention", "Download", "Package", "Plan", "PreventList",
+	"DLPPolicy", "Role", "Telemetry", "ThreatPreventionVersion", "USBControlSet", "UnifiedLoggingFilter",
+	"UnifiedLoggingFilterSet", "UninstallerToken", "User",
+}
+
+// TestRolePermissionMappings_CoverRBACResources verifies that every RBAC_RESOURCE
+// value other than the hidden Exception has a label that converts back to it,
+// and that every label is offered as a read permission.
+func TestRolePermissionMappings_CoverRBACResources(t *testing.T) {
+	t.Parallel()
+
+	for _, resource := range rbacResources {
+		if resource == "Exception" {
+			continue
+		}
+		t.Run(resource, func(t *testing.T) {
+			t.Parallel()
+			label, ok := rolePermissionAPIToLabel[resource]
+			if !ok {
+				t.Fatalf("RBAC resource %q has no label", resource)
+			}
+			if apiValue, ok := rolePermissionAPIValue(label); !ok || apiValue != resource {
+				t.Errorf("label %q converts to %q (ok=%v), want %q", label, apiValue, ok, resource)
+			}
+			if resource != "all" && !slices.Contains(rolePermissionReadOptions, label) {
+				t.Errorf("label %q is missing from rolePermissionReadOptions", label)
 			}
 		})
 	}

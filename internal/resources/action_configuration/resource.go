@@ -208,8 +208,9 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							Optional:            true,
 						},
 						"url": schema.StringAttribute{
-							MarkdownDescription: "HTTP destination URL.",
+							MarkdownDescription: "HTTP destination URL. Marked sensitive because webhook URLs often embed an access token.",
 							Optional:            true,
+							Sensitive:           true,
 						},
 						"method": schema.StringAttribute{
 							MarkdownDescription: "HTTP request method. Valid options are: " + common.FormatOptions(httpMethodOptions) + ".",
@@ -223,8 +224,43 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 							Optional:            true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"header": schema.StringAttribute{Optional: true},
-									"value":  schema.StringAttribute{Optional: true},
+									"header": schema.StringAttribute{
+										MarkdownDescription: "HTTP header name.",
+										Optional:            true,
+									},
+									"value": schema.StringAttribute{
+										MarkdownDescription: "HTTP header value. Stored in Terraform state; use `value_wo` for credentials " +
+											"such as an `Authorization` token so the value is never persisted. A refresh keeps a value only when it matches " +
+											"the value already in state: after an import, or when a value is changed outside Terraform, the value reads " +
+											"back as null and the next plan restores the configured value. Conflicts with `value_wo`.",
+										Optional:  true,
+										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("value_wo")),
+										},
+									},
+									"value_wo": schema.StringAttribute{
+										MarkdownDescription: "HTTP header value, supplied as a " +
+											"[write-only attribute](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) " +
+											"(Terraform 1.11+). The value is sent to Jamf Protect but never stored in Terraform state, so changes " +
+											"made outside Terraform are not detected. Requires `value_wo_version`; rotate the value by changing " +
+											"that version.",
+										Optional:  true,
+										Sensitive: true,
+										WriteOnly: true,
+										Validators: []validator.String{
+											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("value_wo_version")),
+										},
+									},
+									"value_wo_version": schema.StringAttribute{
+										MarkdownDescription: "Version identifier for `value_wo`. Change this value (for example to a new " +
+											"timestamp) to push a rotated header value, since the write-only value itself is not tracked in " +
+											"state. Required when `value_wo` is set.",
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("value_wo")),
+										},
+									},
 								},
 							},
 						},

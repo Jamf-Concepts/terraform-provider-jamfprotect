@@ -13,6 +13,13 @@ Manages an action configuration in Jamf Protect. Action configurations define th
 ## Example Usage
 
 ```terraform
+variable "siem_api_token" {
+  description = "Bearer token for the SIEM HTTP endpoint."
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
+
 # Example: Action Configuration with HTTP Endpoint
 # This example shows how to configure alert forwarding to an external HTTP endpoint
 # such as a SIEM, SOAR, or webhook integration.
@@ -54,8 +61,11 @@ resource "jamfprotect_action_configuration" "http_integration" {
           value  = "application/json"
         },
         {
-          header = "Authorization"
-          value  = "Bearer YOUR_API_TOKEN"
+          # Write-only (Terraform 1.11+): sent to Jamf Protect, never stored in state.
+          # Change value_wo_version to push a rotated token.
+          header           = "Authorization"
+          value_wo         = var.siem_api_token
+          value_wo_version = "1"
         },
       ]
     },
@@ -222,15 +232,17 @@ Optional:
 - `headers` (Attributes List) HTTP headers. (see [below for nested schema](#nestedatt--http_endpoints--headers))
 - `max_batch_size_bytes` (Number) Maximum batch size in bytes.
 - `method` (String) HTTP request method. Valid options are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
-- `url` (String) HTTP destination URL.
+- `url` (String, Sensitive) HTTP destination URL. Marked sensitive because webhook URLs often embed an access token.
 
 <a id="nestedatt--http_endpoints--headers"></a>
 ### Nested Schema for `http_endpoints.headers`
 
 Optional:
 
-- `header` (String)
-- `value` (String)
+- `header` (String) HTTP header name.
+- `value` (String, Sensitive) HTTP header value. Stored in Terraform state; use `value_wo` for credentials such as an `Authorization` token so the value is never persisted. A refresh keeps a value only when it matches the value already in state: after an import, or when a value is changed outside Terraform, the value reads back as null and the next plan restores the configured value. Conflicts with `value_wo`.
+- `value_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) HTTP header value, supplied as a [write-only attribute](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) (Terraform 1.11+). The value is sent to Jamf Protect but never stored in Terraform state, so changes made outside Terraform are not detected. Requires `value_wo_version`; rotate the value by changing that version.
+- `value_wo_version` (String) Version identifier for `value_wo`. Change this value (for example to a new timestamp) to push a rotated header value, since the write-only value itself is not tracked in state. Required when `value_wo` is set.
 
 
 

@@ -26,3 +26,21 @@ var logSystemEvents = []string{"kextload", "kextunload", "profile_add", "profile
 
 // logNetworkEvents lists event names for network telemetry.
 var logNetworkEvents = []string{"network_connect"}
+
+// telemetryEventCategory pairs a category attribute with the events it collects.
+type telemetryEventCategory struct {
+	Attribute string
+	Events    []string
+}
+
+// telemetryEventCategories lists every event category the resource exposes as a boolean attribute.
+var telemetryEventCategories = []telemetryEventCategory{
+	{Attribute: "log_applications_and_processes", Events: logApplicationsAndProcessesEvents},
+	{Attribute: "log_access_and_authentication", Events: logAccessAndAuthenticationEvents},
+	{Attribute: "log_users_and_groups", Events: logUsersAndGroupsEvents},
+	{Attribute: "log_persistence", Events: logPersistenceEvents},
+	{Attribute: "log_hardware_and_software", Events: logHardwareAndSoftwareEvents},
+	{Attribute: "log_apple_security", Events: logAppleSecurityEvents},
+	{Attribute: "log_system", Events: logSystemEvents},
+	{Attribute: "log_network", Events: logNetworkEvents},
+}

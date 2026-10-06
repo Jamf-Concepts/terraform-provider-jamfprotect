@@ -44,8 +44,12 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.USBControlSet = new(data.USBControlSet.ValueString())
 	}
 
-	if !data.ExceptionSets.IsNull() {
-		input.ExceptionSets = common.SetToStrings(ctx, data.ExceptionSets, diags)
+	if !data.ExceptionSets.IsNull() && !data.ExceptionSets.IsUnknown() {
+		exceptionSets := common.SetToStrings(ctx, data.ExceptionSets, diags)
+		if exceptionSets == nil {
+			exceptionSets = []string{}
+		}
+		input.ExceptionSets = exceptionSets
 	}
 
 	strategy := "Legacy"
@@ -55,7 +59,8 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 	input.ThreatPreventionStrategy = threatPreventionStrategyToAPI(strategy)
 
 	var analyticSets []jamfprotect.PlanAnalyticSetInput
-	if !data.AnalyticSets.IsNull() {
+	if !data.AnalyticSets.IsNull() && !data.AnalyticSets.IsUnknown() {
+		analyticSets = []jamfprotect.PlanAnalyticSetInput{}
 		uuids := common.SetToStrings(ctx, data.AnalyticSets, diags)
 		for _, uuid := range uuids {
 			analyticSets = append(analyticSets, jamfprotect.PlanAnalyticSetInput{

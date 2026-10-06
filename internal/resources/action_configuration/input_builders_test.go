@@ -4,10 +4,12 @@
 package action_configuration
 
 import (
+	"context"
 	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // TestSplitExtendedDataAttributes verifies that UI labels are correctly split into API attrs and related fields.
@@ -243,6 +245,7 @@ func TestSplitSupportedReports(t *testing.T) {
 		reports    []string
 		wantAlerts []string
 		wantLogs   []string
+		wantErr    bool
 	}{
 		{
 			name:       "all alert levels",
@@ -269,17 +272,22 @@ func TestSplitSupportedReports(t *testing.T) {
 			wantLogs:   []string{},
 		},
 		{
-			name:       "unknown report type ignored",
+			name:       "unknown report type errors",
 			reports:    []string{"AlertHigh", "SomethingUnknown"},
 			wantAlerts: []string{"high"},
 			wantLogs:   []string{},
+			wantErr:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			gotAlerts, gotLogs := splitSupportedReports(tt.reports)
+			var diags diag.Diagnostics
+			gotAlerts, gotLogs := splitSupportedReports(tt.reports, &diags)
+			if diags.HasError() != tt.wantErr {
+				t.Errorf("HasError() = %v, want %v: %v", diags.HasError(), tt.wantErr, diags)
+			}
 			if !slices.Equal(gotAlerts, tt.wantAlerts) {
 				t.Errorf("alerts = %v, want %v", gotAlerts, tt.wantAlerts)
 			}
@@ -287,5 +295,46 @@ func TestSplitSupportedReports(t *testing.T) {
 				t.Errorf("logs = %v, want %v", gotLogs, tt.wantLogs)
 			}
 		})
+	}
+}
+
+// TestBuildHTTPParams_WriteOnlyHeaderValue verifies that a write-only header value replaces the plaintext value at the same position.
+func TestBuildHTTPParams_WriteOnlyHeaderValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	headers, d := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: endpointHeaderAttrTypes}, []endpointHeaderModel{
+		{Header: types.StringValue("Authorization"), Value: types.StringNull(), ValueWO: types.StringNull(), ValueWOVersion: types.StringValue("1")},
+		{Header: types.StringValue("Content-Type"), Value: types.StringValue("application/json"), ValueWO: types.StringNull(), ValueWOVersion: types.StringNull()},
+	})
+	if d.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", d)
+	}
+	endpoint := httpEndpointBlockModel{
+		URL:     types.StringValue("https://example.com/hook"),
+		Method:  types.StringNull(),
+		Headers: headers,
+	}
+
+	var diags diag.Diagnostics
+	params := buildHTTPParams(ctx, 0, endpoint, map[headerPosition]string{{endpoint: 0, header: 0}: "Bearer secret"}, &diags)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	items, ok := params["headers"].([]map[string]any)
+	if !ok || len(items) != 2 {
+		t.Fatalf("headers = %#v, want two items", params["headers"])
+	}
+	if items[0]["value"] != "Bearer secret" {
+		t.Errorf("header 0 value = %v, want write-only value", items[0]["value"])
+	}
+	if items[1]["value"] != "application/json" {
+		t.Errorf("header 1 value = %v, want plaintext value", items[1]["value"])
+	}
+
+	params = buildHTTPParams(ctx, 1, endpoint, map[headerPosition]string{{endpoint: 0, header: 0}: "Bearer secret"}, &diags)
+	items, _ = params["headers"].([]map[string]any)
+	if _, ok := items[0]["value"]; ok {
+		t.Errorf("header 0 on endpoint 1 value = %v, want absent", items[0]["value"])
 	}
 }
