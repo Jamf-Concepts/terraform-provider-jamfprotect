@@ -5,7 +5,8 @@ package analytic
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -88,7 +89,7 @@ func analyticActionsToInput(ctx context.Context, actions []analyticActionModel, 
 			if diags.HasError() {
 				return nil
 			}
-			encoded, err := json.Marshal(params)
+			encoded, err := json.Marshal(params, json.Deterministic(true))
 			if err != nil {
 				diags.AddError("Error encoding analytic action parameters", err.Error())
 				return nil
@@ -122,7 +123,7 @@ func analyticActionParametersToMap(raw string, diags *diag.Diagnostics) (types.M
 	if raw == "" || raw == "{}" {
 		return types.MapNull(types.StringType), true
 	}
-	var decoded map[string]json.RawMessage
+	var decoded map[string]jsontext.Value
 	if err := json.Unmarshal([]byte(raw), &decoded); err != nil {
 		diags.AddError("Error decoding analytic action parameters",
 			fmt.Sprintf("Failed to parse parameters JSON %q: %s", raw, err.Error()))

@@ -5,7 +5,7 @@ package plan
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -43,7 +43,7 @@ func newTestPlanResource(t *testing.T, sets []jamfprotect.AnalyticSet) *PlanReso
 		var body struct {
 			Query string `json:"query"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil || !strings.Contains(body.Query, "listAnalyticSets") {
+		if err := json.UnmarshalRead(r.Body, &body); err != nil || !strings.Contains(body.Query, "listAnalyticSets") {
 			http.Error(w, "unexpected request", http.StatusBadRequest)
 			return
 		}
@@ -55,7 +55,7 @@ func newTestPlanResource(t *testing.T, sets []jamfprotect.AnalyticSet) *PlanReso
 				},
 			},
 		}
-		_ = json.NewEncoder(w).Encode(resp)
+		_ = json.MarshalWrite(w, resp)
 	}))
 	t.Cleanup(server.Close)
 	return &PlanResource{client: jamfprotect.NewClient(server.URL, "id", "secret")}

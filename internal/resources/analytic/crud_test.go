@@ -5,7 +5,7 @@ package analytic
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -44,7 +44,7 @@ func (f *fakeProtectAPI) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			AnalyticActions []jamfprotect.AnalyticAction `json:"analyticActions"`
 		} `json:"variables"`
 	}
-	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+	if err := json.UnmarshalRead(req.Body, &body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -63,7 +63,7 @@ func (f *fakeProtectAPI) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		f.getCalls++
 		payload = map[string]any{"data": map[string]any{"getAnalytic": f.analytic}}
 	}
-	_ = json.NewEncoder(w).Encode(payload)
+	_ = json.MarshalWrite(w, payload)
 }
 
 // consoleAnalytic returns an analytic carrying the console actions, as the API returns it.

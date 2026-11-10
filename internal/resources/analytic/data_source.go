@@ -5,7 +5,7 @@ package analytic
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"

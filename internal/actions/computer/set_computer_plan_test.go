@@ -5,7 +5,7 @@ package computeractions
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -47,7 +47,7 @@ func newFakeProtectAPI(t *testing.T, responses map[string]string) (*fakeProtectA
 		var body struct {
 			Query string `json:"query"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		if err := json.UnmarshalRead(r.Body, &body); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

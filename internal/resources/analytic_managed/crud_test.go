@@ -5,7 +5,7 @@ package analytic_managed
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -40,7 +40,7 @@ func (f *fakeProtectAPI) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var body struct {
 		Variables map[string]any `json:"variables"`
 	}
-	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+	if err := json.UnmarshalRead(req.Body, &body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -64,7 +64,7 @@ func (f *fakeProtectAPI) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	default:
 		payload = map[string]any{"data": map[string]any{"getAnalytic": f.getAnalytic}}
 	}
-	_ = json.NewEncoder(w).Encode(payload)
+	_ = json.MarshalWrite(w, payload, json.FormatNilSliceAsNull(true))
 }
 
 // managedStateFromAPI builds a resource model for a Jamf-managed analytic as Read would.

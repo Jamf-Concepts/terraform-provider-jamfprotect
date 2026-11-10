@@ -5,7 +5,7 @@ package analytic_managed
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
