@@ -1,43 +1,18 @@
-## 0.1.0 (Unreleased)
-
-FEATURES:
-
-- **New Resource:** `jamfprotect_action_config` - Manage action configurations (alert data enrichment and reporting clients)
-- **New Resource:** `jamfprotect_analytic` - Manage analytics (threat detection rules with filters, actions, and context)
-- **New Resource:** `jamfprotect_analytic_set` - Manage analytic sets (grouped analytics with report/prevent types)
-- **New Resource:** `jamfprotect_exception_set` - Manage exception sets (analytics and endpoint security exceptions)
-- **New Resource:** `jamfprotect_plan` - Manage plans (endpoint security configurations with analytic sets, telemetry, and comms settings)
-- **New Resource:** `jamfprotect_custom_prevent_list` - Manage custom prevent lists (allow/block lists for team IDs, file hashes, CD hashes, and signing IDs)
-- **New Resource:** `jamfprotect_telemetry` - Manage telemetry configurations (endpoint security event collection)
-- **New Resource:** `jamfprotect_unified_logging_filter` - Manage unified logging filters (Apple Unified Logging predicates)
-- **New Resource:** `jamfprotect_unified_logging_filter_set` - Manage unified logging filter sets (grouped unified logging filters, scoped to plans)
-- **New Resource:** `jamfprotect_removable_storage_control_set` - Manage removable storage control sets (device access policies)
-- **New Data Source:** `jamfprotect_action_configs` - List all action configurations
-- **New Data Source:** `jamfprotect_analytics` - List all analytics
-- **New Data Source:** `jamfprotect_analytic_sets` - List all analytic sets
-- **New Data Source:** `jamfprotect_exception_sets` - List all exception sets
-- **New Data Source:** `jamfprotect_plans` - List all plans
-- **New Data Source:** `jamfprotect_custom_prevent_lists` - List all custom prevent lists
-- **New Data Source:** `jamfprotect_telemetries` - List all telemetry configurations
-- **New Data Source:** `jamfprotect_unified_logging_filters` - List all unified logging filters
-- **New Data Source:** `jamfprotect_unified_logging_filter_sets` - List all unified logging filter sets, with their member filters and the plans they are assigned to
-- **New Data Source:** `jamfprotect_removable_storage_control_sets` - List all removable storage control sets
-- **New Action:** `jamfprotect_set_computer_plan` - Move one or more computers to a different plan, with an opt-in `wait_for_checkin` that blocks until each agent has settled on the new plan
-- **New Action:** `jamfprotect_delete_computer` - Remove one or more computer records from the tenant (destructive and irreversible; does not uninstall the agent)
-
-All resources support full CRUD operations and `terraform import`.
-
-Actions require Terraform >= 1.14. Both computer actions target computers with `computer_uuids` sourced from the `jamfprotect_computers` data source, and are idempotent — an empty target set or an already-deleted computer warns rather than failing, so an offboarding pipeline is safe to re-run. Terraform has no destroy-time action events, so the primary workflow is direct invocation: `terraform apply -invoke=action.jamfprotect_delete_computer.<name>` to clear a retiring plan's computers before `terraform destroy`, which Jamf Protect otherwise blocks with a dependency error.
-
-Unified logging filters now reach endpoints through filter set membership plus plan assignment, rather than the filter's own `enabled` flag. `jamfprotect_plan` gains a `unified_logging_filter_sets` attribute for that assignment, and `enabled` on `jamfprotect_unified_logging_filter` is retained for backwards compatibility but no longer affects delivery.
-
-Existing `jamfprotect_plan` configurations are unaffected. Jamf Protect's migration collects a tenant's previously enabled filters into a set named `Default` and assigns it to every existing plan; because `unified_logging_filter_sets` is optional and computed, a configuration that omits it adopts whatever is already assigned instead of diffing against it. Set it to `[]` to explicitly assign none. A filter set assigned to a plan cannot be deleted, so detach it from every plan before destroying it.
-
-Note that a pending plan move does not release the old plan: `deletePlan` stays blocked until the Jamf Protect agent has applied the change, which is what `wait_for_checkin` on `jamfprotect_set_computer_plan` waits for.
+## 0.13.0 (Unreleased)
 
 ENHANCEMENTS:
 
-- **List Resources:** Added an opt-in `exclude_builtins` configuration attribute to list resources for resource types that have Jamf-provided built-in / system instances (`jamfprotect_analytic`, `jamfprotect_analytic_set`, `jamfprotect_exception_set`, `jamfprotect_plan`, `jamfprotect_role`, `jamfprotect_action_configuration`, `jamfprotect_group`). It defaults to `false` (all instances, including built-ins, are returned); set it to `true` (in a nested `config {}` block) to exclude built-ins from `terraform query` results — e.g. the Default plan, Full Admin / Read Only roles, Default Analytic Set, Default action configuration, Jamf Managed Default Exceptions, and the Default group. Data sources are unchanged.
+- Bumped jamfprotect-go-sdk to v0.10.0 and moved the provider's JSON handling to `encoding/json/v2`. Encoded action and client parameters are now deterministic, so key order no longer varies between runs.
+
+BUG FIXES:
+
+- `jamfprotect_group`, `jamfprotect_user`: `role_ids` (and `group_ids` on users) are now optional and computed. A configuration that omits them keeps the roles and groups already assigned, instead of sending an empty list on every apply and clearing them. Set an attribute to `[]` to clear it explicitly. State for an unset attribute is now an empty set rather than null.
+- `jamfprotect_api_client`: no change in behaviour, now covered by tests. An unset `role_ids` creates the client with no roles. Jamf Protect assigns the Full Admin role when `roleIds` is left out of the request, so the provider always sends it.
+
+## 0.12.0 (2026-10-06)
+
+ENHANCEMENTS:
+
 - Bumped Go to 1.27.1.
 - Bumped jamfprotect-go-sdk to v0.9.0. Debug logs (`TF_LOG=debug` or `trace`) no longer contain API client passwords, data forwarding keys, HTTP endpoint URLs or header values. The client re-authenticates once when the API rejects a token, and bounds response size and pagination.
 - `jamfprotect_role`: added the permissions `Data Loss Prevention Policies`, `Endpoint Security Exceptions`, `Packages`, `Unified Logging Filter Sets` and `Uninstaller Tokens`.
@@ -57,3 +32,61 @@ BUG FIXES:
 - `jamfprotect_set_computer_plan`: the action now fails when `plan_id` does not exist, or when Jamf Protect does not record the assignment. Previously it reported success while nothing was assigned.
 - `jamfprotect_exception_set`: an exception set with no `exceptions` now applies, instead of failing with "Provider produced inconsistent result after apply".
 - Provider debug logs (`TF_LOG=debug` or `trace`) mask the configured `client_secret` in every logged HTTP field.
+
+## 0.11.0 (2026-08-07)
+
+FEATURES:
+
+- **New Resource:** `jamfprotect_unified_logging_filter_set` - Manage unified logging filter sets (grouped unified logging filters, scoped to plans)
+- **New Data Source:** `jamfprotect_unified_logging_filter_sets` - List all unified logging filter sets, with their member filters and the plans they are assigned to
+
+Unified logging filters now reach endpoints through filter set membership plus plan assignment, rather than the filter's own `enabled` flag. `jamfprotect_plan` gains a `unified_logging_filter_sets` attribute for that assignment, and `enabled` on `jamfprotect_unified_logging_filter` is retained for backwards compatibility but no longer affects delivery.
+
+Existing `jamfprotect_plan` configurations are unaffected. Jamf Protect's migration collects a tenant's previously enabled filters into a set named `Default` and assigns it to every existing plan; because `unified_logging_filter_sets` is optional and computed, a configuration that omits it adopts whatever is already assigned instead of diffing against it. Set it to `[]` to explicitly assign none. A filter set assigned to a plan cannot be deleted, so detach it from every plan before destroying it.
+
+## 0.10.0 (2026-07-29)
+
+FEATURES:
+
+- **New Action:** `jamfprotect_set_computer_plan` - Move one or more computers to a different plan, with an opt-in `wait_for_checkin` that blocks until each agent has settled on the new plan
+- **New Action:** `jamfprotect_delete_computer` - Remove one or more computer records from the tenant (destructive and irreversible; does not uninstall the agent)
+
+Actions require Terraform >= 1.14. Both computer actions target computers with `computer_uuids` sourced from the `jamfprotect_computers` data source, and are idempotent — an empty target set or an already-deleted computer warns rather than failing, so an offboarding pipeline is safe to re-run. Terraform has no destroy-time action events, so the primary workflow is direct invocation: `terraform apply -invoke=action.jamfprotect_delete_computer.<name>` to clear a retiring plan's computers before `terraform destroy`, which Jamf Protect otherwise blocks with a dependency error.
+
+Note that a pending plan move does not release the old plan: `deletePlan` stays blocked until the Jamf Protect agent has applied the change, which is what `wait_for_checkin` on `jamfprotect_set_computer_plan` waits for.
+
+## 0.9.0 (2026-07-10)
+
+ENHANCEMENTS:
+
+- **List Resources:** Added an opt-in `exclude_builtins` configuration attribute to list resources for resource types that have Jamf-provided built-in / system instances (`jamfprotect_analytic`, `jamfprotect_analytic_set`, `jamfprotect_exception_set`, `jamfprotect_plan`, `jamfprotect_role`, `jamfprotect_action_configuration`, `jamfprotect_group`). It defaults to `false` (all instances, including built-ins, are returned); set it to `true` (in a nested `config {}` block) to exclude built-ins from `terraform query` results — e.g. the Default plan, Full Admin / Read Only roles, Default Analytic Set, Default action configuration, Jamf Managed Default Exceptions, and the Default group. Data sources are unchanged.
+
+## 0.1.0 (2026-03-05)
+
+FEATURES:
+
+- **New Resource:** `jamfprotect_custom_prevent_list` - Manage custom prevent lists (allow/block lists for team IDs, file hashes, CD hashes, and signing IDs)
+- **New Resource:** `jamfprotect_telemetry` - Manage telemetry configurations (endpoint security event collection)
+- **New Resource:** `jamfprotect_removable_storage_control_set` - Manage removable storage control sets (device access policies)
+- **New Data Source:** `jamfprotect_custom_prevent_lists` - List all custom prevent lists
+- **New Data Source:** `jamfprotect_telemetries` - List all telemetry configurations
+- **New Data Source:** `jamfprotect_removable_storage_control_sets` - List all removable storage control sets
+
+## 0.0.1 (2026-02-13)
+
+FEATURES:
+
+- **New Resource:** `jamfprotect_action_config` - Manage action configurations (alert data enrichment and reporting clients)
+- **New Resource:** `jamfprotect_analytic` - Manage analytics (threat detection rules with filters, actions, and context)
+- **New Resource:** `jamfprotect_analytic_set` - Manage analytic sets (grouped analytics with report/prevent types)
+- **New Resource:** `jamfprotect_exception_set` - Manage exception sets (analytics and endpoint security exceptions)
+- **New Resource:** `jamfprotect_plan` - Manage plans (endpoint security configurations with analytic sets, telemetry, and comms settings)
+- **New Resource:** `jamfprotect_unified_logging_filter` - Manage unified logging filters (Apple Unified Logging predicates)
+- **New Data Source:** `jamfprotect_action_configs` - List all action configurations
+- **New Data Source:** `jamfprotect_analytics` - List all analytics
+- **New Data Source:** `jamfprotect_analytic_sets` - List all analytic sets
+- **New Data Source:** `jamfprotect_exception_sets` - List all exception sets
+- **New Data Source:** `jamfprotect_plans` - List all plans
+- **New Data Source:** `jamfprotect_unified_logging_filters` - List all unified logging filters
+
+All resources support full CRUD operations and `terraform import`.
