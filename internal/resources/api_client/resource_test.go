@@ -89,3 +89,47 @@ resource "jamfprotect_api_client" "test" {
 }
 `, name)
 }
+
+// TestAccApiClientResource_roleIDsNotImplicitAdmin validates that an unset role_ids creates a client
+// with no roles rather than the Full Admin role the API assigns when roleIds is omitted, and that
+// roles can be added and removed again.
+func TestAccApiClientResource_roleIDsNotImplicitAdmin(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-apiclient")
+	resourceName := "jamfprotect_api_client.test"
+	emptyPlan := resource.ConfigPlanChecks{
+		PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccApiClientCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:           testAccApiClientRoleIDsConfig(rName, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckNoResourceAttr(resourceName, "role_ids.#"),
+			},
+			{
+				Config:           testAccApiClientRoleIDsConfig(rName, `role_ids = ["1"]`),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+			},
+			{
+				Config:           testAccApiClientRoleIDsConfig(rName, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckNoResourceAttr(resourceName, "role_ids.#"),
+			},
+		},
+	})
+}
+
+// testAccApiClientRoleIDsConfig builds an API client configuration with a caller-supplied role_ids line.
+func testAccApiClientRoleIDsConfig(name, roleIDsLine string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_api_client" "test" {
+  name = %q
+  %s
+}
+`, name, roleIDsLine)
+}

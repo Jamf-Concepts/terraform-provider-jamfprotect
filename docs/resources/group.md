@@ -29,7 +29,7 @@ resource "jamfprotect_group" "example" {
 
 ### Optional
 
-- `role_ids` (Set of String) Role IDs assigned to the group. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.
+- `role_ids` (Set of String) Role IDs assigned to the group. When unset, the existing assignment is kept. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

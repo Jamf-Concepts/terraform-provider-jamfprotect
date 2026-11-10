@@ -334,3 +334,45 @@ func TestIsKnownString(t *testing.T) {
 		})
 	}
 }
+
+// TestSetToOptionalStrings verifies null and unknown sets map to nil while known sets keep their values.
+func TestSetToOptionalStrings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		set     types.Set
+		wantNil bool
+		want    []string
+	}{
+		{name: "null omits", set: types.SetNull(types.StringType), wantNil: true},
+		{name: "unknown omits", set: types.SetUnknown(types.StringType), wantNil: true},
+		{name: "empty clears", set: types.SetValueMust(types.StringType, []attr.Value{}), want: []string{}},
+		{name: "populated", set: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")}), want: []string{"a"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var diags diag.Diagnostics
+			got := SetToOptionalStrings(context.Background(), tt.set, &diags)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if tt.wantNil {
+				if got != nil {
+					t.Fatalf("expected nil, got %#v", got)
+				}
+				return
+			}
+			if got == nil || len(got) != len(tt.want) {
+				t.Fatalf("expected %#v, got %#v", tt.want, got)
+			}
+			for i := range tt.want {
+				if got[i] != tt.want[i] {
+					t.Fatalf("expected %#v, got %#v", tt.want, got)
+				}
+			}
+		})
+	}
+}

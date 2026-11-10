@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -63,14 +64,18 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"role_ids": schema.SetAttribute{
-				MarkdownDescription: "Role IDs assigned to the user. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed. Only applicable for users with an identity provider.",
+				MarkdownDescription: "Role IDs assigned to the user. When unset, the existing assignment is kept. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed. Only applicable for users with an identity provider.",
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("identity_provider_id"))},
 			},
 			"group_ids": schema.SetAttribute{
-				MarkdownDescription: "Group IDs assigned to the user. Use `1` for the default group or other group IDs as needed. Only applicable for users with an identity provider.",
+				MarkdownDescription: "Group IDs assigned to the user. When unset, the existing assignment is kept. Use `1` for the default group or other group IDs as needed. Only applicable for users with an identity provider.",
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				Validators:          []validator.Set{setvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("identity_provider_id"))},
 			},

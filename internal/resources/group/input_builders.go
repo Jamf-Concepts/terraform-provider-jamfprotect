@@ -16,7 +16,7 @@ import (
 func buildGroupInput(ctx context.Context, data GroupResourceModel, diags *diag.Diagnostics) jamfprotect.GroupInput {
 	input := jamfprotect.GroupInput{
 		Name:    data.Name.ValueString(),
-		RoleIDs: common.SetToStrings(ctx, data.RoleIDs, diags),
+		RoleIDs: common.SetToOptionalStrings(ctx, data.RoleIDs, diags),
 	}
 
 	return input

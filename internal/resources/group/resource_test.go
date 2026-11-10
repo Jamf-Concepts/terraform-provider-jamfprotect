@@ -86,3 +86,51 @@ resource "jamfprotect_group" "test" {
 }
 `, name)
 }
+
+// TestAccGroupResource_roleIDsLifecycle validates that a null role_ids is omitted on create, a
+// populated set is sent, removing the attribute keeps the stored roles, and a known empty set clears them.
+func TestAccGroupResource_roleIDsLifecycle(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-group")
+	resourceName := "jamfprotect_group.test"
+	emptyPlan := resource.ConfigPlanChecks{
+		PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccGroupCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:           testAccGroupRoleIDsConfig(rName, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckResourceAttr(resourceName, "role_ids.#", "0"),
+			},
+			{
+				Config:           testAccGroupRoleIDsConfig(rName, `role_ids = ["1"]`),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+			},
+			{
+				Config:           testAccGroupRoleIDsConfig(rName, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+			},
+			{
+				Config:           testAccGroupRoleIDsConfig(rName, `role_ids = []`),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckResourceAttr(resourceName, "role_ids.#", "0"),
+			},
+		},
+	})
+}
+
+// testAccGroupRoleIDsConfig builds a group configuration with a caller-supplied role_ids line.
+func testAccGroupRoleIDsConfig(name, roleIDsLine string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_group" "test" {
+  name = %q
+  %s
+}
+`, name, roleIDsLine)
+}

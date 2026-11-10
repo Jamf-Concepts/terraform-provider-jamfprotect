@@ -52,9 +52,9 @@ resource "jamfprotect_user" "full_admin" {
 ### Optional
 
 - `email_severity` (String) Minimum severity for email notifications. Valid options are: `High`, `Medium`, `Low`.
-- `group_ids` (Set of String) Group IDs assigned to the user. Use `1` for the default group or other group IDs as needed. Only applicable for users with an identity provider.
+- `group_ids` (Set of String) Group IDs assigned to the user. When unset, the existing assignment is kept. Use `1` for the default group or other group IDs as needed. Only applicable for users with an identity provider.
 - `identity_provider_id` (String) Optional identity provider identifier. Use `1` for local Jamf Protect users and `2` for the first external identity provider and so on. If unset, the user can only receive email notifications.
-- `role_ids` (Set of String) Role IDs assigned to the user. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed. Only applicable for users with an identity provider.
+- `role_ids` (Set of String) Role IDs assigned to the user. When unset, the existing assignment is kept. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed. Only applicable for users with an identity provider.
 - `send_email_notifications` (Boolean) Whether the user receives email notifications.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 

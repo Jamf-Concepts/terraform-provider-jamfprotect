@@ -16,8 +16,8 @@ import (
 func buildUserInput(ctx context.Context, data UserResourceModel, diags *diag.Diagnostics) jamfprotect.UserInput {
 	input := jamfprotect.UserInput{
 		Email:                 data.Email.ValueString(),
-		RoleIDs:               common.SetToStrings(ctx, data.RoleIDs, diags),
-		GroupIDs:              common.SetToStrings(ctx, data.GroupIDs, diags),
+		RoleIDs:               common.SetToOptionalStrings(ctx, data.RoleIDs, diags),
+		GroupIDs:              common.SetToOptionalStrings(ctx, data.GroupIDs, diags),
 		ReceiveEmailAlert:     data.SendEmailNotifications.ValueBool(),
 		EmailAlertMinSeverity: data.EmailSeverity.ValueString(),
 	}

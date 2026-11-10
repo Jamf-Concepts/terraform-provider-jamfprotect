@@ -92,3 +92,73 @@ resource "jamfprotect_user" "test" {
 }
 `, email, identityProviderID, sendEmail, severity)
 }
+
+// TestAccUserResource_roleIDsLifecycle validates that null role_ids and group_ids are omitted on
+// create, populated sets are sent, removing the attributes keeps the stored values, and known empty
+// sets clear them.
+func TestAccUserResource_roleIDsLifecycle(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-user")
+	email := fmt.Sprintf("%s@example.com", rName)
+	resourceName := "jamfprotect_user.test"
+	emptyPlan := resource.ConfigPlanChecks{
+		PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testutil.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testutil.TestAccProtoV6ProviderFactories(),
+		CheckDestroy:             testAccUserCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:           testAccUserRoleIDsConfig(email, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "role_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "group_ids.#", "0"),
+				),
+			},
+			{
+				Config:           testAccUserRoleIDsConfig(email, `role_ids = ["1"]`+"\n  "+`group_ids = ["1"]`),
+				ConfigPlanChecks: emptyPlan,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", "1"),
+				),
+			},
+			{
+				Config:           testAccUserRoleIDsConfig(email, ""),
+				ConfigPlanChecks: emptyPlan,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", "1"),
+				),
+			},
+			{
+				Config:           testAccUserRoleIDsConfig(email, `role_ids = ["1"]`+"\n  "+`group_ids = []`),
+				ConfigPlanChecks: emptyPlan,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr(resourceName, "role_ids.*", "1"),
+					resource.TestCheckResourceAttr(resourceName, "group_ids.#", "0"),
+				),
+			},
+			{
+				Config:           testAccUserRoleIDsConfig(email, `role_ids = []`+"\n  "+`group_ids = []`),
+				ConfigPlanChecks: emptyPlan,
+				Check:            resource.TestCheckResourceAttr(resourceName, "role_ids.#", "0"),
+			},
+		},
+	})
+}
+
+// testAccUserRoleIDsConfig builds a user configuration with a caller-supplied role_ids line.
+func testAccUserRoleIDsConfig(email, roleIDsLine string) string {
+	return fmt.Sprintf(`
+resource "jamfprotect_user" "test" {
+  email                    = %q
+  identity_provider_id     = "1"
+  send_email_notifications = true
+  email_severity           = "Medium"
+  %s
+}
+`, email, roleIDsLine)
+}
