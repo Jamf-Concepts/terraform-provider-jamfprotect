@@ -5,7 +5,7 @@ package analytic
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"

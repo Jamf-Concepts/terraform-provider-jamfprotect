@@ -5,7 +5,7 @@ package analytic_managed
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
@@ -38,7 +38,7 @@ func (r *AnalyticManagedResource) buildInternalInput(ctx context.Context, data A
 					return nil
 				}
 				if len(paramMap) > 0 {
-					b, err := json.Marshal(paramMap)
+					b, err := json.Marshal(paramMap, json.Deterministic(true))
 					if err != nil {
 						diags.AddError("Error encoding tenant action parameters", err.Error())
 						return nil

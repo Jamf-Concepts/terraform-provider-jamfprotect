@@ -5,7 +5,7 @@ package action_configuration
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"maps"
 	"slices"
@@ -297,7 +297,7 @@ func buildEndpointClient(ctx context.Context, clientType string, collectAlerts t
 	if len(supportedReports) > 0 {
 		client["supportedReports"] = supportedReports
 	}
-	paramsJSON, err := json.Marshal(params)
+	paramsJSON, err := json.Marshal(params, json.Deterministic(true))
 	if err != nil {
 		diags.AddError("Error serializing "+clientType+" client params", err.Error())
 		return nil
