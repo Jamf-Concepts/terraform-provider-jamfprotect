@@ -29,7 +29,7 @@ resource "jamfprotect_api_client" "basic" {
 
 ### Optional
 
-- `role_ids` (Set of String) Role IDs assigned to the API client. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.
+- `role_ids` (Set of String) Role IDs assigned to the API client. When unset, the client is created with no roles. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

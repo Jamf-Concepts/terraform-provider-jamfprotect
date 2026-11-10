@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,8 +56,10 @@ func (r *GroupResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"role_ids": schema.SetAttribute{
-				MarkdownDescription: "Role IDs assigned to the group. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.",
+				MarkdownDescription: "Role IDs assigned to the group. When unset, the existing assignment is kept. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.",
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 			},
 			"created": schema.StringAttribute{

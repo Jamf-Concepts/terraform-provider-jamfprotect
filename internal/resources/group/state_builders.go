@@ -19,12 +19,7 @@ func (r *GroupResource) apiToState(_ context.Context, data *GroupResourceModel, 
 	data.Created = types.StringValue(api.Created)
 
 	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.GroupRole) string { return r.ID })
-	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {
-		data.RoleIDs = types.SetNull(types.StringType)
-	} else {
-		data.RoleIDs = common.StringsToSet(roleIDs)
-	}
-
+	data.RoleIDs = common.StringsToSet(roleIDs)
 }
 
 // groupAPIToDataSourceItem maps API group data to a data source item.

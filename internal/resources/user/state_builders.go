@@ -21,18 +21,10 @@ func (r *UserResource) apiToState(_ context.Context, data *UserResourceModel, ap
 	data.Created = types.StringValue(api.Created)
 
 	roleIDs := common.MapSlice(api.AssignedRoles, func(r jamfprotect.UserRole) string { return r.ID })
-	if len(roleIDs) == 0 && (data.RoleIDs.IsNull() || data.RoleIDs.IsUnknown()) {
-		data.RoleIDs = types.SetNull(types.StringType)
-	} else {
-		data.RoleIDs = common.StringsToSet(roleIDs)
-	}
+	data.RoleIDs = common.StringsToSet(roleIDs)
 
 	groupIDs := common.MapSlice(api.AssignedGroups, func(g jamfprotect.UserGroup) string { return g.ID })
-	if len(groupIDs) == 0 && (data.GroupIDs.IsNull() || data.GroupIDs.IsUnknown()) {
-		data.GroupIDs = types.SetNull(types.StringType)
-	} else {
-		data.GroupIDs = common.StringsToSet(groupIDs)
-	}
+	data.GroupIDs = common.StringsToSet(groupIDs)
 
 	if api.Connection != nil {
 		data.IdentityProviderID = types.StringValue(api.Connection.ID)

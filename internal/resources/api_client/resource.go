@@ -54,7 +54,7 @@ func (r *ApiClientResource) Schema(ctx context.Context, req resource.SchemaReque
 				Validators:          []validator.String{validators.ResourceName()},
 			},
 			"role_ids": schema.SetAttribute{
-				MarkdownDescription: "Role IDs assigned to the API client. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.",
+				MarkdownDescription: "Role IDs assigned to the API client. When unset, the client is created with no roles. Use `1` for the Read Only role, `2` for the Full Admin role, or other role IDs as needed.",
 				Optional:            true,
 				ElementType:         types.StringType,
 			},

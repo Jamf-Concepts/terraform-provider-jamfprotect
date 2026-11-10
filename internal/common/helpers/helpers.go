@@ -33,6 +33,18 @@ func ListToStrings(ctx context.Context, list types.List, diags *diag.Diagnostics
 	return result
 }
 
+// SetToOptionalStrings converts a types.Set of strings into a Go []string for optional API list
+// inputs. A null or unknown set returns nil so the field is omitted from the request; a known
+// empty set returns a non-nil empty slice so the API list is cleared.
+func SetToOptionalStrings(ctx context.Context, set types.Set, diags *diag.Diagnostics) []string {
+	if set.IsNull() || set.IsUnknown() {
+		return nil
+	}
+	result := []string{}
+	diags.Append(set.ElementsAs(ctx, &result, false)...)
+	return result
+}
+
 // SetContainsUnknown reports whether the set itself is unknown or any of its
 // elements are unknown. This is useful for guarding calls to SetToStrings in
 // validation functions where set elements may reference unresolved resources.
