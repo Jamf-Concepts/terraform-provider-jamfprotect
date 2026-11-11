@@ -39,6 +39,7 @@ func TestRolePermissionAPIValue_ValidLabels(t *testing.T) {
 		{"Exception Sets", "Exception Sets", "ExceptionSet"},
 		{"Plans", "Plans", "Plan"},
 		{"Prevent Lists", "Prevent Lists", "PreventList"},
+		{"Prevent List Sets", "Prevent List Sets", "PreventListSet"},
 		{"Removable Storage Control Sets", "Removable Storage Control Sets", "USBControlSet"},
 		{"Telemetry", "Telemetry", "Telemetry"},
 		{"Unified Logging", "Unified Logging", "UnifiedLoggingFilter"},
@@ -130,6 +131,7 @@ func TestRolePermissionLabel_ValidAPIValues(t *testing.T) {
 		{"ExceptionSet", "ExceptionSet", "Exception Sets"},
 		{"Plan", "Plan", "Plans"},
 		{"PreventList", "PreventList", "Prevent Lists"},
+		{"PreventListSet", "PreventListSet", "Prevent List Sets"},
 		{"USBControlSet", "USBControlSet", "Removable Storage Control Sets"},
 		{"Telemetry", "Telemetry", "Telemetry"},
 		{"UnifiedLoggingFilter", "UnifiedLoggingFilter", "Unified Logging"},
@@ -442,7 +444,7 @@ func TestRolePermissionListToLabels(t *testing.T) {
 var rbacResources = []string{
 	"all", "ActionConfigs", "Alert", "Analytic", "AnalyticSet", "ApiClient", "AuditLog", "Computer",
 	"Connection", "ConfigFreeze", "Exception", "EsException", "ExceptionSet", "Group", "Insight",
-	"Organization", "DataForward", "DataRetention", "Download", "Package", "Plan", "PreventList",
+	"Organization", "DataForward", "DataRetention", "Download", "Package", "Plan", "PreventList", "PreventListSet",
 	"DLPPolicy", "Role", "Telemetry", "ThreatPreventionVersion", "USBControlSet", "UnifiedLoggingFilter",
 	"UnifiedLoggingFilterSet", "UninstallerToken", "User",
 }

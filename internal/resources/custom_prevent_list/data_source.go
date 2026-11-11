@@ -39,6 +39,7 @@ type CustomPreventListDataSourceItemModel struct {
 	PreventType types.String `tfsdk:"prevent_type"`
 	EntryCount  types.Int64  `tfsdk:"entry_count"`
 	ListData    types.List   `tfsdk:"list_data"`
+	Sets        types.List   `tfsdk:"sets"`
 	Created     types.String `tfsdk:"created"`
 }
 
@@ -79,6 +80,22 @@ func (d *CustomPreventListsDataSource) Schema(ctx context.Context, req datasourc
 							MarkdownDescription: "The entries in the custom prevent list.",
 							Computed:            true,
 							ElementType:         types.StringType,
+						},
+						"sets": schema.ListNestedAttribute{
+							MarkdownDescription: "Prevent list sets that this custom prevent list belongs to.",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"uuid": schema.StringAttribute{
+										MarkdownDescription: "The prevent list set UUID.",
+										Computed:            true,
+									},
+									"name": schema.StringAttribute{
+										MarkdownDescription: "The prevent list set name.",
+										Computed:            true,
+									},
+								},
+							},
 						},
 						"created": schema.StringAttribute{
 							MarkdownDescription: "The creation timestamp.",

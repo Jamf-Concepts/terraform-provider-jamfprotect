@@ -8,6 +8,7 @@ import (
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,5 +37,22 @@ func customPreventListAPIToDataSourceItem(api jamfprotect.CustomPreventList, dia
 		Created:     types.StringValue(api.Created),
 	}
 	item.Description = types.StringValue(api.Description)
+
+	setVals := make([]attr.Value, 0, len(api.Sets))
+	for _, s := range api.Sets {
+		setVals = append(setVals, types.ObjectValueMust(preventListSetAttrTypes, map[string]attr.Value{
+			"uuid": types.StringValue(s.UUID),
+			"name": types.StringValue(s.Name),
+		}))
+	}
+	setList, d := types.ListValue(types.ObjectType{AttrTypes: preventListSetAttrTypes}, setVals)
+	diags.Append(d...)
+	item.Sets = setList
 	return item
+}
+
+// preventListSetAttrTypes defines the attribute types for the prevent list sets a list belongs to.
+var preventListSetAttrTypes = map[string]attr.Type{
+	"uuid": types.StringType,
+	"name": types.StringType,
 }

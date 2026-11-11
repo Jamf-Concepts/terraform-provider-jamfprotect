@@ -44,3 +44,12 @@ Read-Only:
 - `list_data` (List of String) The entries in the custom prevent list.
 - `name` (String) The name of the custom prevent list.
 - `prevent_type` (String) The type of custom prevent list.
+- `sets` (Attributes List) Prevent list sets that this custom prevent list belongs to. (see [below for nested schema](#nestedatt--custom_prevent_lists--sets))
+
+<a id="nestedatt--custom_prevent_lists--sets"></a>
+### Nested Schema for `custom_prevent_lists.sets`
+
+Read-Only:
+
+- `name` (String) The prevent list set name.
+- `uuid` (String) The prevent list set UUID.

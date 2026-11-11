@@ -38,6 +38,7 @@ import (
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/identity_provider"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/plan"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/prevent_list_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/role"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/telemetry"
@@ -197,6 +198,7 @@ func (p *JamfProtectProvider) Resources(ctx context.Context) []func() resource.R
 		custom_prevent_list.NewCustomPreventListResource,
 		telemetry.NewTelemetryV2Resource,
 		unified_logging_filter.NewUnifiedLoggingFilterResource,
+		prevent_list_set.NewPreventListSetResource,
 		unified_logging_filter_set.NewUnifiedLoggingFilterSetResource,
 		removable_storage_control_set.NewRemovableStorageControlSetResource,
 	}
@@ -221,6 +223,7 @@ func (p *JamfProtectProvider) DataSources(ctx context.Context) []func() datasour
 		identity_provider.NewIdentityProvidersDataSource,
 		telemetry.NewTelemetriesV2DataSource,
 		unified_logging_filter.NewUnifiedLoggingFiltersDataSource,
+		prevent_list_set.NewPreventListSetsDataSource,
 		unified_logging_filter_set.NewUnifiedLoggingFilterSetsDataSource,
 		removable_storage_control_set.NewRemovableStorageControlSetsDataSource,
 	}
@@ -241,6 +244,7 @@ func (p *JamfProtectProvider) ListResources(ctx context.Context) []func() list.L
 		user.NewUserListResource,
 		telemetry.NewTelemetryV2ListResource,
 		unified_logging_filter.NewUnifiedLoggingFilterListResource,
+		prevent_list_set.NewPreventListSetListResource,
 		unified_logging_filter_set.NewUnifiedLoggingFilterSetListResource,
 		removable_storage_control_set.NewRemovableStorageControlSetListResource,
 	}

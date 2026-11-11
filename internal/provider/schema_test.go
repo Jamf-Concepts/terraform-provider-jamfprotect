@@ -22,6 +22,7 @@ import (
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/group"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/identity_provider"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/plan"
+	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/prevent_list_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/removable_storage_control_set"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/role"
 	"github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/resources/telemetry"
@@ -412,6 +413,7 @@ func TestPlanResourceSchema(t *testing.T) {
 		"removable_storage_control_set",
 		"analytic_sets",
 		"unified_logging_filter_sets",
+		"prevent_list_sets",
 		"report_architecture",
 		"report_hostname",
 		"report_kernel_version",
@@ -1778,8 +1780,8 @@ func TestProviderDataSources(t *testing.T) {
 	}
 	dataSources := p.DataSources(context.Background())
 
-	if len(dataSources) != 19 {
-		t.Errorf("expected 19 data sources, got %d", len(dataSources))
+	if len(dataSources) != 20 {
+		t.Errorf("expected 20 data sources, got %d", len(dataSources))
 	}
 }
 
@@ -2016,5 +2018,135 @@ func TestPlanResourceSchemaUnifiedLoggingFilterSets(t *testing.T) {
 	}
 	if !attr.IsComputed() {
 		t.Error("expected 'unified_logging_filter_sets' to be computed")
+	}
+}
+
+func TestPreventListSetResourceSchema(t *testing.T) {
+	t.Parallel()
+
+	r := prevent_list_set.NewPreventListSetResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	requiredAttrs := []string{"name", "prevent_lists"}
+	for _, attr := range requiredAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in prevent list set schema", attr)
+			continue
+		}
+		if !a.IsRequired() {
+			t.Errorf("expected attribute %q to be required", attr)
+		}
+	}
+
+	computedAttrs := []string{"id", "created"}
+	for _, attr := range computedAttrs {
+		a, ok := resp.Schema.Attributes[attr]
+		if !ok {
+			t.Errorf("expected attribute %q in prevent list set schema", attr)
+			continue
+		}
+		if !a.IsComputed() {
+			t.Errorf("expected attribute %q to be computed", attr)
+		}
+	}
+
+	description, ok := resp.Schema.Attributes["description"]
+	if !ok {
+		t.Fatal("expected attribute 'description' in prevent list set schema")
+	}
+	if !description.IsOptional() || !description.IsComputed() {
+		t.Error("expected 'description' to be optional and computed")
+	}
+
+	if _, ok := resp.Schema.Attributes["timeouts"]; !ok {
+		t.Error("expected attribute 'timeouts' in prevent list set schema")
+	}
+}
+
+func TestPreventListSetResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	r := prevent_list_set.NewPreventListSetResource()
+	resp := &resource.MetadataResponse{}
+	r.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_prevent_list_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_list_set", resp.TypeName)
+	}
+}
+
+func TestPreventListSetsDataSourceSchema(t *testing.T) {
+	t.Parallel()
+
+	ds := prevent_list_set.NewPreventListSetsDataSource()
+	resp := &datasource.SchemaResponse{}
+	ds.Schema(context.Background(), datasource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	setsAttr, ok := resp.Schema.Attributes["prevent_list_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'prevent_list_sets' in data source schema")
+	}
+	if !setsAttr.IsComputed() {
+		t.Error("expected 'prevent_list_sets' to be computed")
+	}
+}
+
+func TestPreventListSetsDataSourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	ds := prevent_list_set.NewPreventListSetsDataSource()
+	resp := &datasource.MetadataResponse{}
+	ds.Metadata(context.Background(), datasource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_prevent_list_sets" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_list_sets", resp.TypeName)
+	}
+}
+
+func TestPreventListSetListResourceMetadata(t *testing.T) {
+	t.Parallel()
+
+	lr := prevent_list_set.NewPreventListSetListResource()
+	resp := &resource.MetadataResponse{}
+	lr.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "jamfprotect"}, resp)
+
+	if resp.TypeName != "jamfprotect_prevent_list_set" {
+		t.Errorf("expected TypeName %q, got %q", "jamfprotect_prevent_list_set", resp.TypeName)
+	}
+}
+
+func TestPlanResourceSchemaPreventListSets(t *testing.T) {
+	t.Parallel()
+
+	r := plan.NewPlanResource()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	attr, ok := resp.Schema.Attributes["prevent_list_sets"]
+	if !ok {
+		t.Fatal("expected attribute 'prevent_list_sets' in plan schema")
+	}
+	// Optional + Computed is what keeps a plan that omits the attribute from
+	// perpetually diffing against a server-side assignment such as the
+	// migration-created default prevent list set.
+	if !attr.IsOptional() {
+		t.Error("expected 'prevent_list_sets' to be optional")
+	}
+	if !attr.IsComputed() {
+		t.Error("expected 'prevent_list_sets' to be computed")
 	}
 }

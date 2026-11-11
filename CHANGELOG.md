@@ -1,6 +1,16 @@
 ## 0.13.0 (Unreleased)
 
+FEATURES:
+
+- **New Resource:** `jamfprotect_prevent_list_set` - Manage prevent list sets (grouped custom prevent lists, scoped to plans)
+- **New Data Source:** `jamfprotect_prevent_list_sets` - List prevent list sets
+- **New List Resource:** `jamfprotect_prevent_list_set` - Discover prevent list sets with `terraform query`
+
 ENHANCEMENTS:
+
+- `jamfprotect_plan`, `data.jamfprotect_plans`: new `prevent_list_sets` attribute. A custom prevent list now reaches an endpoint only when it belongs to a prevent list set assigned to that endpoint's plan, so a list created without a set takes effect on no endpoint. Leave the attribute unset to keep the sets Jamf Protect already assigned to the plan, or set it to `[]` to assign none.
+- `data.jamfprotect_custom_prevent_lists`: new `sets` attribute listing the prevent list sets each list belongs to.
+- `jamfprotect_role`: added the permission `Prevent List Sets`.
 
 - Bumped jamfprotect-go-sdk to v0.10.0 and moved the provider's JSON handling to `encoding/json/v2`. Encoded action and client parameters are now deterministic, so key order no longer varies between runs.
 
