@@ -49,6 +49,7 @@ Read-Only:
 - `id` (String) The unique identifier of the plan.
 - `log_level` (String) The log level for the plan. Values: `Error`, `Warning`, `Info`, `Debug`, `Verbose`.
 - `name` (String) The name of the plan.
+- `prevent_list_sets` (List of String) Prevent list set UUIDs assigned to this plan.
 - `removable_storage_control_set` (String) The ID of the USB control set associated with this plan.
 - `report_architecture` (Boolean) Whether device architecture reporting is enabled.
 - `report_hostname` (Boolean) Whether device hostname reporting is enabled.

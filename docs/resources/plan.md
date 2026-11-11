@@ -144,6 +144,9 @@ Leave unset to keep whatever analytic sets Jamf Protect already has assigned to 
 
 Leave unset to keep whatever exception sets Jamf Protect already has assigned to the plan. Set it to `[]` to explicitly assign none.
 - `log_level` (String) The log level for the plan. Valid options are: `Error`, `Warning`, `Info`, `Debug`, `Verbose`. Defaults to `Error`.
+- `prevent_list_sets` (Set of String) A set of prevent list set UUIDs to assign to this plan. A custom prevent list reaches this plan's endpoints only when it belongs to one of these prevent list sets.
+
+Leave unset to keep whatever Jamf Protect already has assigned — including the sets that Jamf Protect creates automatically for tenants that had custom prevent lists before prevent list sets existed. Set it to `[]` to explicitly assign none.
 - `removable_storage_control_set` (String) The ID of the USB control set to associate with this plan.
 - `report_architecture` (Boolean) Report the device architecture.
 - `report_hostname` (Boolean) Report the device hostname.

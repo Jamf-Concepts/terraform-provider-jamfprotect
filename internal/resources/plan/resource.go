@@ -124,6 +124,14 @@ func (r *PlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType: types.StringType,
 				Validators:  []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
 			},
+			"prevent_list_sets": schema.SetAttribute{
+				MarkdownDescription: "A set of prevent list set UUIDs to assign to this plan. A custom prevent list reaches this plan's endpoints only when it belongs to one of these prevent list sets.\n\n" +
+					"Leave unset to keep whatever Jamf Protect already has assigned — including the sets that Jamf Protect creates automatically for tenants that had custom prevent lists before prevent list sets existed. Set it to `[]` to explicitly assign none.",
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Validators:  []validator.Set{setvalidator.ValueStringsAre(validators.UUID())},
+			},
 			"communications_protocol": schema.StringAttribute{
 				MarkdownDescription: "The communications protocol to use. Valid options are: " + common.FormatOptions(communicationsProtocolUIOptions) + ". Defaults to `MQTT:443`.",
 				Optional:            true,
