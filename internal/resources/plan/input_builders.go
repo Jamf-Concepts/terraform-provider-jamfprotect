@@ -140,8 +140,6 @@ func (r *PlanResource) buildVariables(ctx context.Context, data PlanResourceMode
 		input.UnifiedLoggingFilterSets = filterSets
 	}
 
-	// A null or unknown value leaves the field off the mutation, which tells the API to
-	// keep the plan's current prevent list set assignments. A known empty set clears them.
 	if !data.PreventListSets.IsNull() && !data.PreventListSets.IsUnknown() {
 		preventListSets := common.SetToStrings(ctx, data.PreventListSets, diags)
 		if diags.HasError() {

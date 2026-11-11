@@ -4,7 +4,10 @@
 package prevent_list_set
 
 import (
+	"cmp"
 	"context"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -43,8 +46,12 @@ func preventListSetAPIToDataSourceItem(api jamfprotect.PreventListSet, diags *di
 		item.Description = types.StringNull()
 	}
 
-	listVals := make([]attr.Value, 0, len(api.PreventLists))
-	for _, l := range api.PreventLists {
+	sortedLists := slices.Clone(api.PreventLists)
+	slices.SortFunc(sortedLists, func(a, b jamfprotect.PreventListSetList) int {
+		return cmp.Or(strings.Compare(a.Name, b.Name), strings.Compare(a.ID, b.ID))
+	})
+	listVals := make([]attr.Value, 0, len(sortedLists))
+	for _, l := range sortedLists {
 		listVals = append(listVals, types.ObjectValueMust(preventListSetListAttrTypes, map[string]attr.Value{
 			"id":   types.StringValue(l.ID),
 			"name": types.StringValue(l.Name),
@@ -54,8 +61,12 @@ func preventListSetAPIToDataSourceItem(api jamfprotect.PreventListSet, diags *di
 	diags.Append(d...)
 	item.PreventLists = listList
 
-	planVals := make([]attr.Value, 0, len(api.Plans))
-	for _, p := range api.Plans {
+	sortedPlans := slices.Clone(api.Plans)
+	slices.SortFunc(sortedPlans, func(a, b jamfprotect.PreventListSetPlan) int {
+		return cmp.Or(strings.Compare(a.Name, b.Name), strings.Compare(a.ID, b.ID))
+	})
+	planVals := make([]attr.Value, 0, len(sortedPlans))
+	for _, p := range sortedPlans {
 		planVals = append(planVals, types.ObjectValueMust(preventListSetPlanAttrTypes, map[string]attr.Value{
 			"id":   types.StringValue(p.ID),
 			"name": types.StringValue(p.Name),

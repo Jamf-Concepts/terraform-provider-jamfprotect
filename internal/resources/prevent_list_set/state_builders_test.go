@@ -5,6 +5,7 @@ package prevent_list_set
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -133,5 +134,38 @@ func TestPreventListSetAPIToDataSourceItem_EmptyDescriptionIsNull(t *testing.T) 
 	}
 	if item.PreventLists.IsNull() || item.Plans.IsNull() {
 		t.Error("expected empty lists for prevent lists and plans, got null")
+	}
+}
+
+// TestPreventListSetAPIToDataSourceItem_SortsNestedLists verifies nested prevent lists
+// and plans are sorted by name so data source state does not depend on API order.
+func TestPreventListSetAPIToDataSourceItem_SortsNestedLists(t *testing.T) {
+	t.Parallel()
+
+	var diags diag.Diagnostics
+
+	item := preventListSetAPIToDataSourceItem(jamfprotect.PreventListSet{
+		UUID: "11111111-1111-4111-8111-111111111111",
+		Name: "Unsorted",
+		PreventLists: []jamfprotect.PreventListSetList{
+			{ID: "3", Name: "Zulu"},
+			{ID: "1", Name: "Alpha"},
+		},
+		Plans: []jamfprotect.PreventListSetPlan{
+			{ID: "9", Name: "Second"},
+			{ID: "8", Name: "First"},
+		},
+	}, &diags)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	lists := item.PreventLists.Elements()
+	if len(lists) != 2 || !strings.Contains(lists[0].String(), "Alpha") || !strings.Contains(lists[1].String(), "Zulu") {
+		t.Errorf("expected prevent lists sorted by name, got %v", lists)
+	}
+	plans := item.Plans.Elements()
+	if len(plans) != 2 || !strings.Contains(plans[0].String(), "First") || !strings.Contains(plans[1].String(), "Second") {
+		t.Errorf("expected plans sorted by name, got %v", plans)
 	}
 }
