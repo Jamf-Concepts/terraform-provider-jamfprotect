@@ -4,7 +4,10 @@
 package custom_prevent_list
 
 import (
+	"cmp"
 	"context"
+	"slices"
+	"strings"
 
 	"github.com/Jamf-Concepts/jamfprotect-go-sdk/jamfprotect"
 	common "github.com/Jamf-Concepts/terraform-provider-jamfprotect/internal/common/helpers"
@@ -38,8 +41,12 @@ func customPreventListAPIToDataSourceItem(api jamfprotect.CustomPreventList, dia
 	}
 	item.Description = types.StringValue(api.Description)
 
-	setVals := make([]attr.Value, 0, len(api.Sets))
-	for _, s := range api.Sets {
+	sortedSets := slices.Clone(api.Sets)
+	slices.SortFunc(sortedSets, func(a, b jamfprotect.CustomPreventListSetRef) int {
+		return cmp.Or(strings.Compare(a.Name, b.Name), strings.Compare(a.UUID, b.UUID))
+	})
+	setVals := make([]attr.Value, 0, len(sortedSets))
+	for _, s := range sortedSets {
 		setVals = append(setVals, types.ObjectValueMust(preventListSetAttrTypes, map[string]attr.Value{
 			"uuid": types.StringValue(s.UUID),
 			"name": types.StringValue(s.Name),
@@ -49,10 +56,4 @@ func customPreventListAPIToDataSourceItem(api jamfprotect.CustomPreventList, dia
 	diags.Append(d...)
 	item.Sets = setList
 	return item
-}
-
-// preventListSetAttrTypes defines the attribute types for the prevent list sets a list belongs to.
-var preventListSetAttrTypes = map[string]attr.Type{
-	"uuid": types.StringType,
-	"name": types.StringType,
 }
