@@ -3,7 +3,7 @@ module github.com/Jamf-Concepts/terraform-provider-jamfprotect
 go 1.27.4
 
 require (
-	github.com/Jamf-Concepts/jamfprotect-go-sdk v0.11.0
+	github.com/Jamf-Concepts/jamfprotect-go-sdk v0.12.0
 	github.com/hashicorp/go-uuid v1.0.4
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.7.0
@@ -64,7 +64,7 @@ require (
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
